@@ -72,7 +72,9 @@ test('native keyboard fallback preserves answer, hints and feedback through loca
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
   expect(screen.getByRole('region', { name: 'Hint' })).toHaveTextContent('Hint 1 / 3');
   fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'Použiť číselnú klávesnicu' }));
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveValue('9');
@@ -101,7 +103,9 @@ test('compact hardware keys edit only the focused answer controls and announce l
   fireEvent.keyDown(screen.getByRole('button', { name: '9' }), { key: 'Delete' });
   expect(input).toHaveValue('');
   expect(screen.getByRole('status')).toHaveTextContent('');
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   expect(screen.getByTestId('answer-announcement')).toHaveTextContent('Odpoveď: prázdna');
   expect(screen.getByRole('button', { name: 'Vymazať poslednú číslicu' })).toBeInTheDocument();
 });
@@ -151,7 +155,9 @@ test('hint popup closes without consuming stages and contains keyboard focus', (
   expect(trigger).toHaveFocus();
   fireEvent.click(trigger); expect(screen.getByRole('dialog')).toHaveTextContent('Hint 2 / 3');
   fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'Ukázať pomôcku' }));
   expect(screen.getByRole('dialog', { name: 'Pomôcka' })).toHaveTextContent('Pomôcka 2 / 3');
   fireEvent.click(screen.getByRole('button', { name: 'Zavrieť pomôcku' }));

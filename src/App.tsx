@@ -38,6 +38,8 @@ export default function App() {
   };
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [hintOpen, setHintOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLButtonElement>(null);
   const hintRef = useRef<HTMLButtonElement>(null);
   const [audio] = useState(() => new FeedbackAudio());
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -84,6 +86,7 @@ export default function App() {
     return () => { if (previousFocus?.isConnected) previousFocus.focus(); };
   }, [leaveOpen]);
   const requestLeave = () => {
+    if (settingsOpen || hintOpen || leaveOpen) return;
     if (session && (session.index > 0 || session.attempts > 0 || session.hintStage > 0 || answer.trim())) setLeaveOpen(true);
     else setSession(null);
   };
@@ -125,6 +128,7 @@ export default function App() {
     setAnswer('');
   };
   const openHint = () => {
+    if (settingsOpen || hintOpen || leaveOpen) return;
     setSession(previous => previous && !previous.solved && !previous.done && previous.hintStage === 0 ? { ...previous, hintStage: 1 } : previous);
     setHintOpen(true);
   };
@@ -135,17 +139,17 @@ export default function App() {
   const equationDescription = current ? `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}` : '';
 
   return <div className={`app-shell ${compact && session && !session.done ? 'compact-practice' : ''}`}>
-    <header className="site-header" inert={leaveOpen || hintOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
-      <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
-      {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
+    {session && !session.done && <progress className="viewport-progress" aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} />}
+    <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
+      <button ref={settingsRef} className="corner-button settings-button" type="button" aria-label={t.settings} aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => { if (!hintOpen && !leaveOpen) setSettingsOpen(true); }}><span aria-hidden="true">⚙</span></button>
     </header>
-    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen}><aside className="companion"><p className="eyebrow">{t.tagline}</p><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div><p className="companion-caption">{t.gentle}</p></aside>
+    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen || settingsOpen}><aside className="companion"><p className="eyebrow">{t.tagline}</p><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div><p className="companion-caption">{t.gentle}</p></aside>
       {!session ? <section className="selection"><p className="eyebrow">{t.trail}</p><h2>{t.choose}</h2><p className="intro">{t.intro}</p>
         <fieldset className="level-options"><legend className="sr-only">{t.level}</legend>{([1, 2, 3, 4, 5, 6] as const).map(n => <label className={`level-option level-${n}`} key={n}><input type="radio" name="level" value={n} checked={level === n} onChange={() => setLevel(n)} /><span className="level-number" aria-hidden="true">{n}</span><span><span className="level-title">{t.level} {n} · {t.levels[n - 1]}</span><span className="level-detail">{t.details[n - 1]}</span></span><span className="selection-dot" aria-hidden="true" /></label>)}</fieldset>
         <fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
         <button className="primary start-button" onClick={start}>{t.start}<span aria-hidden="true"> →</span></button>
       </section> : session.done ? <section className="summary"><p className="eyebrow">{t.trail}</p><span className="completion-mark" aria-hidden="true">✓</span><h2 ref={summaryRef} tabIndex={-1}>{t.complete}</h2><p className="intro">{t.summary}</p><p className="completed-total">{session.exercises.length} {t.finished}</p><p className="first-try">{t.first} <strong>{session.firstTry} / {session.exercises.length}</strong></p><button className="primary" onClick={start}>{t.again}</button><button className="text-button" onClick={() => setSession(null)}>{t.back}</button></section>
-        : current && <section className="practice"><div className="practice-header"><div className="practice-top"><span className="level-pill">{t.level} {level}</span><button className="text-button" onClick={requestLeave}>{t.back}</button></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p><progress aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} /></div><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>
+        : current && <section className="practice"><div className="practice-header"><div className="practice-top"><span className="level-pill">{t.level} {level}</span><button className="corner-button back-button" aria-label={t.back} onClick={requestLeave}><span aria-hidden="true">←</span></button></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p></div><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>
           <form onSubmit={submit} onKeyDown={event => {
             if (event.key === 'Enter' && event.repeat && (event.target === inputRef.current || (event.target as HTMLElement).classList.contains('answer-button'))) event.preventDefault();
           }} noValidate><div className="equation" data-feedback={session.feedback} role="group" aria-label={equationDescription}>{current.values.map((n, i) => <span className="equation-part" key={i}>{i === 1 && <span className="operator" aria-hidden="true">{symbols[current.operation]}</span>}{i === 2 && <span className="operator" aria-hidden="true">=</span>}<span data-term={i}>{i === current.blank ? <input ref={inputRef} type="text" onKeyDown={handleAnswerKey} readOnly={padMode} inputMode={padMode ? 'none' : 'numeric'} autoComplete="off" aria-label={`${t.missing}, ${t.positions[i]}`} aria-describedby={padMode ? 'answer-feedback answer-instructions' : 'answer-feedback'} aria-invalid={session.feedback === 'invalid' || session.feedback === 'incorrect'} value={answer} disabled={session.solved} onChange={e => editAnswer(e.target.value)} /> : <span aria-hidden="true">{n}</span>}</span></span>)}</div>
@@ -159,6 +163,10 @@ export default function App() {
           </form>
         </section>}
     </main>
+    {settingsOpen && <HintDialog titleId="settings-title" title={t.settings} closeLabel={t.closeSettings} onClose={() => setSettingsOpen(false)} triggerRef={settingsRef}>
+      <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
+      {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
+    </HintDialog>}
     {hintOpen && session && current && <HintDialog title={t.hint} closeLabel={t.closeHint} nextLabel={session.hintStage >= 3 ? t.allHints : t.nextHint} nextDisabled={session.hintStage >= 3} onClose={() => setHintOpen(false)} onNext={showHint} triggerRef={hintRef}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}<HintPanel exercise={current} stage={session.hintStage} language={language} /></HintDialog>}
     {leaveOpen && <div className="modal-backdrop"><div ref={dialogRef} className="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-description" onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); setLeaveOpen(false); }
@@ -170,6 +178,6 @@ export default function App() {
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     }}><h2 id="leave-title">{t.leaveTitle}</h2><p id="leave-description">{t.leaveText}</p><button className="primary" onClick={() => setLeaveOpen(false)}>{t.stay}</button><button className="text-button" onClick={() => { setLeaveOpen(false); setAnswer(''); setSession(null); }}>{t.leave}</button></div></div>}
-    <footer className="site-footer" inert={leaveOpen || hintOpen}>{t.tagline}</footer>
+    <footer className="site-footer" inert={leaveOpen || hintOpen || settingsOpen}>{t.tagline}</footer>
   </div>;
 }

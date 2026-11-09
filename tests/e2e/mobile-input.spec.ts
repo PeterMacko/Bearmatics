@@ -1,6 +1,13 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 
+
+async function switchLanguage(page: Page, language: string, gear: string, close: string) {
+  await page.getByRole('button', { name: gear, exact: true }).click();
+  await page.getByRole('button', { name: language, exact: true }).click();
+  await page.getByRole('button', { name: close, exact: true }).click();
+}
+
 async function answerFor(page: Page) {
   return page.locator('.equation').evaluate(el => {
     const parts = [...el.querySelectorAll('[data-term]')];
@@ -52,7 +59,7 @@ test('native fallback and orientation changes preserve practice with localized i
   await page.locator('.hint-button').click();
   await expect(page.locator('.hint-step')).toHaveText('Hint 1 / 3');
   await page.getByRole('button', { name: 'Close hint' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   await page.getByRole('button', { name: 'Použiť číselnú klávesnicu' }).click();
   await expect(input).toHaveAttribute('readonly', '');
   await expect(input).toHaveAccessibleDescription(/Použi číselnú klávesnicu/);
@@ -67,12 +74,13 @@ test('native fallback and orientation changes preserve practice with localized i
 test('enlarged text reflows metadata and keeps help and primary controls reachable', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   await page.getByRole('button', { name: 'Začať počítať' }).click();
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   const position = (await page.locator('.exercise-position').boundingBox())!;
   const progress = (await page.locator('progress').boundingBox())!;
-  expect(progress.y).toBeGreaterThanOrEqual(position.y + position.height);
+  expect(progress.y).toBe(0);
+  expect(progress.y + progress.height).toBeLessThan(position.y);
   await page.locator('.answer-button').scrollIntoViewIfNeeded();
   await expect(page.locator('.answer-button')).toBeInViewport();
   await page.locator('.hint-button').click();
@@ -87,11 +95,11 @@ for (const [width, height] of [[320, 568], [360, 640], [390, 844], [568, 320]]) 
     test(`compact ${width}x${height} ${language}: core, hints, review and stable action`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
-      if (language === 'sk') await page.getByRole('button', { name: 'Slovenčina' }).click();
+      if (language === 'sk') await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
       await page.getByRole('radio', { name: language === 'sk' ? '5 príkladov' : '5 exercises', exact: true }).check();
       await page.getByRole('button', { name: language === 'sk' ? 'Začať počítať' : 'Let’s count' }).click();
       await expect(page.getByRole('textbox')).toHaveAttribute('readonly', '');
-      const core = ['.bear', 'progress', '.equation', '.feedback', '.number-pad', '.answer-button', '.hint-button', '.input-mode-button', '.practice-top .text-button', '.sound-toggle', '.language-switch'];
+      const core = ['.bear', 'progress', '.equation', '.feedback', '.number-pad', '.answer-button', '.hint-button', '.input-mode-button', '.back-button', '.settings-button'];
       for (const selector of core) await visibleInViewport(page.locator(selector), page);
       const bear = (await page.locator('.bear').boundingBox())!;
       const position = (await page.locator('.exercise-position').boundingBox())!;
@@ -101,7 +109,21 @@ for (const [width, height] of [[320, 568], [360, 640], [390, 844], [568, 320]]) 
       expect(character.width).toBeGreaterThanOrEqual(64);
       expect(character.height).toBeGreaterThanOrEqual(64);
       const progress = (await page.locator('progress').boundingBox())!;
-      const gap = Math.max(progress.y - (bear.y + bear.height), progress.x - (bear.x + bear.width), bear.x - (progress.x + progress.width));
+      await expect(page.getByRole('progressbar')).toHaveCount(1);
+      expect(progress.x).toBe(0); expect(progress.y).toBe(0);
+      expect(progress.width).toBe(width); expect(progress.height).toBeLessThanOrEqual(4);
+      expect(await page.locator('progress').evaluate(el => el.parentElement!.firstElementChild === el)).toBe(true);
+      await expect(page.locator('progress')).toHaveCSS('border-bottom-width', '0px');
+      await expect(page.locator('header')).toHaveCSS('border-bottom-width', '0px');
+      const gap = bear.y - (progress.y + progress.height);
+      for (const selector of ['.settings-button', '.back-button']) {
+        const corner = (await page.locator(selector).boundingBox())!;
+        expect(corner.width).toBeGreaterThanOrEqual(44); expect(corner.height).toBeGreaterThanOrEqual(44);
+        for (const target of ['.bear', '.equation', '.number-pad']) {
+          const b = (await page.locator(target).boundingBox())!;
+          expect(corner.x + corner.width <= b.x || b.x + b.width <= corner.x || corner.y + corner.height <= b.y || b.y + b.height <= corner.y).toBe(true);
+        }
+      }
       expect(gap).toBeGreaterThanOrEqual(12);
       const positionGap = Math.max(position.x - (bear.x + bear.width), position.y - (bear.y + bear.height));
       const equationGap = Math.max(equation.x - (bear.x + bear.width), equation.y - (bear.y + bear.height));
@@ -110,9 +132,6 @@ for (const [width, height] of [[320, 568], [360, 640], [390, 844], [568, 320]]) 
       if (height > width) {
         expect(position.width).toBeGreaterThanOrEqual(100);
         expect(bear.width).toBeGreaterThanOrEqual(height >= 800 ? 170 : height >= 640 ? 150 : 130);
-      } else {
-        expect(progress.width).toBeLessThanOrEqual(100);
-        expect(progress.x).toBeLessThan(equation.x);
       }
       for (const key of await page.locator('.number-pad button').all()) {
         const box = (await key.boundingBox())!;
@@ -176,7 +195,7 @@ for (const [width, height] of [[320, 568], [360, 640], [390, 844], [568, 320]]) 
 for (const language of ['en', 'sk']) {
   test(`hint modal keyboard lifecycle ${language} on desktop and short zoomed landscape`, async ({ page }, testInfo) => {
     await page.goto('/');
-    if (language === 'sk') await page.getByRole('button', { name: 'Slovenčina' }).click();
+    if (language === 'sk') await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
     await page.getByRole('radio', { name: new RegExp(language === 'sk' ? 'Úroveň 6 ·' : 'Level 6 ·') }).check();
     await page.getByRole('button', { name: language === 'sk' ? 'Začať počítať' : 'Let’s count' }).click();
     const input = page.getByRole('textbox');

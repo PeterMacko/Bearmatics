@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 
+
+async function switchLanguage(page: Page, language: string, gear: string, close: string) {
+  await page.getByRole('button', { name: gear, exact: true }).click();
+  await page.getByRole('button', { name: language, exact: true }).click();
+  await page.getByRole('button', { name: close, exact: true }).click();
+}
+
 async function fillAnswer(page: Page, value: string) {
   const input = page.getByRole('textbox');
   if (await input.getAttribute('readonly') !== null) {
@@ -87,10 +94,10 @@ test('missed equations return at the end and cycle until a first-attempt success
   await fillAnswer(page, '1e0');
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.getByRole('status')).toContainText('Check the number.');
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   await expect(page.getByText('Opakovanie · 1 na precvičenie', { exact: true })).toBeVisible();
   await expect(page.getByRole('textbox')).toHaveValue('1e0');
-  await page.getByRole('button', { name: 'English' }).click();
+  await switchLanguage(page, 'English', 'Nastavenia', 'Close settings');
   await page.getByRole('button', { name: 'Show a hint' }).click();
   await page.getByRole('button', { name: 'Close hint' }).click();
   await fillAnswer(page, String(answer));
@@ -123,7 +130,7 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
     expect(await page.locator('.quantity-tokens > span').count()).toBeLessThanOrEqual(38);
     await expect(page.getByTestId('worked-solution')).toHaveCount(0);
     await page.getByRole('button', { name: 'Close hint' }).click();
-    await page.getByRole('button', { name: 'Slovenčina' }).click();
+    await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
     await page.getByRole('button', { name: 'Ukázať pomôcku' }).click();
     await expect(page.getByRole('region', { name: 'Pomôcka' })).toContainText('Pomôcka 2 / 3');
     await expect(page.getByRole('textbox')).toHaveValue('007');
@@ -149,7 +156,9 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
     AudioContext.prototype.createOscillator = function () { state.audioNotes++; return original.call(this); };
   });
   await page.goto('/');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const expected = await answerFor(page);
   const answerButton = page.locator('.answer-button');
@@ -164,8 +173,10 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'sad');
   await expect(page.locator('.bear-character')).toHaveCSS('animation-name', 'bear-think');
   expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(0);
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Sound off' }).click();
   await expect(page.getByRole('button', { name: 'Sound on' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Close settings' }).click();
   expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(0); // no replay on enable
   await fillAnswer(page, String(expected + 2)); await answerButton.click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(2);
@@ -177,10 +188,12 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'bear-wave');
   await expect.poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
   await page.locator('form').evaluate(form => (form as HTMLFormElement).requestSubmit());
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
+  await page.getByRole('button', { name: 'Nastavenia', exact: true }).click();
   await page.getByRole('button', { name: 'Zvuk zapnutý' }).click();
   await expect(page.getByRole('button', { name: 'Zvuk vypnutý' })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
   await page.getByRole('button', { name: 'Ďalší príklad' }).click();
   await expect(page.locator('.answer-button')).toHaveAttribute('data-state', 'neutral');
   await fillAnswer(page, String((await answerFor(page)) + 1));
@@ -191,9 +204,12 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
 test('blocked audio does not prevent answering and reports its unavailable state', async ({ page }) => {
   await page.addInitScript(() => Object.defineProperty(window, 'AudioContext', { configurable: true, value: class { constructor() { throw new Error('Blocked audio'); } } }));
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
-  await page.goto('/'); await page.getByRole('button', { name: 'Sound off' }).click();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Sound off' }).click();
   await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+  await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('button', { name: 'Check answer' }).click();
@@ -220,7 +236,7 @@ test('Slovak switching preserves equation, answer and progress; leave dialog tra
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const equation = await page.locator('.equation').textContent();
   await fillAnswer(page, '12');
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
   await expect(page.getByRole('textbox')).toHaveValue('12');
   expect(await page.locator('.equation').textContent()).toBe(equation);
@@ -239,7 +255,7 @@ test('Slovak switching preserves equation, answer and progress; leave dialog tra
 test('narrow Slovak screens have no horizontal overflow in selection or practice', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
+  await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await page.getByRole('radio', { name: /Úroveň 4/ }).check();
   await page.getByRole('button', { name: 'Začať počítať' }).click();

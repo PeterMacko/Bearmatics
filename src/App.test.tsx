@@ -6,7 +6,9 @@ import App from './App';
 test('answer controls are neutral before checking, red for errors and green for success', () => {
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
   const { container } = render(<App />);
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   expect(screen.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+  fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
@@ -46,12 +48,16 @@ test('progressive hints preserve language/input, require submission and do not c
   fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   expect(screen.getByRole('textbox')).toHaveValue('9');
   expect(screen.getByRole('textbox')).not.toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'Ukázať pomôcku' }));
   expect(screen.getByRole('region', { name: 'Pomôcka' })).toHaveTextContent('Vypočítajme to spolu');
   fireEvent.click(screen.getByRole('button', { name: 'Zavrieť pomôcku' }));
   expect(screen.getByRole('textbox')).toHaveValue('9');
+  fireEvent.click(screen.getByRole('button', { name: 'Nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   for (let i = 0; i < 5; i++) {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
@@ -75,10 +81,14 @@ test('keeps retries and language changes on the same exercise and completes exac
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
   expect(screen.getByRole('status')).toHaveTextContent('Not quite');
   expect(screen.getByText('Exercise 1 of 5')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   expect(input).toHaveValue('9');
   expect(screen.getByRole('status')).toHaveTextContent('Ešte nie');
+  fireEvent.click(screen.getByRole('button', { name: 'Nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   for (let i = 0; i < 5; i++) {
     input = screen.getByRole('textbox');
     if (i === 1) {
@@ -105,9 +115,13 @@ test('keeps retries and language changes on the same exercise and completes exac
   fireEvent.click(screen.getByRole('button', { name: 'Next exercise' }));
   expect(screen.getByText('Review · 1 to practise')).toBeInTheDocument();
   expect(screen.getByRole('textbox')).toHaveValue('');
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   expect(screen.getByRole('heading', { name: 'Skúsme tieto príklady ešte raz' })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: 'abc' } });
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
@@ -161,12 +175,16 @@ test('offers all levels and session sizes and starts a localized practice sessio
   expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
   fireEvent.click(screen.getByRole('radio', { name: /Level 2/ }));
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   expect(document.documentElement.lang).toBe('sk');
   fireEvent.click(screen.getByRole('button', { name: 'Začať počítať' }));
   expect(screen.getByText('Príklad 1 z 5')).toBeInTheDocument();
   expect(screen.getByRole('textbox', { name: /Chýbajúce číslo/ })).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   expect(screen.getByText('Exercise 1 of 5')).toBeInTheDocument();
   expect(document.documentElement.lang).toBe('en');
 });
