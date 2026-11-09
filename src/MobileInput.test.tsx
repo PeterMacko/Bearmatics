@@ -37,6 +37,7 @@ test('desktop to compact transitions refocus readonly safely without resetting p
   expect(screen.queryByRole('group', { name: 'Number pad' })).not.toBeInTheDocument();
   fireEvent.change(input, { target: { value: '007' } });
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   input.focus();
   const blur = vi.spyOn(input, 'blur');
   media.matches = true;
@@ -45,7 +46,9 @@ test('desktop to compact transitions refocus readonly safely without resetting p
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveFocus();
   expect(input).toHaveValue('007');
+  fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
   expect(screen.getByRole('region', { name: 'Hint' })).toHaveTextContent('Hint 1 / 3');
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   fireEvent.click(screen.getByRole('button', { name: 'Use device keyboard' }));
   media.matches = false; act(() => resize());
   media.matches = true; act(() => resize());
@@ -59,19 +62,24 @@ test('native keyboard fallback preserves answer, hints and feedback through loca
   fireEvent.click(screen.getByRole('button', { name: '9' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   const equation = screen.getByRole('group', { name: '99 plus 1 equals blank' });
   fireEvent.click(screen.getByRole('button', { name: 'Use device keyboard' }));
   expect(input).not.toHaveAttribute('readonly');
   expect(input).toHaveFocus();
   expect(input).toHaveValue('9');
   expect(screen.getByRole('status')).toHaveTextContent('Not quite');
+  fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
   expect(screen.getByRole('region', { name: 'Hint' })).toHaveTextContent('Hint 1 / 3');
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
   fireEvent.click(screen.getByRole('button', { name: 'Použiť číselnú klávesnicu' }));
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveValue('9');
   expect(equation).toHaveAttribute('aria-label', '99 plus 1 rovná sa prázdne miesto');
+  fireEvent.click(screen.getByRole('button', { name: 'Ukázať pomôcku' }));
   expect(screen.getByRole('region', { name: 'Pomôcka' })).toHaveTextContent('Pomôcka 1 / 3');
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť pomôcku' }));
 });
 
 test('compact hardware keys edit only the focused answer controls and announce localized values', () => {
@@ -104,6 +112,7 @@ test('compact number pad edits a three-digit answer without submitting and disab
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveFocus();
   const pad = screen.getByRole('group', { name: 'Number pad' });
+  expect(within(pad).getAllByRole('button').map(button => button.getAttribute('aria-label'))).toEqual(['7', '8', '9', '0', '4', '5', '6', 'Clear answer', '1', '2', '3', 'Backspace']);
   for (const digit of ['1', '0', '0']) fireEvent.click(within(pad).getByRole('button', { name: digit }));
   expect(input).toHaveValue('100');
   expect(screen.getByRole('button', { name: 'Check answer' })).toBeInTheDocument();
@@ -119,4 +128,31 @@ test('compact number pad edits a three-digit answer without submitting and disab
   fireEvent.click(screen.getByRole('button', { name: 'Next exercise' }));
   expect(input).toHaveValue('');
   expect(input).toHaveFocus();
+});
+
+test('hint popup closes without consuming stages and contains keyboard focus', () => {
+  compactScreen(); start();
+  const trigger = screen.getByRole('button', { name: 'Show a hint' });
+  trigger.focus(); fireEvent.click(trigger);
+  const dialog = screen.getByRole('dialog', { name: 'Hint' });
+  const close = within(dialog).getByRole('button', { name: 'Close hint' });
+  expect(close).toHaveFocus();
+  expect(screen.getByRole('main')).toHaveAttribute('inert');
+  expect(dialog).toHaveTextContent('Hint 1 / 3');
+  const next = within(dialog).getByRole('button', { name: 'Show next hint' });
+  fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+  expect(next).toHaveFocus();
+  fireEvent.keyDown(next, { key: 'Tab' }); expect(close).toHaveFocus();
+  fireEvent.click(next); expect(dialog).toHaveTextContent('Hint 2 / 3');
+  fireEvent.keyDown(dialog, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: 'Hint' })).not.toBeInTheDocument();
+  expect(screen.getByRole('main')).not.toHaveAttribute('inert');
+  expect(trigger).toHaveFocus();
+  fireEvent.click(trigger); expect(screen.getByRole('dialog')).toHaveTextContent('Hint 2 / 3');
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Ukázať pomôcku' }));
+  expect(screen.getByRole('dialog', { name: 'Pomôcka' })).toHaveTextContent('Pomôcka 2 / 3');
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť pomôcku' }));
 });

@@ -92,6 +92,7 @@ test('missed equations return at the end and cycle until a first-attempt success
   await expect(page.getByRole('textbox')).toHaveValue('1e0');
   await page.getByRole('button', { name: 'English' }).click();
   await page.getByRole('button', { name: 'Show a hint' }).click();
+  await page.getByRole('button', { name: 'Close hint' }).click();
   await fillAnswer(page, String(answer));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await page.getByRole('button', { name: 'Next exercise' }).click();
@@ -121,7 +122,9 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
     await expect(page.locator('.quantity')).toHaveCount(3);
     expect(await page.locator('.quantity-tokens > span').count()).toBeLessThanOrEqual(38);
     await expect(page.getByTestId('worked-solution')).toHaveCount(0);
+    await page.getByRole('button', { name: 'Close hint' }).click();
     await page.getByRole('button', { name: 'Slovenčina' }).click();
+    await page.getByRole('button', { name: 'Ukázať pomôcku' }).click();
     await expect(page.getByRole('region', { name: 'Pomôcka' })).toContainText('Pomôcka 2 / 3');
     await expect(page.getByRole('textbox')).toHaveValue('007');
     await page.getByRole('button', { name: 'Ďalšia pomôcka' }).click();
@@ -129,6 +132,7 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
     await expect(page.getByRole('button', { name: 'Všetky pomôcky zobrazené' })).toBeDisabled();
     await expect(page.getByRole('textbox')).toHaveValue('007');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    await page.getByRole('button', { name: 'Zavrieť pomôcku' }).click();
     await fillAnswer(page, String(expected));
     await page.getByRole('button', { name: 'Skontrolovať' }).click();
     await page.getByRole('button', { name: 'Ďalší príklad' }).click();

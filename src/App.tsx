@@ -5,6 +5,7 @@ import { copy, type Language } from './i18n';
 import Bear from './Bear';
 import { useCompactPractice } from './useCompactPractice';
 import HintPanel from './HintPanel';
+import HintDialog from './HintDialog';
 import { FeedbackAudio } from './audio';
 
 type Feedback = 'ready' | 'correct' | 'incorrect' | 'invalid';
@@ -36,6 +37,8 @@ export default function App() {
     }
   };
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
+  const hintRef = useRef<HTMLButtonElement>(null);
   const [audio] = useState(() => new FeedbackAudio());
   const [soundEnabled, setSoundEnabled] = useState(false);
   const [soundBusy, setSoundBusy] = useState(false);
@@ -106,6 +109,7 @@ export default function App() {
     });
   }
   const next = () => {
+    setHintOpen(false);
     setSession(previous => {
       if (!previous || !previous.solved || previous.done) return previous;
       const reset = { attempts: 0, hintStage: 0, solved: false, feedback: 'ready' as const };
@@ -120,6 +124,10 @@ export default function App() {
     });
     setAnswer('');
   };
+  const openHint = () => {
+    setSession(previous => previous && !previous.solved && !previous.done && previous.hintStage === 0 ? { ...previous, hintStage: 1 } : previous);
+    setHintOpen(true);
+  };
   const showHint = () => setSession(previous => {
     if (!previous || previous.done || previous.solved || previous.hintStage >= 3) return previous;
     return { ...previous, hintStage: previous.hintStage + 1 };
@@ -127,11 +135,11 @@ export default function App() {
   const equationDescription = current ? `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}` : '';
 
   return <div className={`app-shell ${compact && session && !session.done ? 'compact-practice' : ''}`}>
-    <header className="site-header" inert={leaveOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
+    <header className="site-header" inert={leaveOpen || hintOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
       <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
       {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
     </header>
-    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen}><aside className="companion"><p className="eyebrow">{t.tagline}</p><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div><p className="companion-caption">{t.gentle}</p></aside>
+    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen}><aside className="companion"><p className="eyebrow">{t.tagline}</p><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div><p className="companion-caption">{t.gentle}</p></aside>
       {!session ? <section className="selection"><p className="eyebrow">{t.trail}</p><h2>{t.choose}</h2><p className="intro">{t.intro}</p>
         <fieldset className="level-options"><legend className="sr-only">{t.level}</legend>{([1, 2, 3, 4, 5, 6] as const).map(n => <label className={`level-option level-${n}`} key={n}><input type="radio" name="level" value={n} checked={level === n} onChange={() => setLevel(n)} /><span className="level-number" aria-hidden="true">{n}</span><span><span className="level-title">{t.level} {n} · {t.levels[n - 1]}</span><span className="level-detail">{t.details[n - 1]}</span></span><span className="selection-dot" aria-hidden="true" /></label>)}</fieldset>
         <fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
@@ -144,14 +152,14 @@ export default function App() {
             <p id="answer-feedback" className={`feedback feedback-${session.feedback}`} role="status" aria-live="polite" aria-atomic="true">{session.feedback === 'ready' ? '' : t[session.feedback]}</p>
             <span id="answer-instructions" className="sr-only">{t.padInstructions}</span>
             <span className="sr-only" data-testid="answer-announcement" aria-live="polite" aria-atomic="true">{padMode ? `${t.answerLabel}: ${answer || t.emptyAnswer}` : ''}</span>
-            {padMode && <div className="number-pad" onKeyDown={handleAnswerKey} role="group" aria-label={t.numberPad}>{['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'backspace'].map(key => <button key={key} className={key === 'clear' ? 'pad-clear' : undefined} type="button" disabled={session.solved} aria-label={key === 'clear' ? t.clearAnswer : key === 'backspace' ? t.backspace : key} onClick={() => padEdit(key)}>{key === 'clear' ? t.clear : key === 'backspace' ? '⌫' : key}</button>)}</div>}
+            {padMode && <div className="number-pad" onKeyDown={handleAnswerKey} role="group" aria-label={t.numberPad}>{['7', '8', '9', '0', '4', '5', '6', 'clear', '1', '2', '3', 'backspace'].map(key => <button key={key} className={key === 'clear' ? 'pad-clear' : undefined} type="button" disabled={session.solved} aria-label={key === 'clear' ? t.clearAnswer : key === 'backspace' ? t.backspace : key} onClick={() => padEdit(key)}>{key === 'clear' ? t.clear : key === 'backspace' ? '⌫' : key}</button>)}</div>}
             {session.solved ? <button ref={nextRef} type="button" className="primary answer-button" data-state="correct" onClick={event => { event.preventDefault(); next(); }}>{session.reviewing ? (session.reviewQueue.length === 1 && session.attempts === 1 && session.hintStage === 0 ? t.finish : t.next) : session.index === session.exercises.length - 1 ? (session.reviewQueue.length > 0 || session.attempts > 1 ? t.reviewStart : t.finish) : t.next}<span aria-hidden="true"> →</span></button> : <button type="submit" className="primary answer-button" data-state={session.feedback === 'incorrect' ? 'incorrect' : 'neutral'}>{t.check}</button>}
             <div className="practice-tools"><button type="button" className="input-mode-button" disabled={session.solved} onClick={toggleInputMode}>{padMode ? t.useNative : t.usePad}</button>
-            <button type="button" className="hint-button" aria-controls="hint-panel" aria-expanded={session.hintStage > 0} disabled={session.solved || session.hintStage >= 3} onClick={showHint}>{session.hintStage === 0 ? t.showHint : session.hintStage >= 3 ? t.allHints : t.nextHint}</button></div>
-            {(session.reviewing || session.hintStage > 0) && <div className="practice-help" role="region" aria-label={t.practiceHelp} tabIndex={0}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}{session.hintStage > 0 && <HintPanel exercise={current} stage={session.hintStage} language={language} />}</div>}
+            <button ref={hintRef} type="button" className="hint-button" aria-haspopup="dialog" aria-controls={hintOpen ? 'hint-title' : undefined} aria-expanded={hintOpen} disabled={session.solved} onClick={openHint}>{t.showHint}</button></div>
           </form>
         </section>}
     </main>
+    {hintOpen && session && current && <HintDialog title={t.hint} closeLabel={t.closeHint} nextLabel={session.hintStage >= 3 ? t.allHints : t.nextHint} nextDisabled={session.hintStage >= 3} onClose={() => setHintOpen(false)} onNext={showHint} triggerRef={hintRef}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}<HintPanel exercise={current} stage={session.hintStage} language={language} /></HintDialog>}
     {leaveOpen && <div className="modal-backdrop"><div ref={dialogRef} className="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-description" onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); setLeaveOpen(false); }
       if (event.key === 'Tab') {
@@ -162,6 +170,6 @@ export default function App() {
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     }}><h2 id="leave-title">{t.leaveTitle}</h2><p id="leave-description">{t.leaveText}</p><button className="primary" onClick={() => setLeaveOpen(false)}>{t.stay}</button><button className="text-button" onClick={() => { setLeaveOpen(false); setAnswer(''); setSession(null); }}>{t.leave}</button></div></div>}
-    <footer className="site-footer">{t.tagline}</footer>
+    <footer className="site-footer" inert={leaveOpen || hintOpen}>{t.tagline}</footer>
   </div>;
 }

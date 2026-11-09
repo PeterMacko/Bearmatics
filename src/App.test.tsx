@@ -43,10 +43,13 @@ test('progressive hints preserve language/input, require submission and do not c
   fireEvent.click(screen.getByRole('button', { name: 'Show next hint' }));
   expect(screen.getByTestId('worked-solution')).toHaveTextContent('5 − 2 = 3');
   expect(screen.getByRole('button', { name: 'All hints shown' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   expect(screen.getByRole('textbox')).toHaveValue('9');
   expect(screen.getByRole('textbox')).not.toBeDisabled();
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Ukázať pomôcku' }));
   expect(screen.getByRole('region', { name: 'Pomôcka' })).toHaveTextContent('Vypočítajme to spolu');
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť pomôcku' }));
   expect(screen.getByRole('textbox')).toHaveValue('9');
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
   for (let i = 0; i < 5; i++) {
@@ -124,9 +127,11 @@ test('hint use is session progress and requires leave confirmation', () => {
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
   fireEvent.click(screen.getByRole('button', { name: 'Choose level' }));
   expect(screen.getByRole('dialog', { name: 'Leave this trail?' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Keep practising' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
   expect(screen.getByRole('region', { name: 'Hint' })).toHaveTextContent('Hint 1 / 3');
 });
 

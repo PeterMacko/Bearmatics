@@ -156,7 +156,6 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .number-pad button:disabled { background: #f2efea; color: #666372; border-color: #d8d0c8; }
 .number-pad .pad-clear { font-size: .85rem; }
 .input-mode-button { min-height: 44px; border: 0; border-radius: 8px; padding: 8px; background: transparent; color: #315783; font-size: .85rem; text-decoration: underline; }
-.practice-help { margin-top: 12px; }
 
 /* The compact class follows both width and short-height media changes. No body
    scroll lock: enlarged text and the explicit native keyboard can still scroll. */
@@ -168,17 +167,17 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .compact-practice .language-switch { padding: 0; }
 .compact-practice .language-switch button { padding: 4px 8px; }
 .compact-practice .workspace { display: block; position: relative; min-height: 0; padding: 4px 0 0; }
-.compact-practice .companion { position: absolute; left: 0; top: 4px; padding: 0; width: 48px; }
+.compact-practice .companion { position: absolute; left: 0; top: 4px; padding: 0; width: 86px; }
 .compact-practice .companion .eyebrow, .compact-practice .companion-caption, .compact-practice .scene-leaf { display: none; }
-.compact-practice .companion .bear-scene { width: 44px; flex: 0 0 44px; margin: 0; }
+.compact-practice .companion .bear-scene { width: 86px; flex: 0 0 86px; margin: 0; }
 .compact-practice .bear { width: 100%; }
 .compact-practice .practice { min-height: 0; padding: 0; }
-.compact-practice .practice-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 130px); padding-left: 56px; }
+.compact-practice .practice-header { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 130px); padding-left: 98px; min-height: 96px; align-content: end; }
 .compact-practice .practice-top { display: contents; }
 .compact-practice .practice-top .text-button { grid-column: 2; grid-row: 1; }
 .compact-practice .level-pill { display: none; }
 .compact-practice .exercise-position { grid-column: 1; grid-row: 1; min-height: 44px; display: flex; align-items: center; margin: 0; font-size: .75rem; line-height: 1.2; overflow-wrap: anywhere; }
-.compact-practice progress { grid-column: 1 / -1; height: 4px; margin: 0; }
+.compact-practice progress { grid-column: 1 / -1; height: 4px; margin: 12px 0 0; }
 .compact-practice .practice h2 { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
 .compact-practice .equation { min-height: 56px; padding: 2px 0; font-size: 1.9rem; gap: 6px; }
 .compact-practice .equation-part { gap: 6px; }
@@ -188,17 +187,38 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .compact-practice .answer-button { min-height: 48px; padding: 8px; font-size: .95rem; }
 .compact-practice .practice-tools { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px; }
 .compact-practice .practice-tools button { margin: 0; min-height: 48px; padding: 4px 6px; font-size: .75rem; line-height: 1.2; }
-.compact-practice .practice-help { margin: 4px 0 0; max-height: max(48px, calc(100svh - 504px)); overflow: auto; overscroll-behavior: contain; border: 1px solid #ccd9e9; border-radius: 10px; padding: 6px; scroll-padding: 6px; }
-.compact-practice .practice-help .hint-panel { margin: 0; border: 0; padding: 6px; }
-.compact-practice .practice-help .review-note { margin: 0; }
 .compact-practice .site-footer { display: none; }
 
+@media (orientation: portrait) {
+  .compact-practice { --practice-bear-size: 130px; }
+  .compact-practice .companion { width: var(--practice-bear-size); }
+  .compact-practice .companion .bear-scene { width: var(--practice-bear-size); flex-basis: var(--practice-bear-size); }
+  .compact-practice .practice-header { padding-left: calc(var(--practice-bear-size) + 12px); min-height: calc(var(--practice-bear-size) * 1.077 + 4px); grid-template-columns: minmax(0, 1fr); }
+  .compact-practice .exercise-position { grid-column: 1; grid-row: 1; }
+  .compact-practice .practice-top .text-button { grid-column: 1; grid-row: 2; }
+  .compact-practice progress { grid-row: 3; }
+}
+@media (orientation: portrait) and (min-height: 640px) { .compact-practice { --practice-bear-size: 150px; } }
+@media (orientation: portrait) and (min-height: 800px) { .compact-practice { --practice-bear-size: 170px; } }
+
 @media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
-  .compact-practice .practice form { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; align-items: start; }
+  .compact-practice .practice-header { position: absolute; left: 0; top: 110px; width: 98px; padding: 0; min-height: 0; grid-template-columns: minmax(0, 1fr); }
+  .compact-practice progress { grid-column: 1; grid-row: 1; width: 86px; margin: 0; }
+  .compact-practice .exercise-position { grid-column: 1; grid-row: 2; }
+  .compact-practice .practice-top .text-button { grid-column: 1; grid-row: 3; padding-inline: 0; }
+  .compact-practice .practice form { margin-left: 110px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; align-items: start; }
   .compact-practice .equation { grid-column: 1; grid-row: 1; }
   .compact-practice .feedback { grid-column: 1; grid-row: 2; }
   .compact-practice .answer-button { grid-column: 1; grid-row: 3; width: 100%; }
   .compact-practice .number-pad { grid-column: 2; grid-row: 1 / 4; margin: 0; }
   .compact-practice .practice-tools { grid-column: 1; grid-row: 4; }
-  .compact-practice .practice-help { grid-column: 2; grid-row: 4; max-height: 48px; }
 }
+.hint-backdrop { padding: 12px; }
+.hint-dialog { width: min(100%, 640px); max-height: calc(100dvh - 24px); min-height: 0; display: flex; flex-direction: column; background: var(--paper); border-radius: 16px; padding: 12px; box-shadow: 0 20px 80px #0003; }
+.hint-dialog-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-shrink: 0; }
+.hint-dialog-header h2 { font-size: 1.25rem; margin: 0; }
+.hint-dialog button { min-height: 48px; padding: 8px 12px; border: 1px solid #91afd2; border-radius: 10px; background: #deedff; color: #315783; font: inherit; }
+.hint-dialog-content { overflow: auto; min-height: 0; overscroll-behavior: contain; margin-block: 8px; }
+.hint-dialog-content .hint-panel { margin: 0; }
+.hint-dialog-actions { flex-shrink: 0; }
+.hint-dialog-actions button { width: 100%; }
