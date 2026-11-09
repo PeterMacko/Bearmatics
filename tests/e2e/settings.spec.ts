@@ -27,7 +27,8 @@ for (const language of ['en', 'sk']) {
     const dialog = page.getByRole('dialog');
     const close = dialog.locator('.hint-dialog-header button');
     await expect(close).toBeFocused();
-    for (const selector of ['header', 'main', 'footer']) await expect(page.locator(selector)).toHaveAttribute('inert', '');
+    for (const selector of ['header', 'main']) await expect(page.locator(selector)).toHaveAttribute('inert', '');
+    await expect(page.locator('footer')).toHaveCount(0);
     for (const selector of ['.hint-button', '.back-button']) {
       await page.locator(selector).evaluate(el => (el as HTMLElement).focus());
       await expect(close).toBeFocused();

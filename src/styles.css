@@ -199,7 +199,7 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
   .compact-practice .practice form { margin-left: 110px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 12px; align-items: start; }
   .compact-practice .equation { grid-column: 1; grid-row: 1; }
   .compact-practice .feedback { grid-column: 1; grid-row: 2; }
-  .compact-practice .answer-button { grid-column: 1; grid-row: 3; width: 100%; }
+  .compact-practice .answer-actions { grid-column: 1; grid-row: 3; width: 100%; }
   .compact-practice .number-pad { grid-column: 2; grid-row: 1 / 4; margin: 0; }
   .compact-practice .practice-tools { grid-column: 1; grid-row: 4; }
 }
@@ -248,3 +248,38 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .corner-button span { font-size: 24px; }
 .compact-practice .practice-tools { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
 .compact-practice .practice-tools button { overflow-wrap: anywhere; }
+
+/* A minimal navigation row, not a branded header/footer band. */
+.site-header { position: relative; display: grid; grid-template-columns: 44px minmax(0, 1fr) 44px; min-height: 60px; padding: 8px 0; border: 0; gap: 8px; }
+.site-header .wordmark { grid-column: 2; justify-self: center; }
+.site-header .settings-button { grid-column: 3; grid-row: 1; }
+.site-header .back-button { position: static; grid-column: 1; grid-row: 1; }
+.answer-actions { display: grid; grid-template-columns: minmax(0, 1fr) 48px; align-items: stretch; gap: 8px; }
+.answer-actions .hint-button { width: 48px; min-width: 44px; min-height: 48px; margin: 0; padding: 4px; font-size: 1.4rem; }
+.hint-button span { display: inline-grid; place-items: center; border: 2px solid currentColor; border-radius: 50%; width: 26px; height: 26px; font-family: Georgia, serif; font-style: italic; }
+.hint-dialog .dialog-close { min-width: 48px; min-height: 48px; flex-shrink: 0; font-size: 1.6rem; padding: 4px; }
+@media (min-width: 621px) {
+  .workspace { grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); gap: 32px; padding: 8px 0 12px; min-height: calc(100svh - 60px); }
+  .level-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .level-option { min-height: 74px; padding: 10px; gap: 8px; grid-template-columns: 36px minmax(0, 1fr) 17px; }
+  .level-number { width: 34px; height: 34px; }
+  .selection .intro { margin: 8px 0 12px; }
+  .selection .eyebrow { margin-bottom: 8px; }
+  .session-options { margin: 12px 0; }
+  .practice { padding: 0; }
+  .practice-top { margin-bottom: 8px; }
+  .practice h2 { font-size: 1.6rem; }
+  .equation { padding: 16px 0 12px; font-size: 2.8rem; }
+  .feedback { min-height: 48px; padding: 4px 0 8px; }
+  .summary { padding: 12px 0; }
+  .bear-scene { width: min(100%, 300px); }
+}
+.compact-practice .site-header { position: relative; inset: auto; display: grid; min-height: 52px; padding: 4px 0; }
+.compact-practice .wordmark { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+.compact-practice .workspace { padding-top: 4px; }
+.compact-practice .companion { top: 4px; }
+.compact-practice .answer-actions { grid-column: 1; grid-row: 3; }
+.compact-practice .practice-tools { display: block; }
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .practice-header { top: 100px; }
+}

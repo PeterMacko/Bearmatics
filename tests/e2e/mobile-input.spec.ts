@@ -20,8 +20,10 @@ async function answerFor(page: Page) {
   });
 }
 async function enter(page: Page, value: number) {
-  await page.getByRole('textbox').focus();
-  await page.keyboard.press('Delete');
+  const input = page.getByRole('textbox');
+  await input.focus();
+  if (await input.getAttribute('readonly') !== null) await page.keyboard.press('Delete');
+  else await input.fill('');
   await page.keyboard.type(String(value));
 }
 async function visibleInViewport(locator: Locator, page: Page) {
@@ -45,6 +47,8 @@ test('native fallback and orientation changes preserve practice with localized i
   const equation = await page.locator('.equation').getAttribute('aria-label');
   await input.focus();
   await page.setViewportSize({ width: 320, height: 568 });
+  await expect(input).toBeEditable();
+  await page.getByRole('button', { name: 'Use number pad' }).click();
   await expect(input).toHaveAttribute('readonly', '');
   await expect(input).toHaveValue('100');
   await expect(input).toHaveAccessibleDescription(/Use the number pad or hardware digits/);
@@ -94,13 +98,20 @@ for (const [width, height] of [[320, 568], [360, 640], [390, 844], [568, 320]]) 
   for (const language of ['en', 'sk']) {
     test(`compact ${width}x${height} ${language}: core, hints, review and stable action`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height });
+      await page.addInitScript(() => Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 }));
       await page.goto('/');
       if (language === 'sk') await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
       await page.getByRole('radio', { name: language === 'sk' ? '5 príkladov' : '5 exercises', exact: true }).check();
       await page.getByRole('button', { name: language === 'sk' ? 'Začať počítať' : 'Let’s count' }).click();
       await expect(page.getByRole('textbox')).toHaveAttribute('readonly', '');
-      const core = ['.bear', 'progress', '.equation', '.feedback', '.number-pad', '.answer-button', '.hint-button', '.input-mode-button', '.back-button', '.settings-button'];
+      await expect(page.locator('.input-mode-button')).toHaveCount(0);
+      const core = ['.bear', 'progress', '.equation', '.feedback', '.number-pad', '.answer-button', '.hint-button', '.back-button', '.settings-button'];
       for (const selector of core) await visibleInViewport(page.locator(selector), page);
+      const action = (await page.locator('.answer-button').boundingBox())!;
+      const info = (await page.locator('.hint-button').boundingBox())!;
+      expect(info.y).toBeCloseTo(action.y, 0);
+      expect(info.x).toBeGreaterThanOrEqual(action.x + action.width);
+      expect(info.width).toBeGreaterThanOrEqual(44); expect(info.height).toBeGreaterThanOrEqual(44);
       const bear = (await page.locator('.bear').boundingBox())!;
       const position = (await page.locator('.exercise-position').boundingBox())!;
       const equation = (await page.locator('.equation').boundingBox())!;
@@ -208,7 +219,8 @@ for (const language of ['en', 'sk']) {
     const dialog = page.getByRole('dialog', { name: language === 'sk' ? 'Pomôcka' : 'Hint', exact: true });
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     await expect(close).toBeFocused();
-    for (const background of ['header', 'main', 'footer']) await expect(page.locator(background)).toHaveAttribute('inert', '');
+    for (const background of ['header', 'main']) await expect(page.locator(background)).toHaveAttribute('inert', '');
+    await expect(page.locator('footer')).toHaveCount(0);
     await input.evaluate(el => (el as HTMLElement).focus());
     await expect(close).toBeFocused();
     await close.press('Shift+Tab'); await expect(next).toBeFocused();
@@ -254,6 +266,7 @@ for (const language of ['en', 'sk']) {
 test('calculator pad DOM, visual and keyboard order agree', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/'); await page.getByRole('button', { name: 'Let’s count' }).click();
+  await page.getByRole('button', { name: 'Use number pad' }).click();
   const keys = page.locator('.number-pad button');
   const labels = ['7', '8', '9', '0', '4', '5', '6', 'Clear answer', '1', '2', '3', 'Backspace'];
   expect(await keys.evaluateAll(elements => elements.map(el => el.getAttribute('aria-label')))).toEqual(labels);

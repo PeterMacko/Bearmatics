@@ -1,19 +1,84 @@
 import { act, createEvent, fireEvent, render, screen, within } from '@testing-library/react';
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
 
+afterEach(() => vi.unstubAllGlobals());
+
 function compactScreen() {
-  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  vi.stubGlobal('matchMedia', vi.fn((query: string) => ({ matches: query.includes('max-width'), addEventListener: vi.fn(), removeEventListener: vi.fn() })));
 }
-function start() {
+
+test('large hybrid touch hardware forces readonly before focus and offers no native switch', () => {
+  vi.stubGlobal('navigator', Object.assign(Object.create(navigator), { maxTouchPoints: 10 }));
+  vi.stubGlobal('matchMedia', vi.fn(() => ({ matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() })));
+  start();
+  const input = screen.getByRole('textbox');
+  expect(input).toHaveAttribute('readonly');
+  expect(input).toHaveAttribute('inputmode', 'none');
+  expect(input).toHaveFocus();
+  expect(screen.getByRole('group', { name: 'Number pad' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Use device keyboard' })).not.toBeInTheDocument();
+  for (const key of ['1', '0', '0']) fireEvent.keyDown(input, { key });
+  fireEvent.submit(input.closest('form')!);
+  expect(screen.getByRole('status')).toHaveTextContent('That’s it! Nicely done.');
+});
+function start(pad = false) {
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 4, operation: '+', values: [99, 1, 100], blank: 2 }));
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
+  if (pad) fireEvent.click(screen.getByRole('button', { name: 'Use number pad' }));
 }
 
-test('held Enter cannot repeat checks or advance a newly solved exercise', () => {
+test('touch fallback overrides an earlier native preference without resetting answer or hints', () => {
+  let updateTouch = () => {};
+  const capability = { matches: false, addEventListener: vi.fn((_type, listener) => { updateTouch = listener; }), removeEventListener: vi.fn() };
+  vi.stubGlobal('matchMedia', vi.fn((query: string) => query === '(any-pointer: coarse)' ? capability : { matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
+  start(true);
+  fireEvent.click(screen.getByRole('button', { name: 'Use device keyboard' }));
+  const input = screen.getByRole('textbox');
+  fireEvent.change(input, { target: { value: '007' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
+  input.focus();
+  capability.matches = true; act(() => updateTouch());
+  expect(input).toHaveAttribute('readonly');
+  expect(input).toHaveFocus();
+  expect(input).toHaveValue('007');
+  expect(screen.queryByRole('button', { name: 'Use device keyboard' })).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
+  expect(screen.getByRole('dialog')).toHaveTextContent('Hint 1 / 3');
+});
+
+test('hint info icon sits beside the primary action and controls the dialog container', () => {
+  start();
+  const hint = screen.getByRole('button', { name: 'Show a hint' });
+  expect(hint.textContent).toBe('i');
+  expect(hint.previousElementSibling).toBe(screen.getByRole('button', { name: 'Check answer' }));
+  fireEvent.click(hint);
+  expect(document.getElementById(hint.getAttribute('aria-controls')!)).toBe(screen.getByRole('dialog'));
+});
+
+test('hint and settings close controls are localized visible cross icons', () => {
+  start();
+  for (const [open, close] of [['Show a hint', 'Close hint'], ['Settings', 'Close settings']]) {
+    fireEvent.click(screen.getByRole('button', { name: open }));
+    const button = screen.getByRole('button', { name: close });
+    expect(button.textContent).toBe('×');
+    expect(button).toHaveAttribute('title', close);
+    fireEvent.click(button);
+  }
+});
+
+test('non-touch desktop keeps native editing even in a narrow window', () => {
   compactScreen(); start();
+  expect(screen.getByRole('textbox')).not.toHaveAttribute('readonly');
+  expect(screen.queryByRole('group', { name: 'Number pad' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Use number pad' })).toBeInTheDocument();
+});
+
+test('held Enter cannot repeat checks or advance a newly solved exercise', () => {
+  compactScreen(); start(true);
   const input = screen.getByRole('textbox');
   const repeatedCheck = createEvent.keyDown(input, { key: 'Enter', repeat: true });
   fireEvent(input, repeatedCheck);
@@ -27,10 +92,10 @@ test('held Enter cannot repeat checks or advance a newly solved exercise', () =>
   expect(screen.getByText('Exercise 1 of 5')).toBeInTheDocument();
 });
 
-test('desktop to compact transitions refocus readonly safely without resetting practice', () => {
+test('desktop resizing keeps native editing and optional pad refocuses readonly without resetting practice', () => {
   let resize = () => {};
   const media = { matches: false, addEventListener: vi.fn((_type, listener) => { resize = listener; }), removeEventListener: vi.fn() };
-  vi.stubGlobal('matchMedia', vi.fn(() => media));
+  vi.stubGlobal('matchMedia', vi.fn((query: string) => query.includes('max-width') ? media : { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() }));
   start();
   const input = screen.getByRole('textbox');
   expect(input).not.toHaveAttribute('readonly');
@@ -42,6 +107,8 @@ test('desktop to compact transitions refocus readonly safely without resetting p
   const blur = vi.spyOn(input, 'blur');
   media.matches = true;
   act(() => resize());
+  expect(input).not.toHaveAttribute('readonly');
+  fireEvent.click(screen.getByRole('button', { name: 'Use number pad' }));
   expect(blur).toHaveBeenCalledOnce();
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveFocus();
@@ -57,7 +124,7 @@ test('desktop to compact transitions refocus readonly safely without resetting p
 });
 
 test('native keyboard fallback preserves answer, hints and feedback through locale changes', () => {
-  compactScreen(); start();
+  compactScreen(); start(true);
   const input = screen.getByRole('textbox');
   fireEvent.click(screen.getByRole('button', { name: '9' }));
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
@@ -85,7 +152,7 @@ test('native keyboard fallback preserves answer, hints and feedback through loca
 });
 
 test('compact hardware keys edit only the focused answer controls and announce localized values', () => {
-  compactScreen(); start();
+  compactScreen(); start(true);
   const input = screen.getByRole('textbox');
   for (const key of ['1', '0', '0']) fireEvent.keyDown(input, { key });
   expect(input).toHaveValue('100');
@@ -111,7 +178,7 @@ test('compact hardware keys edit only the focused answer controls and announce l
 });
 
 test('compact number pad edits a three-digit answer without submitting and disables when solved', () => {
-  compactScreen(); start();
+  compactScreen(); start(true);
   const input = screen.getByRole('textbox');
   expect(input).toHaveAttribute('readonly');
   expect(input).toHaveFocus();
@@ -135,7 +202,7 @@ test('compact number pad edits a three-digit answer without submitting and disab
 });
 
 test('hint popup closes without consuming stages and contains keyboard focus', () => {
-  compactScreen(); start();
+  compactScreen(); start(true);
   const trigger = screen.getByRole('button', { name: 'Show a hint' });
   trigger.focus(); fireEvent.click(trigger);
   const dialog = screen.getByRole('dialog', { name: 'Hint' });
