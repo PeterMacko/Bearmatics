@@ -1,7 +1,9 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { flushSync } from 'react-dom';
 import { checkAnswer, generateSession, type Level, type Exercise } from './math/engine';
 import { copy, type Language } from './i18n';
 import Bear from './Bear';
+import { useCompactPractice } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import { FeedbackAudio } from './audio';
 
@@ -15,6 +17,24 @@ export default function App() {
   const [size, setSize] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
   const [answer, setAnswer] = useState('');
+  const compact = useCompactPractice();
+  const [inputMode, setInputMode] = useState<'pad' | 'native' | null>(null);
+  const padMode = inputMode ? inputMode === 'pad' : compact;
+  const editAnswer = (value: string) => {
+    if (!session || session.solved || session.done) return;
+    setAnswer(value);
+    setSession(previous => previous && !previous.solved ? { ...previous, feedback: 'ready' } : previous);
+  };
+  const padEdit = (key: string) => {
+    editAnswer(key === 'clear' ? '' : key === 'backspace' ? answer.slice(0, -1) : (answer + key).slice(0, 3));
+  };
+  const handleAnswerKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (!padMode || session?.solved || event.altKey || event.ctrlKey || event.metaKey || event.nativeEvent.isComposing) return;
+    if (/^[0-9]$/.test(event.key) || event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      padEdit(event.key === 'Backspace' ? 'backspace' : event.key === 'Delete' ? 'clear' : event.key);
+    }
+  };
   const [leaveOpen, setLeaveOpen] = useState(false);
   const [audio] = useState(() => new FeedbackAudio());
   const [soundEnabled, setSoundEnabled] = useState(false);
@@ -38,9 +58,22 @@ export default function App() {
   };
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (padMode && input && document.activeElement === input) {
+      input.blur();
+      input.focus({ preventScroll: true });
+    }
+  }, [padMode]);
   const nextRef = useRef<HTMLButtonElement>(null);
   const summaryRef = useRef<HTMLHeadingElement>(null);
   const t = copy[language];
+  const toggleInputMode = () => {
+    // Commit readonly before focusing; the editable fallback is a user gesture.
+    inputRef.current?.blur();
+    flushSync(() => setInputMode(padMode ? 'native' : 'pad'));
+    inputRef.current?.focus();
+  };
   useEffect(() => {
     if (!leaveOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -93,7 +126,7 @@ export default function App() {
   });
   const equationDescription = current ? `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}` : '';
 
-  return <div className="app-shell">
+  return <div className={`app-shell ${compact && session && !session.done ? 'compact-practice' : ''}`}>
     <header className="site-header" inert={leaveOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
       <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
       {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
@@ -104,12 +137,18 @@ export default function App() {
         <fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
         <button className="primary start-button" onClick={start}>{t.start}<span aria-hidden="true"> →</span></button>
       </section> : session.done ? <section className="summary"><p className="eyebrow">{t.trail}</p><span className="completion-mark" aria-hidden="true">✓</span><h2 ref={summaryRef} tabIndex={-1}>{t.complete}</h2><p className="intro">{t.summary}</p><p className="completed-total">{session.exercises.length} {t.finished}</p><p className="first-try">{t.first} <strong>{session.firstTry} / {session.exercises.length}</strong></p><button className="primary" onClick={start}>{t.again}</button><button className="text-button" onClick={() => setSession(null)}>{t.back}</button></section>
-        : current && <section className="practice"><div className="practice-top"><span className="level-pill">{t.level} {level}</span><button className="text-button" onClick={requestLeave}>{t.back}</button></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p><progress aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} /><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}
-          <form onSubmit={submit} noValidate><div className="equation" data-feedback={session.feedback} role="group" aria-label={equationDescription}>{current.values.map((n, i) => <span className="equation-part" key={i}>{i === 1 && <span className="operator" aria-hidden="true">{symbols[current.operation]}</span>}{i === 2 && <span className="operator" aria-hidden="true">=</span>}<span data-term={i}>{i === current.blank ? <input ref={inputRef} type="text" inputMode="numeric" autoComplete="off" aria-label={`${t.missing}, ${t.positions[i]}`} aria-describedby="answer-feedback" aria-invalid={session.feedback === 'invalid' || session.feedback === 'incorrect'} value={answer} disabled={session.solved} onChange={e => { setAnswer(e.target.value); setSession(previous => previous && !previous.solved ? { ...previous, feedback: 'ready' } : previous); }} /> : <span aria-hidden="true">{n}</span>}</span></span>)}</div>
+        : current && <section className="practice"><div className="practice-header"><div className="practice-top"><span className="level-pill">{t.level} {level}</span><button className="text-button" onClick={requestLeave}>{t.back}</button></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p><progress aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} /></div><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>
+          <form onSubmit={submit} onKeyDown={event => {
+            if (event.key === 'Enter' && event.repeat && (event.target === inputRef.current || (event.target as HTMLElement).classList.contains('answer-button'))) event.preventDefault();
+          }} noValidate><div className="equation" data-feedback={session.feedback} role="group" aria-label={equationDescription}>{current.values.map((n, i) => <span className="equation-part" key={i}>{i === 1 && <span className="operator" aria-hidden="true">{symbols[current.operation]}</span>}{i === 2 && <span className="operator" aria-hidden="true">=</span>}<span data-term={i}>{i === current.blank ? <input ref={inputRef} type="text" onKeyDown={handleAnswerKey} readOnly={padMode} inputMode={padMode ? 'none' : 'numeric'} autoComplete="off" aria-label={`${t.missing}, ${t.positions[i]}`} aria-describedby={padMode ? 'answer-feedback answer-instructions' : 'answer-feedback'} aria-invalid={session.feedback === 'invalid' || session.feedback === 'incorrect'} value={answer} disabled={session.solved} onChange={e => editAnswer(e.target.value)} /> : <span aria-hidden="true">{n}</span>}</span></span>)}</div>
             <p id="answer-feedback" className={`feedback feedback-${session.feedback}`} role="status" aria-live="polite" aria-atomic="true">{session.feedback === 'ready' ? '' : t[session.feedback]}</p>
-            {session.solved ? <button ref={nextRef} type="button" className="primary answer-button" data-state="correct" onClick={next}>{session.reviewing ? (session.reviewQueue.length === 1 && session.attempts === 1 && session.hintStage === 0 ? t.finish : t.next) : session.index === session.exercises.length - 1 ? (session.reviewQueue.length > 0 || session.attempts > 1 ? t.reviewStart : t.finish) : t.next}<span aria-hidden="true"> →</span></button> : <button type="submit" className="primary answer-button" data-state={session.feedback === 'incorrect' ? 'incorrect' : 'neutral'}>{t.check}</button>}
-            <button type="button" className="hint-button" aria-controls="hint-panel" aria-expanded={session.hintStage > 0} disabled={session.solved || session.hintStage >= 3} onClick={showHint}>{session.hintStage === 0 ? t.showHint : session.hintStage >= 3 ? t.allHints : t.nextHint}</button>
-            {session.hintStage > 0 && <HintPanel exercise={current} stage={session.hintStage} language={language} />}
+            <span id="answer-instructions" className="sr-only">{t.padInstructions}</span>
+            <span className="sr-only" data-testid="answer-announcement" aria-live="polite" aria-atomic="true">{padMode ? `${t.answerLabel}: ${answer || t.emptyAnswer}` : ''}</span>
+            {padMode && <div className="number-pad" onKeyDown={handleAnswerKey} role="group" aria-label={t.numberPad}>{['1', '2', '3', '4', '5', '6', '7', '8', '9', 'clear', '0', 'backspace'].map(key => <button key={key} className={key === 'clear' ? 'pad-clear' : undefined} type="button" disabled={session.solved} aria-label={key === 'clear' ? t.clearAnswer : key === 'backspace' ? t.backspace : key} onClick={() => padEdit(key)}>{key === 'clear' ? t.clear : key === 'backspace' ? '⌫' : key}</button>)}</div>}
+            {session.solved ? <button ref={nextRef} type="button" className="primary answer-button" data-state="correct" onClick={event => { event.preventDefault(); next(); }}>{session.reviewing ? (session.reviewQueue.length === 1 && session.attempts === 1 && session.hintStage === 0 ? t.finish : t.next) : session.index === session.exercises.length - 1 ? (session.reviewQueue.length > 0 || session.attempts > 1 ? t.reviewStart : t.finish) : t.next}<span aria-hidden="true"> →</span></button> : <button type="submit" className="primary answer-button" data-state={session.feedback === 'incorrect' ? 'incorrect' : 'neutral'}>{t.check}</button>}
+            <div className="practice-tools"><button type="button" className="input-mode-button" disabled={session.solved} onClick={toggleInputMode}>{padMode ? t.useNative : t.usePad}</button>
+            <button type="button" className="hint-button" aria-controls="hint-panel" aria-expanded={session.hintStage > 0} disabled={session.solved || session.hintStage >= 3} onClick={showHint}>{session.hintStage === 0 ? t.showHint : session.hintStage >= 3 ? t.allHints : t.nextHint}</button></div>
+            {(session.reviewing || session.hintStage > 0) && <div className="practice-help" role="region" aria-label={t.practiceHelp} tabIndex={0}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}{session.hintStage > 0 && <HintPanel exercise={current} stage={session.hintStage} language={language} />}</div>}
           </form>
         </section>}
     </main>

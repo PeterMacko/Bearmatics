@@ -1,5 +1,14 @@
 import { expect, test, type Page } from '@playwright/test';
 
+async function fillAnswer(page: Page, value: string) {
+  const input = page.getByRole('textbox');
+  if (await input.getAttribute('readonly') !== null) {
+    await input.focus();
+    await input.press('Delete');
+    await input.pressSequentially(value);
+  } else await input.fill(value);
+}
+
 async function answerFor(page: Page): Promise<number> {
   return page.locator('.equation').evaluate(element => {
     const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
@@ -26,7 +35,7 @@ for (const [level, size] of [[1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [1,
       if (level === 1) await expect(page.locator('.operator').first()).toHaveText('+');
       const answer = await answerFor(page);
       expect(Number.isInteger(answer)).toBeTruthy();
-      await page.getByRole('textbox').fill(String(answer));
+      await fillAnswer(page, String(answer));
       await page.getByRole('textbox').press('Enter');
       await expect(page.getByRole('status')).toHaveText('That’s it! Nicely done.');
       await expect(page.getByRole('textbox')).toBeDisabled();
@@ -50,32 +59,32 @@ test('missed equations return at the end and cycle until a first-attempt success
     const answer = await answerFor(page);
     if (i === 0 || i === 4) {
       missed.push((await page.locator('.equation').getAttribute('aria-label'))!);
-      await page.getByRole('textbox').fill(String(answer + 1));
+      await fillAnswer(page, String(answer + 1));
       await page.getByRole('button', { name: 'Check answer' }).click();
       await expect(page.getByRole('status')).toContainText('Not quite');
     }
-    await page.getByRole('textbox').fill(String(answer));
+    await fillAnswer(page, String(answer));
     await page.getByRole('button', { name: 'Check answer' }).click();
     await page.getByRole('button', { name: i === 4 ? 'Review tricky ones' : 'Next exercise' }).click();
   }
   await expect(page.getByText('Review · 2 to practise', { exact: true })).toBeVisible();
   await expect(page.locator('.equation')).toHaveAttribute('aria-label', missed[0]);
   let answer = await answerFor(page);
-  await page.getByRole('textbox').fill(String(answer + 1));
+  await fillAnswer(page, String(answer + 1));
   await page.getByRole('button', { name: 'Check answer' }).click();
-  await page.getByRole('textbox').fill(String(answer));
+  await fillAnswer(page, String(answer));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await page.getByRole('button', { name: 'Next exercise' }).click();
   // Failed review is placed behind the other pending exercise, not duplicated.
   await expect(page.getByText('Review · 2 to practise', { exact: true })).toBeVisible();
   await expect(page.locator('.equation')).toHaveAttribute('aria-label', missed[1]);
-  await page.getByRole('textbox').fill(String(await answerFor(page)));
+  await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await page.getByRole('button', { name: 'Next exercise' }).click();
   await expect(page.getByText('Review · 1 to practise', { exact: true })).toBeVisible();
   await expect(page.locator('.equation')).toHaveAttribute('aria-label', missed[0]);
   answer = await answerFor(page);
-  await page.getByRole('textbox').fill('1e0');
+  await fillAnswer(page, '1e0');
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.getByRole('status')).toContainText('Check the number.');
   await page.getByRole('button', { name: 'Slovenčina' }).click();
@@ -83,13 +92,13 @@ test('missed equations return at the end and cycle until a first-attempt success
   await expect(page.getByRole('textbox')).toHaveValue('1e0');
   await page.getByRole('button', { name: 'English' }).click();
   await page.getByRole('button', { name: 'Show a hint' }).click();
-  await page.getByRole('textbox').fill(String(answer));
+  await fillAnswer(page, String(answer));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await page.getByRole('button', { name: 'Next exercise' }).click();
   // A hint-assisted review answer needs one more fresh, independent attempt.
   await expect(page.getByText('Review · 1 to practise', { exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Hint' })).toHaveCount(0);
-  await page.getByRole('textbox').fill(String(answer));
+  await fillAnswer(page, String(answer));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await page.getByRole('button', { name: 'See how you did' }).click();
   await expect(page.getByText('3 / 5', { exact: true })).toBeVisible();
@@ -104,7 +113,7 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
     await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
     await page.getByRole('button', { name: 'Let’s count' }).click();
     const expected = await answerFor(page);
-    await page.getByRole('textbox').fill('007');
+    await fillAnswer(page, '007');
     await page.getByRole('button', { name: 'Show a hint' }).click();
     await expect(page.getByRole('region', { name: 'Hint' })).toContainText('Hint 1 / 3');
     await expect(page.getByTestId('worked-solution')).toHaveCount(0);
@@ -120,7 +129,7 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
     await expect(page.getByRole('button', { name: 'Všetky pomôcky zobrazené' })).toBeDisabled();
     await expect(page.getByRole('textbox')).toHaveValue('007');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
-    await page.getByRole('textbox').fill(String(expected));
+    await fillAnswer(page, String(expected));
     await page.getByRole('button', { name: 'Skontrolovať' }).click();
     await page.getByRole('button', { name: 'Ďalší príklad' }).click();
     await expect(page.getByRole('region', { name: 'Pomôcka' })).toHaveCount(0);
@@ -145,7 +154,7 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   await answerButton.click();
   await expect(page.getByRole('status')).toHaveText('Check the number.');
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'neutral');
-  await page.getByRole('textbox').fill(String(expected + 1)); await answerButton.click();
+  await fillAnswer(page, String(expected + 1)); await answerButton.click();
   await page.mouse.move(0, 0);
   await expect(answerButton).toHaveCSS('background-color', 'rgb(182, 62, 69)');
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'sad');
@@ -154,9 +163,9 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   await page.getByRole('button', { name: 'Sound off' }).click();
   await expect(page.getByRole('button', { name: 'Sound on' })).toHaveAttribute('aria-pressed', 'true');
   expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(0); // no replay on enable
-  await page.getByRole('textbox').fill(String(expected + 2)); await answerButton.click();
+  await fillAnswer(page, String(expected + 2)); await answerButton.click();
   await expect.poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(2);
-  await page.getByRole('textbox').fill(String(expected));
+  await fillAnswer(page, String(expected));
   await expect(answerButton).toHaveAttribute('data-state', 'neutral');
   await answerButton.click(); await page.mouse.move(0, 0);
   await expect(answerButton).toHaveCSS('background-color', 'rgb(35, 116, 68)');
@@ -170,7 +179,7 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   await expect(page.getByRole('button', { name: 'Zvuk vypnutý' })).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Ďalší príklad' }).click();
   await expect(page.locator('.answer-button')).toHaveAttribute('data-state', 'neutral');
-  await page.getByRole('textbox').fill(String((await answerFor(page)) + 1));
+  await fillAnswer(page, String((await answerFor(page)) + 1));
   await page.getByRole('button', { name: 'Skontrolovať' }).click();
   expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
 });
@@ -182,7 +191,7 @@ test('blocked audio does not prevent answering and reports its unavailable state
   await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Let’s count' }).click();
-  await page.getByRole('textbox').fill(String(await answerFor(page)));
+  await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.answer-button')).toHaveAttribute('data-state', 'correct');
   expect(errors).toEqual([]);
@@ -193,10 +202,10 @@ test('reduced motion keeps the bear expressions but disables reaction animations
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/'); await page.getByRole('button', { name: 'Let’s count' }).click();
   const answer = await answerFor(page);
-  await page.getByRole('textbox').fill(String(answer + 1)); await page.getByRole('button', { name: 'Check answer' }).click();
+  await fillAnswer(page, String(answer + 1)); await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'sad');
   await expect(page.locator('.bear-character')).toHaveCSS('animation-name', 'none');
-  await page.getByRole('textbox').fill(String(answer)); await page.getByRole('button', { name: 'Check answer' }).click();
+  await fillAnswer(page, String(answer)); await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'happy');
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'none');
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
@@ -206,7 +215,7 @@ test('Slovak switching preserves equation, answer and progress; leave dialog tra
   await page.goto('/');
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const equation = await page.locator('.equation').textContent();
-  await page.getByRole('textbox').fill('12');
+  await fillAnswer(page, '12');
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await expect(page.locator('html')).toHaveAttribute('lang', 'sk');
   await expect(page.getByRole('textbox')).toHaveValue('12');
@@ -232,7 +241,7 @@ test('narrow Slovak screens have no horizontal overflow in selection or practice
   await page.getByRole('button', { name: 'Začať počítať' }).click();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
   await expect(page.getByRole('textbox')).toBeFocused();
-  await page.getByRole('textbox').fill(String(await answerFor(page)));
+  await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('textbox').press('Enter');
   await expect(page.getByRole('button', { name: 'Ďalší príklad' })).toBeFocused();
 });
