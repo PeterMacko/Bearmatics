@@ -1,0 +1,15 @@
+# Equivalent TOML configuration. Keep in sync with canonical wrangler.jsonc.
+# Wrangler discovers JSONC before TOML; select this file with --config wrangler.toml.
+"$schema" = "node_modules/wrangler/config-schema.json"
+name = "bearmatics"
+compatibility_date = "2026-11-09"
+previews = {}
+
+[assets]
+directory = "./dist"
+not_found_handling = "single-page-application"
+
+[observability.logs]
+enabled = true
+invocation_logs = true
+persist = true
