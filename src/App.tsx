@@ -43,24 +43,52 @@ export default function App() {
   const settingsRef = useRef<HTMLButtonElement>(null);
   const hintRef = useRef<HTMLButtonElement>(null);
   const [audio] = useState(() => new FeedbackAudio());
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundReady, setSoundReady] = useState(false);
+  const desiredSound = useRef(true);
+  const readySound = useRef(false);
+  const activation = useRef(0);
+  const pendingSound = useRef(false);
   const [soundBusy, setSoundBusy] = useState(false);
   const [audioUnavailable, setAudioUnavailable] = useState(false);
   const lastReaction = useRef('');
-  useEffect(() => () => audio.dispose(), [audio]);
+  const completionConsumed = useRef(false);
+  useEffect(() => () => { ++activation.current; pendingSound.current = false; readySound.current = false; audio.dispose(); }, [audio]);
   useEffect(() => {
     const feedback = session?.feedback;
     if (feedback !== 'correct' && feedback !== 'incorrect') { lastReaction.current = ''; return; }
     const key = `${feedback}:${session?.attempts}`;
     if (lastReaction.current === key) return;
     lastReaction.current = key;
-    if (soundEnabled && !audio.play(feedback)) { setSoundEnabled(false); setAudioUnavailable(true); }
+    if (desiredSound.current && readySound.current && !audio.play(feedback)) { readySound.current = false; setSoundReady(false); setAudioUnavailable(true); }
   }, [session?.feedback, session?.attempts, soundEnabled, audio]);
-  const toggleSound = async () => {
-    setSoundBusy(true);
-    const target = !soundEnabled;
-    const enabled = await audio.setEnabled(target);
-    setSoundEnabled(enabled); setAudioUnavailable(target && !enabled); setSoundBusy(false);
+  useEffect(() => {
+    if (!session?.done || completionConsumed.current) return;
+    // Consume even when muted/blocked/pending: activation must not replay history.
+    completionConsumed.current = true;
+    if (desiredSound.current && readySound.current && !audio.play('complete')) {
+      readySound.current = false; setSoundReady(false); setAudioUnavailable(true);
+    }
+  }, [session?.done, audio]);
+  // Only invoke synchronously from interaction handlers, never from effects.
+  const activateSound = async () => {
+    if (!desiredSound.current || readySound.current || pendingSound.current) return;
+    const revision = ++activation.current;
+    pendingSound.current = true; setSoundBusy(true);
+    const enabled = await audio.setEnabled(true);
+    if (revision !== activation.current) return;
+    pendingSound.current = false; readySound.current = enabled;
+    setSoundReady(enabled); setAudioUnavailable(!enabled); setSoundBusy(false);
+  };
+  const toggleSound = () => {
+    const target = !desiredSound.current;
+    desiredSound.current = target; setSoundEnabled(target);
+    if (target) void activateSound();
+    else {
+      ++activation.current; pendingSound.current = false; readySound.current = false;
+      void audio.setEnabled(false);
+      setSoundReady(false); setSoundBusy(false); setAudioUnavailable(false);
+    }
   };
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -99,11 +127,15 @@ export default function App() {
   }, [session?.index, session?.solved, session?.done]);
   const current = session ? (session.reviewing ? session.reviewQueue[0] : session.exercises[session.index]) : undefined;
   const start = () => {
+    completionConsumed.current = false;
+    lastReaction.current = '';
+    void activateSound();
     setAnswer('');
     setSession({ exercises: generateSession(level, size), index: 0, firstTry: 0, attempts: 0, solved: false, done: false, feedback: 'ready', hintStage: 0, reviewing: false, reviewQueue: [] });
   };
   function submit(event: FormEvent) {
     event.preventDefault();
+    void activateSound();
     setSession(previous => {
       if (!previous || previous.solved || previous.done) return previous;
       const result = checkAnswer(previous.reviewing ? previous.reviewQueue[0] : previous.exercises[previous.index], answer);
@@ -113,6 +145,7 @@ export default function App() {
     });
   }
   const next = () => {
+    void activateSound();
     setHintOpen(false);
     setSession(previous => {
       if (!previous || !previous.solved || previous.done) return previous;
@@ -165,7 +198,7 @@ export default function App() {
         </section>}
     </main>
     {settingsOpen && <HintDialog titleId="settings-title" title={t.settings} closeLabel={t.closeSettings} onClose={() => setSettingsOpen(false)} triggerRef={settingsRef}>
-      <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
+      <div className="header-controls"><button className="sound-toggle" type="button" onClick={toggleSound} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? (soundReady ? t.soundOn : audioUnavailable ? t.soundUnavailable : t.soundRequested) : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
       {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
     </HintDialog>}
     {hintOpen && session && current && <HintDialog title={t.hint} closeLabel={t.closeHint} nextLabel={session.hintStage >= 3 ? t.allHints : t.nextHint} nextDisabled={session.hintStage >= 3} onClose={() => setHintOpen(false)} onNext={showHint} triggerRef={hintRef}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}<HintPanel exercise={current} stage={session.hintStage} language={language} /></HintDialog>}

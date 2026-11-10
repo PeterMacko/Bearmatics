@@ -1,6 +1,7 @@
 export type Language = 'en' | 'sk';
 export const copy = {
   en: {
+    soundRequested: 'Sound requested', soundUnavailable: 'Sound unavailable',
     settings: 'Settings', closeSettings: 'Close settings',
     padInstructions: 'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check. You can also choose Use device keyboard.', practiceHelp: 'Practice help',
     useNative: 'Use device keyboard', usePad: 'Use number pad', answerLabel: 'Answer', emptyAnswer: 'empty', numberPad: 'Number pad', backspace: 'Backspace', clearAnswer: 'Clear answer', clear: 'Clear',
@@ -15,6 +16,7 @@ export const copy = {
     leaveTitle: 'Leave this trail?', leaveText: 'Your progress in this session will be lost.', stay: 'Keep practising', leave: 'Choose a new trail', confirm: 'Confirm your choice',
   },
   sk: {
+    soundRequested: 'Zvuk povolený', soundUnavailable: 'Zvuk nedostupný',
     settings: 'Nastavenia', closeSettings: 'Zavrieť nastavenia',
     padInstructions: 'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje. Môžeš zvoliť aj klávesnicu zariadenia.', practiceHelp: 'Pomoc pri počítaní',
     useNative: 'Použiť klávesnicu zariadenia', usePad: 'Použiť číselnú klávesnicu', answerLabel: 'Odpoveď', emptyAnswer: 'prázdna', numberPad: 'Číselná klávesnica', backspace: 'Vymazať poslednú číslicu', clearAnswer: 'Vymazať odpoveď', clear: 'Zmazať',

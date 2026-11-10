@@ -36,7 +36,7 @@ for (const language of ['en', 'sk']) {
     await close.press('Shift+Tab'); await expect(page.getByRole('button', { name: 'English' })).toBeFocused();
     await page.keyboard.press('Tab'); await expect(close).toBeFocused();
     await close.press('Tab'); await expect(page.locator('.hint-dialog-content')).toBeFocused();
-    await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Sound off' })).toBeFocused();
+    await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Sound on' })).toBeFocused();
     await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'Slovenčina' })).toBeFocused();
     await page.keyboard.press('Tab'); await expect(page.getByRole('button', { name: 'English' })).toBeFocused();
     await page.keyboard.press('Tab'); await expect(close).toBeFocused();
@@ -47,7 +47,7 @@ for (const language of ['en', 'sk']) {
     if (language === 'sk') await page.getByRole('button', { name: 'Slovenčina' }).click();
     await expect(dialog).toHaveAccessibleName(language === 'sk' ? 'Nastavenia' : 'Settings');
     await expect(dialog).toHaveCount(1);
-    await expect(page.getByRole('button', { name: language === 'sk' ? 'Zvuk vypnutý' : 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+    await expect(page.getByRole('button', { name: language === 'sk' ? 'Zvuk zapnutý' : 'Sound on' })).toHaveAttribute('aria-pressed', 'true');
     await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
     for (const viewport of [{ width: 320, height: 568 }, { width: 568, height: 320 }]) {
       await page.setViewportSize(viewport);

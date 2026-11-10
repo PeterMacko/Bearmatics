@@ -7,7 +7,7 @@ test('answer controls are neutral before checking, red for errors and green for 
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
   const { container } = render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-  expect(screen.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'Sound requested' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');

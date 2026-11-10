@@ -148,7 +148,7 @@ for (const level of [1, 2, 3, 4, 5, 6]) {
   });
 }
 
-test('button colours, bear reactions and opt-in native audio follow submitted answers', async ({ page }) => {
+test('button colours, bear reactions and gesture-activated native audio follow submitted answers', async ({ page }) => {
   await page.addInitScript(() => {
     const state = window as unknown as { audioNotes: number };
     state.audioNotes = 0;
@@ -157,6 +157,8 @@ test('button colours, bear reactions and opt-in native audio follow submitted an
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Sound requested' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Sound requested' }).click(); // explicit mute before Start
   await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
   await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: 'Let’s count' }).click();
@@ -205,12 +207,11 @@ test('blocked audio does not prevent answering and reports its unavailable state
   await page.addInitScript(() => Object.defineProperty(window, 'AudioContext', { configurable: true, value: class { constructor() { throw new Error('Blocked audio'); } } }));
   const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
   await page.goto('/');
-  await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await page.getByRole('button', { name: 'Sound off' }).click();
-  await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
-  await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: 'Let’s count' }).click();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Sound unavailable' })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Close settings' }).click();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.answer-button')).toHaveAttribute('data-state', 'correct');

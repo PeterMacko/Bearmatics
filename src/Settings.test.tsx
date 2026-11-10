@@ -22,7 +22,7 @@ test('settings localizes in place, traps focus and restores its gear trigger wit
   fireEvent.keyDown(document.activeElement!, { key: 'Tab' }); expect(close).toHaveFocus();
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
   expect(screen.getByRole('dialog', { name: 'Nastavenia' })).toBe(dialog);
-  expect(screen.getByRole('button', { name: 'Zvuk vypnutý' })).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('button', { name: 'Zvuk povolený' })).toHaveAttribute('aria-pressed', 'true');
   fireEvent.keyDown(dialog, { key: 'Escape' });
   expect(gear).toHaveFocus();
   expect(screen.getByRole('textbox')).toHaveValue('123');
