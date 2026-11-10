@@ -44,28 +44,52 @@ test('muting cancels an in-flight audio activation', async () => {
 });
 
 test('feedback has a stronger smooth envelope with bounded aggregate headroom', async () => {
-  for (const outcome of ['correct', 'incorrect'] as const) {
+  for (const outcome of ['correct', 'incorrect', 'complete'] as const) {
     const f = fixture(); const player = new PlayerClass(f.factory);
     await player.setEnabled(true); player.play(outcome);
     for (const events of f.envelopes) {
       expect(events[0].value).toBe(0);
-      expect(events[1].value).toBeGreaterThanOrEqual(0.12);
-      expect(events[1].value).toBeLessThanOrEqual(0.18);
-      expect(events[1].time - events[0].time).toBeGreaterThanOrEqual(0.015);
+      expect(events[1].value).toBe(0.6);
+      expect(events[2].value).toBe(0.48);
+      expect(events[2].time).toBeGreaterThan(events[1].time);
+      expect(events[1].time - events[0].time).toBeCloseTo(0.015, 10);
       expect(events.at(-1)!.value).toBe(0);
     }
-    for (let t = 0; t < 0.5; t += 0.001) {
+    // A sum of piecewise-linear envelopes can peak only at an event boundary.
+    for (const t of f.envelopes.flat().map(event => event.time)) {
       const sum = f.envelopes.reduce((total, events) => {
         const i = events.findIndex(e => e.time >= t);
         if (i <= 0) return total;
         const a = events[i - 1], b = events[i];
         return total + a.value + (b.value - a.value) * (t - a.time) / (b.time - a.time);
       }, 0);
-      expect(sum).toBeLessThanOrEqual(0.18);
+      expect(sum).toBeLessThanOrEqual(0.65);
     }
     const old = [...f.nodes]; player.play(outcome);
     for (const node of old) expect(node.stop).toHaveBeenCalledWith();
   }
+});
+
+test('correct tune lasts one second with non-overlapping rising notes and mute cancels all', async () => {
+  const f = fixture(); const player = new PlayerClass(f.factory);
+  await player.setEnabled(true); player.play('correct');
+  expect(f.frequencies).toEqual([523.25, 659.25, 783.99]);
+  expect(f.envelopes.map(events => events[0].time)).toEqual([0, 0.22, 0.44]);
+  expect(f.envelopes.map(events => events.at(-1)!.time)).toEqual([0.2, 0.42, 1]);
+  for (const [index, node] of f.nodes.entries()) expect(node.stop).toHaveBeenCalledWith(f.envelopes[index].at(-1)!.time);
+  await player.setEnabled(false);
+  for (const node of f.nodes) expect(node.stop).toHaveBeenCalledWith();
+});
+
+test('gentle descending retry lasts 0.9 seconds and mute cancels all notes', async () => {
+  const f = fixture(); const player = new PlayerClass(f.factory);
+  await player.setEnabled(true); player.play('incorrect');
+  expect(f.frequencies).toEqual([329.63, 261.63]);
+  expect(f.envelopes.map(events => events[0].time)).toEqual([0, 0.26]);
+  expect(f.envelopes.map(events => events.at(-1)!.time)).toEqual([0.24, 0.9]);
+  for (const [index, node] of f.nodes.entries()) expect(node.stop).toHaveBeenCalledWith(f.envelopes[index].at(-1)!.time);
+  await player.setEnabled(false);
+  for (const node of f.nodes) expect(node.stop).toHaveBeenCalledWith();
 });
 
 test('completion is a distinct two-second fanfare, bounded and immediately mutable', async () => {
@@ -80,11 +104,23 @@ test('completion is a distinct two-second fanfare, bounded and immediately mutab
       const a = events[i - 1], b = events[i];
       return total + a.value + (b.value - a.value) * (t - a.time) / (b.time - a.time);
     }, 0);
-    expect(sum).toBeLessThanOrEqual(0.18);
+    expect(sum).toBeLessThanOrEqual(0.65);
   }
   await player.setEnabled(false);
   for (const node of f.nodes) expect(node.stop).toHaveBeenCalledWith();
   expect(player.play('complete')).toBe(false);
+});
+
+test('each cue captures one currentTime anchor even while the audio clock advances', async () => {
+  for (const outcome of ['correct', 'incorrect', 'complete'] as const) {
+    const f = fixture(); let reads = 0;
+    Object.defineProperty(f.context, 'currentTime', { get: () => 10 + reads++ * 0.01 });
+    const player = new PlayerClass(f.factory);
+    await player.setEnabled(true); player.play(outcome);
+    expect(reads).toBe(1);
+    expect(f.envelopes[0][0].time).toBe(10);
+    expect(f.envelopes.at(-1)!.at(-1)!.time).toBe(10 + (outcome === 'complete' ? 2 : outcome === 'correct' ? 1 : 0.9));
+  }
 });
 
 test('dispose cancels pending activation and never schedules stale completion', async () => {

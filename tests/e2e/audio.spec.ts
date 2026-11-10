@@ -62,6 +62,13 @@ test('native Web Audio is lazy, captures stronger bounded schedules and one gate
   }
   const short = await trace(page);
   expect(short.notes).toHaveLength(17); // five successes + one retry; no early fanfare
+  const correct = short.notes.slice(0, 3), retry = short.notes.slice(12, 14);
+  expect(correct[2].stops[0]! - correct[0].start).toBeCloseTo(1, 5);
+  expect(retry[1].stops[0]! - retry[0].start).toBeCloseTo(0.9, 5);
+  expect(correct.map(n => n.frequency)).toEqual([523.25, 659.25, 783.99]);
+  expect(retry.map(n => n.frequency)).toEqual([329.63, 261.63]);
+  // Subsequent feedback cancels prior sustained notes before their scheduled end.
+  for (const note of [correct.at(-1)!, retry.at(-1)!]) expect(note.stops).toContain(null);
   await solve(page);
   expect((await trace(page)).notes).toHaveLength(20); // final review answer is still ordinary feedback
   await page.getByRole('button', { name: 'See how you did' }).dblclick();
@@ -73,7 +80,8 @@ test('native Web Audio is lazy, captures stronger bounded schedules and one gate
   expect(fanfare[3].stops[0]! - fanfare[0].start).toBeCloseTo(2, 5);
   for (const envelope of completed.envelopes) {
     expect(envelope[0].value).toBe(0);
-    expect(envelope[1].value).toBe(0.15);
+    expect(envelope[1].value).toBe(0.6);
+    expect(envelope[2].value).toBe(0.48);
     expect(envelope[1].time - envelope[0].time).toBeCloseTo(0.015, 5);
     expect(envelope.at(-1)!.value).toBe(0);
   }
@@ -87,7 +95,7 @@ test('native Web Audio is lazy, captures stronger bounded schedules and one gate
     }, 0);
     maximum = Math.max(maximum, sum);
   }
-  expect(maximum).toBeLessThanOrEqual(0.18);
+  expect(maximum).toBeLessThanOrEqual(0.65);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Sound on' }).click();
   // Scheduled long final tone must be cancelled before its natural end.
