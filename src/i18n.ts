@@ -3,7 +3,7 @@ export const copy = {
   en: {
     soundRequested: 'Sound requested', soundUnavailable: 'Sound unavailable',
     settings: 'Settings', closeSettings: 'Close settings',
-    padInstructions: 'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check. You can also choose Use device keyboard.', practiceHelp: 'Practice help',
+    padInstructions: 'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check.', practiceHelp: 'Practice help',
     useNative: 'Use device keyboard', usePad: 'Use number pad', answerLabel: 'Answer', emptyAnswer: 'empty', numberPad: 'Number pad', backspace: 'Backspace', clearAnswer: 'Clear answer', clear: 'Clear',
     tagline: 'Little steps. Big discoveries.', choose: 'Where shall we explore?', intro: 'Pick your trail. We’ll take it one number at a time.', level: 'Level',
     levels: ['Hello, addition!', 'First steps', 'A little further', 'Big number adventure', 'Equal groups', 'Multiply & share'], details: ['Addition only, up to 10', 'Add & subtract up to 10', 'Add & subtract up to 20', 'Add & subtract up to 100', 'Multiply with 1–5', 'Multiply & divide with 1–10'],
@@ -18,7 +18,7 @@ export const copy = {
   sk: {
     soundRequested: 'Zvuk povolený', soundUnavailable: 'Zvuk nedostupný',
     settings: 'Nastavenia', closeSettings: 'Zavrieť nastavenia',
-    padInstructions: 'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje. Môžeš zvoliť aj klávesnicu zariadenia.', practiceHelp: 'Pomoc pri počítaní',
+    padInstructions: 'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje.', practiceHelp: 'Pomoc pri počítaní',
     useNative: 'Použiť klávesnicu zariadenia', usePad: 'Použiť číselnú klávesnicu', answerLabel: 'Odpoveď', emptyAnswer: 'prázdna', numberPad: 'Číselná klávesnica', backspace: 'Vymazať poslednú číslicu', clearAnswer: 'Vymazať odpoveď', clear: 'Zmazať',
     tagline: 'Malé kroky. Veľké objavy.', choose: 'Kam sa vyberieme?', intro: 'Vyber si cestu. Budeme počítať krok za krokom.', level: 'Úroveň',
     levels: ['Ahoj, sčítanie!', 'Prvé kroky', 'O kúsok ďalej', 'Veľké číselné dobrodružstvo', 'Rovnaké skupiny', 'Násobíme a delíme'], details: ['Iba sčítanie do 10', 'Sčítanie a odčítanie do 10', 'Sčítanie a odčítanie do 20', 'Sčítanie a odčítanie do 100', 'Násobenie číslami 1–5', 'Násobenie a delenie číslami 1–10'],

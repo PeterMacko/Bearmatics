@@ -30,6 +30,24 @@ function start(pad = false) {
   if (pad) fireEvent.click(screen.getByRole('button', { name: 'Use number pad' }));
 }
 
+test.each(['en', 'sk'])('touch answer descriptions advertise only available controls in %s', language => {
+  vi.stubGlobal('navigator', Object.assign(Object.create(navigator), { maxTouchPoints: 5 }));
+  start();
+  if (language === 'sk') {
+    fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
+  }
+  const input = screen.getByRole('textbox');
+  expect(input).toHaveAttribute('readonly');
+  expect(input.getAttribute('aria-describedby')?.split(/\s+/)).toContain('answer-instructions');
+  expect(screen.getByRole('group', { name: language === 'sk' ? 'Číselná klávesnica' : 'Number pad' })).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: language === 'sk' ? 'Použiť klávesnicu zariadenia' : 'Use device keyboard' })).not.toBeInTheDocument();
+  expect(input).toHaveAccessibleDescription(language === 'sk'
+    ? /^\s*Použi číselnú klávesnicu alebo číslice na klávesnici\. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje\.\s*$/
+    : /^\s*Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check\.\s*$/);
+});
+
 test('touch fallback overrides an earlier native preference without resetting answer or hints', () => {
   let updateTouch = () => {};
   const capability = { matches: false, addEventListener: vi.fn((_type, listener) => { updateTouch = listener; }), removeEventListener: vi.fn() };

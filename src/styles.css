@@ -223,7 +223,7 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .header-controls { flex-wrap: wrap; }
 .hint-dialog .header-controls { display: flex; flex-direction: column; align-items: stretch; margin: 0; gap: 16px; }
 .hint-dialog .language-switch { flex-wrap: wrap; }
-.hint-dialog .language-switch button { flex: 1; min-width: 44px; }
+.hint-dialog .language-switch button { flex: 1 1 auto; min-width: 48px; overflow-wrap: anywhere; }
 .hint-dialog .audio-notice { text-align: left; }
 .compact-practice .site-header { position: absolute; inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) auto auto; padding: 0; min-height: 0; border: 0; z-index: 1; }
 .compact-practice .workspace { padding-top: max(16px, env(safe-area-inset-top)); }
@@ -261,7 +261,7 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 @media (min-width: 621px) {
   .workspace { grid-template-columns: minmax(0, .65fr) minmax(0, 1.35fr); gap: 32px; padding: 8px 0 12px; min-height: calc(100svh - 60px); }
   .level-options { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .level-option { min-height: 74px; padding: 10px; gap: 8px; grid-template-columns: 36px minmax(0, 1fr) 17px; }
+  .level-option { min-height: 70px; padding: 10px; gap: 8px; grid-template-columns: 36px minmax(0, 1fr) 17px; }
   .level-number { width: 34px; height: 34px; }
   .selection .intro { margin: 8px 0 12px; }
   .selection .eyebrow { margin-bottom: 8px; }
