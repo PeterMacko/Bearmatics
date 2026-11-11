@@ -5,8 +5,8 @@ import { generateSession, type Exercise, type Fact, type Level, type Operation }
 test('provides three localized stages for every operator and blank without revealing early answers', () => {
   const create = (hints as Record<string, unknown>).createHint as (e: Exercise, stage: number, language: string) => { title: string; body: string; model?: { values: (number | null)[] }; formula?: { left: number; operation: Operation; right: number; result: number }; completed?: Fact };
   expect(create).toBeTypeOf('function');
-  const facts: [Level, Operation, Fact][] = [[1, '+', [0, 10, 10]], [2, '-', [0, 0, 0]], [3, '+', [8, 12, 20]], [4, '-', [100, 47, 53]], [5, '*', [5, 4, 20]], [6, '/', [72, 8, 9]]];
-  for (const [level, operation, values] of facts) for (const blank of [0, 1, 2] as const) {
+  const facts: [Level, Operation, Fact][] = [[1, '+', [0, 10, 10]], [2, '-', [0, 0, 0]], [3, '+', [8, 12, 20]], [4, '+', [8, 12, 20]], [5, '-', [100, 47, 53]], [6, '*', [5, 4, 20]], [7, '/', [72, 8, 9]]];
+  for (const [level, operation, values] of facts) for (const blank of level === 3 ? [2] as const : level === 4 ? [0, 1] as const : [0, 1, 2] as const) {
     const exercise = { level, operation, values, blank };
     for (const language of ['en', 'sk']) {
       const first = create(exercise, 1, language);
@@ -28,7 +28,7 @@ test('provides three localized stages for every operator and blank without revea
   }
 });
 
-test.each([1, 2, 3, 4, 5, 6] as const)('validates sampled hint formulas and decomposition on level %i', level => {
+test.each([0, 1, 2, 3, 4, 5, 6, 7] as const)('validates sampled hint formulas and decomposition on level %i', level => {
   for (const exercise of generateSession(level, 20, () => 0.31415)) for (const language of ['en', 'sk'] as const) {
     const result = hints.createHint(exercise, 3, language);
     const f = result.formula!;
@@ -58,8 +58,8 @@ test('worked solutions teach bridging tens and splitting larger numbers', () => 
   expect(create(addition, 2, 'en').steps).toBeUndefined();
   expect(create(addition, 3, 'en').steps).toEqual([{ left: 8, operation: '+', right: 2, result: 10 }, { left: 10, operation: '+', right: 3, result: 13 }]);
   expect(create({ level: 3, operation: '-', values: [13, 7, 6], blank: 2 }, 3, 'sk').steps).toEqual([{ left: 13, operation: '-', right: 3, result: 10 }, { left: 10, operation: '-', right: 4, result: 6 }]);
-  expect(create({ level: 4, operation: '+', values: [45, 37, 82], blank: 2 }, 3, 'en').steps).toEqual([{ left: 45, operation: '+', right: 30, result: 75 }, { left: 75, operation: '+', right: 7, result: 82 }]);
-  expect(create({ level: 4, operation: '+', values: [47, 53, 100], blank: 1 }, 3, 'en').steps).toEqual([{ left: 100, operation: '-', right: 40, result: 60 }, { left: 60, operation: '-', right: 7, result: 53 }]);
+  expect(create({ level: 5, operation: '+', values: [45, 37, 82], blank: 2 }, 3, 'en').steps).toEqual([{ left: 45, operation: '+', right: 30, result: 75 }, { left: 75, operation: '+', right: 7, result: 82 }]);
+  expect(create({ level: 5, operation: '+', values: [47, 53, 100], blank: 1 }, 3, 'en').steps).toEqual([{ left: 100, operation: '-', right: 40, result: 60 }, { left: 60, operation: '-', right: 7, result: 53 }]);
 });
 
 test('rejects malformed facts and unsupported hint stages', () => {

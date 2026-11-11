@@ -3,6 +3,26 @@ import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
 
+test('offers eight correctly localized trails with level 1 selected by default', () => {
+  const { container } = render(<App />);
+  expect(container.querySelectorAll('input[name="level"]')).toHaveLength(8);
+  expect(screen.getByRole('radio', { name: /Level 0 · Count the pictures/ })).toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: /Level 1 · Hello, addition!/ })).toBeChecked();
+  const english = ['Hello, addition!', 'First steps', 'Find the result', 'Find the missing number', 'Big number adventure', 'Equal groups', 'Multiply & share'];
+  for (const [index, name] of english.entries()) expect(screen.getByRole('radio', { name: new RegExp(`Level ${index + 1} · ${name.replace('&', '&')}`) })).toBeInTheDocument();
+  expect(screen.getByText('Add & subtract up to 20: missing result')).toBeInTheDocument();
+  expect(screen.getByText('Add & subtract up to 20: missing first or second number')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: /Level 7 ·/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
+  expect(screen.getByRole('radio', { name: /Úroveň 3 · Hľadáme výsledok/ })).toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: /Úroveň 4 · Hľadáme chýbajúce číslo/ })).toBeInTheDocument();
+  expect(screen.getByRole('radio', { name: /Úroveň 7 · Násobíme a delíme/ })).toBeChecked();
+  expect(screen.getByText('Sčítanie a odčítanie do 20: chýba výsledok')).toBeInTheDocument();
+  expect(screen.getByText('Sčítanie a odčítanie do 20: chýba prvé alebo druhé číslo')).toBeInTheDocument();
+});
+
 test('answer controls are neutral before checking, red for errors and green for success', () => {
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
   const { container } = render(<App />);

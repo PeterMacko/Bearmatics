@@ -29,7 +29,7 @@ async function answerFor(page: Page): Promise<number> {
   });
 }
 
-for (const [level, size] of [[1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [1, 10], [1, 20]]) {
+for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap(level => [5, 10, 20].map(size => [level, size]))) {
   test(`completes ${size} exercises on level ${level} without runtime errors`, async ({ page }) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto('/');
@@ -113,7 +113,7 @@ test('missed equations return at the end and cycle until a first-attempt success
   await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeVisible();
 });
 
-for (const level of [1, 2, 3, 4, 5, 6]) {
+for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
   test(`three hint stages explain level ${level} without automatic answering`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/');

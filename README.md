@@ -6,16 +6,20 @@ A child-friendly math practice web app for ages **6–9**, in **Slovak and Engli
 
 ## Learning levels and mistake review
 
-Peter's revision in [#15](https://github.com/PeterMacko/Bearmatics/issues/15) supersedes the original five-level progression in #6:
+The implemented [SCRUM-26 progression](docs/level-progression.md) extends Peter's revision in [#15](https://github.com/PeterMacko/Bearmatics/issues/15). This feature still requires exact-revision owner review and independent QA; the earlier MVP acceptance below does not accept these changes:
 
 | Level | Practice |
 | --- | --- |
-| 1 | Addition only, up to 10 |
-| 2 | Addition and subtraction, up to 10 |
-| 3 | Addition and subtraction, up to 20 |
-| 4 | Addition and subtraction, up to 100 |
-| 5 | Multiplication with factors 1–5 |
-| 6 | Multiplication and exact division with factors 1–10 |
+| 0 | Picture addition, all quantities 0–6, missing result only |
+| 1 | Addition only, up to 10; any missing term |
+| 2 | Addition and subtraction, up to 10; any missing term |
+| 3 | Addition and subtraction, up to 20; missing result only |
+| 4 | Addition and subtraction, up to 20; missing first or second operand |
+| 5 | Addition and subtraction, up to 100; any missing term |
+| 6 | Multiplication with factors 1–5; any missing term |
+| 7 | Multiplication and exact division with factors 1–10; any missing term |
+
+Level 0 includes zero as an explicitly empty group and samples 5/10/20 unique exercises from all 28 ordered addition facts (swapped operands remain distinct). Numeric entry and the usual keypad remain available. Original local pirates, bears, lollipops, boats and aircraft cycle by original exercise index, staying unchanged through retries, review and settings. Supplied groups remain visible; the main result pictures appear only after a correct submission and hide again on Next or a fresh review presentation. The optional final worked numerical hint remains available without revealing main result pictures. Initial selection remains level 1.
 
 A mathematical mistake does not end the exercise: the child can retry immediately. Once the original session is finished, each missed equation returns in a review queue, with the same missing-number position. A correct first valid attempt removes it from review; another mistake causes it to cycle to the back after the immediate retry. Invalid input does not count as an attempt. Completion appears only when the review queue is empty. Original first-try statistics are not inflated by review answers. Leaving/restarting remains possible and discards in-memory progress.
 
@@ -82,7 +86,7 @@ Record approval in the relevant issue/PR comment (for example, `Peter: approved 
 - New planning, agent-owned tasks, decisions and verification evidence live in [Jira project SCRUM](https://project-22.atlassian.net/jira/software/projects/SCRUM/boards/1). Code, commits, pull requests and Cloudflare build checks stay in this GitHub repository. The original GitHub issue history remains intact; its Jira copy is historical, not automatic two-way synchronization.
 - Use native feature/child relationships and explicit Developer, Analyst, Tester or Peter ownership. Agent-owner metadata is separate from the authenticated Jira author and does not automatically launch a Hermes worker. Do not use an unassignable service account as an assignee; preserve owner labels/descriptions until the shared Agent owner dropdown is available.
 - Keep scope, acceptance criteria, dependencies and evidence concise. Comment only for decisions, blockers, handoffs, approvals and verified results; identify the acting participant. Dev reads back evidence before closing work.
-- Current planned feature: [SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), picture-counting level 0 and the split level-3 progression. [SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27) owns analysis; [SCRUM-32](https://project-22.atlassian.net/browse/SCRUM-32) is Peter's exact-revision review; [SCRUM-33](https://project-22.atlassian.net/browse/SCRUM-33) is independent QA. See [development scope](docs/level-progression.md) for confirmed requirements versus unresolved proposals; the six-level table above still describes the current implementation.
+- Current feature under development: [SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), picture-counting level 0 and the split level-3 progression. [SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27) owns analysis; [SCRUM-32](https://project-22.atlassian.net/browse/SCRUM-32) is Peter's exact-revision review; [SCRUM-33](https://project-22.atlassian.net/browse/SCRUM-33) is independent QA. See [development scope](docs/level-progression.md) for the approved and implemented eight-level contract, verification boundaries and remaining review gates.
 - Creating or assigning a Jira item does not itself approve unresolved product rules, start acceptance QA, or authorize code publication, merges, cloud provisioning or production deployment. The owner-before-QA and separate-release gates above remain unchanged; checked draft PR/feature preview publication follows the approved early-preview workflow.
 
 ## Accepted QA scope

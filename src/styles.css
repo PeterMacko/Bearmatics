@@ -93,9 +93,10 @@ progress::-webkit-progress-bar { background: #f0e0d8; }progress::-webkit-progres
 .level-1 .level-number { background: #ffdc79; color: #76500e; }
 .level-2 .level-number { background: #ffd9cc; color: #933c39; }
 .level-3 .level-number { background: #deedff; color: #345a8d; }
-.level-4 .level-number { background: #ffe7a8; color: #76500e; }
-.level-5 .level-number { background: #eee2ff; color: #68458d; }
-.level-6 .level-number { background: #ffdceb; color: #8c4064; }
+.level-4 .level-number { background: #d8e7fa; color: #345a8d; }
+.level-5 .level-number { background: #ffe7a8; color: #76500e; }
+.level-6 .level-number { background: #eee2ff; color: #68458d; }
+.level-7 .level-number { background: #ffdceb; color: #8c4064; }
 
 .hint-button { display: block; width: 100%; margin-top: 16px; padding: 12px 16px; min-height: 46px; border: 1.5px solid #91afd2; border-radius: 12px; background: #e9f2ff; color: #315783; font-weight: 700; }
 .hint-button:hover:not(:disabled) { background: #dceaff; }
@@ -274,6 +275,16 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
   .summary { padding: 12px 0; }
   .bear-scene { width: min(100%, 300px); }
 }
+/* Eight trails use content-driven compact cards.
+   Do not constrain height or overflow: enlarged text remains scrollable. */
+@media (min-width: 951px) {
+  .workspace:not(.in-session) { grid-template-columns: minmax(0, .35fr) minmax(0, 1.65fr); gap: 24px; padding-bottom: 8px; }
+  .level-option { min-height: 56px; padding: 6px 8px; }
+  .selection .eyebrow { margin-bottom: 4px; }
+  .selection .intro { margin: 4px 0 8px; }
+  .selection .session-options { margin: 8px 0; }
+  .selection h2 { font-size: 1.8rem; }
+}
 .compact-practice .site-header { position: relative; inset: auto; display: grid; min-height: 52px; padding: 4px 0; }
 .compact-practice .wordmark { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
 .compact-practice .workspace { padding-top: 4px; }
@@ -282,4 +293,38 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 .compact-practice .practice-tools { display: block; }
 @media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
   .compact-practice .practice-header { top: 100px; }
+}
+
+/* Keep numeric terms and their countable groups on the same three tracks. */
+.equation.picture-equation { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; }
+.picture-equation .equation-part { display: grid; grid-template-columns: 16px minmax(0, 1fr); grid-template-rows: auto 1fr; gap: 4px 0; align-items: center; justify-items: center; }
+.picture-equation .equation-part:first-child { grid-template-columns: minmax(0, 1fr); }
+.picture-equation [data-term] { grid-column: 2; grid-row: 1; text-align: center; width: 100%; }
+.picture-equation .equation-part:first-child [data-term], .picture-equation .equation-part:first-child .picture-group { grid-column: 1; }
+.picture-equation .operator { grid-column: 1; grid-row: 1; }
+.picture-equation .picture-group { grid-column: 2; grid-row: 2; align-self: start; letter-spacing: normal; font-weight: normal; }
+.equation.picture-equation input { width: 100%; max-width: min(100%, 2em); }
+.picture-equation .picture-unknown { align-content: center; }
+.picture-equation .picture-question { font-size: 1.4rem; line-height: 1; }
+.picture-equation .picture-cue { font-size: .75rem; }
+.picture-equation .equation-part { grid-template-rows: minmax(44px, auto) 1fr; }
+.equation.picture-equation { font-size: 1.7rem; }
+.picture-equation input { font-size: 1.7rem; min-height: 44px; min-width: 44px; }
+@media (orientation: portrait) {
+  .compact-practice .workspace:has(.picture-equation) .companion { left: 0; transform: none; }
+  .compact-practice .practice:has(.picture-equation) .practice-header { padding-left: calc(var(--practice-bear-size) + 12px); min-height: calc(var(--practice-bear-size) * 1.077); align-items: center; }
+}
+@media (min-width: 951px) and (max-height: 700px) {
+  .practice:has(.picture-equation) .practice-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .practice:has(.picture-equation) .practice-top, .practice:has(.picture-equation) .exercise-position { margin-bottom: 0; }
+  .practice:has(.picture-equation) h2 { margin-top: 8px; }
+  .equation.picture-equation { padding-block: 4px; }
+}
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .practice:has(.picture-equation) .number-pad button:last-child { font-size: clamp(16px, 1rem, 26px); }
+  .compact-practice .practice:has(.picture-equation) form { margin-left: 94px; grid-template-columns: minmax(0, 1fr) 204px; column-gap: 8px; }
+  .compact-practice .picture-equation { font-size: 1.6rem; }
+  .picture-equation .equation-part { grid-template-columns: 10px minmax(0, 1fr); }
+  .picture-equation .equation-part:first-child { grid-template-columns: minmax(0, 1fr); }
+  .picture-equation .picture-group { min-block-size: 72px; inline-size: 72px; }
 }

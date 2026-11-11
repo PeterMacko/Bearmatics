@@ -2,13 +2,13 @@
 
 Tracking: [feature SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), [analysis SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27).
 
-**Status:** analysis and development are authorized. This first branch increment is documentation only; the new levels are not implemented yet. Existing behavior is based on main commit `e0f27824badfb01183db0a9a291d5d691eeecb7a`.
+**Status:** the approved eight-level engine, localized selector and level-0 picture practice are implemented in this feature branch. Developer verification is not owner acceptance or independent QA. Peter’s exact-revision review (SCRUM-32), independent QA (SCRUM-33) and separate release authorization remain required.
 
 ## Confirmed scope
 
 | New level | Content |
 | --- | --- |
-| 0 | New addition-only picture counting for younger children. Include zero as an empty group. Show numeric quantities and repeated child-friendly pictures arranged in standard die-pip patterns. |
+| 0 | Addition only: integers a, b, c in 0–6 with a + b = c; missing result only. Include zero as an empty group. Show numeric quantities and repeated pictures in standard die-pip patterns. |
 | 1–2 | Preserve current rules and blank-position mix. |
 | 3 | Current level 3 addition/subtraction within 20, with only the result after `=` missing. |
 | 4 | Current level 3 addition/subtraction within 20, with the first or second operand before `=` missing; cover both positions. |
@@ -18,12 +18,20 @@ Tracking: [feature SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), 
 
 Picture themes requested: pirates, bears, lollipops, boats and aircraft. A quantity of three means three individually countable pictures, not one image with a numeral. Standard groups: one centered; two opposite diagonal corners; three those corners plus center; four corners; five corners plus center; six two columns of three. Zero is an empty group with suitable accessible wording.
 
-## Explicitly unresolved — not approved requirements
+## Explicit owner decisions — approved and implemented
 
-- **Maximum 6:** proposed interpretation is total/result at most 6, not two operands up to 6 with totals up to 12. The owner skipped this clarification; do not infer consent from a skipped response.
-- **Result pictures:** proposed default is supplied-operand pictures first, with result pictures revealed after a correct answer. An intentional count-the-result teaching mode would instead show them before answering. The owner skipped this clarification too.
+Peter explicitly approved both Analyst recommendations after the original clarification was skipped. The later approval supersedes the original pending wording:
 
-The analyst must document these choices and their consequences before the affected Level 0 implementation is accepted. Including zero is explicitly approved. If total ≤ 6 is selected, 28 ordered addition facts are available, enough for the current 5/10/20 unique-equation sessions. Independently verify pool and blank policies rather than trusting these notes.
+- **Maximum 6:** every quantity, including the total/result, is at most 6. This includes 0 + 0, 0 + 6, 6 + 0 and 3 + 3; it excludes 4 + 3.
+- **Result pictures:** supplied-operand groups are always visible. Main result pictures remain a count-neutral unknown until correct submission, including after invalid/wrong input, edits and closing any hint. Preserve the existing optional stage-3 numerical worked explanation; it neither fills the answer nor reveals main result pictures.
+
+All 28 ordered level-0 facts are eligible; swapped operands remain distinct. Finite sampling without replacement supports 5/10/20 unique numeric displays, seeded reproducibility and immutable exercises. The solver, answer checker and hints enforce blank policy too. Themes never affect generation, scoring or mathematical uniqueness.
+
+Five original inline-vector themes cycle by the original exercise index. Retry, locale/settings/orientation changes and exact-equation review retain the theme; Next and a fresh review presentation conceal the result again. Known groups have localized position/theme/count names, zero has an explicit visible empty cue, and unknown results have no hidden count or answer imagery. Existing numeric equation controls and numeric-only `data-term` parsing remain intact. Level 1 remains the initial selection.
+
+## Developer verification boundaries
+
+Unit/component checks cover arithmetic domains, the complete level-0 fact set, supported sizes, seeded/constant random sources, solver/hint rejection, concealment/reveal, theme preservation and review/scoring. Developer browser checks exercise all eight levels, local artwork and responsive SK/EN practice. Test/build/browser execution evidence belongs to the delivered revision; it does not close SCRUM-32/33. Browser emulation, root-text enlargement and audio instrumentation do not establish physical-device keyboard behaviour, actual zoom, screen-reader usability or human listening quality.
 
 ## Implementation and review boundaries
 
