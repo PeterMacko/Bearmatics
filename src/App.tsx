@@ -1,8 +1,11 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type FormEvent, type KeyboardEvent } from 'react';
+import { flushSync } from 'react-dom';
 import { checkAnswer, generateSession, type Level, type Exercise } from './math/engine';
 import { copy, type Language } from './i18n';
 import Bear from './Bear';
+import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
+import HintDialog from './HintDialog';
 import { FeedbackAudio } from './audio';
 
 type Feedback = 'ready' | 'correct' | 'incorrect' | 'invalid';
@@ -15,32 +18,96 @@ export default function App() {
   const [size, setSize] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
   const [answer, setAnswer] = useState('');
+  const compact = useCompactPractice();
+  const touch = useTouchCapability();
+  const [inputMode, setInputMode] = useState<'pad' | 'native'>('native');
+  const padMode = touch || inputMode === 'pad';
+  const editAnswer = (value: string) => {
+    if (!session || session.solved || session.done) return;
+    setAnswer(value);
+    setSession(previous => previous && !previous.solved ? { ...previous, feedback: 'ready' } : previous);
+  };
+  const padEdit = (key: string) => {
+    editAnswer(key === 'clear' ? '' : key === 'backspace' ? answer.slice(0, -1) : (answer + key).slice(0, 3));
+  };
+  const handleAnswerKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (!padMode || session?.solved || event.altKey || event.ctrlKey || event.metaKey || event.nativeEvent.isComposing) return;
+    if (/^[0-9]$/.test(event.key) || event.key === 'Backspace' || event.key === 'Delete') {
+      event.preventDefault();
+      padEdit(event.key === 'Backspace' ? 'backspace' : event.key === 'Delete' ? 'clear' : event.key);
+    }
+  };
   const [leaveOpen, setLeaveOpen] = useState(false);
+  const [hintOpen, setHintOpen] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef<HTMLButtonElement>(null);
+  const hintRef = useRef<HTMLButtonElement>(null);
   const [audio] = useState(() => new FeedbackAudio());
-  const [soundEnabled, setSoundEnabled] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [soundReady, setSoundReady] = useState(false);
+  const desiredSound = useRef(true);
+  const readySound = useRef(false);
+  const activation = useRef(0);
+  const pendingSound = useRef(false);
   const [soundBusy, setSoundBusy] = useState(false);
   const [audioUnavailable, setAudioUnavailable] = useState(false);
   const lastReaction = useRef('');
-  useEffect(() => () => audio.dispose(), [audio]);
+  const completionConsumed = useRef(false);
+  useEffect(() => () => { ++activation.current; pendingSound.current = false; readySound.current = false; audio.dispose(); }, [audio]);
   useEffect(() => {
     const feedback = session?.feedback;
     if (feedback !== 'correct' && feedback !== 'incorrect') { lastReaction.current = ''; return; }
     const key = `${feedback}:${session?.attempts}`;
     if (lastReaction.current === key) return;
     lastReaction.current = key;
-    if (soundEnabled && !audio.play(feedback)) { setSoundEnabled(false); setAudioUnavailable(true); }
+    if (desiredSound.current && readySound.current && !audio.play(feedback)) { readySound.current = false; setSoundReady(false); setAudioUnavailable(true); }
   }, [session?.feedback, session?.attempts, soundEnabled, audio]);
-  const toggleSound = async () => {
-    setSoundBusy(true);
-    const target = !soundEnabled;
-    const enabled = await audio.setEnabled(target);
-    setSoundEnabled(enabled); setAudioUnavailable(target && !enabled); setSoundBusy(false);
+  useEffect(() => {
+    if (!session?.done || completionConsumed.current) return;
+    // Consume even when muted/blocked/pending: activation must not replay history.
+    completionConsumed.current = true;
+    if (desiredSound.current && readySound.current && !audio.play('complete')) {
+      readySound.current = false; setSoundReady(false); setAudioUnavailable(true);
+    }
+  }, [session?.done, audio]);
+  // Only invoke synchronously from interaction handlers, never from effects.
+  const activateSound = async () => {
+    if (!desiredSound.current || readySound.current || pendingSound.current) return;
+    const revision = ++activation.current;
+    pendingSound.current = true; setSoundBusy(true);
+    const enabled = await audio.setEnabled(true);
+    if (revision !== activation.current) return;
+    pendingSound.current = false; readySound.current = enabled;
+    setSoundReady(enabled); setAudioUnavailable(!enabled); setSoundBusy(false);
+  };
+  const toggleSound = () => {
+    const target = !desiredSound.current;
+    desiredSound.current = target; setSoundEnabled(target);
+    if (target) void activateSound();
+    else {
+      ++activation.current; pendingSound.current = false; readySound.current = false;
+      void audio.setEnabled(false);
+      setSoundReady(false); setSoundBusy(false); setAudioUnavailable(false);
+    }
   };
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  useLayoutEffect(() => {
+    const input = inputRef.current;
+    if (padMode && input && document.activeElement === input) {
+      input.blur();
+      input.focus({ preventScroll: true });
+    }
+  }, [padMode]);
   const nextRef = useRef<HTMLButtonElement>(null);
   const summaryRef = useRef<HTMLHeadingElement>(null);
   const t = copy[language];
+  const toggleInputMode = () => {
+    // Commit readonly before focusing; the editable fallback is a user gesture.
+    inputRef.current?.blur();
+    flushSync(() => setInputMode(padMode ? 'native' : 'pad'));
+    inputRef.current?.focus();
+  };
   useEffect(() => {
     if (!leaveOpen) return;
     const previousFocus = document.activeElement as HTMLElement | null;
@@ -48,6 +115,7 @@ export default function App() {
     return () => { if (previousFocus?.isConnected) previousFocus.focus(); };
   }, [leaveOpen]);
   const requestLeave = () => {
+    if (settingsOpen || hintOpen || leaveOpen) return;
     if (session && (session.index > 0 || session.attempts > 0 || session.hintStage > 0 || answer.trim())) setLeaveOpen(true);
     else setSession(null);
   };
@@ -59,11 +127,15 @@ export default function App() {
   }, [session?.index, session?.solved, session?.done]);
   const current = session ? (session.reviewing ? session.reviewQueue[0] : session.exercises[session.index]) : undefined;
   const start = () => {
+    completionConsumed.current = false;
+    lastReaction.current = '';
+    void activateSound();
     setAnswer('');
     setSession({ exercises: generateSession(level, size), index: 0, firstTry: 0, attempts: 0, solved: false, done: false, feedback: 'ready', hintStage: 0, reviewing: false, reviewQueue: [] });
   };
   function submit(event: FormEvent) {
     event.preventDefault();
+    void activateSound();
     setSession(previous => {
       if (!previous || previous.solved || previous.done) return previous;
       const result = checkAnswer(previous.reviewing ? previous.reviewQueue[0] : previous.exercises[previous.index], answer);
@@ -73,6 +145,8 @@ export default function App() {
     });
   }
   const next = () => {
+    void activateSound();
+    setHintOpen(false);
     setSession(previous => {
       if (!previous || !previous.solved || previous.done) return previous;
       const reset = { attempts: 0, hintStage: 0, solved: false, feedback: 'ready' as const };
@@ -87,32 +161,51 @@ export default function App() {
     });
     setAnswer('');
   };
+  const openHint = () => {
+    if (settingsOpen || hintOpen || leaveOpen) return;
+    setSession(previous => previous && !previous.solved && !previous.done && previous.hintStage === 0 ? { ...previous, hintStage: 1 } : previous);
+    setHintOpen(true);
+  };
   const showHint = () => setSession(previous => {
     if (!previous || previous.done || previous.solved || previous.hintStage >= 3) return previous;
     return { ...previous, hintStage: previous.hintStage + 1 };
   });
   const equationDescription = current ? `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}` : '';
 
-  return <div className="app-shell">
-    <header className="site-header" inert={leaveOpen}><div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1>Bearmatics</h1></div>
-      <div className="header-controls"><button className="sound-toggle" type="button" onClick={() => void toggleSound()} disabled={soundBusy} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? t.soundOn : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
-      {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
+  return <div className={`app-shell ${compact && session && !session.done ? 'compact-practice' : ''}`}>
+    {session && !session.done && <progress className="viewport-progress" aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} />}
+    <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>{session && <button className="corner-button back-button" aria-label={t.back} onClick={session.done ? () => setSession(null) : requestLeave}><span aria-hidden="true">←</span></button>}<div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1 className="sr-only">Bearmatics</h1></div>
+      <button ref={settingsRef} className="corner-button settings-button" type="button" aria-label={t.settings} aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => { if (!hintOpen && !leaveOpen) setSettingsOpen(true); }}><span aria-hidden="true">⚙</span></button>
     </header>
-    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen}><aside className="companion"><p className="eyebrow">{t.tagline}</p><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div><p className="companion-caption">{t.gentle}</p></aside>
+    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen || settingsOpen}><aside className="companion"><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div></aside>
       {!session ? <section className="selection"><p className="eyebrow">{t.trail}</p><h2>{t.choose}</h2><p className="intro">{t.intro}</p>
         <fieldset className="level-options"><legend className="sr-only">{t.level}</legend>{([1, 2, 3, 4, 5, 6] as const).map(n => <label className={`level-option level-${n}`} key={n}><input type="radio" name="level" value={n} checked={level === n} onChange={() => setLevel(n)} /><span className="level-number" aria-hidden="true">{n}</span><span><span className="level-title">{t.level} {n} · {t.levels[n - 1]}</span><span className="level-detail">{t.details[n - 1]}</span></span><span className="selection-dot" aria-hidden="true" /></label>)}</fieldset>
         <fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
         <button className="primary start-button" onClick={start}>{t.start}<span aria-hidden="true"> →</span></button>
-      </section> : session.done ? <section className="summary"><p className="eyebrow">{t.trail}</p><span className="completion-mark" aria-hidden="true">✓</span><h2 ref={summaryRef} tabIndex={-1}>{t.complete}</h2><p className="intro">{t.summary}</p><p className="completed-total">{session.exercises.length} {t.finished}</p><p className="first-try">{t.first} <strong>{session.firstTry} / {session.exercises.length}</strong></p><button className="primary" onClick={start}>{t.again}</button><button className="text-button" onClick={() => setSession(null)}>{t.back}</button></section>
-        : current && <section className="practice"><div className="practice-top"><span className="level-pill">{t.level} {level}</span><button className="text-button" onClick={requestLeave}>{t.back}</button></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p><progress aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} /><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}
-          <form onSubmit={submit} noValidate><div className="equation" data-feedback={session.feedback} role="group" aria-label={equationDescription}>{current.values.map((n, i) => <span className="equation-part" key={i}>{i === 1 && <span className="operator" aria-hidden="true">{symbols[current.operation]}</span>}{i === 2 && <span className="operator" aria-hidden="true">=</span>}<span data-term={i}>{i === current.blank ? <input ref={inputRef} type="text" inputMode="numeric" autoComplete="off" aria-label={`${t.missing}, ${t.positions[i]}`} aria-describedby="answer-feedback" aria-invalid={session.feedback === 'invalid' || session.feedback === 'incorrect'} value={answer} disabled={session.solved} onChange={e => { setAnswer(e.target.value); setSession(previous => previous && !previous.solved ? { ...previous, feedback: 'ready' } : previous); }} /> : <span aria-hidden="true">{n}</span>}</span></span>)}</div>
+      </section> : session.done ? <section className="summary"><p className="eyebrow">{t.trail}</p><span className="completion-mark" aria-hidden="true">✓</span><h2 ref={summaryRef} tabIndex={-1}>{t.complete}</h2><p className="intro">{t.summary}</p><p className="completed-total">{session.exercises.length} {t.finished}</p><p className="first-try">{t.first} <strong>{session.firstTry} / {session.exercises.length}</strong></p><button className="primary" onClick={event => {
+        // Ignore the continuation click of the Finish gesture, not a deliberate replay.
+        if (event.detail > 1) { event.preventDefault(); return; }
+        start();
+      }}>{t.again}</button><button className="text-button" onClick={() => setSession(null)}>{t.back}</button></section>
+        : current && <section className="practice"><div className="practice-header"><div className="practice-top"><span className="level-pill">{t.level} {level}</span></div><p className="exercise-position" aria-live="polite">{session.reviewing ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}` : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`}</p></div><h2>{session.reviewing ? t.reviewTitle : t.ready}</h2>
+          <form onSubmit={submit} onKeyDown={event => {
+            if (event.key === 'Enter' && event.repeat && (event.target === inputRef.current || (event.target as HTMLElement).classList.contains('answer-button'))) event.preventDefault();
+          }} noValidate><div className="equation" data-feedback={session.feedback} role="group" aria-label={equationDescription}>{current.values.map((n, i) => <span className="equation-part" key={i}>{i === 1 && <span className="operator" aria-hidden="true">{symbols[current.operation]}</span>}{i === 2 && <span className="operator" aria-hidden="true">=</span>}<span data-term={i}>{i === current.blank ? <input ref={inputRef} type="text" onKeyDown={handleAnswerKey} readOnly={padMode} inputMode={padMode ? 'none' : 'numeric'} autoComplete="off" aria-label={`${t.missing}, ${t.positions[i]}`} aria-describedby={padMode ? 'answer-feedback answer-instructions' : 'answer-feedback'} aria-invalid={session.feedback === 'invalid' || session.feedback === 'incorrect'} value={answer} disabled={session.solved} onChange={e => editAnswer(e.target.value)} /> : <span aria-hidden="true">{n}</span>}</span></span>)}</div>
             <p id="answer-feedback" className={`feedback feedback-${session.feedback}`} role="status" aria-live="polite" aria-atomic="true">{session.feedback === 'ready' ? '' : t[session.feedback]}</p>
-            {session.solved ? <button ref={nextRef} type="button" className="primary answer-button" data-state="correct" onClick={next}>{session.reviewing ? (session.reviewQueue.length === 1 && session.attempts === 1 && session.hintStage === 0 ? t.finish : t.next) : session.index === session.exercises.length - 1 ? (session.reviewQueue.length > 0 || session.attempts > 1 ? t.reviewStart : t.finish) : t.next}<span aria-hidden="true"> →</span></button> : <button type="submit" className="primary answer-button" data-state={session.feedback === 'incorrect' ? 'incorrect' : 'neutral'}>{t.check}</button>}
-            <button type="button" className="hint-button" aria-controls="hint-panel" aria-expanded={session.hintStage > 0} disabled={session.solved || session.hintStage >= 3} onClick={showHint}>{session.hintStage === 0 ? t.showHint : session.hintStage >= 3 ? t.allHints : t.nextHint}</button>
-            {session.hintStage > 0 && <HintPanel exercise={current} stage={session.hintStage} language={language} />}
+            <span id="answer-instructions" className="sr-only">{t.padInstructions}</span>
+            <span className="sr-only" data-testid="answer-announcement" aria-live="polite" aria-atomic="true">{padMode ? `${t.answerLabel}: ${answer || t.emptyAnswer}` : ''}</span>
+            {padMode && <div className="number-pad" onKeyDown={handleAnswerKey} role="group" aria-label={t.numberPad}>{['7', '8', '9', '0', '4', '5', '6', 'clear', '1', '2', '3', 'backspace'].map(key => <button key={key} className={key === 'clear' ? 'pad-clear' : undefined} type="button" disabled={session.solved} aria-label={key === 'clear' ? t.clearAnswer : key === 'backspace' ? t.backspace : key} onClick={() => padEdit(key)}>{key === 'clear' ? t.clear : key === 'backspace' ? '⌫' : key}</button>)}</div>}
+            <div className="answer-actions">{session.solved ? <button ref={nextRef} type="button" className="primary answer-button" data-state="correct" onClick={event => { event.preventDefault(); next(); }}>{session.reviewing ? (session.reviewQueue.length === 1 && session.attempts === 1 && session.hintStage === 0 ? t.finish : t.next) : session.index === session.exercises.length - 1 ? (session.reviewQueue.length > 0 || session.attempts > 1 ? t.reviewStart : t.finish) : t.next}<span aria-hidden="true"> →</span></button> : <button type="submit" className="primary answer-button" data-state={session.feedback === 'incorrect' ? 'incorrect' : 'neutral'}>{t.check}</button>}
+            <button ref={hintRef} type="button" className="hint-button" aria-label={t.showHint} title={t.showHint} aria-haspopup="dialog" aria-controls={hintOpen ? 'hint-dialog' : undefined} aria-expanded={hintOpen} disabled={session.solved} onClick={openHint}><span aria-hidden="true">i</span></button></div>
+            {!touch && <div className="practice-tools"><button type="button" className="input-mode-button" disabled={session.solved} onClick={toggleInputMode}>{padMode ? t.useNative : t.usePad}</button></div>}
           </form>
         </section>}
     </main>
+    {settingsOpen && <HintDialog titleId="settings-title" title={t.settings} closeLabel={t.closeSettings} onClose={() => setSettingsOpen(false)} triggerRef={settingsRef}>
+      <div className="header-controls"><button className="sound-toggle" type="button" onClick={toggleSound} aria-busy={soundBusy} aria-pressed={soundEnabled}><span aria-hidden="true">{soundEnabled ? '♪' : '♩'}</span> {soundEnabled ? (soundReady ? t.soundOn : audioUnavailable ? t.soundUnavailable : t.soundRequested) : t.soundOff}</button><nav className="language-switch" aria-label="Language / Jazyk"><button type="button" aria-pressed={language === 'sk'} onClick={() => setLanguage('sk')}>Slovenčina</button><button type="button" aria-pressed={language === 'en'} onClick={() => setLanguage('en')}>English</button></nav></div>
+      {audioUnavailable && <span className="audio-notice" aria-live="polite">{t.audioUnavailable}</span>}
+    </HintDialog>}
+    {hintOpen && session && current && <HintDialog title={t.hint} closeLabel={t.closeHint} nextLabel={session.hintStage >= 3 ? t.allHints : t.nextHint} nextDisabled={session.hintStage >= 3} onClose={() => setHintOpen(false)} onNext={showHint} triggerRef={hintRef}>{session.reviewing && <p className="review-note">{t.reviewHelp}</p>}<HintPanel exercise={current} stage={session.hintStage} language={language} /></HintDialog>}
     {leaveOpen && <div className="modal-backdrop"><div ref={dialogRef} className="leave-dialog" role="dialog" aria-modal="true" aria-labelledby="leave-title" aria-describedby="leave-description" onKeyDown={event => {
       if (event.key === 'Escape') { event.preventDefault(); setLeaveOpen(false); }
       if (event.key === 'Tab') {
@@ -123,6 +216,6 @@ export default function App() {
         else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
       }
     }}><h2 id="leave-title">{t.leaveTitle}</h2><p id="leave-description">{t.leaveText}</p><button className="primary" onClick={() => setLeaveOpen(false)}>{t.stay}</button><button className="text-button" onClick={() => { setLeaveOpen(false); setAnswer(''); setSession(null); }}>{t.leave}</button></div></div>}
-    <footer className="site-footer">{t.tagline}</footer>
+
   </div>;
 }

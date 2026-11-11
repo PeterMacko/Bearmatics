@@ -1,6 +1,6 @@
 # Bearmatics 🐻
 
-A planned child-friendly math practice web app for ages **6–9**, in **Slovak and English**, with selectable learning levels, missing-number exercises, progressive counting hints, and animated bear/sound feedback.
+A child-friendly math practice web app for ages **6–9**, in **Slovak and English**, with selectable learning levels, missing-number exercises, progressive counting hints, and animated bear/sound feedback.
 
 **Status:** MVP scope approved in [specification #6](https://github.com/PeterMacko/Bearmatics/issues/6). The foundation (#7), math engine (#8), and interactive practice interface (#9) are implemented and verified in the accepted Chromium/Firefox QA scope (#12). Choose a level and 5/10/20 exercises, practise with retries and explicit Next, switch Slovak/English without resetting progress, and view a completion summary. Progressive hints (#10), sound and expressive bear reactions (#11) are implemented and covered by accepted QA. The original bear has neutral/happy/gently sad states, short reactions, and reduced-motion alternatives. Peter accepted scoped independent QA in #12. Feature-branch publication is not a merge or production deployment.
 
@@ -27,7 +27,7 @@ Hint-assisted answers are excluded from original first-try counts. A hinted revi
 
 Answer controls are neutral blue before checking, green on success, and red after a valid wrong answer. Editing the answer returns controls and the bear to neutral. Invalid input gets a short localized prompt, without an example, punishment, sound or sad reaction. Text feedback remains available alongside colour, sound and animation.
 
-Sound starts **off** and must be explicitly enabled using the header control. Correct and retry cues are original short synthesized tones; mute stops active and scheduled feedback. No background music, microphone access, audio downloads or recordings are used. If the browser blocks audio, practice continues with visual feedback. The bear has short non-looping success/retry reactions; reduced-motion settings disable movement while keeping the expressions.
+Sound preference starts **on by default**. Browser audio activates only from a genuine interaction such as Start; it does not autoplay on page load. Settings distinguishes requested, ready, unavailable and muted states. Muting before Start is respected, and mute stops active/scheduled tones immediately. Correct/retry cues use stronger bounded synthesized tones; a distinct two-second completion fanfare plays once after the original session and all required mastery review are finished, without replaying on settings/language changes or unmute. No background music, microphone access, audio downloads or recordings are used. If the browser blocks audio, practice continues with visual feedback. The bear has short non-looping success/retry reactions; reduced-motion settings disable movement while keeping the expressions. Human listening and device volume remain separate review checks.
 
 The bear SVG, expression variations and procedural sound patterns were created for Bearmatics; no third-party image or audio assets are included. A repository-wide license has not been selected by this task.
 
@@ -47,8 +47,9 @@ flowchart TD
     A[Peter defines the task] --> B[Analyst clarifies scope and acceptance criteria]
     B --> C{Peter approves scope?}
     C -->|Changes requested| B
-    C -->|Yes| D[Dev implements and runs developer checks]
-    D --> E[Dev presents a review package]
+    C -->|Yes| P[Open draft PR and feature-branch preview early]
+    P --> D[Dev implements, checks and pushes safe increments]
+    D --> E[Dev presents exact revision and preview for owner review]
     E --> F{Peter approves this revision for QA?}
     F -->|Changes requested| D
     F -->|Yes| G[Tester performs independent QA on approved revision]
@@ -68,7 +69,7 @@ flowchart TD
 
 ### Required review gates
 
-1. **Scope approval:** proposals are not requirements until Peter agrees.
+1. **Scope approval and early previews:** proposals are not requirements until Peter agrees. For approved feature work, create a feature branch and draft PR as soon as a meaningful first commit is available. Push checked increments throughout development so Peter can follow the Cloudflare branch preview. Draft publication and preview updates are authorized by this workflow; they are not owner acceptance, independent QA, merge, or production-release approval. Keep the PR draft until review gates pass.
 2. **Peter's review before QA:** Dev supplies a short change summary, linked issue/PR or exact revision, a runnable demo/preview when available (screenshots when useful), and developer test/build results with limitations. Peter explicitly approves that revision for QA, or requests changes.
 3. **Independent QA:** the tester may prepare a test plan beforehand, but must not start independent acceptance testing of delivered work until Peter's approval is recorded. Dev's unit tests, build checks, and automated CI are allowed before this gate; they do not replace QA.
 4. **Rework:** implementation changes after Peter's approval, including QA fixes, return through Peter's review before independent QA/retesting. Record the approved revision so old approval is not applied to new code.
@@ -92,7 +93,7 @@ No hosted GitHub Actions CI workflow is included in this initial app publication
 
 ## Hosting and data
 
-Planned hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. No server database or accounts are required for the initial app. A future authenticated Worker API with Cloudflare D1 can support saved progress. Do not store children's personal data by default.
+Hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. The MVP is live at https://bearmatics.mr-petermacko.workers.dev (release verification in #13). No server database or accounts are required for the initial app. A future authenticated Worker API with Cloudflare D1 can support saved progress. Do not store children's personal data by default.
 
 ## Local development and developer checks
 
@@ -119,6 +120,8 @@ Dependencies are pinned. npm 11 install-script approvals are limited to the lock
 
 ## Cloudflare connection settings
 
+`wrangler.jsonc` is the canonical configuration and includes the required `previews: {}` block for branch previews. `wrangler.toml` is an equivalent alternative; keep both in sync and use `--config wrangler.toml` to select TOML explicitly (Wrangler otherwise discovers JSONC first). Both enable persistent invocation logs with `observability.logs.enabled`, `invocation_logs` and `persist` set to `true`. Preview observability uses the top-level settings unless explicitly overridden. These are runtime/request logs, not browser audio logs or build logs; do not log children's answers or personal data. Cloudflare log retention/usage follows the account plan.
+
 After the application PR is merged into `main` with Peter’s approval, and the first deployment is authorized, connect the repo as a Worker with these settings:
 
 | Setting | Value |
@@ -133,7 +136,7 @@ After the application PR is merged into `main` with Peter’s approval, and the 
 | Build variable | `NODE_VERSION=26.12.1` (or a compatible installed Node version) |
 | App secrets / database bindings | None for this foundation |
 
-Wrangler serves static files from `dist` with SPA fallback; no server script is required. Cloudflare installs dependencies before the build. No Cloudflare resource or live deployment has been created or verified by this foundation task. Do not treat a successful dry run as a live release. Publishing to the production branch can trigger deployment once Git integration is connected; obtain release authorization first.
+Wrangler serves static files from `dist` with SPA fallback; no server script is required. Cloudflare installs dependencies before the build. The initial production release was verified in #13. Do not treat a successful dry run as a live release. Feature branches use preview builds (`npx wrangler preview`), never the production deploy command. Add the actual verified stable Preview URL to the draft PR; do not guess it from a branch name. A failed build leaves the last successful preview unchanged, so record the previewed revision and use a deployment-specific URL for exact owner/QA approval when available. Publishing to the production branch can trigger deployment once Git integration is connected; obtain release authorization first.
 
 ## Planning links
 
