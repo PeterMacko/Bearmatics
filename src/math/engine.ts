@@ -18,7 +18,7 @@ export function checkAnswer(exercise: Exercise, input: string): AnswerResult {
 
 const pools = new Map<Level, readonly Exercise[]>();
 
-/** Bounded sampling from a complete pool avoids retry loops and duplicate equations. */
+/** Bounded sampling; only level-0 size-20 rounds repeat four nonzero facts. */
 export function generateSession(level: Level, size: number = 10, rng: () => number = Math.random): readonly Exercise[] {
   if (![0, 1, 2, 3, 4, 5, 6, 7].includes(level) || ![5, 10, 20].includes(size)) throw new RangeError('Unsupported session settings');
   let pool = pools.get(level);
@@ -58,7 +58,14 @@ export function generateSession(level: Level, size: number = 10, rng: () => numb
     }
     return items;
   }
-  const available = shuffle([...pool]);
+  // Apply one shared budget before coverage selection as well as filler.
+  let zeroAvailable = true;
+  const available = shuffle([...pool]).filter(e => {
+    if (!e.values.includes(0)) return true;
+    if (!zeroAvailable) return false;
+    zeroAvailable = false;
+    return true;
+  });
   const selected: Exercise[] = [];
   const take = (predicate: (e: Exercise) => boolean) => {
     if (selected.some(predicate)) return;
@@ -76,7 +83,19 @@ export function generateSession(level: Level, size: number = 10, rng: () => numb
     if (level !== 0 && level !== 3) take(e => e.blank !== 2);
   }
   selected.push(...available.slice(0, size - selected.length));
-  return Object.freeze(shuffle(selected));
+  const ordered = shuffle(selected);
+  if (level === 0 && size === 20) {
+    // Only 15 nonzero facts exist. Reuse four different ones, separated from
+    // their first presentations and from each other, without random retries.
+    const repeats = ordered.filter(e => !e.values.includes(0)).slice(0, 4);
+    const extended: Exercise[] = [];
+    for (let i = 0; i < ordered.length; i++) {
+      extended.push(ordered[i]);
+      if (i >= 8 && i < 12) extended.push(Object.freeze({ ...repeats[i - 8] }));
+    }
+    return Object.freeze(extended);
+  }
+  return Object.freeze(ordered);
 }
 
 export function solveBlank(exercise: Exercise): number {

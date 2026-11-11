@@ -2,7 +2,7 @@
 
 Tracking: [feature SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), [analysis SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27).
 
-**Status:** the approved eight-level engine, localized selector and level-0 picture practice are implemented in this feature branch. Developer verification is not owner acceptance or independent QA. Peter’s exact-revision review (SCRUM-32), independent QA (SCRUM-33) and separate release authorization remain required.
+**Status:** the approved eight-level engine, localized selector, level-0 picture practice and owner-requested zero-frequency correction are implemented locally in this feature branch. The correction supersedes earlier preview/review evidence and needs fresh exact-revision owner review; independent QA has not started. Developer verification is not owner acceptance or independent QA. Peter’s exact-revision review (SCRUM-32), independent QA (SCRUM-33) and separate release authorization remain required.
 
 ## Confirmed scope
 
@@ -25,7 +25,11 @@ Peter explicitly approved both Analyst recommendations after the original clarif
 - **Maximum 6:** every quantity, including the total/result, is at most 6. This includes 0 + 0, 0 + 6, 6 + 0 and 3 + 3; it excludes 4 + 3.
 - **Result pictures:** supplied-operand groups are always visible. Main result pictures remain a count-neutral unknown until correct submission, including after invalid/wrong input, edits and closing any hint. Preserve the existing optional stage-3 numerical worked explanation; it neither fills the answer nor reveals main result pictures.
 
-All 28 ordered level-0 facts are eligible; swapped operands remain distinct. Finite sampling without replacement supports 5/10/20 unique numeric displays, seeded reproducibility and immutable exercises. The solver, answer checker and hints enforce blank policy too. Themes never affect generation, scoring or mathematical uniqueness.
+All 28 ordered level-0 facts remain mathematically legal; swapped operands remain distinct. The zero cap is a sampling policy, not a solver restriction. Every original generated round on **all eight levels** contains at most one zero-containing question across required operation/blank coverage and filler combined. Count zero anywhere in the full stored values, including the hidden value; several zeros in a single fact count as one question. Multiplication/division levels 6–7 remain positive and do not force a zero question.
+
+Peter explicitly approved retaining 20 questions at level 0 with minimal nonzero repetition: its legal pool has 15 nonzero and 13 zero-containing facts, so a capped round can have only 16 unique questions. Level-0 20-question rounds use all 15 distinct nonzero facts, one zero-containing fact, and exactly four additional nonzero presentations, repeating four different facts and avoiding immediate identical equations. Zero is never duplicated within an original round. All 5/10-question rounds remain unique on every level; all 20-question rounds on levels 1–7 remain unique. Sampling is finite, seeded/reproducible, rejects invalid random sources and returns exactly the selected size. Every original presentation has a distinct immutable exercise identity, including repeated numeric facts, so themes and review remain tied to the correct original index.
+
+Exact-equation mastery review is unchanged: each missed original presentation retains its equation/blank and theme, and a missed zero may return repeatedly under existing mastery rules. These are review presentations, not newly generated original questions. Original first-try scoring denominators stay 5/10/20. The solver, answer checker and hints still accept every legal zero fact and enforce blank policy. Themes never affect generation, scoring or mathematical legality.
 
 Five original inline-vector themes cycle by the original exercise index. Retry, locale/settings/orientation changes and exact-equation review retain the theme; Next and a fresh review presentation conceal the result again. Known groups have localized position/theme/count names, zero has an explicit visible empty cue, and unknown results have no hidden count or answer imagery. Existing numeric equation controls and numeric-only `data-term` parsing remain intact. Level 1 remains the initial selection.
 
