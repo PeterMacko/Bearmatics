@@ -77,13 +77,13 @@ flowchart TD
 
 Record approval in the relevant issue/PR comment (for example, `Peter: approved revision <commit> for QA`) or in this team's chat, with a concise attributed record linked to the issue. GitHub credentials are currently shared through Peter's account, so a self-approval restriction must not be bypassed or treated as approval; a clear owner decision is required. These are team operating rules, not yet technically enforced branch-protection or CI gates.
 
-## GitHub work tracking
+## Work tracking: Jira and GitHub
 
-- One parent issue per feature/outcome; native sub-issues for meaningful agent tasks and owner review.
-- Titles use `[ANALYST]`, `[DEV]`, `[QA]`, or `[OWNER]`; `agent:*` labels identify agents. The body explicitly names the responsible participant. Hermes agents are not separate GitHub accounts.
-- Keep scope, acceptance criteria, dependencies, and evidence concise. Comment only for decisions, blockers, handoffs, approvals, and verified results; identify the acting participant.
-- A task's status is not proof of completion. Dev checks evidence before closing; all acceptance criteria and review gates must be satisfied before the parent closes.
-- Creating an issue does not automatically start an agent or authorize code publication, merges, cloud resources, or deployments.
+- New planning, agent-owned tasks, decisions and verification evidence live in [Jira project SCRUM](https://project-22.atlassian.net/jira/software/projects/SCRUM/boards/1). Code, commits, pull requests and Cloudflare build checks stay in this GitHub repository. The original GitHub issue history remains intact; its Jira copy is historical, not automatic two-way synchronization.
+- Use native feature/child relationships and explicit Developer, Analyst, Tester or Peter ownership. Agent-owner metadata is separate from the authenticated Jira author and does not automatically launch a Hermes worker. Do not use an unassignable service account as an assignee; preserve owner labels/descriptions until the shared Agent owner dropdown is available.
+- Keep scope, acceptance criteria, dependencies and evidence concise. Comment only for decisions, blockers, handoffs, approvals and verified results; identify the acting participant. Dev reads back evidence before closing work.
+- Current planned feature: [SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), picture-counting level 0 and the split level-3 progression. [SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27) owns analysis; [SCRUM-32](https://project-22.atlassian.net/browse/SCRUM-32) is Peter's exact-revision review; [SCRUM-33](https://project-22.atlassian.net/browse/SCRUM-33) is independent QA. See [development scope](docs/level-progression.md) for confirmed requirements versus unresolved proposals; the six-level table above still describes the current implementation.
+- Creating or assigning a Jira item does not itself approve unresolved product rules, start acceptance QA, or authorize code publication, merges, cloud provisioning or production deployment. The owner-before-QA and separate-release gates above remain unchanged; checked draft PR/feature preview publication follows the approved early-preview workflow.
 
 ## Accepted QA scope
 
