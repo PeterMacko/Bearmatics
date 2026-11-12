@@ -52,25 +52,27 @@ The bear SVG, expression variations and procedural sound patterns were created f
 flowchart TD
     A[Peter requests a feature] --> B[Dev creates Jira feature, child tasks and dependencies]
     B --> C[Analyst defines scope and acceptance criteria]
-    C --> D{Peter approves scope?}
+    C --> AR[Analysis review OWNER task; In Review assigned Peter]
+    AR --> D{Peter approves scope?}
     D -->|Revise| C
-    D -->|Yes| E[Feature In Progress and unassigned; open draft PR and preview early]
+    D -->|Yes| AD[Analysis review Done; preserve approval]
+    AD --> E[Feature In Progress and unassigned; open draft PR and preview early]
     E --> F[Dev implements with tests, build and code review]
     F --> G[Completed developer tasks In Review]
     G --> H[Publish checked revision and verify preview identity]
-    H --> I[Open or reopen SAME OWNER task; assign Peter; brief revision-specific request]
+    H --> I[Separate DEVELOPMENT review OWNER task; In Review assigned Peter; exact revision]
     I --> J{Peter approves this revision for QA?}
     J -->|Changes requested| F
-    J -->|Yes: OWNER task Done| K[Independent Tester checks immutable approved source]
+    J -->|Yes: development review Done| K[Independent Tester checks immutable approved source]
     K --> L{Confirmed defects?}
     L -->|Yes| M[Record reproducible Jira fixes; Dev repairs and verifies]
     M --> G
     L -->|No| N{Remaining test failures or coverage limits?}
-    N -->|Yes| O[Reopen SAME OWNER task; assign Peter; ask brief coverage decision]
+    N -->|Yes| O[Reopen DEVELOPMENT review task; assign Peter; brief coverage decision]
     O --> P{Peter accepts documented limits?}
     P -->|More testing| K
     P -->|Code change needed| F
-    P -->|Yes: OWNER task Done| Q[Close independently verified work and scoped QA; retain raw failures]
+    P -->|Yes: development review Done| Q[Close independently verified work and scoped QA; retain raw failures]
     N -->|No| Q
     Q --> R[Complete handoff; mark PR ready; feature In Review assigned Peter]
     R --> S{Peter merges or explicitly authorizes merge and release?}
@@ -103,9 +105,11 @@ sequenceDiagram
     Dev->>Analyst: Assign scope and acceptance criteria
     Analyst-->>Dev: Specification and unresolved teaching decisions
     loop Until scope is approved
+        Dev->>Jira: Analysis review OWNER task In Review, assign Peter
         Dev->>Peter: Request scope approval
         Peter-->>Dev: Approve scope, or request Analyst clarification
     end
+    Peter->>Jira: Analysis review Done, preserve approval
     Dev->>Jira: Feature In Progress, unassigned
     Dev->>GitHub: Open early draft PR and push checked increments
     GitHub->>Cloudflare: Build feature-branch preview
@@ -117,22 +121,22 @@ sequenceDiagram
         Dev->>GitHub: Push checked revision and retain draft status
         GitHub->>Cloudflare: Update branch preview
         Cloudflare-->>Dev: Verified preview revision
-        Dev->>Jira: Open or reopen SAME OWNER task, assign Peter
+        Dev->>Jira: Separate DEVELOPMENT review task In Review, assign Peter
         Dev->>Peter: Brief review request with exact revision and preview
         alt Peter requests changes
             Peter-->>Dev: Required changes, no acceptance QA yet
         else Peter approves this revision for QA
-            Peter->>Jira: OWNER task Done
+            Peter->>Jira: DEVELOPMENT review Done
             Dev->>Tester: Approved immutable source, criteria and evidence requirements
             Tester-->>Dev: Independent results, defects and coverage limits
             Dev->>Dev: Read and verify raw evidence
             alt Confirmed defect
                 Dev->>Jira: Create fix, return through owner review before retest
             else Test failures or coverage limits remain
-                Dev->>Jira: Reopen SAME OWNER task, assign Peter
+                Dev->>Jira: Reopen DEVELOPMENT review task, assign Peter
                 Dev->>Peter: Accept documented limits or request more testing
                 alt Peter accepts limits
-                    Peter->>Jira: OWNER task Done, scoped acceptance recorded
+                    Peter->>Jira: DEVELOPMENT review Done, scoped acceptance recorded
                 else Peter requests more testing
                     Dev->>Tester: Additional testing of SAME approved source
                     Tester-->>Dev: Additional evidence or defects
@@ -165,17 +169,17 @@ sequenceDiagram
     end
 ```
 
-**Throughout both diagrams:** the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Only the actionable **OWNER** task is assigned to Peter before the final merge queue; reopen that same task for further input, with a few actionable lines. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
+**Throughout both diagrams:** the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Use TWO separate **OWNER** subtasks: **analysis/scope review** and **development/exact-revision preview review**. Assign each to Peter only when actionable. Preserve approved analysis review as Done; reopen development review for revised previews, QA fixes and coverage decisions. Reopen analysis review only for material scope changes. Keep requests brief. Final PR review is the feature itself, not a third owner task. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
 
 **Quota guard:** before model-funded work, check the actual ChatGPT five-hour session window. At **10% remaining or less**, or unavailable telemetry, checkpoint and pause new model work. Resume the same work after the verified provider reset, with fresh quota; do not duplicate workers. Waiting for Peter is not permission to continue automatically.
 
 ### Required review gates
 
-1. **Scope approval and early previews:** proposals are not requirements until Peter agrees. For approved feature work, create a feature branch and draft PR as soon as a meaningful first commit is available. Push checked increments throughout development so Peter can follow the Cloudflare branch preview. Draft publication and preview updates are authorized by this workflow; they are not owner acceptance, independent QA, merge, or production-release approval. Keep the PR draft until review gates pass.
-2. **Peter's review before QA:** Dev supplies a short change summary, linked issue/PR or exact revision, a runnable demo/preview when available (screenshots when useful), and developer test/build results with limitations. Peter explicitly approves that revision for QA, or requests changes.
+1. **Scope approval and early previews:** proposals are not requirements until Peter agrees in the **analysis review OWNER task**, which stays Done after approval. For approved feature work, create a feature branch and draft PR as soon as a meaningful first commit is available. Push checked increments throughout development so Peter can follow the Cloudflare branch preview. Draft publication and preview updates are authorized by this workflow; they are not owner acceptance, independent QA, merge, or production-release approval. Keep the PR draft until review gates pass.
+2. **Peter's development review before QA:** use a **separate development review OWNER task**, In Review and assigned Peter when actionable. Dev supplies a short change summary, linked issue/PR or exact revision, a runnable demo/preview when available (screenshots when useful), and developer test/build results with limitations. Peter explicitly approves that revision for QA, or requests changes.
 3. **Independent QA:** the tester may prepare a test plan beforehand, but must not start independent acceptance testing of delivered work until Peter's approval is recorded. Dev's unit tests, build checks, and automated CI are allowed before this gate; they do not replace QA.
 4. **Rework:** implementation changes after Peter's approval, including QA fixes, return through Peter's review before independent QA/retesting. Record the approved revision so old approval is not applied to new code.
-5. **Coverage decision and final handoff:** retain all raw failures and disclose unverified scope. If a decision is needed, reopen the same OWNER task and assign Peter; acceptance applies only to that revision and those limits. Complete verified child tasks and mark the PR ready only after the review, QA and coverage gates are settled. Then move the feature from **In Progress/unassigned** to **In Review/assigned Peter**, awaiting his merge.
+5. **Coverage decision and final handoff:** retain all raw failures and disclose unverified scope. If a decision is needed, reopen the **development review** task and assign Peter; acceptance applies only to that revision and those limits. Complete verified child tasks and mark the PR ready only after the review, QA and coverage gates are settled. Then move the feature from **In Progress/unassigned** to **In Review/assigned Peter** for his final PR review and merge, without a third owner review task.
 6. **Release approval:** Peter's approval to start QA or accept coverage limits is **not** approval to merge or deploy. Merge/release requires separate explicit authorization. If merging triggers Cloudflare production deployment, merge is also a release decision. Close the feature only after live release verification.
 
 Record approval in the relevant issue/PR comment (for example, `Peter: approved revision <commit> for QA`) or in this team's chat, with a concise attributed record linked to the issue. GitHub credentials are currently shared through Peter's account, so a self-approval restriction must not be bypassed or treated as approval; a clear owner decision is required. These are team operating rules, not yet technically enforced branch-protection or CI gates.
@@ -185,7 +189,7 @@ Record approval in the relevant issue/PR comment (for example, `Peter: approved 
 - New planning, agent-owned tasks, decisions and verification evidence live in [Jira project SCRUM](https://project-22.atlassian.net/jira/software/projects/SCRUM/boards/1). Code, commits, pull requests and Cloudflare build checks stay in this GitHub repository. The original GitHub issue history remains intact; its Jira copy is historical, not automatic two-way synchronization.
 - Use native feature/child relationships and explicit Developer, Analyst, Tester or Peter ownership. Agent-owner metadata is separate from the authenticated Jira author and does not automatically launch a Hermes worker. Do not use an unassignable service account as an assignee; preserve owner labels/descriptions until the shared Agent owner dropdown is available.
 - Keep scope, acceptance criteria, dependencies and evidence concise. Comment only for decisions, blockers, handoffs, approvals and verified results; identify the acting participant. Dev reads back evidence before closing work.
-- Current feature under development: [SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), picture-counting level 0 and the split level-3 progression. [SCRUM-27](https://project-22.atlassian.net/browse/SCRUM-27) owns analysis; [SCRUM-32](https://project-22.atlassian.net/browse/SCRUM-32) is Peter's exact-revision review; [SCRUM-33](https://project-22.atlassian.net/browse/SCRUM-33) is independent QA. See [development scope](docs/level-progression.md) for the approved and implemented eight-level contract, verification boundaries and remaining review gates.
+- Current feature: [SCRUM-36](https://project-22.atlassian.net/browse/SCRUM-36), responsive menu scrolling, compact bear header and favicon. Analysis review [SCRUM-41](https://project-22.atlassian.net/browse/SCRUM-41) is approved; development review is separate in [SCRUM-44](https://project-22.atlassian.net/browse/SCRUM-44); [SCRUM-42](https://project-22.atlassian.net/browse/SCRUM-42) owns independent QA. The earlier eight-level contract remains in [development scope](docs/level-progression.md); its acceptance does not accept this new visual feature.
 - Creating or assigning a Jira item does not itself approve unresolved product rules, start acceptance QA, or authorize code publication, merges, cloud provisioning or production deployment. The owner-before-QA and separate-release gates above remain unchanged; checked draft PR/feature preview publication follows the approved early-preview workflow.
 
 ## Accepted QA scope
