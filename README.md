@@ -46,30 +46,128 @@ The bear SVG, expression variations and procedural sound patterns were created f
 
 ## Delivery workflow
 
+### Activity diagram
+
 ```mermaid
 flowchart TD
-    A[Peter defines the task] --> B[Analyst clarifies scope and acceptance criteria]
-    B --> C{Peter approves scope?}
-    C -->|Changes requested| B
-    C -->|Yes| P[Open draft PR and feature-branch preview early]
-    P --> D[Dev implements, checks and pushes safe increments]
-    D --> E[Dev presents exact revision and preview for owner review]
-    E --> F{Peter approves this revision for QA?}
-    F -->|Changes requested| D
-    F -->|Yes| G[Tester performs independent QA on approved revision]
-    G --> H{QA passes?}
-    H -->|No: defects return to Dev| D
-    H -->|Yes| V[Dev closes verified implementation and QA tasks]
-    V --> I{Peter authorizes merge and release?}
-    I -->|Changes requested| D
-    I -->|Hold| J[Wait without merging or deploying]
-    J --> I
-    I -->|Yes| K[Authorized merge and Cloudflare deployment]
-    K --> L[Verify deployed revision and acceptance criteria]
-    L --> M{Verification passes?}
-    M -->|No| D
-    M -->|Yes| N[Dev closes completed issues]
+    A[Peter requests a feature] --> B[Dev creates Jira feature, child tasks and dependencies]
+    B --> C[Analyst defines scope and acceptance criteria]
+    C --> D{Peter approves scope?}
+    D -->|Revise| C
+    D -->|Yes| E[Feature In Progress and unassigned; open draft PR and preview early]
+    E --> F[Dev implements with tests, build and code review]
+    F --> G[Completed developer tasks In Review]
+    G --> H[Publish checked revision and verify preview identity]
+    H --> I[Open or reopen SAME OWNER task; assign Peter; brief revision-specific request]
+    I --> J{Peter approves this revision for QA?}
+    J -->|Changes requested| F
+    J -->|Yes: OWNER task Done| K[Independent Tester checks immutable approved source]
+    K --> L{Confirmed defects?}
+    L -->|Yes| M[Record reproducible Jira fixes; Dev repairs and verifies]
+    M --> G
+    L -->|No| N{Remaining test failures or coverage limits?}
+    N -->|Yes| O[Reopen SAME OWNER task; assign Peter; ask brief coverage decision]
+    O --> P{Peter accepts documented limits?}
+    P -->|More testing| K
+    P -->|Code change needed| F
+    P -->|Yes: OWNER task Done| Q[Close independently verified work and scoped QA; retain raw failures]
+    N -->|No| Q
+    Q --> R[Complete handoff; mark PR ready; feature In Review assigned Peter]
+    R --> S{Peter merges or explicitly authorizes merge and release?}
+    S -->|Hold| T[Wait; no agent merge or production release]
+    T --> S
+    S -->|Changes requested| U[Feature In Progress and unassigned; PR draft]
+    U --> F
+    S -->|Yes| V[Authorized merge and Cloudflare production deployment]
+    V --> W[Dev verifies deployed revision, assets and acceptance criteria]
+    W --> X{Release verification passes?}
+    X -->|No| Y[Feature In Progress and unassigned; record incident; new draft fix PR]
+    Y --> F
+    X -->|Yes| Z[Feature Done]
 ```
+
+### Sequence diagram
+
+```mermaid
+sequenceDiagram
+    actor Peter as Peter - product owner
+    participant Dev as Dev - coordinator
+    participant Analyst as Analyst
+    participant Jira as Jira - planning and decisions
+    participant GitHub as GitHub - code and PR
+    participant Cloudflare as Cloudflare - preview and production
+    participant Tester as Independent Tester
+
+    Peter->>Dev: Request feature
+    Dev->>Jira: Create feature, native child tasks and dependencies
+    Dev->>Analyst: Assign scope and acceptance criteria
+    Analyst-->>Dev: Specification and unresolved teaching decisions
+    loop Until scope is approved
+        Dev->>Peter: Request scope approval
+        Peter-->>Dev: Approve scope, or request Analyst clarification
+    end
+    Dev->>Jira: Feature In Progress, unassigned
+    Dev->>GitHub: Open early draft PR and push checked increments
+    GitHub->>Cloudflare: Build feature-branch preview
+    Cloudflare-->>Dev: Preview and deployed revision identity
+
+    loop Until exact revision and scoped QA are accepted
+        Dev->>Dev: TDD implementation or fixes, checks and code review
+        Dev->>Jira: Developer-complete tasks In Review
+        Dev->>GitHub: Push checked revision and retain draft status
+        GitHub->>Cloudflare: Update branch preview
+        Cloudflare-->>Dev: Verified preview revision
+        Dev->>Jira: Open or reopen SAME OWNER task, assign Peter
+        Dev->>Peter: Brief review request with exact revision and preview
+        alt Peter requests changes
+            Peter-->>Dev: Required changes, no acceptance QA yet
+        else Peter approves this revision for QA
+            Peter->>Jira: OWNER task Done
+            Dev->>Tester: Approved immutable source, criteria and evidence requirements
+            Tester-->>Dev: Independent results, defects and coverage limits
+            Dev->>Dev: Read and verify raw evidence
+            alt Confirmed defect
+                Dev->>Jira: Create fix, return through owner review before retest
+            else Test failures or coverage limits remain
+                Dev->>Jira: Reopen SAME OWNER task, assign Peter
+                Dev->>Peter: Accept documented limits or request more testing
+                alt Peter accepts limits
+                    Peter->>Jira: OWNER task Done, scoped acceptance recorded
+                else Peter requests more testing
+                    Dev->>Tester: Additional testing of SAME approved source
+                    Tester-->>Dev: Additional evidence or defects
+                    Dev->>Peter: Updated coverage decision if still needed
+                    Note over Dev,Tester: Testing-only changes repeat QA and coverage decision, not implementation review
+                else Peter requests code changes
+                    Note over Peter,Dev: Return to implementation and Peter's revision review before retesting
+                end
+            else No unresolved test or coverage gate
+                Note over Dev,Tester: QA accepted with verified evidence
+            end
+        end
+    end
+
+    Dev->>Jira: Verified implementation, QA and handoff tasks Done
+    Dev->>GitHub: Mark PR ready, retain failures and accepted limits in report
+    Dev->>Jira: Feature In Review, assign Peter
+    Dev->>Peter: Ready for your merge
+    Note over Peter,Cloudflare: Preview approval and coverage acceptance are NOT merge or release approval
+    Peter->>GitHub: Merge PR, or explicitly authorize Dev to merge
+    GitHub->>Cloudflare: Trigger authorized production deployment
+    Cloudflare-->>Dev: Deployed revision and assets
+    Dev->>Dev: Verify live identity and acceptance criteria
+    alt Release verification passes
+        Dev->>Jira: Feature Done
+    else Verification fails
+        Dev->>Jira: Feature In Progress and unassigned, record incident or fix
+        Dev->>GitHub: Open new draft fix PR if code changes are needed
+        Note over Peter,Dev: Fixes repeat revision review and independent QA, no automatic release permission
+    end
+```
+
+**Throughout both diagrams:** the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Only the actionable **OWNER** task is assigned to Peter before the final merge queue; reopen that same task for further input, with a few actionable lines. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
+
+**Quota guard:** before model-funded work, check the actual ChatGPT five-hour session window. At **10% remaining or less**, or unavailable telemetry, checkpoint and pause new model work. Resume the same work after the verified provider reset, with fresh quota; do not duplicate workers. Waiting for Peter is not permission to continue automatically.
 
 ### Required review gates
 
@@ -77,7 +175,8 @@ flowchart TD
 2. **Peter's review before QA:** Dev supplies a short change summary, linked issue/PR or exact revision, a runnable demo/preview when available (screenshots when useful), and developer test/build results with limitations. Peter explicitly approves that revision for QA, or requests changes.
 3. **Independent QA:** the tester may prepare a test plan beforehand, but must not start independent acceptance testing of delivered work until Peter's approval is recorded. Dev's unit tests, build checks, and automated CI are allowed before this gate; they do not replace QA.
 4. **Rework:** implementation changes after Peter's approval, including QA fixes, return through Peter's review before independent QA/retesting. Record the approved revision so old approval is not applied to new code.
-5. **Release approval:** Peter's approval to start QA is **not** approval to merge or deploy. Merge/release requires separate explicit authorization. If merging triggers Cloudflare production deployment, merge is also a release decision.
+5. **Coverage decision and final handoff:** retain all raw failures and disclose unverified scope. If a decision is needed, reopen the same OWNER task and assign Peter; acceptance applies only to that revision and those limits. Complete verified child tasks and mark the PR ready only after the review, QA and coverage gates are settled. Then move the feature from **In Progress/unassigned** to **In Review/assigned Peter**, awaiting his merge.
+6. **Release approval:** Peter's approval to start QA or accept coverage limits is **not** approval to merge or deploy. Merge/release requires separate explicit authorization. If merging triggers Cloudflare production deployment, merge is also a release decision. Close the feature only after live release verification.
 
 Record approval in the relevant issue/PR comment (for example, `Peter: approved revision <commit> for QA`) or in this team's chat, with a concise attributed record linked to the issue. GitHub credentials are currently shared through Peter's account, so a self-approval restriction must not be bypassed or treated as approval; a clear owner decision is required. These are team operating rules, not yet technically enforced branch-protection or CI gates.
 
