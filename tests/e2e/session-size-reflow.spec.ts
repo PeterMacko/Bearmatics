@@ -58,8 +58,10 @@ for (const hasTouch of [false, true]) {
           : [{ width: 320, height: 568 }, { width: 1024, height: 600 }, { width: 1366, height: 768 }, { width: 1920, height: 1080 }];
         for (const viewport of viewports) {
           await page.setViewportSize(viewport);
+          await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
           // Only vertical scrolling: sideways auto-scroll must not hide a defect.
-          await page.locator('.session-options').evaluate(el => { window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 40); });
+          const flow = await page.locator('.workspace').getAttribute('data-menu-mode') === 'flow';
+          if (flow) await page.locator('.session-options').evaluate(el => { window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 40); });
           const measured = await geometry(page);
           measurements.push({ viewport, ...measured });
           await testInfo.attach(`geometry-${viewport.width}`, { body: JSON.stringify(measured, null, 2), contentType: 'application/json' });
@@ -69,7 +71,13 @@ for (const hasTouch of [false, true]) {
           expect(measured.labels).toHaveLength(3);
           expect(measured.rootOverflow).not.toMatch(/hidden|clip/);
           expect(measured.bodyOverflow).not.toMatch(/hidden|clip/);
-          if (enlarged) { expect(measured.rootFont).toBe('32px'); expect(measured.scrollHeight).toBeGreaterThan(viewport.height); }
+          if (enlarged) expect(measured.rootFont).toBe('32px');
+          if (flow) expect(measured.scrollHeight).toBeGreaterThan(viewport.height);
+          else {
+            expect(measured.scrollHeight).toBeLessThanOrEqual(viewport.height);
+            expect(measured.scrollY).toBe(0);
+            await expect(page.locator('.start-button')).toBeInViewport();
+          }
           if (!enlarged) {
             expect(measured.labels.map(label => label.box.top)).toEqual(Array(3).fill(measured.labels[0].box.top));
             if (viewport.width >= 1024) expect(measured.scrollHeight).toBeLessThanOrEqual(viewport.height);
@@ -95,7 +103,7 @@ for (const hasTouch of [false, true]) {
           }
           for (const size of [5, 10, 20]) {
             const label = page.locator('.session-options label').filter({ has: page.getByRole('radio', { name: `${size} ${language === 'sk' ? 'príkladov' : 'exercises'}`, exact: true }) });
-            await label.evaluate(el => { window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 40); });
+            if (flow) await label.evaluate(el => { window.scrollTo(0, el.getBoundingClientRect().top + scrollY - 40); });
             const box = (await label.boundingBox())!;
             expect.soft(box.x + box.width).toBeLessThanOrEqual(viewport.width);
             expect(box.y).toBeGreaterThanOrEqual(0); expect(box.y + box.height).toBeLessThanOrEqual(viewport.height);

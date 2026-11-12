@@ -46,7 +46,10 @@ for (const language of ['en', 'sk']) {
       await page.locator('.settings-button').click(); await page.getByRole('button', { name: 'Slovenčina' }).click(); await page.keyboard.press('Escape');
     }
     await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
-    expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(true);
+    await page.evaluate(() => new Promise<void>(resolve => requestAnimationFrame(() => requestAnimationFrame(() => resolve()))));
+    await expect.poll(() => page.locator('.workspace').getAttribute('data-menu-mode')).toMatch(/flow|contained/);
+    const flow = await page.locator('.workspace').getAttribute('data-menu-mode') === 'flow';
+    expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(flow);
     for (const option of await page.locator('.level-option').all()) {
       await option.scrollIntoViewIfNeeded(); await expect(option).toBeInViewport();
       expect((await option.boundingBox())!.height).toBeGreaterThanOrEqual(48);
