@@ -8,6 +8,7 @@ import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import { FeedbackAudio } from './audio';
+import { useMenuLayout } from './useMenuLayout';
 
 type Feedback = 'ready' | 'correct' | 'incorrect' | 'invalid';
 type Session = { exercises: readonly Exercise[]; index: number; firstTry: number; attempts: number; solved: boolean; done: boolean; feedback: Feedback; hintStage: number; reviewing: boolean; reviewQueue: readonly Exercise[] };
@@ -18,6 +19,7 @@ export default function App() {
   const [level, setLevel] = useState<Level>(1);
   const [size, setSize] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
+  const menuRef = useMenuLayout(!session, language, level);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
   const touch = useTouchCapability();
@@ -174,16 +176,16 @@ export default function App() {
   });
   const equationDescription = current ? `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}` : '';
 
-  return <div className={`app-shell ${compact && session && !session.done ? 'compact-practice' : ''}`}>
+  return <div className={`app-shell ${!session ? 'menu-shell' : ''} ${compact && session && !session.done ? 'compact-practice' : ''}`}>
     {session && !session.done && <progress className="viewport-progress" aria-label={t.trail} max={session.exercises.length} value={session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)} />}
-    <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>{session && <button className="corner-button back-button" aria-label={t.back} onClick={session.done ? () => setSession(null) : requestLeave}><span aria-hidden="true">←</span></button>}<div className="wordmark"><span className="brand-mark" aria-hidden="true">b.</span><h1 className="sr-only">Bearmatics</h1></div>
+    <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>{session && <button className="corner-button back-button" aria-label={t.back} onClick={session.done ? () => setSession(null) : requestLeave}><span aria-hidden="true">←</span></button>}<div className="wordmark"><h1 className="sr-only">Bearmatics</h1></div>
       <button ref={settingsRef} className="corner-button settings-button" type="button" aria-label={t.settings} aria-haspopup="dialog" aria-expanded={settingsOpen} onClick={() => { if (!hintOpen && !leaveOpen) setSettingsOpen(true); }}><span aria-hidden="true">⚙</span></button>
     </header>
-    <main className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen || settingsOpen}><aside className="companion"><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div></aside>
-      {!session ? <section className="selection"><p className="eyebrow">{t.trail}</p><h2>{t.choose}</h2><p className="intro">{t.intro}</p>
+    <main ref={menuRef} className={`workspace ${session ? 'in-session' : ''}`} inert={leaveOpen || hintOpen || settingsOpen}><aside className="companion"><div className="bear-scene"><span className="scene-ring" /><Bear key={`${session?.done}:${session?.feedback}:${session?.attempts}`} mood={session?.done || session?.feedback === 'correct' ? 'happy' : session?.feedback === 'incorrect' ? 'sad' : 'neutral'} /><span className="scene-leaf leaf-one" /><span className="scene-leaf leaf-two" /></div></aside>
+      {!session ? <section className="selection"><div className="menu-heading"><p className="eyebrow">{t.trail}</p><h2>{t.choose}</h2><p className="intro">{t.intro}</p></div>
         <fieldset className="level-options"><legend className="sr-only">{t.level}</legend>{([0, 1, 2, 3, 4, 5, 6, 7] as const).map(n => <label className={`level-option level-${n}`} key={n}><input type="radio" name="level" value={n} checked={level === n} onChange={() => setLevel(n)} /><span className="level-number" aria-hidden="true">{n}</span><span><span className="level-title">{t.level} {n} · {t.levels[n]}</span><span className="level-detail">{t.details[n]}</span></span><span className="selection-dot" aria-hidden="true" /></label>)}</fieldset>
-        <fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
-        <button className="primary start-button" onClick={start}>{t.start}<span aria-hidden="true"> →</span></button>
+        <div className="menu-controls"><fieldset className="session-options"><legend>{t.count}</legend>{[5, 10, 20].map(n => <label key={n}><input type="radio" name="size" checked={size === n} onChange={() => setSize(n)} /><span>{n} <span>{t.exercises}</span></span></label>)}</fieldset>
+        <button className="primary start-button" onClick={start}>{t.start}<span aria-hidden="true"> →</span></button></div>
       </section> : session.done ? <section className="summary"><p className="eyebrow">{t.trail}</p><span className="completion-mark" aria-hidden="true">✓</span><h2 ref={summaryRef} tabIndex={-1}>{t.complete}</h2><p className="intro">{t.summary}</p><p className="completed-total">{session.exercises.length} {t.finished}</p><p className="first-try">{t.first} <strong>{session.firstTry} / {session.exercises.length}</strong></p><button className="primary" onClick={event => {
         // Ignore the continuation click of the Finish gesture, not a deliberate replay.
         if (event.detail > 1) { event.preventDefault(); return; }
