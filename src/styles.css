@@ -299,6 +299,14 @@ progress { accent-color: #356da6; }progress::-webkit-progress-value { background
 
 /* Menu composition is isolated from the shared practice/summary cascade. */
 .menu-shell { position: relative; }
+/* Match the original 340px scene accents, scaling down with the menu scene. */
+.menu-shell .scene-leaf { width: 7.059%; height: 14.276%; }
+.menu-shell .leaf-two { width: 5.882%; height: 11.173%; }
+/* Animate artwork only: SVG, shadow, scene decorations and layout stay fixed.
+   Pausing retains the CSS timeline across hidden-document suspension. */
+.menu-shell .bear[data-idle-motion] .bear-character { animation: menu-bear-sway 8s ease-in-out infinite; }
+.menu-shell .bear[data-idle-motion="paused"] .bear-character { animation-play-state: paused; }
+@keyframes menu-bear-sway { 0%, 100% { transform: rotate(-1.2deg); } 50% { transform: rotate(1.2deg); } }
 .menu-shell .site-header { position: absolute; top: 8px; right: inherit; inset-inline-end: 48px; min-height: 44px; padding: 0; width: 44px; display: block; z-index: 1; }
 .menu-shell .workspace { display: grid; height: 100vh; height: 100svh; height: 100dvh; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-columns: 82px minmax(0, 1fr); gap: 8px 12px; align-items: start; padding-block: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom)); min-height: 0; }
 .menu-shell .selection { display: contents; }

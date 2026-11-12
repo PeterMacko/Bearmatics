@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 /** Opt-in idle gesture: never used by practice or expression feedback. */
 export function useMenuWink(enabled: boolean) {
   const [winking, setWinking] = useState(false);
+  const [motionAllowed, setMotionAllowed] = useState(false);
   useEffect(() => {
     if (!enabled || typeof matchMedia === 'undefined') return;
     const motion = matchMedia('(prefers-reduced-motion: reduce)');
@@ -18,6 +19,7 @@ export function useMenuWink(enabled: boolean) {
     const restart = () => {
       clearTimeout(timer);
       setWinking(false);
+      setMotionAllowed(allowed());
       if (allowed()) schedule();
     };
     restart();
@@ -29,5 +31,5 @@ export function useMenuWink(enabled: boolean) {
       motion.removeEventListener('change', restart);
     };
   }, [enabled]);
-  return enabled && winking;
+  return { winking: enabled && winking, idleMotion: enabled ? (motionAllowed ? 'running' : 'paused') : undefined };
 }

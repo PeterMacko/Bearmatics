@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 
 test('idle menu wink renders one curved eye without moving content', async ({ page }, info) => {
-  test.setTimeout(45000);
+  test.setTimeout(75000);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.setViewportSize({ width: 754, height: 655 });
   await page.goto('/');
@@ -16,14 +16,20 @@ test('idle menu wink renders one curved eye without moving content', async ({ pa
       const eye = bear.querySelector('.bear-wink-eye');
       const { x, y, width, height } = bear.getBoundingClientRect();
       events.push({ elapsed: performance.now() - start, eye: eye?.getAttribute('d') ?? null, box: { x, y, width, height } });
-      if (events.some(event => event.eye) && !eye) {
+      if (events.length === 4 && !eye) {
         clearTimeout(timeout); observer.disconnect(); resolve(events);
       }
     });
-    const timeout = setTimeout(() => { observer.disconnect(); resolve(events); }, 35000);
+    const timeout = setTimeout(() => { observer.disconnect(); resolve(events); }, 65000);
     observer.observe(bear, { childList: true, subtree: true });
   }));
-  expect(events).toHaveLength(2);
+  expect(events).toHaveLength(4);
+  expect(events[2].eye).toBe('M156 120q7 6 14 0');
+  expect(events[2].elapsed - events[0].elapsed).toBeGreaterThan(30000);
+  expect(events[2].elapsed - events[0].elapsed).toBeLessThan(31000);
+  expect(events[3].eye).toBeNull();
+  expect(events[3].elapsed - events[2].elapsed).toBeGreaterThan(180);
+  expect(events[3].elapsed - events[2].elapsed).toBeLessThan(600);
   expect(events[0].eye).toBe('M156 120q7 6 14 0');
   expect(events[0].elapsed).toBeGreaterThan(29000);
   expect(events[0].elapsed).toBeLessThan(32000);

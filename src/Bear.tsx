@@ -3,8 +3,8 @@ import { useMenuWink } from './useMenuWink';
 /** Original SVG artwork and expressions created for Bearmatics. */
 export type BearMood = 'neutral' | 'happy' | 'sad';
 export default function Bear({ mood = 'neutral', idleWink = false }: { mood?: BearMood; idleWink?: boolean }) {
-  const winking = useMenuWink(idleWink && mood === 'neutral');
-  return <svg className={`bear bear-${mood}`} data-mood={mood} data-winking={winking || undefined} viewBox="0 0 260 280" aria-hidden="true" focusable="false">
+  const { winking, idleMotion } = useMenuWink(idleWink && mood === 'neutral');
+  return <svg className={`bear bear-${mood}`} data-mood={mood} data-winking={winking || undefined} data-idle-motion={idleMotion} viewBox="0 0 260 280" aria-hidden="true" focusable="false">
     <ellipse className="bear-shadow" cx="130" cy="262" rx="82" ry="10" fill="#efdcbf" />
     <g className="bear-character">
       <ellipse cx="130" cy="205" rx="67" ry="62" fill="#a96e45" />
