@@ -1,0 +1,57 @@
+.picture-group {
+  box-sizing: border-box;
+  inline-size: clamp(72px, 24vw, 84px);
+  max-inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: clamp(72px, 24vw, 84px);
+  display: grid;
+  align-items: center;
+  padding: 3px;
+  border: 1px solid #b8c9df;
+  border-radius: 12px;
+  background: #fffdf8;
+  color: #34334f;
+  font-family: inherit;
+  line-height: 1.25;
+}
+.picture-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  inline-size: 100%;
+  aspect-ratio: 1;
+  direction: ltr;
+}
+.picture-pip {
+  display: block;
+  min-inline-size: 0;
+  min-block-size: 0;
+}
+.picture-pip svg {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+}
+.picture-empty {
+  background: #fff3d3;
+  border-color: #a87212;
+}
+.picture-cue {
+  display: block;
+  text-align: center;
+  overflow-wrap: anywhere;
+  font-size: .75rem;
+  font-weight: 700;
+}
+.picture-unknown {
+  border: 2px dashed #6489b3;
+  background: #e3f1ff;
+  color: #315783;
+}
+.picture-question {
+  display: block;
+  text-align: center;
+  font-size: 2rem;
+  font-weight: 700;
+}

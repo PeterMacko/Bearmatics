@@ -29,7 +29,7 @@ async function answerFor(page: Page): Promise<number> {
   });
 }
 
-for (const [level, size] of [[1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [1, 10], [1, 20]]) {
+for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap(level => [5, 10, 20].map(size => [level, size]))) {
   test(`completes ${size} exercises on level ${level} without runtime errors`, async ({ page }) => {
     const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
     await page.goto('/');
@@ -37,17 +37,29 @@ for (const [level, size] of [[1, 5], [2, 5], [3, 5], [4, 5], [5, 5], [6, 5], [1,
     await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
     await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check();
     await page.getByRole('button', { name: 'Let’s count' }).click();
+    const originalFacts: string[] = [];
+    let zeroQuestions = 0;
     for (let i = 0; i < size; i++) {
       await expect(page.getByText(`Exercise ${i + 1} of ${size}`, { exact: true })).toBeVisible();
       if (level === 1) await expect(page.locator('.operator').first()).toHaveText('+');
       const answer = await answerFor(page);
       expect(Number.isInteger(answer)).toBeTruthy();
+      const fact = await page.locator('.equation').evaluate((element, hidden) => {
+        const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
+        return parts.map(p => p.querySelector('input') ? hidden : Number(p.textContent));
+      }, answer);
+      if (fact.includes(0)) zeroQuestions++;
+      originalFacts.push(`${await page.locator('.operator').first().textContent()}:${fact.join(',')}:${await page.locator('[data-term]').evaluateAll(parts => parts.findIndex(p => p.querySelector('input')))}`);
+      if (level >= 6) expect(fact.every(n => n > 0)).toBeTruthy();
       await fillAnswer(page, String(answer));
       await page.getByRole('textbox').press('Enter');
       await expect(page.getByRole('status')).toHaveText('That’s it! Nicely done.');
       await expect(page.getByRole('textbox')).toBeDisabled();
       await page.getByRole('button', { name: i === size - 1 ? 'See how you did' : 'Next exercise' }).click();
     }
+    expect(zeroQuestions).toBeLessThanOrEqual(1);
+    expect(new Set(originalFacts).size).toBe(level === 0 && size === 20 ? 16 : size);
+    if (level === 0 && size === 20) expect(zeroQuestions).toBe(1);
     await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeFocused();
     await expect(page.getByText(`${size} exercises completed`, { exact: true })).toBeVisible();
     await expect(page.getByText(`${size} / ${size}`, { exact: true })).toBeVisible();
@@ -113,7 +125,7 @@ test('missed equations return at the end and cycle until a first-attempt success
   await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeVisible();
 });
 
-for (const level of [1, 2, 3, 4, 5, 6]) {
+for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
   test(`three hint stages explain level ${level} without automatic answering`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/');

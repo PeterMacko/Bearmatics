@@ -1,12 +1,14 @@
 export type Language = 'en' | 'sk';
 export const copy = {
   en: {
+    picturePositions: ['First group', 'Second group', 'Result'], pictureCount: 'Count', emptyGroup: 'Empty group',
+    pictureThemes: { pirates: 'pirates', bears: 'bears', lollipops: 'lollipops', boats: 'boats', aircraft: 'aircraft' },
     soundRequested: 'Sound requested', soundUnavailable: 'Sound unavailable',
     settings: 'Settings', closeSettings: 'Close settings',
     padInstructions: 'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check.', practiceHelp: 'Practice help',
     useNative: 'Use device keyboard', usePad: 'Use number pad', answerLabel: 'Answer', emptyAnswer: 'empty', numberPad: 'Number pad', backspace: 'Backspace', clearAnswer: 'Clear answer', clear: 'Clear',
     tagline: 'Little steps. Big discoveries.', choose: 'Where shall we explore?', intro: 'Pick your trail. We’ll take it one number at a time.', level: 'Level',
-    levels: ['Hello, addition!', 'First steps', 'A little further', 'Big number adventure', 'Equal groups', 'Multiply & share'], details: ['Addition only, up to 10', 'Add & subtract up to 10', 'Add & subtract up to 20', 'Add & subtract up to 100', 'Multiply with 1–5', 'Multiply & divide with 1–10'],
+    levels: { 0: 'Count the pictures', 1: 'Hello, addition!', 2: 'First steps', 3: 'Find the result', 4: 'Find the missing number', 5: 'Big number adventure', 6: 'Equal groups', 7: 'Multiply & share' }, details: { 0: 'Add with pictures up to 6', 1: 'Addition only, up to 10', 2: 'Add & subtract up to 10', 3: 'Add & subtract up to 20: missing result', 4: 'Add & subtract up to 20: missing first or second number', 5: 'Add & subtract up to 100', 6: 'Multiply with 1–5', 7: 'Multiply & divide with 1–10' },
     count: 'How many exercises?', exercises: 'exercises', start: 'Let’s count', gentle: 'No timer. No rush. Just you and your curious mind.', trail: 'Your counting trail', back: 'Choose level', missing: 'Missing number', positions: ['first number', 'second number', 'result'],
     operators: { '+': 'plus', '-': 'minus', '*': 'times', '/': 'divided by' }, equals: 'equals', blank: 'blank', exercise: 'Exercise', of: 'of',
     check: 'Check answer', next: 'Next exercise', finish: 'See how you did', correct: 'That’s it! Nicely done.', incorrect: 'Not quite. Have another try—you can do it.', invalid: 'Check the number.', ready: 'What number belongs in the space?',
@@ -16,12 +18,14 @@ export const copy = {
     leaveTitle: 'Leave this trail?', leaveText: 'Your progress in this session will be lost.', stay: 'Keep practising', leave: 'Choose a new trail', confirm: 'Confirm your choice',
   },
   sk: {
+    picturePositions: ['Prvá skupina', 'Druhá skupina', 'Výsledok'], pictureCount: 'Počet', emptyGroup: 'Prázdna skupina',
+    pictureThemes: { pirates: 'piráti', bears: 'medvede', lollipops: 'lízanky', boats: 'lode', aircraft: 'lietadlá' },
     soundRequested: 'Zvuk povolený', soundUnavailable: 'Zvuk nedostupný',
     settings: 'Nastavenia', closeSettings: 'Zavrieť nastavenia',
     padInstructions: 'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje.', practiceHelp: 'Pomoc pri počítaní',
     useNative: 'Použiť klávesnicu zariadenia', usePad: 'Použiť číselnú klávesnicu', answerLabel: 'Odpoveď', emptyAnswer: 'prázdna', numberPad: 'Číselná klávesnica', backspace: 'Vymazať poslednú číslicu', clearAnswer: 'Vymazať odpoveď', clear: 'Zmazať',
     tagline: 'Malé kroky. Veľké objavy.', choose: 'Kam sa vyberieme?', intro: 'Vyber si cestu. Budeme počítať krok za krokom.', level: 'Úroveň',
-    levels: ['Ahoj, sčítanie!', 'Prvé kroky', 'O kúsok ďalej', 'Veľké číselné dobrodružstvo', 'Rovnaké skupiny', 'Násobíme a delíme'], details: ['Iba sčítanie do 10', 'Sčítanie a odčítanie do 10', 'Sčítanie a odčítanie do 20', 'Sčítanie a odčítanie do 100', 'Násobenie číslami 1–5', 'Násobenie a delenie číslami 1–10'],
+    levels: { 0: 'Počítame obrázky', 1: 'Ahoj, sčítanie!', 2: 'Prvé kroky', 3: 'Hľadáme výsledok', 4: 'Hľadáme chýbajúce číslo', 5: 'Veľké číselné dobrodružstvo', 6: 'Rovnaké skupiny', 7: 'Násobíme a delíme' }, details: { 0: 'Sčítanie s obrázkami do 6', 1: 'Iba sčítanie do 10', 2: 'Sčítanie a odčítanie do 10', 3: 'Sčítanie a odčítanie do 20: chýba výsledok', 4: 'Sčítanie a odčítanie do 20: chýba prvé alebo druhé číslo', 5: 'Sčítanie a odčítanie do 100', 6: 'Násobenie číslami 1–5', 7: 'Násobenie a delenie číslami 1–10' },
     count: 'Koľko príkladov?', exercises: 'príkladov', start: 'Začať počítať', gentle: 'Bez časovača. Bez náhlenia. S chuťou objavovať.', trail: 'Tvoja číselná cesta', back: 'Vybrať úroveň', missing: 'Chýbajúce číslo', positions: ['prvé číslo', 'druhé číslo', 'výsledok'],
     operators: { '+': 'plus', '-': 'mínus', '*': 'krát', '/': 'delené' }, equals: 'rovná sa', blank: 'prázdne miesto', exercise: 'Príklad', of: 'z',
     check: 'Skontrolovať', next: 'Ďalší príklad', finish: 'Pozrieť výsledok', correct: 'Presne tak! Výborne.', incorrect: 'Ešte nie. Skús to znova, zvládneš to.', invalid: 'Skontroluj číslo.', ready: 'Ktoré číslo patrí na prázdne miesto?',

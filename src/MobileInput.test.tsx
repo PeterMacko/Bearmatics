@@ -24,7 +24,7 @@ test('large hybrid touch hardware forces readonly before focus and offers no nat
   expect(screen.getByRole('status')).toHaveTextContent('That’s it! Nicely done.');
 });
 function start(pad = false) {
-  vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 4, operation: '+', values: [99, 1, 100], blank: 2 }));
+  vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 5, operation: '+', values: [99, 1, 100], blank: 2 }));
   render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   if (pad) fireEvent.click(screen.getByRole('button', { name: 'Use number pad' }));

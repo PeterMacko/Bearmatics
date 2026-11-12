@@ -1,10 +1,20 @@
-import { useEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
 
 export default function HintDialog({ title, closeLabel, nextLabel, nextDisabled, onClose, onNext, triggerRef, children, titleId = 'hint-title' }: {
   title: string; closeLabel: string; nextLabel?: string; nextDisabled?: boolean; titleId?: string;
   onClose: () => void; onNext?: () => void; triggerRef: RefObject<HTMLButtonElement | null>; children: ReactNode;
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!nextDisabled) return;
+    const dialog = dialogRef.current;
+    // Disabling the focused final-step button can move browser focus to body.
+    // Keep Escape and the next Tab inside the modal rather than on inert content.
+    const active = document.activeElement;
+    if (dialog && (!dialog.contains(active) || active?.matches('button:disabled'))) {
+      dialog.querySelector<HTMLButtonElement>('.dialog-close')?.focus({ preventScroll: true });
+    }
+  }, [nextDisabled]);
   useEffect(() => {
     const trigger = triggerRef.current;
     dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
