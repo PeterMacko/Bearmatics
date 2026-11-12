@@ -10,6 +10,9 @@ Peter explicitly approved the Analyst scope and marked [analysis review SCRUM-41
 - Add original, local, recognizable smiling-bear favicon; verify16/32px artwork, built delivery and MIME/path rather than SPA-fallback HTML. SVG plus local32px PNG fallback is the proposed treatment.
 - Preserve SK/EN copy, mathematical progression, zero cap, defaults, scoring/mastery/hints, session identities, inputs, settings and audio. Exact responsive thresholds are implementation choices to verify, not new learning rules.
 
+## Owner-requested development-review amendment
+Peter's review of e359406 approves the narrow-phone layout as shown: preserve it unchanged apart from the gentle wink. Wide windows must use a compact horizontally/vertically centered menu rather than stretching header and controls across the full height. Put the wide settings gear at the viewport upper-right outside main content, preserving the approved narrow gear position. At Fold/wide sizes, enlarge and vertically center the bear in the left half; put heading, a SINGLE column of levels, count and Start in the right half. This supersedes retaining two-column cards. Keep level-list-only scrolling when height-constrained and readable extreme-enlargement fallback. Add a short infrequent menu-only wink (roughly25–40seconds apart as an implementation default), no layout shift, disabled for reduced motion, suspended when hidden, cleaned up on exit. Do not alter practice bear feedback, audio or session logic. Revised exact preview must return to DEVELOPMENT44 before independent QA.
+
 ## Distinct owner gates
 1. **Analysis review SCRUM-41:** approved/Done; reopen only for material scope changes.
 2. **Development review SCRUM-44:** separate task. When checked code and exact preview are ready, set In Review and assign Peter. Reopen this task for revised previews, QA fixes or coverage decisions. Peter approves the exact revision BEFORE independent Tester QA.

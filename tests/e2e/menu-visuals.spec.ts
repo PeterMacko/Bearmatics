@@ -1,7 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-for (const language of ['en', 'sk']) for (const [width, height] of [[320,568], [360,640], [390,844], [568,320], [844,390], [1024,400], [1024,600], [1366,768], [1920,1080], [620,640], [621,640], [950,640], [951,640]]) {
+for (const language of ['en', 'sk']) for (const [width, height] of [[320,568], [438,628], [439,628], [754,655], [360,640], [390,844], [568,320], [844,390], [1024,400], [1024,600], [1366,768], [1920,1080], [620,640], [621,640], [950,640], [951,640]]) {
   test(`menu matrix ${language} ${width}x${height}`, async ({ page }, testInfo) => {
     const errors: string[] = [];
     page.on('pageerror', e => errors.push(e.message));
@@ -35,7 +35,8 @@ for (const language of ['en', 'sk']) for (const [width, height] of [[320,568], [
     expect(geometry.bear.right).toBeLessThanOrEqual(geometry.header.x);
     for (const target of [...geometry.cards, ...geometry.targets]) expect(target.height).toBeGreaterThanOrEqual(48);
     // No gratuitous overflow when the entire intrinsic grid has ample room.
-    if (width >= 1366) expect(geometry.list.scroll).toBeLessThanOrEqual(geometry.list.client);
+    // A single column needs height as well as width; 1366x768 now legitimately scrolls.
+    if (width >= 1366 && height >= 1000) expect(geometry.list.scroll).toBeLessThanOrEqual(geometry.list.client);
     const selected = await page.locator('input[name=level]:checked').inputValue();
     if (geometry.list.scroll > geometry.list.client) {
       await list.hover(); await page.mouse.wheel(0,2000);
