@@ -33,6 +33,7 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .scene-leaf { position: absolute; width: 24px; height: 46px; border-radius: 100% 0 100% 0; background: #8cc5ef; }
 .leaf-one { top: 15%; left: 2%; transform: rotate(-35deg); }.leaf-two { bottom: 15%; right: 0; transform: rotate(15deg); width: 20px; height: 36px; }
 .companion-caption { max-width: 235px; margin: auto; color: var(--muted); font-size: .95rem; }
+.selection h2 { overflow-wrap: anywhere; }
 .selection .intro { color: var(--muted); margin: 14px 0 24px; max-width: 390px; font-size: .95rem; }
 .level-options { display: grid; gap: 8px; }
 .level-option { display: grid; grid-template-columns: 42px minmax(0,1fr) 18px; gap: 13px; align-items: center; border: 1.5px solid var(--line); background: var(--paper); padding: 12px 14px; border-radius: 13px; cursor: pointer; min-height: 73px; position: relative; }
@@ -46,7 +47,8 @@ fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
 .level-detail { display: block; font-size: .79rem; line-height: 1.4; color: var(--muted); margin-top: 4px; }
 .selection-dot { width: 17px; height: 17px; border: 1.5px solid #af8781; border-radius: 50%; }
 .level-option:has(input:checked) .selection-dot { background: var(--accent); border: 4px solid #fff0e9; outline: 1.5px solid var(--accent); }
-.session-options { display: flex; gap: 8px; margin: 24px 0 20px; }
+/* Reflow at intrinsic label widths instead of squeezing enlarged text. */
+.session-options { display: flex; flex-wrap: wrap; gap: 8px; margin: 24px 0 20px; }
 .session-options legend { font-size: .85rem; font-weight: 700; margin-bottom: 10px; }
 .session-options label { flex: 1; position: relative; cursor: pointer; border-radius: 10px; }
 .session-options label > span { display: block; padding: 12px 6px; min-height: 47px; border: 1px solid var(--line); border-radius: 10px; text-align: center; font-size: 1rem; font-weight: bold; }
