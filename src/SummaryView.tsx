@@ -4,6 +4,8 @@ import type { Copy } from './i18n';
 /** Completion screen with the first-try score. */
 export default function SummaryView({
   t,
+  eyebrow,
+  finishedLabel,
   total,
   firstTry,
   headingRef,
@@ -11,6 +13,8 @@ export default function SummaryView({
   onBack,
 }: {
   t: Copy;
+  eyebrow?: string;
+  finishedLabel?: string;
   total: number;
   firstTry: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
@@ -19,7 +23,7 @@ export default function SummaryView({
 }) {
   return (
     <section className="summary">
-      <p className="eyebrow">{t.trail}</p>
+      <p className="eyebrow">{eyebrow ?? t.trail}</p>
       <span className="completion-mark" aria-hidden="true">
         ✓
       </span>
@@ -28,7 +32,7 @@ export default function SummaryView({
       </h2>
       <p className="intro">{t.summary}</p>
       <p className="completed-total">
-        {total} {t.finished}
+        {total} {finishedLabel ?? t.finished}
       </p>
       <p className="first-try">
         {t.first}{' '}
