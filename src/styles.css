@@ -2119,7 +2119,7 @@ progress::-moz-progress-bar {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   /* Square buttons: the 2x2 block is limited by the space left under the speaker and Check. */
-  width: max(150px, min(100%, 340px, calc(100dvh - 500px)));
+  width: max(150px, min(100%, 440px, calc(100dvh - 500px)));
 }
 .word-option {
   aspect-ratio: 1;
@@ -2130,7 +2130,7 @@ progress::-moz-progress-bar {
   background: #fff;
   color: var(--ink);
   font: inherit;
-  font-size: clamp(1rem, 4.2vw, 1.25rem);
+  font-size: var(--word-font, clamp(1rem, 4.2vw, 1.25rem));
   font-weight: 700;
   /* Break inside a word only if it cannot fit at all (e.g. 200% text). */
   overflow-wrap: break-word;
@@ -2139,7 +2139,7 @@ progress::-moz-progress-bar {
 }
 .compact-practice .word-option {
   padding-inline: 6px;
-  font-size: clamp(1rem, 2.6vw + 0.3rem, 1.2rem);
+  font-size: var(--word-font, clamp(1rem, 2.6vw + 0.3rem, 1.2rem));
 }
 .word-option[aria-pressed='true'] {
   border-color: #356da6;
@@ -2229,7 +2229,10 @@ progress::-moz-progress-bar {
     height: 64px;
   }
   .compact-practice .english-practice .answer-actions {
-    width: max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)));
+    width: var(
+      --word-block,
+      max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)))
+    );
   }
   .compact-practice .english-practice .answer-actions .answer-button {
     width: 100%;

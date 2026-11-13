@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import type { Copy } from '../i18n';
 import type { Feedback } from '../session';
 import type { WordQuestion } from './listen';
@@ -13,6 +13,70 @@ function SpeakerIcon() {
       <path className="speaker-wave wave-three" d="M53 12a27 27 0 0 1 0 40" />
     </svg>
   );
+}
+
+/**
+ * Sizes the square word buttons to the space the screen really has: start at the largest size,
+ * then shrink by however much the page overflows (one row of 4 shrinks 4x slower in height).
+ * The word font follows the square so the longest word stays on one line.
+ * CSS keeps a size for the first paint and for environments without layout.
+ */
+export function useWordGrid(key: unknown) {
+  const grid = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    const el = grid.current;
+    if (!el || typeof window === 'undefined') return;
+    const fit = () => {
+      const style = getComputedStyle(el);
+      const cols = style.gridTemplateColumns.split(' ').filter(Boolean).length || 2;
+      const gap = parseFloat(style.columnGap) || 10;
+      const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
+      // Phones (compact layout) up to 340 px; tablets and desktops may use up to 440 px.
+      const compact = el.closest('.compact-practice') !== null;
+      const max = cols === 4 ? 560 : compact ? 340 : 440;
+      const min = cols === 4 ? 4 * 6.5 * rem + 3 * gap : 2 * 6.5 * rem + gap;
+      el.style.width = `${max}px`;
+      el.style.minWidth = '0';
+      const form = el.closest('form');
+      const bottoms = [el, ...(form ? Array.from(form.children) : [])].map(
+        (child) => child.getBoundingClientRect().bottom,
+      );
+      // clientHeight is the layout viewport; innerHeight can grow while mobile browsers zoom out.
+      const viewport = document.documentElement.clientHeight || window.innerHeight;
+      const overflow = Math.max(
+        document.documentElement.scrollHeight - viewport,
+        Math.max(...bottoms) + 8 - viewport,
+        0,
+      );
+      let width = Math.min(max, el.getBoundingClientRect().width);
+      width -= overflow * (cols === 4 ? 4 : 1);
+      width = Math.floor(Math.max(Math.min(min, el.parentElement?.clientWidth ?? min), width));
+      el.style.width = `${width}px`;
+      // Check and the word block share one width on phones.
+      form?.style.setProperty('--word-block', `${width}px`);
+      const square = (width - (cols - 1) * gap) / cols;
+      // About 5.8 font-sizes fit the longest words ("seventeen", "butterfly") plus padding.
+      const font = Math.max(rem, Math.min(1.75 * rem, (square - 14) / 5.8));
+      el.style.setProperty('--word-font', `${font}px`);
+    };
+    let frame = 0;
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    };
+    fit();
+    // Refit when anything around the grid changes size (bear, header, fonts, rotation).
+    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
+    const section = el.closest('section');
+    if (observer && section?.parentElement) observer.observe(section.parentElement);
+    window.addEventListener('resize', schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', schedule);
+    };
+  }, [key]);
+  return grid;
 }
 
 /**
@@ -59,6 +123,7 @@ export default function EnglishPracticeView({
   onNext: () => void;
 }) {
   const speaking = playing === 'speaker';
+  const gridRef = useWordGrid(question);
   return (
     <section className="practice english-practice">
       <div className="practice-header">
@@ -98,7 +163,7 @@ export default function EnglishPracticeView({
             </button>
           </p>
         )}
-        <div className="word-options" role="group" aria-label={t.englishWords}>
+        <div ref={gridRef} className="word-options" role="group" aria-label={t.englishWords}>
           {question.options.map((word) => {
             const selected = choice === word;
             const state = solved && word === question.target ? 'correct' : selected ? feedback : '';
