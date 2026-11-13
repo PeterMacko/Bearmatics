@@ -1949,14 +1949,6 @@ progress::-moz-progress-bar {
   transform: none;
 }
 @media (max-width: 620px) {
-  .menu-shell .menu-heading .menu-topline {
-    min-height: 48px;
-    padding-inline-end: 52px;
-  }
-  .menu-shell .menu-heading .menu-topline .eyebrow {
-    min-height: 0;
-    padding-inline-end: 0;
-  }
   .course-option {
     min-height: 92px;
     grid-template-columns: 52px minmax(0, 1fr) max-content;
@@ -1978,18 +1970,21 @@ progress::-moz-progress-bar {
     align-content: center;
   }
 }
-/* Wider windows: the menu Back arrow sits in the top-left corner (like practice Back and the
-   top-right gear), so the heading keeps its SCRUM-36 height and short windows still fit. */
-@media (min-width: 621px) {
-  .menu-shell .menu-topline {
-    display: block;
-    margin: 0;
-    min-height: 0;
-  }
-  .menu-shell .menu-back.corner-button {
-    position: fixed;
-    z-index: 1;
-    top: max(8px, env(safe-area-inset-top));
-    left: max(8px, env(safe-area-inset-left));
+/* The menu Back arrow floats in the top-left corner like the top-right gear, so the heading
+   keeps its SCRUM-36 height. On phones the bear moves down below it. */
+.menu-shell .menu-topline {
+  display: block;
+  margin: 0;
+  min-height: 0;
+}
+.menu-shell .menu-back.corner-button {
+  position: fixed;
+  z-index: 1;
+  top: max(8px, env(safe-area-inset-top));
+  left: max(8px, env(safe-area-inset-left));
+}
+@media (max-width: 620px) {
+  .menu-shell .workspace:has(.menu-back) .companion {
+    padding-top: 52px;
   }
 }
