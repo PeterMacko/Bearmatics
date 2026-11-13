@@ -1,0 +1,11 @@
+# Out of scope for formatting (docs prose, generated output, platform config)
+*.md
+docs/
+public/
+dist/
+.wrangler/
+test-results/
+playwright-report/
+package-lock.json
+wrangler.jsonc
+wrangler.toml
