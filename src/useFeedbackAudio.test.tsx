@@ -76,6 +76,37 @@ test('muting stops playback and disables audio', async () => {
   expect(play).not.toHaveBeenCalled();
 });
 
+test('muting while activation is pending wins over the late activation result', async () => {
+  let resolve!: (value: boolean) => void;
+  const setEnabled = vi
+    .spyOn(FeedbackAudio.prototype, 'setEnabled')
+    .mockImplementation((value) =>
+      value ? new Promise<boolean>((r) => (resolve = r)) : Promise.resolve(false),
+    );
+  const play = vi.spyOn(FeedbackAudio.prototype, 'play').mockReturnValue(true);
+  const hook = renderHook((p: Props) => useFeedbackAudio(p.feedback, p.attempts, p.done), {
+    initialProps: {} as Props,
+  });
+  let pending!: Promise<void>;
+  act(() => {
+    pending = hook.result.current.activateSound();
+  });
+  expect(hook.result.current.soundBusy).toBe(true);
+  act(() => hook.result.current.toggleSound());
+  await act(async () => {
+    resolve(true);
+    await pending;
+  });
+  expect(setEnabled).toHaveBeenLastCalledWith(false);
+  expect(hook.result.current).toMatchObject({
+    soundEnabled: false,
+    soundReady: false,
+    soundBusy: false,
+  });
+  hook.rerender({ feedback: 'correct', attempts: 1 });
+  expect(play).not.toHaveBeenCalled();
+});
+
 test('blocked audio reports unavailable', async () => {
   const { hook } = setup(false);
   await activate(hook);

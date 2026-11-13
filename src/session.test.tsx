@@ -92,6 +92,7 @@ describe('session steps', () => {
     let s: Session = { ...fresh(), reviewing: true, reviewQueue: [A, B] };
     s = advance(solveWith(s, 1)); // A missed again -> back of queue
     expect(s.reviewQueue).toEqual([B, A]);
+    expect(nextAction(solveWith(s, 1))).toBe('next'); // B missed with 2 left: not finish
     s = advance(solveWith(openHintStage(s))); // B with hint -> back of queue
     expect(s.reviewQueue).toEqual([A, B]);
     s = advance(solveWith(s));
