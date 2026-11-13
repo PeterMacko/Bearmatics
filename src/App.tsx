@@ -193,6 +193,9 @@ export default function App() {
     if (session?.done) summaryRef.current?.focus();
     else if (session?.solved) nextRef.current?.focus();
     else if (session) inputRef.current?.focus();
+    // Move focus only when the exercise, solved or done state changes; depending on the whole
+    // session would re-focus on every attempt or hint step.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
   }, [session?.index, session?.solved, session?.done]);
   const current = session
     ? session.reviewing
