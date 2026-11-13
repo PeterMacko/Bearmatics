@@ -1977,14 +1977,26 @@ progress::-moz-progress-bar {
   margin: 0;
   min-height: 0;
 }
+/* Mirror the gear exactly: same centre line and same distance from the screen edge
+   (the 48px arrow is 2px larger than the 44px gear on each side). */
 .menu-shell .menu-back.corner-button {
   position: fixed;
   z-index: 1;
-  top: max(8px, env(safe-area-inset-top));
-  left: max(8px, env(safe-area-inset-left));
+  top: calc(max(8px, env(safe-area-inset-top)) - 2px);
+  left: calc(max(12px, env(safe-area-inset-left)) - 2px);
 }
 @media (max-width: 620px) {
+  .menu-shell .menu-back.corner-button {
+    position: absolute;
+    top: 6px;
+    left: 18px;
+  }
   .menu-shell .workspace:has(.menu-back) .companion {
     padding-top: 52px;
+  }
+  /* Eyebrow sits low in its gear-height row: further from the top, close to the heading. */
+  .menu-shell .menu-heading .eyebrow {
+    display: flex;
+    align-items: flex-end;
   }
 }
