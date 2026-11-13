@@ -305,7 +305,8 @@ for (const [width, height] of [
 for (const [width, height, screens] of [
   [1280, 320, ['courses', 'Mathematics', 'English']],
   [1366, 300, ['courses', 'Mathematics', 'English']],
-  [1000, 320, ['courses', 'Mathematics']],
+  [1100, 320, ['courses', 'Mathematics']],
+  [1000, 320, ['courses']],
   [820, 320, ['courses']],
 ] as const)
   test(`very short wide ${width}x${height} keeps the level list scrolling (${screens.join(', ')})`, async ({
