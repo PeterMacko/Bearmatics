@@ -1994,6 +1994,12 @@ progress::-moz-progress-bar {
   .menu-shell .workspace:has(.menu-back) .companion {
     padding-top: 52px;
   }
+  /* Course choice has no Back arrow: centre the bear on its three heading lines. */
+  .menu-shell .workspace:has(> .course-choice) .companion {
+    align-self: center;
+    /* Offset the empty gear-height space above the eyebrow text. */
+    margin-top: 24px;
+  }
   /* Eyebrow sits low in its gear-height row: further from the top, close to the heading. */
   .menu-shell .menu-heading .eyebrow {
     display: flex;
