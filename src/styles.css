@@ -1904,7 +1904,7 @@ progress::-moz-progress-bar {
 }
 .course-option {
   width: 100%;
-  grid-template-columns: 64px minmax(0, 1fr) 24px;
+  grid-template-columns: 64px minmax(0, 1fr) max-content;
   min-height: 104px;
   font: inherit;
   color: inherit;
@@ -1959,10 +1959,22 @@ progress::-moz-progress-bar {
   }
   .course-option {
     min-height: 92px;
-    grid-template-columns: 52px minmax(0, 1fr) 20px;
+    grid-template-columns: 52px minmax(0, 1fr) max-content;
   }
   .course-icon svg {
     width: 52px;
     height: 52px;
+  }
+}
+/* Short course/English lists: no reserved gap; still scroll when height is tight. */
+.menu-shell .workspace:has(> .course-choice),
+.menu-shell .workspace:has(> .english-home) {
+  grid-template-rows: auto minmax(0, max-content) auto;
+  align-content: start;
+}
+@media (min-width: 621px) {
+  .menu-shell .workspace:has(> .course-choice),
+  .menu-shell .workspace:has(> .english-home) {
+    align-content: center;
   }
 }

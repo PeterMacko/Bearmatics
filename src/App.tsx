@@ -16,6 +16,7 @@ import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import LeaveDialog from './LeaveDialog';
 import CourseChoice, { type Course } from './CourseChoice';
+import EnglishHome, { type EnglishLevel } from './EnglishHome';
 import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
@@ -45,6 +46,8 @@ export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   // Course screen state: null is the course choice. Nothing is stored between visits.
   const [course, setCourse] = useState<Course | null>(null);
+  const [englishLevel, setEnglishLevel] = useState<EnglishLevel>(1);
+  const [englishSize, setEnglishSize] = useState(10);
   const menuRef = useMenuLayout(!session, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusMenuHeading = useRef(false);
@@ -233,6 +236,16 @@ export default function App() {
               onLevelChange={setLevel}
               onSizeChange={setSize}
               onStart={start}
+            />
+          ) : course === 'english' ? (
+            <EnglishHome
+              t={t}
+              level={englishLevel}
+              size={englishSize}
+              headingRef={menuHeadingRef}
+              onLevelChange={setEnglishLevel}
+              onSizeChange={setEnglishSize}
+              onBack={() => navigate(null)}
             />
           ) : (
             <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
