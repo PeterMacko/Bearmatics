@@ -41,7 +41,7 @@ The bear SVG, expression variations and procedural sound patterns were created f
 | --- | --- |
 | Peter (product owner) | Approves scope, reviews Dev's delivered work **before independent QA**, and authorizes merge/release. |
 | `dev` | Coordinates work, implements, runs developer checks, presents reviewable deliverables, and verifies evidence before closing tasks. |
-| `bearmatics-analyst` | Clarifies requirements, learning rules, user flows, and acceptance criteria. |
+| `bearmatics-analyst` | Prepares backlog features in Jira: scope, acceptance criteria, subtasks and dependencies; moves approved features to Ready. |
 | `bearmatics-tester` | Independently tests the owner-approved revision and reports verified results and reproducible defects. |
 
 ## Delivery workflow
@@ -50,13 +50,16 @@ The bear SVG, expression variations and procedural sound patterns were created f
 
 ```mermaid
 flowchart TD
-    A[Peter requests a feature] --> B[Dev creates Jira feature, child tasks and dependencies]
-    B --> C[Analyst defines scope and acceptance criteria]
-    C --> AR[Analysis review OWNER task; In Review assigned Peter]
-    AR --> D{Peter approves scope?}
+    A[Peter gives the Analyst a feature idea] --> C[Analyst writes scope, acceptance criteria, Jira feature, subtasks and dependencies]
+    C --> BL[Feature in Backlog; analysis review OWNER task In Review assigned Peter]
+    BL --> D{Peter approves scope?}
     D -->|Revise| C
-    D -->|Yes| AD[Analysis review Done; preserve approval]
-    AD --> E[Feature In Progress and unassigned; open draft PR and preview early]
+    D -->|Yes| AD[Analysis review Done; Analyst moves feature to Ready]
+    AD --> SEL{Peter selects it: implement SCRUM-X}
+    SEL -->|Not yet| AD
+    SEL -->|Yes| RC{Dev readiness check: analysis still fits current main?}
+    RC -->|Drift or gaps| C
+    RC -->|Yes| E[Feature In Progress and unassigned; open draft PR and preview early]
     E --> F[Dev implements with tests, build and code review]
     F --> G[Completed developer tasks In Review]
     G --> H[Publish checked revision and verify preview identity]
@@ -100,17 +103,23 @@ sequenceDiagram
     participant Cloudflare as Cloudflare - preview and production
     participant Tester as Independent Tester
 
-    Peter->>Dev: Request feature
-    Dev->>Jira: Create feature, native child tasks and dependencies
-    Dev->>Analyst: Assign scope and acceptance criteria
-    Analyst-->>Dev: Specification and unresolved teaching decisions
+    Peter->>Analyst: Feature idea for the backlog
+    Analyst->>Jira: Create feature in Backlog, native subtasks and dependencies
     loop Until scope is approved
-        Dev->>Jira: Analysis review OWNER task In Review, assign Peter
-        Dev->>Peter: Request scope approval
-        Peter-->>Dev: Approve scope, or request Analyst clarification
+        Analyst->>Jira: Analysis review OWNER task In Review, assign Peter
+        Analyst->>Peter: Specification, open questions, request scope approval
+        Peter-->>Analyst: Approve scope, or request changes
     end
     Peter->>Jira: Analysis review Done, preserve approval
-    Dev->>Jira: Feature In Progress, unassigned
+    Analyst->>Jira: Feature Ready
+    Note over Peter,Jira: Several Ready features can wait in the backlog
+    Peter->>Dev: Implement SCRUM-X
+    Dev->>Jira: Readiness check against current main
+    alt Analysis is stale or incomplete
+        Dev->>Analyst: Return gaps, feature back to Backlog
+    else Ready to build
+        Dev->>Jira: Feature In Progress, unassigned
+    end
     Dev->>GitHub: Open early draft PR and push checked increments
     GitHub->>Cloudflare: Build feature-branch preview
     Cloudflare-->>Dev: Preview and deployed revision identity
@@ -169,9 +178,11 @@ sequenceDiagram
     end
 ```
 
-**Throughout both diagrams:** the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Use TWO separate **OWNER** subtasks: **analysis/scope review** and **development/exact-revision preview review**. Assign each to Peter only when actionable. Preserve approved analysis review as Done; reopen development review for revised previews, QA fixes and coverage decisions. Reopen analysis review only for material scope changes. Keep requests brief. Final PR review is the feature itself, not a third owner task. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
+**Backlog first:** Jira statuses are **Backlog** (Analyst drafted, awaiting Peter's analysis approval) → **Ready** (approved, waiting to be selected) → To Do / **In Progress** / **In Review** / **Done**. The Analyst creates and maintains backlog features in Jira; Dev starts only when Peter selects a Ready feature.
 
-**Quota guard:** before model-funded work, check the actual ChatGPT five-hour session window. At **10% remaining or less**, or unavailable telemetry, checkpoint and pause new model work. Resume the same work after the verified provider reset, with fresh quota; do not duplicate workers. Waiting for Peter is not permission to continue automatically.
+**Throughout both diagrams:** after selection, the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Use TWO separate **OWNER** subtasks: **analysis/scope review** and **development/exact-revision preview review**. Assign each to Peter only when actionable. Preserve approved analysis review as Done; reopen development review for revised previews, QA fixes and coverage decisions. Reopen analysis review only for material scope changes. Keep requests brief. Final PR review is the feature itself, not a third owner task. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
+
+**Models and limits:** the team runs on Anthropic Claude: Dev and Analyst use Claude Opus 5.5, the Tester uses Claude Sonnet 5.5. Claude enforces its own usage limits; if one is hit, work resumes from the same checkpoint after the reset, without duplicate workers. Waiting for Peter is not permission to continue automatically.
 
 ### Required review gates
 
