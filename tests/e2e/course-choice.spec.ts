@@ -222,3 +222,49 @@ for (const size of [SIZES[0], SIZES[1], SIZES[2], SIZES[6]])
     }
     await context.close();
   });
+
+for (const [width, height] of [
+  [733, 500],
+  [844, 390],
+])
+  test(`short ${width}x${height} window: compact heading keeps level list scrolling on both menus`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    const workspace = page.locator('.workspace');
+    for (const course of ['Mathematics', 'English']) {
+      await page.getByRole('button', { name: course, exact: true }).click();
+      await expect(workspace).toHaveAttribute('data-menu-compact', '');
+      await expect(workspace).toHaveAttribute('data-menu-mode', 'contained');
+      await expect(page.locator('.menu-heading .intro')).toBeHidden();
+      const h2 = await page
+        .locator('.menu-heading h2')
+        .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
+      expect(h2).toBeLessThanOrEqual(24);
+      const list = page.locator('.level-options');
+      expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight + 1)).toBe(true);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
+      ).toBe(true);
+      const sizes = await page
+        .locator('.session-options label')
+        .evaluateAll((labels) =>
+          labels.map((label) => Math.round(label.getBoundingClientRect().top)),
+        );
+      expect(new Set(sizes).size).toBe(1);
+      await expect(page.locator('.start-button')).toBeInViewport({ ratio: 1 });
+      await page.getByRole('button', { name: 'Back to courses' }).click();
+    }
+  });
+
+test('tall window keeps the full heading with its intro', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await page.goto('/');
+  for (const course of ['Mathematics', 'English']) {
+    await page.getByRole('button', { name: course, exact: true }).click();
+    await expect(page.locator('.workspace')).not.toHaveAttribute('data-menu-compact');
+    await expect(page.locator('.menu-heading .intro')).toBeVisible();
+    await page.getByRole('button', { name: 'Back to courses' }).click();
+  }
+});

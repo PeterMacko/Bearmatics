@@ -346,11 +346,17 @@ test('impossible height uses readable document flow and recovers after resize an
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '200%';
   });
-  await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'flow');
+  // SCRUM-71: large text first gets the compact heading; page flow only if even that cannot fit.
+  await expect(page.locator('.workspace')).toHaveAttribute('data-menu-compact', '');
+  if ((await page.locator('.workspace').getAttribute('data-menu-mode')) === 'contained') {
+    for (const fixed of ['.menu-heading', '.menu-controls'])
+      await expect(page.locator(fixed)).toBeInViewport({ ratio: 1 });
+  }
   await page.evaluate(() => {
     document.documentElement.style.fontSize = '';
   });
   await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
+  await expect(page.locator('.workspace')).not.toHaveAttribute('data-menu-compact');
   await page.screenshot({ path: testInfo.outputPath('recovered.png') });
 });
 

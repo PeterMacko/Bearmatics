@@ -1958,9 +1958,10 @@ progress::-moz-progress-bar {
     height: 52px;
   }
 }
-/* Short course/English lists: no reserved gap; still scroll when height is tight. */
-.menu-shell .workspace:has(> .course-choice),
-.menu-shell .workspace:has(> .english-home) {
+/* Short course/English lists: no reserved gap. Compact (short) windows use the shared
+   menu rows so the list shrinks and scrolls like the maths levels. */
+.menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
+.menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
   grid-template-rows: auto minmax(0, max-content) auto;
   align-content: start;
 }
@@ -2014,5 +2015,30 @@ progress::-moz-progress-bar {
   }
   .menu-shell .workspace:has(.menu-back) .companion .bear-scene {
     width: 70px;
+  }
+}
+/* Short windows (set by useMenuLayout on every menu screen): compact heading leaves the
+   levels room to scroll in their own list. */
+.menu-shell .workspace[data-menu-compact] .menu-heading h2 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+.menu-shell .workspace[data-menu-compact] .menu-heading .intro {
+  display: none;
+}
+/* Short windows, every menu: the exercise sizes keep one row when it fits (they wrap only
+   for very large text); Start sits beside them when there is room, otherwise on the row below (with the English "coming
+   soon" note next to it). */
+@media (min-width: 480px) and (max-height: 500px) {
+  .menu-shell .menu-controls {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+  }
+  .menu-shell .coming-soon-note {
+    order: 3;
+    flex: 1 1 12ch;
+    min-width: 0;
+    margin: 0;
   }
 }

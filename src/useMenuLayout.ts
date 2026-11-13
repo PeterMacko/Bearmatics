@@ -26,21 +26,29 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       // this synchronous task prevents scrollbar-width/fallback hysteresis. RO
       // sees only the final sizes, never the intermediate probe (no RO writes).
       menu.dataset.menuMode = 'contained';
+      delete menu.dataset.menuCompact;
       const style = getComputedStyle(menu);
-      const firstRow = Math.max(
-        heading.getBoundingClientRect().height,
-        matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
-      );
-      const required =
-        firstRow +
+      const card = Math.max(...cards.map((item) => item.getBoundingClientRect().height));
+      const required = (visibleCards: number) =>
+        Math.max(
+          heading.getBoundingClientRect().height,
+          matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
+        ) +
         (controls?.getBoundingClientRect().height ?? 0) +
-        Math.max(...cards.map((card) => card.getBoundingClientRect().height)) +
+        Math.min(visibleCards, cards.length) * card +
         16 +
         parseFloat(style.paddingTop) +
         parseFloat(style.paddingBottom) +
         2 * parseFloat(style.rowGap);
-      menu.dataset.menuMode =
-        required > menu.getBoundingClientRect().height + 0.5 ? 'flow' : 'contained';
+      const fits = (visibleCards: number) =>
+        required(visibleCards) <= menu.getBoundingClientRect().height + 0.5;
+      // Short window: if the list could not show two whole levels, give it more room
+      // with a compact heading (smaller title, intro hidden). Page scrolling is the
+      // last resort, when even one level does not fit.
+      if (!fits(2)) {
+        menu.dataset.menuCompact = '';
+        if (!fits(1)) menu.dataset.menuMode = 'flow';
+      }
       reveal(
         list.querySelector<HTMLElement>(':focus')?.closest('.level-option') ??
           list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ??
@@ -68,6 +76,7 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       document.fonts?.removeEventListener('loadingdone', schedule);
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
+      delete menu.dataset.menuCompact;
     };
   }, [active, language, level, view]);
   return ref;
