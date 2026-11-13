@@ -197,3 +197,6 @@ export const copy = {
     leave: 'Vybrať novú cestu',
   },
 } as const;
+
+/** Copy for one language. */
+export type Copy = (typeof copy)[Language];
