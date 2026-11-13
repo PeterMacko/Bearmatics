@@ -2223,9 +2223,17 @@ progress::-moz-progress-bar {
   .compact-practice .english-practice .speaker-button {
     position: absolute;
     top: 0;
-    left: calc(var(--practice-bear-size) + 12px);
-    width: 72px;
-    height: 72px;
+    /* At the bear's top-right corner, just outside it (the bear is centred). */
+    left: calc(50% + var(--practice-bear-size) / 2 + 2px);
+    width: 64px;
+    height: 64px;
+  }
+  .compact-practice .english-practice .answer-actions {
+    width: max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)));
+  }
+  .compact-practice .english-practice .answer-actions .answer-button {
+    width: 100%;
+    max-width: none;
   }
   .compact-practice .english-practice .word-options {
     width: max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)));
@@ -2238,4 +2246,9 @@ progress::-moz-progress-bar {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     width: min(100%, 560px, calc((100dvh - 290px) * 4));
   }
+}
+
+/* English has no hint button: Check takes the whole row. */
+.english-practice .answer-actions {
+  grid-template-columns: minmax(0, 1fr);
 }
