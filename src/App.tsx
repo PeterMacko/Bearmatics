@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
 } from 'react';
 import { flushSync } from 'react-dom';
-import { checkAnswer, generateSession, type Level } from './math/engine';
+import { generateSession, type Level } from './math/engine';
 import { copy, type Language } from './i18n';
 import Bear from './Bear';
 import { PICTURE_THEMES } from './PictureGroup';
@@ -19,10 +19,23 @@ import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
 import SummaryView from './SummaryView';
-import { FeedbackAudio } from './audio';
 import { useMenuLayout } from './useMenuLayout';
-
-import type { Session } from './session';
+import { useFeedbackAudio } from './useFeedbackAudio';
+import {
+  MAX_HINT_STAGE,
+  advance,
+  bearMood,
+  clearFeedback,
+  createSession,
+  currentExercise,
+  hasProgress,
+  nextAction,
+  nextHintStage,
+  openHintStage,
+  progressValue,
+  submitAnswer,
+  type Session,
+} from './session';
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('en');
@@ -38,9 +51,7 @@ export default function App() {
   const editAnswer = (value: string) => {
     if (!session || session.solved || session.done) return;
     setAnswer(value);
-    setSession((previous) =>
-      previous && !previous.solved ? { ...previous, feedback: 'ready' } : previous,
-    );
+    setSession((previous) => previous && clearFeedback(previous));
   };
   const padEdit = (key: string) => {
     editAnswer(
@@ -69,80 +80,15 @@ export default function App() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef<HTMLButtonElement>(null);
   const hintRef = useRef<HTMLButtonElement>(null);
-  const [audio] = useState(() => new FeedbackAudio());
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [soundReady, setSoundReady] = useState(false);
-  const desiredSound = useRef(true);
-  const readySound = useRef(false);
-  const activation = useRef(0);
-  const pendingSound = useRef(false);
-  const [soundBusy, setSoundBusy] = useState(false);
-  const [audioUnavailable, setAudioUnavailable] = useState(false);
-  const lastReaction = useRef('');
-  const completionConsumed = useRef(false);
-  useEffect(
-    () => () => {
-      ++activation.current;
-      pendingSound.current = false;
-      readySound.current = false;
-      audio.dispose();
-    },
-    [audio],
-  );
-  useEffect(() => {
-    const feedback = session?.feedback;
-    if (feedback !== 'correct' && feedback !== 'incorrect') {
-      lastReaction.current = '';
-      return;
-    }
-    const key = `${feedback}:${session?.attempts}`;
-    if (lastReaction.current === key) return;
-    lastReaction.current = key;
-    if (desiredSound.current && readySound.current && !audio.play(feedback)) {
-      readySound.current = false;
-      setSoundReady(false);
-      setAudioUnavailable(true);
-    }
-  }, [session?.feedback, session?.attempts, soundEnabled, audio]);
-  useEffect(() => {
-    if (!session?.done || completionConsumed.current) return;
-    // Consume even when muted/blocked/pending: activation must not replay history.
-    completionConsumed.current = true;
-    if (desiredSound.current && readySound.current && !audio.play('complete')) {
-      readySound.current = false;
-      setSoundReady(false);
-      setAudioUnavailable(true);
-    }
-  }, [session?.done, audio]);
-  // Only invoke synchronously from interaction handlers, never from effects.
-  const activateSound = async () => {
-    if (!desiredSound.current || readySound.current || pendingSound.current) return;
-    const revision = ++activation.current;
-    pendingSound.current = true;
-    setSoundBusy(true);
-    const enabled = await audio.setEnabled(true);
-    if (revision !== activation.current) return;
-    pendingSound.current = false;
-    readySound.current = enabled;
-    setSoundReady(enabled);
-    setAudioUnavailable(!enabled);
-    setSoundBusy(false);
-  };
-  const toggleSound = () => {
-    const target = !desiredSound.current;
-    desiredSound.current = target;
-    setSoundEnabled(target);
-    if (target) void activateSound();
-    else {
-      ++activation.current;
-      pendingSound.current = false;
-      readySound.current = false;
-      void audio.setEnabled(false);
-      setSoundReady(false);
-      setSoundBusy(false);
-      setAudioUnavailable(false);
-    }
-  };
+  const {
+    soundEnabled,
+    soundReady,
+    soundBusy,
+    audioUnavailable,
+    activateSound,
+    toggleSound,
+    resetForNewSession,
+  } = useFeedbackAudio(session?.feedback, session?.attempts, session?.done);
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -162,11 +108,7 @@ export default function App() {
   };
   const requestLeave = () => {
     if (settingsOpen || hintOpen || leaveOpen) return;
-    if (
-      session &&
-      (session.index > 0 || session.attempts > 0 || session.hintStage > 0 || answer.trim())
-    )
-      setLeaveOpen(true);
+    if (session && hasProgress(session, answer)) setLeaveOpen(true);
     else setSession(null);
   };
   useEffect(() => {
@@ -180,101 +122,34 @@ export default function App() {
     // session would re-focus on every attempt or hint step.
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
   }, [session?.index, session?.solved, session?.done]);
-  const current = session
-    ? session.reviewing
-      ? session.reviewQueue[0]
-      : session.exercises[session.index]
-    : undefined;
+  const current = session ? currentExercise(session) : undefined;
   const pictureTheme =
     session && current
       ? PICTURE_THEMES[session.exercises.indexOf(current) % PICTURE_THEMES.length]
       : PICTURE_THEMES[0];
   const start = () => {
-    completionConsumed.current = false;
-    lastReaction.current = '';
+    resetForNewSession();
     void activateSound();
     setAnswer('');
-    setSession({
-      exercises: generateSession(level, size),
-      index: 0,
-      firstTry: 0,
-      attempts: 0,
-      solved: false,
-      done: false,
-      feedback: 'ready',
-      hintStage: 0,
-      reviewing: false,
-      reviewQueue: [],
-    });
+    setSession(createSession(generateSession(level, size)));
   };
   function submit(event: FormEvent) {
     event.preventDefault();
     void activateSound();
-    setSession((previous) => {
-      if (!previous || previous.solved || previous.done) return previous;
-      const result = checkAnswer(
-        previous.reviewing ? previous.reviewQueue[0] : previous.exercises[previous.index],
-        answer,
-      );
-      if (result === 'invalid-input') return { ...previous, feedback: 'invalid' };
-      const solved = result === 'correct';
-      return {
-        ...previous,
-        solved,
-        attempts: previous.attempts + 1,
-        firstTry:
-          previous.firstTry +
-          (solved && !previous.reviewing && previous.attempts === 0 && previous.hintStage === 0
-            ? 1
-            : 0),
-        feedback: result,
-      };
-    });
+    setSession((previous) => previous && submitAnswer(previous, answer));
   }
   const next = () => {
     void activateSound();
     setHintOpen(false);
-    setSession((previous) => {
-      if (!previous || !previous.solved || previous.done) return previous;
-      const reset = { attempts: 0, hintStage: 0, solved: false, feedback: 'ready' as const };
-      if (previous.reviewing) {
-        const [reviewed, ...remaining] = previous.reviewQueue;
-        const reviewQueue =
-          previous.attempts === 1 && previous.hintStage === 0
-            ? remaining
-            : [...remaining, reviewed];
-        return { ...previous, ...reset, reviewQueue, done: reviewQueue.length === 0 };
-      }
-      const reviewQueue =
-        previous.attempts > 1
-          ? [...previous.reviewQueue, previous.exercises[previous.index]]
-          : previous.reviewQueue;
-      if (previous.index === previous.exercises.length - 1)
-        return {
-          ...previous,
-          ...reset,
-          reviewQueue,
-          reviewing: reviewQueue.length > 0,
-          done: reviewQueue.length === 0,
-        };
-      return { ...previous, ...reset, reviewQueue, index: previous.index + 1 };
-    });
+    setSession((previous) => previous && advance(previous));
     setAnswer('');
   };
   const openHint = () => {
     if (settingsOpen || hintOpen || leaveOpen) return;
-    setSession((previous) =>
-      previous && !previous.solved && !previous.done && previous.hintStage === 0
-        ? { ...previous, hintStage: 1 }
-        : previous,
-    );
+    setSession((previous) => previous && openHintStage(previous));
     setHintOpen(true);
   };
-  const showHint = () =>
-    setSession((previous) => {
-      if (!previous || previous.done || previous.solved || previous.hintStage >= 3) return previous;
-      return { ...previous, hintStage: previous.hintStage + 1 };
-    });
+  const showHint = () => setSession((previous) => previous && nextHintStage(previous));
 
   return (
     <div
@@ -285,9 +160,7 @@ export default function App() {
           className="viewport-progress"
           aria-label={t.trail}
           max={session.exercises.length}
-          value={
-            session.reviewing ? session.exercises.length : session.index + (session.solved ? 1 : 0)
-          }
+          value={progressValue(session)}
         />
       )}
       <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>
@@ -328,13 +201,7 @@ export default function App() {
             <Bear
               idleWink={!session}
               key={`${session?.done}:${session?.feedback}:${session?.attempts}`}
-              mood={
-                session?.done || session?.feedback === 'correct'
-                  ? 'happy'
-                  : session?.feedback === 'incorrect'
-                    ? 'sad'
-                    : 'neutral'
-              }
+              mood={bearMood(session)}
             />
             <span className="scene-leaf leaf-one" />
             <span className="scene-leaf leaf-two" />
@@ -373,19 +240,7 @@ export default function App() {
               reviewing={session.reviewing}
               solved={session.solved}
               feedback={session.feedback}
-              nextLabel={
-                session.reviewing
-                  ? session.reviewQueue.length === 1 &&
-                    session.attempts === 1 &&
-                    session.hintStage === 0
-                    ? t.finish
-                    : t.next
-                  : session.index === session.exercises.length - 1
-                    ? session.reviewQueue.length > 0 || session.attempts > 1
-                      ? t.reviewStart
-                      : t.finish
-                    : t.next
-              }
+              nextLabel={t[nextAction(session)]}
               answer={answer}
               padMode={padMode}
               touch={touch}
@@ -422,8 +277,8 @@ export default function App() {
         <HintDialog
           title={t.hint}
           closeLabel={t.closeHint}
-          nextLabel={session.hintStage >= 3 ? t.allHints : t.nextHint}
-          nextDisabled={session.hintStage >= 3}
+          nextLabel={session.hintStage >= MAX_HINT_STAGE ? t.allHints : t.nextHint}
+          nextDisabled={session.hintStage >= MAX_HINT_STAGE}
           onClose={() => setHintOpen(false)}
           onNext={showHint}
           triggerRef={hintRef}
