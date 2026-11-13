@@ -2006,3 +2006,13 @@ progress::-moz-progress-bar {
     align-items: flex-end;
   }
 }
+/* Very short phone windows (e.g. 568x320): keep the SCRUM-36 list-only scrolling by tucking a
+   slightly smaller bear right under the Back arrow. */
+@media (max-width: 620px) and (max-height: 500px) {
+  .menu-shell .workspace:has(.menu-back) .companion {
+    padding-top: 46px;
+  }
+  .menu-shell .workspace:has(.menu-back) .companion .bear-scene {
+    width: 70px;
+  }
+}
