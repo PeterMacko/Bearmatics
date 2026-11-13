@@ -46,6 +46,7 @@ export default function EnglishPracticeView({
   solved: boolean;
   feedback: Feedback;
   choice: string;
+  /** 'speaker' or the word whose button started the sound; null when silent. */
   playing: string | null;
   playFailed: boolean;
   nextLabel: string;
@@ -57,7 +58,7 @@ export default function EnglishPracticeView({
   onCheck: () => void;
   onNext: () => void;
 }) {
-  const speaking = playing === question.target;
+  const speaking = playing === 'speaker';
   return (
     <section className="practice english-practice">
       <div className="practice-header">

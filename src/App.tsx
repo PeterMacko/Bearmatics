@@ -53,6 +53,9 @@ export default function App() {
   const [englishSize, setEnglishSize] = useState(10);
   const [englishSession, setEnglishSession] = useState<Session<WordQuestion> | null>(null);
   const [choice, setChoice] = useState('');
+  // What started the current sound: the speaker or one word button. Only that control animates,
+  // so playing the target never highlights its button and a word tap never animates the speaker.
+  const [playSource, setPlaySource] = useState<string | null>(null);
   const words = useWordPlayer();
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null = session ?? englishSession;
@@ -206,10 +209,12 @@ export default function App() {
       generateWordSession(englishLevel === 3 ? 1 : englishLevel, englishSize),
     );
     setEnglishSession(created);
+    setPlaySource('speaker');
     void words.play(created.exercises[0].target);
   };
   const chooseWord = (word: string) => {
     if (!englishSession || englishSession.solved) return;
+    setPlaySource(word);
     void words.play(word);
     setChoice(word);
     setEnglishSession((previous) => previous && clearFeedback(previous));
@@ -225,6 +230,7 @@ export default function App() {
     setEnglishSession(following);
     setChoice('');
     const question = currentExercise(following);
+    setPlaySource('speaker');
     if (!following.done && question) void words.play(question.target);
     else words.stop();
   };
@@ -311,7 +317,7 @@ export default function App() {
                 solved={englishSession.solved}
                 feedback={englishSession.feedback}
                 choice={choice}
-                playing={words.playing}
+                playing={words.playing ? playSource : null}
                 playFailed={words.failed}
                 nextLabel={
                   nextAction(englishSession) === 'next'
@@ -320,7 +326,10 @@ export default function App() {
                 }
                 speakerRef={speakerRef}
                 nextRef={nextRef}
-                onReplay={() => void words.play(englishQuestion.target)}
+                onReplay={() => {
+                  setPlaySource('speaker');
+                  void words.play(englishQuestion.target);
+                }}
                 onRetryPlay={() => void words.retry()}
                 onChoose={chooseWord}
                 onCheck={checkChoice}

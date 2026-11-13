@@ -19,7 +19,8 @@ const COPY = {
     mathHeading: 'Where shall we explore?',
     englishHeading: 'Which level shall we try?',
     back: 'Back to courses',
-    soon: 'English exercises are coming soon.',
+    soon: 'Level 3 is coming soon.',
+    level3: /^Level 3 /,
   },
   sk: {
     courses: 'Čo sa dnes naučíme?',
@@ -28,7 +29,8 @@ const COPY = {
     mathHeading: 'Kam sa vyberieme?',
     englishHeading: 'Ktorú úroveň skúsime?',
     back: 'Späť na kurzy',
-    soon: 'Anglické cvičenia už čoskoro pribudnú.',
+    soon: 'Úroveň 3 už čoskoro pribudne.',
+    level3: /^Úroveň 3 /,
   },
 };
 
@@ -135,6 +137,9 @@ for (const size of SIZES)
       await page.getByRole('button', { name: c.english, exact: true }).click();
       await expect(page.getByRole('heading', { level: 2 })).toHaveText(c.englishHeading);
       await expect(page.getByRole('heading', { level: 2 })).toBeFocused();
+      await checkLayout(page);
+      // Level 3 is still coming: its note must fit too.
+      await page.getByRole('radio', { name: c.level3 }).click();
       await expect(page.getByText(c.soon)).toBeVisible();
       await checkLayout(page);
       await context.close();
@@ -166,8 +171,8 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   const start = page.getByRole('button', { name: /Let’s listen/ });
   await start.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('heading', { name: 'Which level shall we try?' })).toBeVisible();
-  await expect(page.locator('.practice')).toHaveCount(0);
+  // English levels 1-2 start from the keyboard; focus moves to the speaker.
+  await expect(page.getByRole('button', { name: 'Play the word again' })).toBeFocused();
 });
 
 test('touch taps open Mathematics and practice still starts from its menu', async ({ browser }) => {
@@ -242,8 +247,18 @@ for (const [width, height] of [
         .locator('.menu-heading h2')
         .evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
       expect(h2).toBeLessThanOrEqual(24);
+      // The level list either scrolls inside itself or shows every level in full.
       const list = page.locator('.level-options');
-      expect(await list.evaluate((el) => el.scrollHeight > el.clientHeight + 1)).toBe(true);
+      expect(
+        await list.evaluate((el) => {
+          const box = el.getBoundingClientRect();
+          const cards = [...el.querySelectorAll('label')].map((c) => c.getBoundingClientRect());
+          return (
+            el.scrollHeight > el.clientHeight + 1 ||
+            cards.every((c) => c.top >= box.top - 1 && c.bottom <= box.bottom + 1)
+          );
+        }),
+      ).toBe(true);
       expect(
         await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1),
       ).toBe(true);

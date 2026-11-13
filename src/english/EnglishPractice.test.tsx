@@ -175,3 +175,16 @@ test('WordPlayer: a new word stops the playing one; end and failure update the s
   expect(await player.play('dog')).toBe(false);
   expect(states.at(-1)).toEqual({ playing: null, failed: true });
 });
+
+test('playing the target never highlights its button; tapping a word never animates the speaker', async () => {
+  await startEnglish();
+  const target = currentTarget();
+  const speaker = button('Play the word again');
+  expect(speaker).toHaveAttribute('data-playing', 'true');
+  for (const b of wordButtons()) expect(b).toHaveAttribute('data-playing', 'false');
+  await act(async () => fireEvent.click(speaker));
+  for (const b of wordButtons()) expect(b).toHaveAttribute('data-playing', 'false');
+  await act(async () => fireEvent.click(wordButton(target.toLowerCase())));
+  expect(speaker).toHaveAttribute('data-playing', 'false');
+  expect(wordButton(target.toLowerCase())).toHaveAttribute('data-playing', 'true');
+});
