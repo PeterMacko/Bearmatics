@@ -1,14 +1,18 @@
 import { expect, test, type Page } from '@playwright/test';
+import { allWords } from '../../src/english/words';
 
 // SCRUM-79: English listen-and-choose on the defined devices (Peter's test scope).
 const DEVICES: [string, number, number][] = [
   ['phone', 390, 844],
   ['small phone', 320, 568],
+  ['phone 360', 360, 640],
   ['phone landscape', 844, 390],
   ['small phone landscape', 568, 320],
   ['tablet', 820, 1180],
   ['tablet landscape', 1180, 820],
   ['foldable unfolded', 884, 1004],
+  ['foldable with browser bar', 884, 838],
+  ['foldable narrow with browser bar', 742, 702],
   ['wide short', 1280, 520],
   ['desktop', 1366, 900],
 ];
@@ -55,6 +59,42 @@ for (const [name, width, height] of DEVICES) {
     expect(layout.square).toBe(true);
     expect(layout.oneLine).toBe(true);
     expect(layout.minSide).toBeGreaterThanOrEqual(44);
+  });
+}
+
+// The four longest-rendering words checked together, then every word, at each device:
+// after a refit the text must stay on one line inside its square.
+for (const [name, width, height] of DEVICES) {
+  test(`English: all 111 words stay on one line at ${name} ${width}x${height}`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      hasTouch: width < 900,
+      isMobile: width < 900,
+    });
+    const page = await context.newPage();
+    await startEnglish(page);
+    const words = allWords();
+    const groups = [['seventeen', 'butterfly', 'umbrella', 'computer']];
+    for (let i = 0; i < words.length; i += 4) groups.push(words.slice(i, i + 4));
+    for (const group of groups) {
+      const broken = await page.evaluate(async (group) => {
+        const buttons = [...document.querySelectorAll<HTMLElement>('.word-option')];
+        buttons.forEach((b, i) => (b.textContent = group[i % group.length]));
+        window.dispatchEvent(new Event('resize'));
+        await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+        return buttons
+          .filter((b) => {
+            const range = document.createRange();
+            range.selectNodeContents(b);
+            return range.getClientRects().length !== 1 || b.scrollWidth > b.clientWidth;
+          })
+          .map((b) => b.textContent);
+      }, group);
+      expect(broken, `words broken at ${width}x${height}`).toEqual([]);
+    }
+    await context.close();
   });
 }
 

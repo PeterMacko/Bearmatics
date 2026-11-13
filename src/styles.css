@@ -2167,7 +2167,8 @@ progress::-moz-progress-bar {
   opacity: 1;
 }
 .english-practice .feedback {
-  min-height: 1.6em;
+  /* Two lines reserved so wrapping feedback never moves the word squares. */
+  min-height: 2.6em;
   padding: 0;
   text-align: center;
 }
@@ -2180,7 +2181,7 @@ progress::-moz-progress-bar {
 @media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
   .compact-practice .english-practice form {
     grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
-    grid-template-rows: auto auto auto 1fr;
+    grid-template-rows: auto auto auto auto 1fr;
     align-items: center;
     justify-items: center;
     row-gap: 8px;
@@ -2195,16 +2196,16 @@ progress::-moz-progress-bar {
   }
   .compact-practice .english-practice .word-options {
     grid-column: 2;
-    grid-row: 1 / 4;
+    grid-row: 1 / 5;
     width: min(100%, calc(100dvh - 90px));
   }
   .compact-practice .english-practice .feedback {
     grid-column: 1;
-    grid-row: 2;
+    grid-row: 3;
   }
   .compact-practice .english-practice .answer-actions {
     grid-column: 1;
-    grid-row: 3;
+    grid-row: 4;
   }
 }
 .compact-practice .english-practice .answer-actions {
@@ -2254,4 +2255,8 @@ progress::-moz-progress-bar {
 /* English has no hint button: Check takes the whole row. */
 .english-practice .answer-actions {
   grid-template-columns: minmax(0, 1fr);
+}
+
+.compact-practice .english-practice .feedback {
+  min-height: 2.6em;
 }

@@ -70,8 +70,13 @@ export class WordPlayer {
     try {
       await audio.play();
       // Only listen for pause once playing, so the pause() above cannot end this play.
-      if (revision === this.revision) audio.addEventListener('pause', finished);
-      return revision === this.revision;
+      if (revision !== this.revision) {
+        // A newer word started meanwhile: drop this play's listeners.
+        cleanup();
+        return false;
+      }
+      audio.addEventListener('pause', finished);
+      return true;
     } catch {
       if (revision === this.revision) failed();
       else cleanup();

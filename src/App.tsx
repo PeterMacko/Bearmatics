@@ -202,12 +202,12 @@ export default function App() {
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
+    // Level 3 (listen and write) is not available yet; Start is disabled for it.
+    if (englishLevel === 3) return;
     resetForNewSession();
     void activateSound();
     setChoice('');
-    const created = createSession(
-      generateWordSession(englishLevel === 3 ? 1 : englishLevel, englishSize),
-    );
+    const created = createSession(generateWordSession(englishLevel, englishSize));
     setEnglishSession(created);
     setPlaySource('speaker');
     void words.play(created.exercises[0].target);

@@ -38,8 +38,9 @@ export function useWordGrid(key: unknown) {
       el.style.width = `${max}px`;
       el.style.minWidth = '0';
       const form = el.closest('form');
+      // Page coordinates (add scrollY) so a scrolled page (200% text) is measured correctly.
       const bottoms = [el, ...(form ? Array.from(form.children) : [])].map(
-        (child) => child.getBoundingClientRect().bottom,
+        (child) => child.getBoundingClientRect().bottom + window.scrollY,
       );
       // clientHeight is the layout viewport; innerHeight can grow while mobile browsers zoom out.
       const viewport = document.documentElement.clientHeight || window.innerHeight;
@@ -55,9 +56,30 @@ export function useWordGrid(key: unknown) {
       // Check and the word block share one width on phones.
       form?.style.setProperty('--word-block', `${width}px`);
       const square = (width - (cols - 1) * gap) / cols;
-      // About 5.8 font-sizes fit the longest words ("seventeen", "butterfly") plus padding.
-      const font = Math.max(rem, Math.min(1.75 * rem, (square - 14) / 5.8));
+      // First guess from the square, then measure the widest of the four words on one line
+      // and shrink the font until it fits the button's inner width. Never below 1rem, so
+      // enlarged text still grows (very long words may then wrap at 200% text).
+      let font = Math.max(rem, Math.min(1.75 * rem, square / 6));
       el.style.setProperty('--word-font', `${font}px`);
+      const buttons = Array.from(el.querySelectorAll<HTMLElement>('.word-option'));
+      if (buttons.length) {
+        const button = getComputedStyle(buttons[0]);
+        const inner =
+          buttons[0].clientWidth - parseFloat(button.paddingLeft) - parseFloat(button.paddingRight);
+        const widest = Math.max(
+          ...buttons.map((b) => {
+            const range = document.createRange();
+            range.selectNodeContents(b);
+            if (typeof range.getClientRects !== 'function') return 0; // no layout (tests)
+            // Width of the text if it were on one line: sum of its line boxes.
+            return Array.from(range.getClientRects()).reduce((sum, r) => sum + r.width, 0);
+          }),
+        );
+        if (widest > inner - 2 && widest > 0) {
+          font = Math.max(rem, Math.floor(font * ((inner - 2) / widest) * 10) / 10);
+          el.style.setProperty('--word-font', `${font}px`);
+        }
+      }
     };
     let frame = 0;
     const schedule = () => {
