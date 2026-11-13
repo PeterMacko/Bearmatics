@@ -1,9 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 test('keeps one accessible identity without the obsolete visible mark on menu or practice', () => {
   const { container } = render(<App />);
+  openMathematics();
   expect(container.querySelector('.brand-mark')).toBeNull();
   expect(screen.getAllByRole('heading', { name: 'Bearmatics', level: 1 })).toHaveLength(1);
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));

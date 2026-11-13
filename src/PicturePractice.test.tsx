@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 const facts: math.Exercise[] = [
   [0, 0, 0],
@@ -17,6 +18,7 @@ const enter = (value: string) =>
 test('pictures conceal results through invalid wrong edits and final hint, reveal only on success and reset on Next', () => {
   vi.spyOn(math, 'generateSession').mockReturnValue(facts);
   const { container } = render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: /Level 0 ·/ }));
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   click('Let’s count');
@@ -66,6 +68,7 @@ test('pictures conceal results through invalid wrong edits and final hint, revea
 test('review retains original theme and equation and requeues wrong or hinted attempts without inflating score', () => {
   vi.spyOn(math, 'generateSession').mockReturnValue(facts);
   const { container } = render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: /Level 0 ·/ }));
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   click('Let’s count');

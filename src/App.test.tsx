@@ -2,9 +2,11 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 test('offers eight correctly localized trails with level 1 selected by default', () => {
   const { container } = render(<App />);
+  openMathematics();
   expect(container.querySelectorAll('input[name="level"]')).toHaveLength(8);
   expect(screen.getByRole('radio', { name: /Level 0 · Count the pictures/ })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: /Level 1 · Hello, addition!/ })).toBeChecked();
@@ -47,6 +49,7 @@ test('answer controls are neutral before checking, red for errors and green for 
     Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }),
   );
   const { container } = render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   expect(screen.getByRole('button', { name: 'Sound requested' })).toHaveAttribute(
     'aria-pressed',
@@ -92,6 +95,7 @@ test('progressive hints preserve language/input, require submission and do not c
   const fact: math.Exercise = { level: 1, operation: '+', values: [2, 3, 5], blank: 1 };
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill(fact));
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '9' } });
@@ -137,6 +141,7 @@ test('keeps retries and language changes on the same exercise and completes exac
   const fact: math.Exercise = { level: 1, operation: '+', values: [1, 2, 3], blank: 2 };
   vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill(fact));
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   let input = screen.getByRole('textbox');
@@ -208,6 +213,7 @@ test('keeps retries and language changes on the same exercise and completes exac
 
 test('hint use is session progress and requires leave confirmation', () => {
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.click(screen.getByRole('button', { name: 'Show a hint' }));
   fireEvent.click(screen.getByRole('button', { name: 'Close hint' }));
@@ -220,6 +226,7 @@ test('hint use is session progress and requires leave confirmation', () => {
 
 test('requires confirmation before abandoning progress and can cancel safely', () => {
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '123' } });
   fireEvent.click(screen.getByRole('button', { name: 'Choose level' }));
@@ -239,6 +246,7 @@ test('requires confirmation before abandoning progress and can cancel safely', (
 
 test('offers all levels and session sizes and starts a localized practice session', () => {
   render(<App />);
+  openMathematics();
   expect(screen.getByRole('heading', { name: 'Bearmatics', level: 1 })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: /Level 6/ })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();

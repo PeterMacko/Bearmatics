@@ -1715,7 +1715,8 @@ progress::-moz-progress-bar {
     align-self: center;
   }
   .menu-shell .companion .bear-scene {
-    width: min(100%, 340px);
+    /* Very short windows: the bear never grows taller than the menu itself. */
+    width: min(100%, 340px, calc((100dvh - 48px) * 1.05));
     margin: 0 auto;
   }
   .menu-shell .level-options,
@@ -1866,5 +1867,176 @@ progress::-moz-progress-bar {
   .picture-equation .picture-group {
     min-block-size: 72px;
     inline-size: 72px;
+  }
+}
+
+/* SCRUM-71: course choice, English home and menu back navigation. */
+.menu-topline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: -6px;
+  min-width: 0;
+}
+.menu-topline .eyebrow {
+  margin: 0;
+  min-width: 0;
+}
+.menu-back.corner-button {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  flex: none;
+}
+.menu-heading h2:focus {
+  outline: none;
+}
+.menu-heading h2:focus-visible {
+  outline: 3px solid #a95120;
+  outline-offset: 4px;
+}
+.course-options {
+  list-style: none;
+  margin: 0;
+}
+.course-options li {
+  min-width: 0;
+}
+.course-option {
+  width: 100%;
+  grid-template-columns: 64px minmax(0, 1fr) max-content;
+  min-height: 104px;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+}
+.course-icon svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+.course-title {
+  font-size: 1.15rem;
+}
+.course-arrow {
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.soon-tag {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e3f1ff;
+  color: #21466d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.coming-soon-note {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.start-button[aria-disabled='true'],
+.start-button[aria-disabled='true']:hover {
+  background: #7d8799;
+  box-shadow: 0 4px 0 #5d6678;
+  cursor: default;
+}
+.start-button[aria-disabled='true']:active {
+  transform: none;
+}
+@media (max-width: 620px) {
+  .course-option {
+    min-height: 92px;
+    grid-template-columns: 52px minmax(0, 1fr) max-content;
+  }
+  .course-icon svg {
+    width: 52px;
+    height: 52px;
+  }
+}
+/* Phones: short course/English lists take only the height they need (no reserved gap).
+   Compact (short) windows use the shared menu rows so the list shrinks and scrolls like
+   the maths levels. Wider windows size the menu to its content already. */
+@media (max-width: 620px) {
+  .menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
+  .menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
+    grid-template-rows: auto minmax(0, max-content) auto;
+    align-content: start;
+  }
+}
+/* The menu Back arrow floats in the top-left corner like the top-right gear, so the heading
+   keeps its SCRUM-36 height. On phones the bear moves down below it. */
+.menu-shell .menu-topline {
+  display: block;
+  margin: 0;
+  min-height: 0;
+}
+/* Mirror the gear exactly: same centre line and same distance from the screen edge
+   (the 48px arrow is 2px larger than the 44px gear on each side). */
+.menu-shell .menu-back.corner-button {
+  position: fixed;
+  z-index: 1;
+  top: calc(max(8px, env(safe-area-inset-top)) - 2px);
+  left: calc(max(12px, env(safe-area-inset-left)) - 2px);
+}
+@media (max-width: 620px) {
+  .menu-shell .menu-back.corner-button {
+    position: absolute;
+    top: 6px;
+    left: 18px;
+  }
+  .menu-shell .workspace:has(.menu-back) .companion {
+    padding-top: 52px;
+  }
+  /* Course choice has no Back arrow: centre the bear on its three heading lines. */
+  .menu-shell .workspace:has(> .course-choice) .companion {
+    align-self: center;
+    /* Offset the empty gear-height space above the eyebrow text. */
+    margin-top: 24px;
+  }
+  /* Eyebrow sits low in its gear-height row: further from the top, close to the heading. */
+  .menu-shell .menu-heading .eyebrow {
+    display: flex;
+    align-items: flex-end;
+  }
+}
+/* Very short phone windows (e.g. 568x320): keep the SCRUM-36 list-only scrolling by tucking a
+   slightly smaller bear right under the Back arrow. */
+@media (max-width: 620px) and (max-height: 500px) {
+  .menu-shell .workspace:has(.menu-back) .companion {
+    padding-top: 46px;
+  }
+  .menu-shell .workspace:has(.menu-back) .companion .bear-scene {
+    width: 70px;
+  }
+}
+/* Short windows (set by useMenuLayout on every menu screen): compact heading leaves the
+   levels room to scroll in their own list. */
+.menu-shell .workspace[data-menu-compact] .menu-heading h2 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+.menu-shell .workspace[data-menu-compact] .menu-heading .intro {
+  display: none;
+}
+/* Short windows, every menu: the exercise sizes keep one row when it fits (they wrap only
+   for very large text); Start sits beside them when there is room, otherwise on the row below (with the English "coming
+   soon" note next to it). */
+@media (min-width: 480px) and (max-height: 500px) {
+  .menu-shell .menu-controls {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+  }
+  .menu-shell .coming-soon-note {
+    order: 3;
+    flex: 1 1 12ch;
+    min-width: 0;
+    margin: 0;
   }
 }

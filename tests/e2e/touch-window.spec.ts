@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openMathematics } from './course';
 import { writeFile } from 'node:fs/promises';
 
 async function answerFor(page: Page) {
@@ -39,6 +40,7 @@ for (const [width, height] of [
           touch ? 10 : 0,
         );
         await page.goto('/');
+        await openMathematics(page);
         expect(await page.evaluate(() => matchMedia('(pointer: fine)').matches)).toBe(true);
         if (language === 'sk') {
           await page.getByRole('button', { name: 'Settings', exact: true }).click();

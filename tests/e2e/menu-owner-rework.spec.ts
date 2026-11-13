@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 for (const language of ['en', 'sk'])
   for (const [width, height] of [
     [754, 655],
@@ -12,6 +13,7 @@ for (const language of ['en', 'sk'])
     test(`owner wide ${language} ${width}x${height}`, async ({ page }, info) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
+      await openMathematics(page);
       if (language === 'sk') {
         await page.locator('.settings-button').click();
         await page.getByRole('button', { name: 'Slovenčina' }).click();

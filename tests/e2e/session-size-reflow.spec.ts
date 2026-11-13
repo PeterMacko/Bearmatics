@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openMathematics } from './course';
 
 type Bounds = { left: number; right: number; top: number; bottom: number };
 const nonoverlapping = (a: Bounds, b: Bounds) =>
@@ -76,6 +77,7 @@ for (const hasTouch of [false, true]) {
           });
           await page.setViewportSize({ width: 320, height: 568 });
           await page.goto('/');
+          await openMathematics(page);
           if (language === 'sk') {
             await page.locator('.settings-button').click();
             await page.getByRole('button', { name: 'Slovenčina' }).click();

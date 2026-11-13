@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 import { writeFile } from 'node:fs/promises';
 
 for (const [width, height] of [
@@ -19,6 +20,7 @@ for (const [width, height] of [
       const errors: string[] = [];
       page.on('pageerror', (e) => errors.push(e.message));
       await page.goto('/');
+      await openMathematics(page);
       if (lang === 'sk') {
         await page.locator('.settings-button').click();
         await page.getByRole('button', { name: 'Slovenčina' }).click();

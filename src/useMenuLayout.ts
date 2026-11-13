@@ -1,14 +1,14 @@
 import { useLayoutEffect, useRef } from 'react';
 
 /** Menu-only intrinsic feasibility check. No application/selection state lives here. */
-export function useMenuLayout(active: boolean, language: string, level: number) {
+export function useMenuLayout(active: boolean, language: string, level: number, view = '') {
   const ref = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const menu = ref.current;
     if (!active || !menu || typeof ResizeObserver === 'undefined') return;
     const list = menu.querySelector<HTMLElement>('.level-options')!;
     const heading = menu.querySelector<HTMLElement>('.menu-heading')!;
-    const controls = menu.querySelector<HTMLElement>('.menu-controls')!;
+    const controls = menu.querySelector<HTMLElement>('.menu-controls');
     const bear = menu.querySelector<HTMLElement>('.companion')!;
     const cards = [...list.querySelectorAll<HTMLElement>('.level-option')];
     let frame = 0;
@@ -26,23 +26,42 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       // this synchronous task prevents scrollbar-width/fallback hysteresis. RO
       // sees only the final sizes, never the intermediate probe (no RO writes).
       menu.dataset.menuMode = 'contained';
+      delete menu.dataset.menuCompact;
       const style = getComputedStyle(menu);
-      const firstRow = Math.max(
-        heading.getBoundingClientRect().height,
-        matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
-      );
-      const required =
-        firstRow +
-        controls.getBoundingClientRect().height +
-        Math.max(...cards.map((card) => card.getBoundingClientRect().height)) +
+      const card = Math.max(...cards.map((item) => item.getBoundingClientRect().height));
+      const required = (visibleCards: number) =>
+        Math.max(
+          heading.getBoundingClientRect().height,
+          matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
+        ) +
+        (controls?.getBoundingClientRect().height ?? 0) +
+        Math.min(visibleCards, cards.length) * card +
         16 +
         parseFloat(style.paddingTop) +
         parseFloat(style.paddingBottom) +
         2 * parseFloat(style.rowGap);
-      menu.dataset.menuMode =
-        required > menu.getBoundingClientRect().height + 0.5 ? 'flow' : 'contained';
+      // The estimate plus a check of the real layout: heading, list and controls must end
+      // inside the menu (the decorative bear may overflow on very short wide windows).
+      // A fully visible list always fits.
+      const contentInside = () => {
+        const bottom = menu.getBoundingClientRect().bottom - parseFloat(style.paddingBottom) + 1;
+        return [heading, list, controls].every(
+          (part) => !part || part.getBoundingClientRect().bottom <= bottom,
+        );
+      };
+      const fits = (visibleCards: number) =>
+        (list.scrollHeight <= list.clientHeight + 1 ||
+          required(visibleCards) <= menu.getBoundingClientRect().height + 0.5) &&
+        contentInside();
+      // Short window: if the list could not show two whole levels, give it more room
+      // with a compact heading (smaller title, intro hidden). Page scrolling is the
+      // last resort, when even one level does not fit.
+      if (!fits(2)) {
+        menu.dataset.menuCompact = '';
+        if (!fits(1)) menu.dataset.menuMode = 'flow';
+      }
       reveal(
-        list.querySelector<HTMLInputElement>('input:focus')?.closest('.level-option') ??
+        list.querySelector<HTMLElement>(':focus')?.closest('.level-option') ??
           list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ??
           null,
       );
@@ -54,7 +73,7 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       reveal((event.target as HTMLElement).closest('.level-option'));
     measure();
     const observer = new ResizeObserver(schedule);
-    [heading, controls, bear, ...cards].forEach((element) => observer.observe(element));
+    [heading, controls, bear, ...cards].forEach((element) => element && observer.observe(element));
     window.addEventListener('resize', schedule);
     window.visualViewport?.addEventListener('resize', schedule);
     document.fonts?.addEventListener('loadingdone', schedule);
@@ -68,7 +87,8 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       document.fonts?.removeEventListener('loadingdone', schedule);
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
+      delete menu.dataset.menuCompact;
     };
-  }, [active, language, level]);
+  }, [active, language, level, view]);
   return ref;
 }

@@ -4,6 +4,7 @@ import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import { FeedbackAudio } from './audio';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 const button = (name: string) => screen.getByRole('button', { name });
 const click = (name: string) => fireEvent.click(button(name));
@@ -22,6 +23,7 @@ test('sound is desired initially without autoplay; Start lazily activates', asyn
       <App />
     </StrictMode>,
   );
+  openMathematics();
   settings();
   expect(button('Sound requested')).toHaveAttribute('aria-pressed', 'true');
   close();
@@ -47,6 +49,7 @@ test.each([5, 10, 20])(
         <App />
       </StrictMode>,
     );
+    openMathematics();
     fireEvent.click(screen.getByRole('radio', { name: `${size} exercises` }));
     click('Let’s count');
     await flush();
@@ -106,6 +109,7 @@ test('explicit mute before Start remains off and does not activate', async () =>
   const activate = vi.spyOn(FeedbackAudio.prototype, 'setEnabled').mockResolvedValue(false);
   const play = vi.spyOn(FeedbackAudio.prototype, 'play').mockReturnValue(true);
   render(<App />);
+  openMathematics();
   settings();
   click('Sound requested');
   close();
@@ -137,6 +141,7 @@ test('pending activation is mutable and stale completion cannot unmute or replay
       <App />
     </StrictMode>,
   );
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   click('Let’s count');
   settings();
@@ -171,6 +176,7 @@ test('activation finishing after a whole silent session never replays completion
     Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }),
   );
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   click('Let’s count');
   for (let i = 0; i < 5; i++) {
@@ -189,6 +195,7 @@ test('blocked Start keeps preference, explains silence locally and retries only 
     .mockResolvedValue(true);
   const play = vi.spyOn(FeedbackAudio.prototype, 'play').mockReturnValue(true);
   render(<App />);
+  openMathematics();
   click('Let’s count');
   await flush();
   settings();

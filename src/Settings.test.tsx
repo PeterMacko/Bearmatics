@@ -1,9 +1,11 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 test('settings localizes in place, traps focus and restores its gear trigger without resetting practice', () => {
   render(<App />);
+  openMathematics();
   expect(screen.queryByRole('button', { name: 'English' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '123' } });
@@ -39,6 +41,7 @@ test('settings localizes in place, traps focus and restores its gear trigger wit
 
 test('compact back arrow confirms leaving and restores focus on cancel and Escape', () => {
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '7' } });
   const back = screen.getByRole('button', { name: 'Choose level' });
@@ -57,6 +60,7 @@ test('compact back arrow confirms leaving and restores focus on cancel and Escap
 
 test('settings, hint and leave dialogs exclude other modal requests', () => {
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '7' } });
   const gear = screen.getByRole('button', { name: 'Settings' });
@@ -83,6 +87,7 @@ test('settings, hint and leave dialogs exclude other modal requests', () => {
 
 test('practice exposes exactly one progress indicator as the first app element', () => {
   const { container } = render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   expect(screen.getAllByRole('progressbar')).toHaveLength(1);
   expect(container.querySelector('.app-shell')?.firstElementChild).toBe(

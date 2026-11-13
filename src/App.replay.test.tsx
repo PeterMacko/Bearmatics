@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 for (const review of [false, true]) {
   for (const replayDetail of [1, 0]) {
@@ -10,6 +11,7 @@ for (const review of [false, true]) {
         .spyOn(math, 'generateSession')
         .mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
       const { container } = render(<App />);
+      openMathematics();
       const click = (name: string) =>
         fireEvent.click(screen.getByRole('button', { name }), { detail: 1 });
       const solve = (value = '3') => {

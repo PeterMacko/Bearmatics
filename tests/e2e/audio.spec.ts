@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openMathematics } from './course';
 
 type Envelope = { value: number; time: number }[];
 type Note = { frequency: number; start: number; stops: (number | null)[] };
@@ -71,6 +72,7 @@ test('native Web Audio is lazy, captures stronger bounded schedules and one gate
     };
   });
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sound requested' })).toHaveAttribute(
     'aria-pressed',

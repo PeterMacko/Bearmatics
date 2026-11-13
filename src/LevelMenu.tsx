@@ -1,5 +1,7 @@
+import type { RefObject } from 'react';
 import type { Level } from './math/engine';
 import type { Copy } from './i18n';
+import MenuHeading from './MenuHeading';
 
 const LEVELS = [0, 1, 2, 3, 4, 5, 6, 7] as const;
 const SIZES = [5, 10, 20];
@@ -12,6 +14,8 @@ export default function LevelMenu({
   onLevelChange,
   onSizeChange,
   onStart,
+  onBack,
+  headingRef,
 }: {
   t: Copy;
   level: Level;
@@ -19,14 +23,19 @@ export default function LevelMenu({
   onLevelChange: (level: Level) => void;
   onSizeChange: (size: number) => void;
   onStart: () => void;
+  onBack: () => void;
+  headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   return (
     <section className="selection">
-      <div className="menu-heading">
-        <p className="eyebrow">{t.trail}</p>
-        <h2>{t.choose}</h2>
-        <p className="intro">{t.intro}</p>
-      </div>
+      <MenuHeading
+        eyebrow={t.trail}
+        title={t.choose}
+        intro={t.intro}
+        headingRef={headingRef}
+        backLabel={t.backToCourses}
+        onBack={onBack}
+      />
       <fieldset className="level-options">
         <legend className="sr-only">{t.level}</legend>
         {LEVELS.map((n) => (

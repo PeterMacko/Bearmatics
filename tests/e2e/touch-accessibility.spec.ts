@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 import { writeFile } from 'node:fs/promises';
 
 for (const language of ['en', 'sk']) {
@@ -13,6 +14,7 @@ for (const language of ['en', 'sk']) {
     const page = await context.newPage();
     try {
       await page.goto('/');
+      await openMathematics(page);
       expect(await page.evaluate(() => navigator.maxTouchPoints)).toBeGreaterThan(0);
       await page.getByRole('button', { name: 'Let’s count' }).click();
       const input = page.getByRole('textbox');
@@ -60,6 +62,7 @@ for (const language of ['en', 'sk']) {
       Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 10 }),
     );
     await page.goto('/');
+    await openMathematics(page);
     if (language === 'sk') {
       await page.locator('.settings-button').click();
       await page.getByRole('button', { name: 'Slovenčina' }).click();
