@@ -1,8 +1,8 @@
 import { createHint } from './math/hints';
 import type { Exercise } from './math/engine';
 import { copy, type Language } from './i18n';
+import { OPERATOR_SYMBOLS as symbols } from './operatorSymbols';
 
-const symbols = { '+': '+', '-': '−', '*': '×', '/': '÷' } as const;
 export default function HintPanel({
   exercise,
   stage,
