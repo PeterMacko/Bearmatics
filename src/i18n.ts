@@ -108,7 +108,7 @@ export const copy = {
     englishCourseDetail: 'Listen to English words and learn them',
     englishTrail: 'Your English course',
     englishChoose: 'Which level shall we try?',
-    englishIntro: 'Listen carefully and find the right word.',
+    englishIntro: 'Listen carefully and learn new English words.',
     englishLevels: {
       1: 'Listen and choose',
       2: 'Listen and choose: similar-sounding words',
@@ -223,10 +223,10 @@ export const copy = {
     mathCourse: 'Matematika',
     mathCourseDetail: 'Počítanie, sčítanie, odčítanie, násobenie a delenie',
     englishCourse: 'Angličtina',
-    englishCourseDetail: 'Počúvaj anglické slová a uč sa ich',
+    englishCourseDetail: 'Počúvaj anglické slová a nauč sa ich',
     englishTrail: 'Tvoj kurz angličtiny',
     englishChoose: 'Ktorú úroveň skúsime?',
-    englishIntro: 'Pozorne počúvaj a nájdi správne slovo.',
+    englishIntro: 'Pozorne počúvaj a uč sa nové anglické slová.',
     englishLevels: {
       1: 'Počúvaj a vyber',
       2: 'Počúvaj a vyber: podobne znejúce slová',

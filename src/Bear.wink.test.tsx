@@ -50,6 +50,7 @@ test('reduced motion disables, cancels an active wink, and restarts a fresh idle
 });
 test('hidden document cancels the gesture and resumes without accumulated events', () => {
   const { container } = render(<App />);
+  openMathematics();
   advance(29999);
   visibility(true);
   advance(120000);
@@ -172,6 +173,7 @@ test('repeat onsets stay 30.24 seconds apart through menu rerenders', () => {
 
 test('menu waits 25–40 seconds before a short one-eye wink, then waits again', () => {
   const { container } = render(<App />);
+  openMathematics();
   const bear = () => container.querySelector('.bear')!;
   expect(bear()).not.toHaveAttribute('data-winking', 'true');
   advance(24999);
