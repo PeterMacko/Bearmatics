@@ -7,15 +7,26 @@ type Evidence = {
 
 for (const review of [false, true]) {
   for (const replay of ['click', 'Enter', 'Space'] as const) {
-    test(`Finish double-click preserves completion: review=${review}, replay=${replay}`, async ({ page }, testInfo) => {
+    test(`Finish double-click preserves completion: review=${review}, replay=${replay}`, async ({
+      page,
+    }, testInfo) => {
       await page.setViewportSize({ width: 1280, height: 720 });
       await page.addInitScript(() => {
         const evidence: Evidence = { notes: [], clicks: [] };
         (window as unknown as { completionEvidence: Evidence }).completionEvidence = evidence;
-        document.addEventListener('click', event => {
-          const button = (event.target as Element).closest('button');
-          if (button) evidence.clicks.push({ text: button.textContent!.trim(), detail: event.detail, trusted: event.isTrusted });
-        }, true);
+        document.addEventListener(
+          'click',
+          (event) => {
+            const button = (event.target as Element).closest('button');
+            if (button)
+              evidence.clicks.push({
+                text: button.textContent!.trim(),
+                detail: event.detail,
+                trusted: event.isTrusted,
+              });
+          },
+          true,
+        );
         // Observe native scheduling without replacing browser audio or app activation.
         const create = AudioContext.prototype.createOscillator;
         AudioContext.prototype.createOscillator = function () {
@@ -28,12 +39,15 @@ for (const review of [false, true]) {
           return oscillator;
         };
       });
-      const evidence = () => page.evaluate(() => (window as unknown as { completionEvidence: Evidence }).completionEvidence);
+      const evidence = () =>
+        page.evaluate(
+          () => (window as unknown as { completionEvidence: Evidence }).completionEvidence,
+        );
       const solve = async (wrong = false) => {
-        const value = await page.locator('.equation').evaluate(el => {
+        const value = await page.locator('.equation').evaluate((el) => {
           const terms = [...el.querySelectorAll('[data-term]')];
-          const blank = terms.findIndex(term => term.querySelector('input'));
-          const [a, b, c] = terms.map(term => Number(term.textContent));
+          const blank = terms.findIndex((term) => term.querySelector('input'));
+          const [a, b, c] = terms.map((term) => Number(term.textContent));
           return blank === 2 ? a + b : blank === 0 ? c - b : c - a;
         });
         await page.getByRole('textbox').fill(String(value + Number(wrong)));
@@ -72,23 +86,42 @@ for (const review of [false, true]) {
       // A separate gesture must still replay, including native keyboard clicks.
       const again = page.getByRole('button', { name: 'Play again' });
       if (replay === 'click') await again.click();
-      else { await again.focus(); await page.keyboard.press(replay); }
+      else {
+        await again.focus();
+        await page.keyboard.press(replay);
+      }
       await expect(page.locator('.exercise-position')).toHaveText('Exercise 1 of 5');
       await expect(page.getByRole('textbox')).toHaveValue('');
-      await expect(page.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
+      await expect(page.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+        'data-state',
+        'neutral',
+      );
       const restarted = await evidence();
-      expect(restarted.clicks.at(-1)).toEqual({ text: 'Play again', detail: replay === 'click' ? 1 : 0, trusted: true });
+      expect(restarted.clicks.at(-1)).toEqual({
+        text: 'Play again',
+        detail: replay === 'click' ? 1 : 0,
+        trusted: true,
+      });
       expect(restarted.notes).toHaveLength(before + 4);
       // Completing the new session proves score and completion-consumption reset.
       for (let i = 0; i < 5; i++) {
         await solve();
-        await page.getByRole('button', { name: i < 4 ? 'Next exercise' : 'See how you did' }).click();
+        await page
+          .getByRole('button', { name: i < 4 ? 'Next exercise' : 'See how you did' })
+          .click();
       }
       await expect(page.locator('.first-try strong')).toHaveText('5 / 5');
       const final = await evidence();
       expect(final.notes).toHaveLength(before + 4 + 15 + 4);
-      expect(final.notes.filter(value => value === 1046.5)).toHaveLength(2);
-      await testInfo.attach('completion-replay-evidence', { body: JSON.stringify({ browser: testInfo.project.name, review, replay, completed, restarted, final }, null, 2), contentType: 'application/json' });
+      expect(final.notes.filter((value) => value === 1046.5)).toHaveLength(2);
+      await testInfo.attach('completion-replay-evidence', {
+        body: JSON.stringify(
+          { browser: testInfo.project.name, review, replay, completed, restarted, final },
+          null,
+          2,
+        ),
+        contentType: 'application/json',
+      });
     });
   }
 }

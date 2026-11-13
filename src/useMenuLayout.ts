@@ -15,7 +15,8 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
     let disposed = false;
     const reveal = (card: HTMLElement | null) => {
       if (!card || menu.dataset.menuMode === 'flow') return;
-      const bounds = list.getBoundingClientRect(), box = card.getBoundingClientRect();
+      const bounds = list.getBoundingClientRect(),
+        box = card.getBoundingClientRect();
       if (box.top < bounds.top + 8) list.scrollTop -= bounds.top + 8 - box.top;
       else if (box.bottom > bounds.bottom - 8) list.scrollTop += box.bottom - bounds.bottom + 8;
     };
@@ -26,26 +27,42 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       // sees only the final sizes, never the intermediate probe (no RO writes).
       menu.dataset.menuMode = 'contained';
       const style = getComputedStyle(menu);
-      const firstRow = Math.max(heading.getBoundingClientRect().height,
-        matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0);
-      const required = firstRow + controls.getBoundingClientRect().height
-        + Math.max(...cards.map(card => card.getBoundingClientRect().height)) + 16
-        + parseFloat(style.paddingTop) + parseFloat(style.paddingBottom) + 2 * parseFloat(style.rowGap);
-      menu.dataset.menuMode = required > menu.getBoundingClientRect().height + 0.5 ? 'flow' : 'contained';
-      reveal(list.querySelector<HTMLInputElement>('input:focus')?.closest('.level-option')
-        ?? list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ?? null);
+      const firstRow = Math.max(
+        heading.getBoundingClientRect().height,
+        matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
+      );
+      const required =
+        firstRow +
+        controls.getBoundingClientRect().height +
+        Math.max(...cards.map((card) => card.getBoundingClientRect().height)) +
+        16 +
+        parseFloat(style.paddingTop) +
+        parseFloat(style.paddingBottom) +
+        2 * parseFloat(style.rowGap);
+      menu.dataset.menuMode =
+        required > menu.getBoundingClientRect().height + 0.5 ? 'flow' : 'contained';
+      reveal(
+        list.querySelector<HTMLInputElement>('input:focus')?.closest('.level-option') ??
+          list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ??
+          null,
+      );
     };
-    const schedule = () => { if (!disposed && !frame) frame = requestAnimationFrame(measure); };
-    const focus = (event: FocusEvent) => reveal((event.target as HTMLElement).closest('.level-option'));
+    const schedule = () => {
+      if (!disposed && !frame) frame = requestAnimationFrame(measure);
+    };
+    const focus = (event: FocusEvent) =>
+      reveal((event.target as HTMLElement).closest('.level-option'));
     measure();
     const observer = new ResizeObserver(schedule);
-    [heading, controls, bear, ...cards].forEach(element => observer.observe(element));
+    [heading, controls, bear, ...cards].forEach((element) => observer.observe(element));
     window.addEventListener('resize', schedule);
     window.visualViewport?.addEventListener('resize', schedule);
     document.fonts?.addEventListener('loadingdone', schedule);
     list.addEventListener('focusin', focus);
     return () => {
-      disposed = true; cancelAnimationFrame(frame); observer.disconnect();
+      disposed = true;
+      cancelAnimationFrame(frame);
+      observer.disconnect();
       window.removeEventListener('resize', schedule);
       window.visualViewport?.removeEventListener('resize', schedule);
       document.fonts?.removeEventListener('loadingdone', schedule);

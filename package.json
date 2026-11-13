@@ -12,7 +12,9 @@
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
     "test:e2e": "playwright test",
-    "deploy:check": "wrangler deploy --dry-run"
+    "deploy:check": "wrangler deploy --dry-run",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
   },
   "dependencies": {
     "react": "19.3.1",
@@ -29,6 +31,7 @@
     "@testing-library/react": "16.3.3",
     "@testing-library/jest-dom": "7.0.1",
     "@playwright/test": "1.65.0",
+    "prettier": "3.10.1",
     "wrangler": "4.158.0"
   },
   "allowScripts": {
