@@ -40,8 +40,12 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
         parseFloat(style.paddingTop) +
         parseFloat(style.paddingBottom) +
         2 * parseFloat(style.rowGap);
+      // The estimate plus a check of the real layout: content must not spill out of the menu.
+      // A fully visible list always fits.
       const fits = (visibleCards: number) =>
-        required(visibleCards) <= menu.getBoundingClientRect().height + 0.5;
+        (list.scrollHeight <= list.clientHeight + 1 ||
+          required(visibleCards) <= menu.getBoundingClientRect().height + 0.5) &&
+        menu.scrollHeight <= menu.clientHeight + 1;
       // Short window: if the list could not show two whole levels, give it more room
       // with a compact heading (smaller title, intro hidden). Page scrolling is the
       // last resort, when even one level does not fit.

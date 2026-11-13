@@ -268,3 +268,33 @@ test('tall window keeps the full heading with its intro', async ({ page }) => {
     await page.getByRole('button', { name: 'Back to courses' }).click();
   }
 });
+
+// SCRUM-77 QA D1/D2: while the menu is "contained", the page itself never scrolls
+// (course choice, Mathematics and English), including the sizes that used to break.
+for (const [width, height] of [
+  [1280, 520],
+  [1280, 400],
+  [1000, 440],
+  [820, 460],
+  [733, 640],
+  [640, 720],
+  [844, 390],
+])
+  test(`no page scroll while contained at ${width}x${height} on every menu screen`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    for (const course of [null, 'Mathematics', 'English']) {
+      if (course) await page.getByRole('button', { name: course, exact: true }).click();
+      const workspace = page.locator('.workspace');
+      await expect(workspace).toHaveAttribute('data-menu-mode', /contained|flow/);
+      const state = await page.evaluate(() => ({
+        mode: document.querySelector<HTMLElement>('.workspace')!.dataset.menuMode,
+        overflow: document.documentElement.scrollHeight - innerHeight,
+      }));
+      if (state.mode === 'contained')
+        expect(state.overflow, `${course ?? 'courses'}`).toBeLessThanOrEqual(1);
+      if (course) await page.getByRole('button', { name: 'Back to courses' }).click();
+    }
+  });

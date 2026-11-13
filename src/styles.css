@@ -1958,17 +1958,14 @@ progress::-moz-progress-bar {
     height: 52px;
   }
 }
-/* Short course/English lists: no reserved gap. Compact (short) windows use the shared
-   menu rows so the list shrinks and scrolls like the maths levels. */
-.menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
-.menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
-  grid-template-rows: auto minmax(0, max-content) auto;
-  align-content: start;
-}
-@media (min-width: 621px) {
-  .menu-shell .workspace:has(> .course-choice),
-  .menu-shell .workspace:has(> .english-home) {
-    align-content: center;
+/* Phones: short course/English lists take only the height they need (no reserved gap).
+   Compact (short) windows use the shared menu rows so the list shrinks and scrolls like
+   the maths levels. Wider windows size the menu to its content already. */
+@media (max-width: 620px) {
+  .menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
+  .menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
+    grid-template-rows: auto minmax(0, max-content) auto;
+    align-content: start;
   }
 }
 /* The menu Back arrow floats in the top-left corner like the top-right gear, so the heading
