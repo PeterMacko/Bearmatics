@@ -76,12 +76,9 @@ fieldset {
   padding: 0 48px;
 }
 .site-header {
-  display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 28px 0;
   border-bottom: 1px solid var(--line);
-  gap: 20px;
 }
 .wordmark {
   display: flex;
@@ -91,17 +88,6 @@ fieldset {
 .wordmark h1 {
   font-size: 1.4rem;
   letter-spacing: -0.045em;
-}
-.brand-mark {
-  background: var(--accent);
-  color: #fffdf8;
-  border-radius: 12px 12px 5px 12px;
-  width: 38px;
-  height: 38px;
-  display: grid;
-  place-items: center;
-  font-size: 1.5rem;
-  font-weight: bold;
 }
 .language-switch {
   display: flex;
@@ -182,12 +168,6 @@ fieldset {
   width: 20px;
   height: 36px;
 }
-.companion-caption {
-  max-width: 235px;
-  margin: auto;
-  color: var(--muted);
-  font-size: 0.95rem;
-}
 .selection h2 {
   overflow-wrap: anywhere;
 }
@@ -244,22 +224,6 @@ fieldset {
   font-size: 1.25rem;
   background: #ffdc79;
   color: var(--accent);
-}
-.level-2 .level-number {
-  background: #f3e6cb;
-  color: #755126;
-}
-.level-3 .level-number {
-  background: #e0efff;
-  color: #335f91;
-}
-.level-4 .level-number {
-  background: #f0dfd6;
-  color: #824a36;
-}
-.level-5 .level-number {
-  background: #e9e3ef;
-  color: #645074;
 }
 .level-title {
   display: block;
@@ -325,21 +289,15 @@ fieldset {
 .primary {
   border: 0;
   border-radius: 12px;
-  background: var(--accent);
   color: #fffdf8;
   padding: 17px 24px;
   min-height: 56px;
   font-weight: 700;
   font-size: 1rem;
   line-height: 1.4;
-  box-shadow: 0 4px 0 #842a36;
-}
-.primary:hover {
-  background: #a4323e;
 }
 .primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #842a36;
 }
 .start-button {
   width: 100%;
@@ -357,12 +315,6 @@ fieldset {
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 4px;
-}
-.site-footer {
-  border-top: 1px solid var(--line);
-  padding: 18px 0 24px;
-  font-size: 0.75rem;
-  color: var(--muted);
 }
 .practice {
   min-width: 0;
@@ -396,18 +348,14 @@ progress {
   border-radius: 8px;
   overflow: hidden;
   background: #f0e0d8;
-  accent-color: var(--accent);
   margin-bottom: 34px;
+  accent-color: #356da6;
 }
 progress::-webkit-progress-bar {
   background: #f0e0d8;
 }
 progress::-webkit-progress-value {
-  background: var(--accent);
   border-radius: 8px;
-}
-progress::-moz-progress-bar {
-  background: var(--accent);
 }
 .practice h2 {
   font-size: clamp(1.45rem, 2.3vw, 2rem);
@@ -439,8 +387,6 @@ progress::-moz-progress-bar {
   width: 1.9em;
   max-width: 100%;
   border: 2px dashed #bc5c65;
-  background: #fff0e5;
-  color: var(--accent);
   text-align: center;
   padding: 0.25em 0.08em;
   border-radius: 12px;
@@ -451,19 +397,13 @@ progress::-moz-progress-bar {
 }
 .equation input:disabled {
   border-style: solid;
-  border-color: var(--accent);
-  background: #e0edff;
   opacity: 1;
-  -webkit-text-fill-color: var(--accent);
 }
 .feedback {
   min-height: 74px;
   padding: 8px 0 18px;
   font-size: 1rem;
   color: var(--muted);
-}
-.feedback-correct {
-  color: #315f9c;
 }
 .feedback-incorrect,
 .feedback-invalid {
@@ -488,8 +428,6 @@ progress::-moz-progress-bar {
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #e0edff;
-  color: var(--accent);
   font-size: 2rem;
   margin: 18px 0;
 }
@@ -573,12 +511,6 @@ progress::-moz-progress-bar {
   .wordmark h1 {
     font-size: 1.15rem;
   }
-  .brand-mark {
-    width: 32px;
-    height: 32px;
-    font-size: 1.25rem;
-    border-radius: 10px;
-  }
   .language-switch {
     padding: 2px;
   }
@@ -607,12 +539,6 @@ progress::-moz-progress-bar {
     width: 82px;
     flex: 0 0 82px;
     margin: 0;
-  }
-  .companion-caption {
-    max-width: 200px;
-    margin: 0;
-    text-align: left;
-    font-size: 0.78rem;
   }
   .selection h2 {
     font-size: 2rem;
@@ -662,9 +588,6 @@ progress::-moz-progress-bar {
   }
   .session-options label > span > span {
     font-size: 0.7rem;
-  }
-  .site-footer {
-    padding-block: 16px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -1038,9 +961,6 @@ progress::-moz-progress-bar {
 .language-switch button[aria-pressed='true'] {
   color: #315783;
 }
-progress {
-  accent-color: #356da6;
-}
 progress::-webkit-progress-value {
   background: #356da6;
 }
@@ -1097,17 +1017,7 @@ progress::-moz-progress-bar {
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
 .compact-practice .site-header {
-  display: flex;
-  padding: max(2px, env(safe-area-inset-top)) 0 2px;
-  min-height: 48px;
   gap: 0;
-}
-.compact-practice .wordmark {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 .compact-practice .workspace {
   display: block;
@@ -1118,12 +1028,10 @@ progress::-moz-progress-bar {
 .compact-practice .companion {
   position: absolute;
   left: 0;
-  top: 4px;
   padding: 0;
   width: 86px;
 }
 .compact-practice .companion .eyebrow,
-.compact-practice .companion-caption,
 .compact-practice .scene-leaf {
   display: none;
 }
@@ -1198,8 +1106,6 @@ progress::-moz-progress-bar {
   font-size: 0.95rem;
 }
 .compact-practice .practice-tools {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
   gap: 6px;
   margin-top: 4px;
 }
@@ -1209,9 +1115,6 @@ progress::-moz-progress-bar {
   padding: 4px 6px;
   font-size: 0.75rem;
   line-height: 1.2;
-}
-.compact-practice .site-footer {
-  display: none;
 }
 
 @media (orientation: portrait) {
@@ -1227,7 +1130,6 @@ progress::-moz-progress-bar {
   }
   .compact-practice .practice-header {
     padding-left: calc(var(--practice-bear-size) + 12px);
-    min-height: calc(var(--practice-bear-size) * 1.077 + 4px);
     grid-template-columns: minmax(0, 1fr);
   }
   .compact-practice .exercise-position {
@@ -1250,7 +1152,6 @@ progress::-moz-progress-bar {
   .compact-practice .practice-header {
     position: absolute;
     left: 0;
-    top: 110px;
     width: 98px;
     padding: 0;
     min-height: 0;
@@ -1372,9 +1273,6 @@ progress::-moz-progress-bar {
 .corner-button:hover {
   background: #e3f1ff;
 }
-.site-header {
-  display: flex;
-}
 .back-button {
   position: fixed;
   z-index: 1;
@@ -1403,15 +1301,8 @@ progress::-moz-progress-bar {
   text-align: left;
 }
 .compact-practice .site-header {
-  position: absolute;
-  inset: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) auto auto;
-  padding: 0;
-  min-height: 0;
   border: 0;
   z-index: 1;
-}
-.compact-practice .workspace {
-  padding-top: max(16px, env(safe-area-inset-top));
 }
 @media (orientation: portrait) {
   .compact-practice .companion {
@@ -1440,9 +1331,6 @@ progress::-moz-progress-bar {
   }
   .compact-practice .companion {
     top: max(56px, env(safe-area-inset-top));
-  }
-  .compact-practice .practice-header {
-    top: 152px;
   }
 }
 .leave-dialog {
@@ -1877,10 +1765,10 @@ progress::-moz-progress-bar {
 .picture-equation .equation-part {
   display: grid;
   grid-template-columns: 16px minmax(0, 1fr);
-  grid-template-rows: auto 1fr;
   gap: 4px 0;
   align-items: center;
   justify-items: center;
+  grid-template-rows: minmax(44px, auto) 1fr;
 }
 .picture-equation .equation-part:first-child {
   grid-template-columns: minmax(0, 1fr);
@@ -1919,9 +1807,6 @@ progress::-moz-progress-bar {
 }
 .picture-equation .picture-cue {
   font-size: 0.75rem;
-}
-.picture-equation .equation-part {
-  grid-template-rows: minmax(44px, auto) 1fr;
 }
 .equation.picture-equation {
   font-size: 1.7rem;

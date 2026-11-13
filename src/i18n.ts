@@ -17,7 +17,6 @@ export const copy = {
     closeSettings: 'Close settings',
     padInstructions:
       'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check.',
-    practiceHelp: 'Practice help',
     useNative: 'Use device keyboard',
     usePad: 'Use number pad',
     answerLabel: 'Answer',
@@ -26,7 +25,6 @@ export const copy = {
     backspace: 'Backspace',
     clearAnswer: 'Clear answer',
     clear: 'Clear',
-    tagline: 'Little steps. Big discoveries.',
     choose: 'Where shall we explore?',
     intro: 'Pick your trail. We’ll take it one number at a time.',
     level: 'Level',
@@ -53,7 +51,6 @@ export const copy = {
     count: 'How many exercises?',
     exercises: 'exercises',
     start: 'Let’s count',
-    gentle: 'No timer. No rush. Just you and your curious mind.',
     trail: 'Your counting trail',
     back: 'Choose level',
     missing: 'Missing number',
@@ -100,7 +97,6 @@ export const copy = {
     leaveText: 'Your progress in this session will be lost.',
     stay: 'Keep practising',
     leave: 'Choose a new trail',
-    confirm: 'Confirm your choice',
   },
   sk: {
     picturePositions: ['Prvá skupina', 'Druhá skupina', 'Výsledok'],
@@ -119,7 +115,6 @@ export const copy = {
     closeSettings: 'Zavrieť nastavenia',
     padInstructions:
       'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje.',
-    practiceHelp: 'Pomoc pri počítaní',
     useNative: 'Použiť klávesnicu zariadenia',
     usePad: 'Použiť číselnú klávesnicu',
     answerLabel: 'Odpoveď',
@@ -128,7 +123,6 @@ export const copy = {
     backspace: 'Vymazať poslednú číslicu',
     clearAnswer: 'Vymazať odpoveď',
     clear: 'Zmazať',
-    tagline: 'Malé kroky. Veľké objavy.',
     choose: 'Kam sa vyberieme?',
     intro: 'Vyber si cestu. Budeme počítať krok za krokom.',
     level: 'Úroveň',
@@ -155,7 +149,6 @@ export const copy = {
     count: 'Koľko príkladov?',
     exercises: 'príkladov',
     start: 'Začať počítať',
-    gentle: 'Bez časovača. Bez náhlenia. S chuťou objavovať.',
     trail: 'Tvoja číselná cesta',
     back: 'Vybrať úroveň',
     missing: 'Chýbajúce číslo',
@@ -202,6 +195,5 @@ export const copy = {
     leaveText: 'Priebeh tohto cvičenia sa neuloží.',
     stay: 'Pokračovať v počítaní',
     leave: 'Vybrať novú cestu',
-    confirm: 'Potvrď svoj výber',
   },
 } as const;
