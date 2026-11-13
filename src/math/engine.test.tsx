@@ -10,7 +10,12 @@ describe('level arithmetic rules', () => {
     expect(valid(1, [10, 0, 10], '+')).toBe(true);
     expect(valid(1, [10, 1, 11], '+')).toBe(false);
     expect(valid(1, [5, 2, 3], '-')).toBe(false);
-    for (const [level, max] of [[2, 10], [3, 20], [4, 20], [5, 100]]) {
+    for (const [level, max] of [
+      [2, 10],
+      [3, 20],
+      [4, 20],
+      [5, 100],
+    ]) {
       expect(valid!(level!, [0, max!, max!], '+')).toBe(true);
       expect(valid!(level!, [max!, max!, 0], '-')).toBe(true);
       expect(valid!(level!, [max!, 1, max! + 1], '+')).toBe(false);
@@ -34,11 +39,24 @@ describe('level arithmetic rules', () => {
 describe('answer validation', () => {
   const check = engine.checkAnswer;
   const exercise: engine.Exercise = { level: 1, operation: '+', values: [1, 2, 3], blank: 1 };
-  test.each(['2', ' 2 ', '002'])('accepts digit-only correct input %j', input => {
+  test.each(['2', ' 2 ', '002'])('accepts digit-only correct input %j', (input) => {
     expect(check).toBeTypeOf('function');
     expect(check(exercise, input)).toBe('correct');
   });
-  test.each(['', ' ', '-2', '+2', '2.0', '2e0', '2x', 'Infinity', 'NaN', '0x2', '٢', '9007199254740992'])('rejects invalid input %j without scoring it as wrong', input => {
+  test.each([
+    '',
+    ' ',
+    '-2',
+    '+2',
+    '2.0',
+    '2e0',
+    '2x',
+    'Infinity',
+    'NaN',
+    '0x2',
+    '٢',
+    '9007199254740992',
+  ])('rejects invalid input %j without scoring it as wrong', (input) => {
     expect(check).toBeTypeOf('function');
     expect(check(exercise, input)).toBe('invalid-input');
   });
@@ -55,34 +73,62 @@ describe('answer validation', () => {
 
 describe('session generation', () => {
   const generate = engine.generateSession;
-  function seeded(seed: number) { return () => { seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0; return seed / 4294967296; }; }
-  test.each([0, 1, 2, 3, 4, 5, 6, 7] as const)('generates unique valid mixed sessions for level %i', level => {
-    expect(generate).toBeTypeOf('function');
-    for (const size of [5, 10, 20]) for (const seed of [0, 1, 42, 999]) {
-      const exercises = generate(level, size, seeded(seed));
-      expect(exercises).toHaveLength(size);
-      const displayed = exercises.map(e => `${e.values.map((v, i) => i === e.blank ? '?' : v).join(',')}:${e.operation}`);
-      expect(new Set(displayed).size).toBe(level === 0 && size === 20 ? 16 : size);
-      const operations = new Set(exercises.map(e => e.operation));
-      expect(operations.size).toBe(level <= 1 || level === 6 ? 1 : 2);
-      if (level === 1) expect([...operations]).toEqual(['+']);
-      expect(exercises.some(e => e.blank === 2)).toBe(level !== 4);
-      if (level === 4) for (const blank of [0, 1]) expect(exercises.some(e => e.blank === blank)).toBe(true);
-      expect(exercises.some(e => e.blank !== 2)).toBe(level !== 0 && level !== 3);
-      for (const e of exercises) {
-        expect(e.level).toBe(level);
-        expect(engine.isValidFact(level, e.values, e.operation)).toBe(true);
-        // Independent arithmetic evaluation over the whole allowed domain.
-        const answers = Array.from({ length: 101 }, (_, n) => n).filter(n => {
-          const v = [...e.values]; v[e.blank] = n; const [a, b, c] = v;
-          const domain = level <= 5 ? v.every(x => x <= [6, 10, 10, 20, 20, 100][level]) : e.operation === '*' ? a >= 1 && a <= (level === 6 ? 5 : 10) && b >= 1 && b <= (level === 6 ? 5 : 10) : b >= 1 && b <= 10 && c >= 1 && c <= 10;
-          return domain && (e.operation === '+' ? a + b === c : e.operation === '-' ? a - b === c : e.operation === '*' ? a * b === c : b !== 0 && a === b * c);
-        });
-        expect(answers).toEqual([e.values[e.blank]]);
-      }
-      expect(exercises).toEqual(generate(level, size, seeded(seed)));
-    }
-  });
+  function seeded(seed: number) {
+    return () => {
+      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+      return seed / 4294967296;
+    };
+  }
+  test.each([0, 1, 2, 3, 4, 5, 6, 7] as const)(
+    'generates unique valid mixed sessions for level %i',
+    (level) => {
+      expect(generate).toBeTypeOf('function');
+      for (const size of [5, 10, 20])
+        for (const seed of [0, 1, 42, 999]) {
+          const exercises = generate(level, size, seeded(seed));
+          expect(exercises).toHaveLength(size);
+          const displayed = exercises.map(
+            (e) => `${e.values.map((v, i) => (i === e.blank ? '?' : v)).join(',')}:${e.operation}`,
+          );
+          expect(new Set(displayed).size).toBe(level === 0 && size === 20 ? 16 : size);
+          const operations = new Set(exercises.map((e) => e.operation));
+          expect(operations.size).toBe(level <= 1 || level === 6 ? 1 : 2);
+          if (level === 1) expect([...operations]).toEqual(['+']);
+          expect(exercises.some((e) => e.blank === 2)).toBe(level !== 4);
+          if (level === 4)
+            for (const blank of [0, 1]) expect(exercises.some((e) => e.blank === blank)).toBe(true);
+          expect(exercises.some((e) => e.blank !== 2)).toBe(level !== 0 && level !== 3);
+          for (const e of exercises) {
+            expect(e.level).toBe(level);
+            expect(engine.isValidFact(level, e.values, e.operation)).toBe(true);
+            // Independent arithmetic evaluation over the whole allowed domain.
+            const answers = Array.from({ length: 101 }, (_, n) => n).filter((n) => {
+              const v = [...e.values];
+              v[e.blank] = n;
+              const [a, b, c] = v;
+              const domain =
+                level <= 5
+                  ? v.every((x) => x <= [6, 10, 10, 20, 20, 100][level])
+                  : e.operation === '*'
+                    ? a >= 1 && a <= (level === 6 ? 5 : 10) && b >= 1 && b <= (level === 6 ? 5 : 10)
+                    : b >= 1 && b <= 10 && c >= 1 && c <= 10;
+              return (
+                domain &&
+                (e.operation === '+'
+                  ? a + b === c
+                  : e.operation === '-'
+                    ? a - b === c
+                    : e.operation === '*'
+                      ? a * b === c
+                      : b !== 0 && a === b * c)
+              );
+            });
+            expect(answers).toEqual([e.values[e.blank]]);
+          }
+          expect(exercises).toEqual(generate(level, size, seeded(seed)));
+        }
+    },
+  );
   test('rejects unsupported settings and broken random sources without hanging', () => {
     expect(generate).toBeTypeOf('function');
     for (const size of [0, 1, 6, 21, NaN]) expect(() => generate(1, size)).toThrow();
@@ -95,9 +141,21 @@ describe('session generation', () => {
 test('finds the unique missing value in every position and rejects invalid facts', () => {
   const solve = engine.solveBlank;
   expect(solve).toBeTypeOf('function');
-  const facts: [engine.Level, engine.Operation, engine.Fact][] = [[1, '+', [1, 2, 3]], [3, '-', [20, 7, 13]], [4, '-', [20, 7, 13]], [5, '+', [45, 55, 100]], [6, '*', [5, 4, 20]], [7, '/', [72, 8, 9]]];
+  const facts: [engine.Level, engine.Operation, engine.Fact][] = [
+    [1, '+', [1, 2, 3]],
+    [3, '-', [20, 7, 13]],
+    [4, '-', [20, 7, 13]],
+    [5, '+', [45, 55, 100]],
+    [6, '*', [5, 4, 20]],
+    [7, '/', [72, 8, 9]],
+  ];
   for (const [level, operation, values] of facts) {
-    for (const blank of level === 3 ? [2] as const : level === 4 ? [0, 1] as const : [0, 1, 2] as const) expect(solve({ level, operation, values, blank })).toBe(values[blank]);
+    for (const blank of level === 3
+      ? ([2] as const)
+      : level === 4
+        ? ([0, 1] as const)
+        : ([0, 1, 2] as const))
+      expect(solve({ level, operation, values, blank })).toBe(values[blank]);
   }
   expect(() => solve({ level: 6, operation: '*', values: [0, 3, 0], blank: 1 })).toThrow();
   expect(() => solve({ level: 7, operation: '/', values: [0, 2, 0], blank: 1 })).toThrow();

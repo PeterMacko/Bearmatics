@@ -8,45 +8,84 @@ test('offers eight correctly localized trails with level 1 selected by default',
   expect(container.querySelectorAll('input[name="level"]')).toHaveLength(8);
   expect(screen.getByRole('radio', { name: /Level 0 · Count the pictures/ })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: /Level 1 · Hello, addition!/ })).toBeChecked();
-  const english = ['Hello, addition!', 'First steps', 'Find the result', 'Find the missing number', 'Big number adventure', 'Equal groups', 'Multiply & share'];
-  for (const [index, name] of english.entries()) expect(screen.getByRole('radio', { name: new RegExp(`Level ${index + 1} · ${name.replace('&', '&')}`) })).toBeInTheDocument();
+  const english = [
+    'Hello, addition!',
+    'First steps',
+    'Find the result',
+    'Find the missing number',
+    'Big number adventure',
+    'Equal groups',
+    'Multiply & share',
+  ];
+  for (const [index, name] of english.entries())
+    expect(
+      screen.getByRole('radio', {
+        name: new RegExp(`Level ${index + 1} · ${name.replace('&', '&')}`),
+      }),
+    ).toBeInTheDocument();
   expect(screen.getByText('Add & subtract up to 20: missing result')).toBeInTheDocument();
-  expect(screen.getByText('Add & subtract up to 20: missing first or second number')).toBeInTheDocument();
+  expect(
+    screen.getByText('Add & subtract up to 20: missing first or second number'),
+  ).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: /Level 7 ·/ }));
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
   fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
   expect(screen.getByRole('radio', { name: /Úroveň 3 · Hľadáme výsledok/ })).toBeInTheDocument();
-  expect(screen.getByRole('radio', { name: /Úroveň 4 · Hľadáme chýbajúce číslo/ })).toBeInTheDocument();
+  expect(
+    screen.getByRole('radio', { name: /Úroveň 4 · Hľadáme chýbajúce číslo/ }),
+  ).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: /Úroveň 7 · Násobíme a delíme/ })).toBeChecked();
   expect(screen.getByText('Sčítanie a odčítanie do 20: chýba výsledok')).toBeInTheDocument();
-  expect(screen.getByText('Sčítanie a odčítanie do 20: chýba prvé alebo druhé číslo')).toBeInTheDocument();
+  expect(
+    screen.getByText('Sčítanie a odčítanie do 20: chýba prvé alebo druhé číslo'),
+  ).toBeInTheDocument();
 });
 
 test('answer controls are neutral before checking, red for errors and green for success', () => {
-  vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
+  vi.spyOn(math, 'generateSession').mockReturnValue(
+    Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }),
+  );
   const { container } = render(<App />);
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
-  expect(screen.getByRole('button', { name: 'Sound requested' })).toHaveAttribute('aria-pressed', 'true');
+  expect(screen.getByRole('button', { name: 'Sound requested' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
-  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
+  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+    'data-state',
+    'neutral',
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
   expect(screen.getByRole('status')).toHaveTextContent('Check the number.');
   expect(screen.queryByText('Type a whole number, like 3.')).not.toBeInTheDocument();
   expect(container.querySelector('.bear')).toHaveAttribute('data-mood', 'neutral');
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '9' } });
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
-  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'incorrect');
+  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+    'data-state',
+    'incorrect',
+  );
   expect(container.querySelector('.bear')).toHaveAttribute('data-mood', 'sad');
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
-  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
+  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+    'data-state',
+    'neutral',
+  );
   expect(container.querySelector('.bear')).toHaveAttribute('data-mood', 'neutral');
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
-  expect(screen.getByRole('button', { name: 'Next exercise' })).toHaveAttribute('data-state', 'correct');
+  expect(screen.getByRole('button', { name: 'Next exercise' })).toHaveAttribute(
+    'data-state',
+    'correct',
+  );
   expect(container.querySelector('.bear')).toHaveAttribute('data-mood', 'happy');
   fireEvent.click(screen.getByRole('button', { name: 'Next exercise' }));
-  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
+  expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+    'data-state',
+    'neutral',
+  );
 });
 
 test('progressive hints preserve language/input, require submission and do not count as first-try success', () => {
@@ -60,7 +99,9 @@ test('progressive hints preserve language/input, require submission and do not c
   expect(screen.getByRole('region', { name: 'Hint' })).toHaveTextContent('Try a counting strategy');
   expect(screen.queryByTestId('worked-solution')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Show next hint' }));
-  expect(screen.getByRole('region', { name: 'Hint' }).querySelectorAll('.quantity')).toHaveLength(3);
+  expect(screen.getByRole('region', { name: 'Hint' }).querySelectorAll('.quantity')).toHaveLength(
+    3,
+  );
   expect(screen.queryByTestId('worked-solution')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Show next hint' }));
   expect(screen.getByTestId('worked-solution')).toHaveTextContent('5 − 2 = 3');
@@ -81,7 +122,9 @@ test('progressive hints preserve language/input, require submission and do not c
   for (let i = 0; i < 5; i++) {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
     fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
-    fireEvent.click(screen.getByRole('button', { name: i === 4 ? 'See how you did' : 'Next exercise' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: i === 4 ? 'See how you did' : 'Next exercise' }),
+    );
     if (i < 4) {
       expect(screen.queryByRole('region', { name: 'Hint' })).not.toBeInTheDocument();
       expect(screen.getByRole('button', { name: 'Show a hint' })).toBeInTheDocument();
@@ -122,12 +165,16 @@ test('keeps retries and language changes on the same exercise and completes exac
     expect(input).toBeDisabled();
     expect(screen.getByText(`Exercise ${i + 1} of 5`)).toBeInTheDocument();
     fireEvent.submit(input.closest('form')!); // duplicate submission must not increment counters
-    fireEvent.click(screen.getByRole('button', { name: i === 4 ? 'Review tricky ones' : 'Next exercise' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: i === 4 ? 'Review tricky ones' : 'Next exercise' }),
+    );
   }
   expect(screen.getByRole('heading', { name: 'Let’s give these another try' })).toBeInTheDocument();
   expect(screen.getByText('Review · 1 to practise')).toBeInTheDocument();
   expect(screen.getByRole('group', { name: '1 plus 2 equals blank' })).toBeInTheDocument();
-  expect(screen.queryByRole('heading', { name: 'Look how far you’ve come!' })).not.toBeInTheDocument();
+  expect(
+    screen.queryByRole('heading', { name: 'Look how far you’ve come!' }),
+  ).not.toBeInTheDocument();
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '9' } });
   fireEvent.click(screen.getByRole('button', { name: 'Check answer' }));
   fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
@@ -138,7 +185,9 @@ test('keeps retries and language changes on the same exercise and completes exac
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
   fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
-  expect(screen.getByRole('heading', { name: 'Skúsme tieto príklady ešte raz' })).toBeInTheDocument();
+  expect(
+    screen.getByRole('heading', { name: 'Skúsme tieto príklady ešte raz' }),
+  ).toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Nastavenia' }));
   fireEvent.click(screen.getByRole('button', { name: 'English' }));
   fireEvent.click(screen.getByRole('button', { name: 'Close settings' }));

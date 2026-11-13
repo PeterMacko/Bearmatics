@@ -13,7 +13,10 @@ export function useMenuWink(enabled: boolean) {
       timer = setTimeout(() => {
         if (!allowed()) return;
         setWinking(true);
-        timer = setTimeout(() => { setWinking(false); schedule(); }, 240);
+        timer = setTimeout(() => {
+          setWinking(false);
+          schedule();
+        }, 240);
       }, 30000);
     };
     const restart = () => {
@@ -31,5 +34,8 @@ export function useMenuWink(enabled: boolean) {
       motion.removeEventListener('change', restart);
     };
   }, [enabled]);
-  return { winking: enabled && winking, idleMotion: enabled ? (motionAllowed ? 'running' : 'paused') : undefined };
+  return {
+    winking: enabled && winking,
+    idleMotion: enabled ? (motionAllowed ? 'running' : 'paused') : undefined,
+  };
 }

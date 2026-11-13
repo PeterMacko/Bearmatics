@@ -6,9 +6,12 @@ import App from './App';
 for (const review of [false, true]) {
   for (const replayDetail of [1, 0]) {
     test(`completion ignores continuation clicks and permits replay detail=${replayDetail}, review=${review}`, () => {
-      const generate = vi.spyOn(math, 'generateSession').mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
+      const generate = vi
+        .spyOn(math, 'generateSession')
+        .mockReturnValue(Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }));
       const { container } = render(<App />);
-      const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }), { detail: 1 });
+      const click = (name: string) =>
+        fireEvent.click(screen.getByRole('button', { name }), { detail: 1 });
       const solve = (value = '3') => {
         fireEvent.change(screen.getByRole('textbox'), { target: { value } });
         click('Check answer');
@@ -37,7 +40,10 @@ for (const review of [false, true]) {
       fireEvent.click(screen.getByRole('button', { name: 'Play again' }), { detail: replayDetail });
       expect(screen.getByText('Exercise 1 of 5')).toBeInTheDocument();
       expect(screen.getByRole('textbox')).toHaveValue('');
-      expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute('data-state', 'neutral');
+      expect(screen.getByRole('button', { name: 'Check answer' })).toHaveAttribute(
+        'data-state',
+        'neutral',
+      );
       expect(generate).toHaveBeenCalledTimes(2);
     });
   }

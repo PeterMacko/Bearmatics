@@ -1,6 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
 
-
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
   await page.getByRole('button', { name: gear, exact: true }).click();
   await page.getByRole('button', { name: language, exact: true }).click();
@@ -9,7 +8,7 @@ async function switchLanguage(page: Page, language: string, gear: string, close:
 
 async function fillAnswer(page: Page, value: string) {
   const input = page.getByRole('textbox');
-  if (await input.getAttribute('readonly') !== null) {
+  if ((await input.getAttribute('readonly')) !== null) {
     await input.focus();
     await input.press('Delete');
     await input.pressSequentially(value);
@@ -17,21 +16,44 @@ async function fillAnswer(page: Page, value: string) {
 }
 
 async function answerFor(page: Page): Promise<number> {
-  return page.locator('.equation').evaluate(element => {
+  return page.locator('.equation').evaluate((element) => {
     const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
-    const blank = parts.findIndex(p => p.querySelector('input'));
-    const values = parts.map(p => Number(p.textContent));
+    const blank = parts.findIndex((p) => p.querySelector('input'));
+    const values = parts.map((p) => Number(p.textContent));
     const operation = element.querySelector('.operator')!.textContent;
     const [a, b, c] = values;
-    if (blank === 2) return operation === '+' ? a + b : operation === '−' ? a - b : operation === '×' ? a * b : a / b;
-    if (blank === 0) return operation === '+' ? c - b : operation === '−' ? c + b : operation === '×' ? c / b : c * b;
-    return operation === '+' ? c - a : operation === '−' ? a - c : operation === '×' ? c / a : a / c;
+    if (blank === 2)
+      return operation === '+'
+        ? a + b
+        : operation === '−'
+          ? a - b
+          : operation === '×'
+            ? a * b
+            : a / b;
+    if (blank === 0)
+      return operation === '+'
+        ? c - b
+        : operation === '−'
+          ? c + b
+          : operation === '×'
+            ? c / b
+            : c * b;
+    return operation === '+'
+      ? c - a
+      : operation === '−'
+        ? a - c
+        : operation === '×'
+          ? c / a
+          : a / c;
   });
 }
 
-for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap(level => [5, 10, 20].map(size => [level, size]))) {
+for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap((level) =>
+  [5, 10, 20].map((size) => [level, size]),
+)) {
   test(`completes ${size} exercises on level ${level} without runtime errors`, async ({ page }) => {
-    const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+    const errors: string[] = [];
+    page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/');
     await expect(page).toHaveTitle('Bearmatics');
     await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
@@ -46,16 +68,20 @@ for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap(level => [5, 10, 20
       expect(Number.isInteger(answer)).toBeTruthy();
       const fact = await page.locator('.equation').evaluate((element, hidden) => {
         const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
-        return parts.map(p => p.querySelector('input') ? hidden : Number(p.textContent));
+        return parts.map((p) => (p.querySelector('input') ? hidden : Number(p.textContent)));
       }, answer);
       if (fact.includes(0)) zeroQuestions++;
-      originalFacts.push(`${await page.locator('.operator').first().textContent()}:${fact.join(',')}:${await page.locator('[data-term]').evaluateAll(parts => parts.findIndex(p => p.querySelector('input')))}`);
-      if (level >= 6) expect(fact.every(n => n > 0)).toBeTruthy();
+      originalFacts.push(
+        `${await page.locator('.operator').first().textContent()}:${fact.join(',')}:${await page.locator('[data-term]').evaluateAll((parts) => parts.findIndex((p) => p.querySelector('input')))}`,
+      );
+      if (level >= 6) expect(fact.every((n) => n > 0)).toBeTruthy();
       await fillAnswer(page, String(answer));
       await page.getByRole('textbox').press('Enter');
       await expect(page.getByRole('status')).toHaveText('That’s it! Nicely done.');
       await expect(page.getByRole('textbox')).toBeDisabled();
-      await page.getByRole('button', { name: i === size - 1 ? 'See how you did' : 'Next exercise' }).click();
+      await page
+        .getByRole('button', { name: i === size - 1 ? 'See how you did' : 'Next exercise' })
+        .click();
     }
     expect(zeroQuestions).toBeLessThanOrEqual(1);
     expect(new Set(originalFacts).size).toBe(level === 0 && size === 20 ? 16 : size);
@@ -69,7 +95,9 @@ for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap(level => [5, 10, 20
   });
 }
 
-test('missed equations return at the end and cycle until a first-attempt success', async ({ page }) => {
+test('missed equations return at the end and cycle until a first-attempt success', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
@@ -84,7 +112,9 @@ test('missed equations return at the end and cycle until a first-attempt success
     }
     await fillAnswer(page, String(answer));
     await page.getByRole('button', { name: 'Check answer' }).click();
-    await page.getByRole('button', { name: i === 4 ? 'Review tricky ones' : 'Next exercise' }).click();
+    await page
+      .getByRole('button', { name: i === 4 ? 'Review tricky ones' : 'Next exercise' })
+      .click();
   }
   await expect(page.getByText('Review · 2 to practise', { exact: true })).toBeVisible();
   await expect(page.locator('.equation')).toHaveAttribute('aria-label', missed[0]);
@@ -147,10 +177,14 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
     await expect(page.getByRole('region', { name: 'Pomôcka' })).toContainText('Pomôcka 2 / 3');
     await expect(page.getByRole('textbox')).toHaveValue('007');
     await page.getByRole('button', { name: 'Ďalšia pomôcka' }).click();
-    await expect(page.getByTestId('worked-solution').locator('p').first()).toHaveText(new RegExp(`=\\s*${expected}$`));
+    await expect(page.getByTestId('worked-solution').locator('p').first()).toHaveText(
+      new RegExp(`=\\s*${expected}$`),
+    );
     await expect(page.getByRole('button', { name: 'Všetky pomôcky zobrazené' })).toBeDisabled();
     await expect(page.getByRole('textbox')).toHaveValue('007');
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+    ).toBeTruthy();
     await page.getByRole('button', { name: 'Zavrieť pomôcku' }).click();
     await fillAnswer(page, String(expected));
     await page.getByRole('button', { name: 'Skontrolovať' }).click();
@@ -160,18 +194,29 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
   });
 }
 
-test('button colours, bear reactions and gesture-activated native audio follow submitted answers', async ({ page }) => {
+test('button colours, bear reactions and gesture-activated native audio follow submitted answers', async ({
+  page,
+}) => {
   await page.addInitScript(() => {
     const state = window as unknown as { audioNotes: number };
     state.audioNotes = 0;
     const original = AudioContext.prototype.createOscillator;
-    AudioContext.prototype.createOscillator = function () { state.audioNotes++; return original.call(this); };
+    AudioContext.prototype.createOscillator = function () {
+      state.audioNotes++;
+      return original.call(this);
+    };
   });
   await page.goto('/');
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Sound requested' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Sound requested' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.getByRole('button', { name: 'Sound requested' }).click(); // explicit mute before Start
-  await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Sound off' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
   await page.getByRole('button', { name: 'Close settings' }).click();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const expected = await answerFor(page);
@@ -181,48 +226,84 @@ test('button colours, bear reactions and gesture-activated native audio follow s
   await answerButton.click();
   await expect(page.getByRole('status')).toHaveText('Check the number.');
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'neutral');
-  await fillAnswer(page, String(expected + 1)); await answerButton.click();
+  await fillAnswer(page, String(expected + 1));
+  await answerButton.click();
   await page.mouse.move(0, 0);
   await expect(answerButton).toHaveCSS('background-color', 'rgb(182, 62, 69)');
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'sad');
   await expect(page.locator('.bear-character')).toHaveCSS('animation-name', 'bear-think');
-  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(0);
+  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(
+    0,
+  );
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await page.getByRole('button', { name: 'Sound off' }).click();
-  await expect(page.getByRole('button', { name: 'Sound on' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Sound on' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.getByRole('button', { name: 'Close settings' }).click();
-  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(0); // no replay on enable
-  await fillAnswer(page, String(expected + 2)); await answerButton.click();
-  await expect.poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(2);
+  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(
+    0,
+  ); // no replay on enable
+  await fillAnswer(page, String(expected + 2));
+  await answerButton.click();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes))
+    .toBe(2);
   await fillAnswer(page, String(expected));
   await expect(answerButton).toHaveAttribute('data-state', 'neutral');
-  await answerButton.click(); await page.mouse.move(0, 0);
+  await answerButton.click();
+  await page.mouse.move(0, 0);
   await expect(answerButton).toHaveCSS('background-color', 'rgb(35, 116, 68)');
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'happy');
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'bear-wave');
-  await expect.poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
-  await page.locator('form').evaluate(form => (form as HTMLFormElement).requestSubmit());
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes))
+    .toBe(5);
+  await page.locator('form').evaluate((form) => (form as HTMLFormElement).requestSubmit());
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
-  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
+  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(
+    5,
+  );
   await page.getByRole('button', { name: 'Nastavenia', exact: true }).click();
   await page.getByRole('button', { name: 'Zvuk zapnutý' }).click();
-  await expect(page.getByRole('button', { name: 'Zvuk vypnutý' })).toHaveAttribute('aria-pressed', 'false');
+  await expect(page.getByRole('button', { name: 'Zvuk vypnutý' })).toHaveAttribute(
+    'aria-pressed',
+    'false',
+  );
   await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
   await page.getByRole('button', { name: 'Ďalší príklad' }).click();
   await expect(page.locator('.answer-button')).toHaveAttribute('data-state', 'neutral');
   await fillAnswer(page, String((await answerFor(page)) + 1));
   await page.getByRole('button', { name: 'Skontrolovať' }).click();
-  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(5);
+  expect(await page.evaluate(() => (window as unknown as { audioNotes: number }).audioNotes)).toBe(
+    5,
+  );
 });
 
-test('blocked audio does not prevent answering and reports its unavailable state', async ({ page }) => {
-  await page.addInitScript(() => Object.defineProperty(window, 'AudioContext', { configurable: true, value: class { constructor() { throw new Error('Blocked audio'); } } }));
-  const errors: string[] = []; page.on('pageerror', e => errors.push(e.message));
+test('blocked audio does not prevent answering and reports its unavailable state', async ({
+  page,
+}) => {
+  await page.addInitScript(() =>
+    Object.defineProperty(window, 'AudioContext', {
+      configurable: true,
+      value: class {
+        constructor() {
+          throw new Error('Blocked audio');
+        }
+      },
+    }),
+  );
+  const errors: string[] = [];
+  page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
   await page.getByRole('button', { name: 'Let’s count' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Sound unavailable' })).toHaveAttribute('aria-pressed', 'true');
+  await expect(page.getByRole('button', { name: 'Sound unavailable' })).toHaveAttribute(
+    'aria-pressed',
+    'true',
+  );
   await page.getByRole('button', { name: 'Close settings' }).click();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('button', { name: 'Check answer' }).click();
@@ -230,21 +311,30 @@ test('blocked audio does not prevent answering and reports its unavailable state
   expect(errors).toEqual([]);
 });
 
-test('reduced motion keeps the bear expressions but disables reaction animations', async ({ page }) => {
+test('reduced motion keeps the bear expressions but disables reaction animations', async ({
+  page,
+}) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto('/'); await page.getByRole('button', { name: 'Let’s count' }).click();
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Let’s count' }).click();
   const answer = await answerFor(page);
-  await fillAnswer(page, String(answer + 1)); await page.getByRole('button', { name: 'Check answer' }).click();
+  await fillAnswer(page, String(answer + 1));
+  await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'sad');
   await expect(page.locator('.bear-character')).toHaveCSS('animation-name', 'none');
-  await fillAnswer(page, String(answer)); await page.getByRole('button', { name: 'Check answer' }).click();
+  await fillAnswer(page, String(answer));
+  await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'happy');
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'none');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBeTruthy();
 });
 
-test('Slovak switching preserves equation, answer and progress; leave dialog traps focus', async ({ page }) => {
+test('Slovak switching preserves equation, answer and progress; leave dialog traps focus', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const equation = await page.locator('.equation').textContent();
@@ -259,20 +349,27 @@ test('Slovak switching preserves equation, answer and progress; leave dialog tra
   await expect(keep).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('button', { name: 'Vybrať novú cestu' })).toBeFocused();
-  await page.keyboard.press('Tab'); await expect(keep).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(keep).toBeFocused();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).not.toBeVisible();
   await expect(page.getByRole('textbox')).toHaveValue('12');
 });
 
-test('narrow Slovak screens have no horizontal overflow in selection or practice', async ({ page }) => {
+test('narrow Slovak screens have no horizontal overflow in selection or practice', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBeTruthy();
   await page.getByRole('radio', { name: /Úroveň 4/ }).check();
   await page.getByRole('button', { name: 'Začať počítať' }).click();
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBeTruthy();
+  expect(
+    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+  ).toBeTruthy();
   await expect(page.getByRole('textbox')).toBeFocused();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('textbox').press('Enter');

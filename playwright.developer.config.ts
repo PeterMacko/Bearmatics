@@ -11,5 +11,9 @@ export default defineConfig(base, {
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'firefox', use: { browserName: 'firefox' } },
   ],
-  webServer: { command: 'npm run preview -- --port 4186 --strictPort', url: 'http://127.0.0.1:4186', reuseExistingServer: false },
+  webServer: {
+    command: 'npm run preview -- --port 4186 --strictPort',
+    url: 'http://127.0.0.1:4186',
+    reuseExistingServer: false,
+  },
 });
