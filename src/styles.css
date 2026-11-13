@@ -2050,8 +2050,8 @@ progress::-moz-progress-bar {
 .speaker-button {
   display: grid;
   place-items: center;
-  width: clamp(72px, 14vh, 112px);
-  height: clamp(72px, 14vh, 112px);
+  width: clamp(64px, 10vh, 112px);
+  height: clamp(64px, 10vh, 112px);
   border-radius: 50%;
   border: 3px solid #6489b3;
   background: #e9f2ff;
@@ -2119,7 +2119,7 @@ progress::-moz-progress-bar {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   /* Square buttons: the 2x2 block is limited by the space left under the speaker and Check. */
-  width: max(150px, min(100%, 340px, calc(100dvh - 378px)));
+  width: max(150px, min(100%, 340px, calc(100dvh - 500px)));
 }
 .word-option {
   aspect-ratio: 1;
