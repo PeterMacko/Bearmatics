@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
+import { openMathematics } from './course';
 import { mkdir, writeFile } from 'node:fs/promises';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
@@ -41,6 +42,7 @@ test('native fallback and orientation changes preserve practice with localized i
   page,
 }) => {
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('radio', { name: /Level 4 ·/ }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const input = page.getByRole('textbox');
@@ -84,6 +86,7 @@ test('enlarged text reflows metadata and keeps help and primary controls reachab
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
+  await openMathematics(page);
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   await page.getByRole('button', { name: 'Začať počítať' }).click();
   await page.evaluate(() => {
@@ -117,6 +120,7 @@ for (const [width, height] of [
         Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 }),
       );
       await page.goto('/');
+      await openMathematics(page);
       if (language === 'sk')
         await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
       await page
@@ -286,6 +290,7 @@ for (const language of ['en', 'sk']) {
     page,
   }, testInfo) => {
     await page.goto('/');
+    await openMathematics(page);
     if (language === 'sk')
       await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
     await page
@@ -383,6 +388,7 @@ for (const language of ['en', 'sk']) {
 test('calculator pad DOM, visual and keyboard order agree', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Let’s count' }).click();
   await page.getByRole('button', { name: 'Use number pad' }).click();
   const keys = page.locator('.number-pad button');

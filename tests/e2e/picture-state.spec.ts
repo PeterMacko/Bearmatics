@@ -1,9 +1,11 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 test('level zero keeps main results concealed and stable through hints locale orientation and mastery review', async ({
   page,
 }) => {
   await page.goto('/');
+  await openMathematics(page);
   await page.locator('input[name=level][value="0"]').check();
   await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
   await page.locator('.start-button').click();

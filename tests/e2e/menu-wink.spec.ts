@@ -1,10 +1,12 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 test('idle menu wink renders one curved eye without moving content', async ({ page }, info) => {
   test.setTimeout(75000);
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.setViewportSize({ width: 754, height: 655 });
   await page.goto('/');
+  await openMathematics(page);
   const before = await page.locator('.bear').evaluate((bear) => {
     const { x, y, width, height } = bear.getBoundingClientRect();
     return { x, y, width, height };
@@ -76,6 +78,7 @@ test('rendered wink visual and menu exit cleanup with held browser clock', async
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.goto('/');
+  await openMathematics(page);
   const before = await page.locator('.bear').evaluate((bear) => {
     const { x, y, width, height } = bear.getBoundingClientRect();
     return { x, y, width, height };

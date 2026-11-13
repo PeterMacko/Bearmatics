@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 import { writeFile } from 'node:fs/promises';
 
 for (const language of ['en', 'sk'])
@@ -28,6 +29,7 @@ for (const language of ['en', 'sk'])
       });
       await page.setViewportSize({ width, height });
       await page.goto('/');
+      await openMathematics(page);
       if (language === 'sk') {
         await page.locator('.settings-button').click();
         await page.getByRole('button', { name: 'Slovenčina' }).click();
@@ -149,6 +151,7 @@ test('selected level and count survive settings, locale, orientation and all com
 }, testInfo) => {
   await page.setViewportSize({ width: 360, height: 640 });
   await page.goto('/');
+  await openMathematics(page);
   await page.locator('input[name=level]').last().check();
   await page.locator('input[name=size]').last().check();
   await page.locator('.settings-button').click();
@@ -198,6 +201,7 @@ for (const language of ['en', 'sk'])
       page.on('pageerror', (e) => errors.push(e.message));
       await page.setViewportSize({ width, height });
       await page.goto('/');
+      await openMathematics(page);
       if (language === 'sk') {
         await page.locator('.settings-button').click();
         await page.getByRole('button', { name: 'Slovenčina' }).click();
@@ -262,6 +266,7 @@ test('emulated touch drag scrolls only the level list without changing selection
   try {
     const page = await context.newPage();
     await page.goto('/');
+    await openMathematics(page);
     expect(await page.evaluate(() => navigator.maxTouchPoints)).toBeGreaterThan(0);
     const list = page.locator('.level-options');
     const box = (await list.boundingBox())!;
@@ -292,6 +297,7 @@ test('native level radios accept pointer checks without label interception in bo
   page,
 }) => {
   await page.goto('/');
+  await openMathematics(page);
   for (const radio of await page.locator('input[name=level]').all()) {
     await radio.check({ timeout: 3000 });
     await expect(radio).toBeChecked();
@@ -303,6 +309,7 @@ test('Slovak phone heading does not split a word to reserve the entire gear colu
 }) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
+  await openMathematics(page);
   await page.locator('.settings-button').click();
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await page.keyboard.press('Escape');
@@ -322,6 +329,7 @@ test('impossible height uses readable document flow and recovers after resize an
 }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 180 });
   await page.goto('/');
+  await openMathematics(page);
   await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'flow');
   const list = page.locator('.level-options');
   expect(await list.evaluate((el) => el.scrollHeight - el.clientHeight)).toBeLessThanOrEqual(1);
@@ -353,6 +361,7 @@ for (const [width, height] of [
   test(`only levels scroll at ${width}x${height}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height });
     await page.goto('/');
+    await openMathematics(page);
     const list = page.locator('.level-options');
     const before = await list.evaluate((el) => ({
       client: el.clientHeight,
@@ -389,6 +398,7 @@ test('phone bear sits left beside the heading without a vacant branding row', as
 }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
+  await openMathematics(page);
   const bear = (await page.locator('.companion').boundingBox())!;
   const heading = (await page.locator('.selection h2').boundingBox())!;
   const gear = (await page.locator('.settings-button').boundingBox())!;

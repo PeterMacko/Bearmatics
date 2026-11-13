@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 import { writeFile } from 'node:fs/promises';
 
 for (const language of ['en', 'sk']) {
@@ -10,6 +11,7 @@ for (const language of ['en', 'sk']) {
       Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 }),
     );
     await page.goto('/');
+    await openMathematics(page);
     if (language === 'sk') {
       await page.locator('.settings-button').click();
       await page.getByRole('button', { name: 'Slovenčina' }).click();
@@ -46,6 +48,7 @@ for (const language of ['en', 'sk']) {
   }, testInfo) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/');
+    await openMathematics(page);
     await page.getByRole('button', { name: 'Let’s count' }).click();
     const gear = page.locator('.settings-button');
     await gear.click();

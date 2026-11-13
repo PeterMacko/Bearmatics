@@ -1,7 +1,9 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 test('renumbered content retains its level badge palette', async ({ page }) => {
   await page.goto('/');
+  await openMathematics(page);
   await expect(page.locator('.level-5 .level-number')).toHaveCSS(
     'background-color',
     'rgb(255, 231, 168)',

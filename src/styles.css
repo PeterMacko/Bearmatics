@@ -1868,3 +1868,101 @@ progress::-moz-progress-bar {
     inline-size: 72px;
   }
 }
+
+/* SCRUM-71: course choice, English home and menu back navigation. */
+.menu-topline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-inline-start: -6px;
+  min-width: 0;
+}
+.menu-topline .eyebrow {
+  margin: 0;
+  min-width: 0;
+}
+.menu-back.corner-button {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  flex: none;
+}
+.menu-heading h2:focus {
+  outline: none;
+}
+.menu-heading h2:focus-visible {
+  outline: 3px solid #a95120;
+  outline-offset: 4px;
+}
+.course-options {
+  list-style: none;
+  margin: 0;
+}
+.course-options li {
+  min-width: 0;
+}
+.course-option {
+  width: 100%;
+  grid-template-columns: 64px minmax(0, 1fr) 24px;
+  min-height: 104px;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+}
+.course-icon svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+.course-title {
+  font-size: 1.15rem;
+}
+.course-arrow {
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+.soon-tag {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #e3f1ff;
+  color: #21466d;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.coming-soon-note {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.start-button[aria-disabled='true'],
+.start-button[aria-disabled='true']:hover {
+  background: #7d8799;
+  box-shadow: 0 4px 0 #5d6678;
+  cursor: default;
+}
+.start-button[aria-disabled='true']:active {
+  transform: none;
+}
+@media (max-width: 620px) {
+  .menu-shell .menu-heading .menu-topline {
+    min-height: 48px;
+    padding-inline-end: 52px;
+  }
+  .menu-shell .menu-heading .menu-topline .eyebrow {
+    min-height: 0;
+    padding-inline-end: 0;
+  }
+  .course-option {
+    min-height: 92px;
+    grid-template-columns: 52px minmax(0, 1fr) 20px;
+  }
+  .course-icon svg {
+    width: 52px;
+    height: 52px;
+  }
+}

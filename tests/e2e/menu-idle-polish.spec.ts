@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 test('clock-controlled wink cadence survives selection and locale; visibility and reduced motion cancel it', async ({
   page,
@@ -7,6 +8,7 @@ test('clock-controlled wink cadence survives selection and locale; visibility an
   await page.clock.install();
   await page.clock.pauseAt(new Date(Date.now() + 1000));
   await page.goto('/');
+  await openMathematics(page);
   await page.clock.runFor(15000);
   await page.locator('input[name=level]').last().check();
   await page.locator('input[name=size]').last().check();
@@ -64,6 +66,7 @@ test('menu accents scale intrinsically with scene, retaining desktop proportions
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto('/');
+    await openMathematics(page);
     const ratios = await page.locator('.bear-scene').evaluate((scene) =>
       [...scene.querySelectorAll('.scene-leaf')].map((leaf) => ({
         width: parseFloat(getComputedStyle(leaf).width) / scene.clientWidth,
@@ -86,6 +89,7 @@ for (const [width, height] of [
     await page.emulateMedia({ reducedMotion: 'no-preference' });
     await page.setViewportSize({ width, height });
     await page.goto('/');
+    await openMathematics(page);
     const frames = await page.evaluate(
       () =>
         new Promise<any[]>((resolve) => {

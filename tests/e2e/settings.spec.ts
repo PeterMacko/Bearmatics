@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openMathematics } from './course';
 
 async function fits(page: Page, selector: string) {
   const box = (await page.locator(selector).boundingBox())!;
@@ -15,6 +16,7 @@ for (const language of ['en', 'sk']) {
   }, testInfo) => {
     await page.setViewportSize({ width: 320, height: 568 });
     await page.goto('/');
+    await openMathematics(page);
     await page.getByRole('button', { name: 'Let’s count' }).click();
     const input = page.getByRole('textbox');
     await input.pressSequentially('123');

@@ -15,6 +15,7 @@ import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import LeaveDialog from './LeaveDialog';
+import CourseChoice, { type Course } from './CourseChoice';
 import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
@@ -42,7 +43,21 @@ export default function App() {
   const [level, setLevel] = useState<Level>(1);
   const [size, setSize] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
-  const menuRef = useMenuLayout(!session, language, level);
+  // Course screen state: null is the course choice. Nothing is stored between visits.
+  const [course, setCourse] = useState<Course | null>(null);
+  const menuRef = useMenuLayout(!session, language, level, course ?? 'choice');
+  const menuHeadingRef = useRef<HTMLHeadingElement>(null);
+  const focusMenuHeading = useRef(false);
+  const navigate = (next: Course | null) => {
+    focusMenuHeading.current = true;
+    setCourse(next);
+  };
+  // Move focus to the new screen's heading after course navigation (not on first load).
+  useEffect(() => {
+    if (!focusMenuHeading.current) return;
+    focusMenuHeading.current = false;
+    menuHeadingRef.current?.focus();
+  }, [course]);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
   const touch = useTouchCapability();
@@ -208,14 +223,20 @@ export default function App() {
           </div>
         </aside>
         {!session ? (
-          <LevelMenu
-            t={t}
-            level={level}
-            size={size}
-            onLevelChange={setLevel}
-            onSizeChange={setSize}
-            onStart={start}
-          />
+          course === 'math' ? (
+            <LevelMenu
+              t={t}
+              headingRef={menuHeadingRef}
+              onBack={() => navigate(null)}
+              level={level}
+              size={size}
+              onLevelChange={setLevel}
+              onSizeChange={setSize}
+              onStart={start}
+            />
+          ) : (
+            <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
+          )
         ) : session.done ? (
           <SummaryView
             t={t}

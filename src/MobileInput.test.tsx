@@ -2,6 +2,7 @@ import { act, createEvent, fireEvent, render, screen, within } from '@testing-li
 import { afterEach, expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 
 afterEach(() => vi.unstubAllGlobals());
 
@@ -38,6 +39,7 @@ function start(pad = false) {
     Array(5).fill({ level: 5, operation: '+', values: [99, 1, 100], blank: 2 }),
   );
   render(<App />);
+  openMathematics();
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   if (pad) fireEvent.click(screen.getByRole('button', { name: 'Use number pad' }));
 }

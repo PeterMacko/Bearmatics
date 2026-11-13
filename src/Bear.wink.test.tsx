@@ -3,6 +3,7 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import { StrictMode } from 'react';
 import Bear from './Bear';
 import App from './App';
+import { openMathematics } from './testing/openMathematics';
 let reduced = false;
 let hidden = false;
 let media: EventTarget;
@@ -86,6 +87,7 @@ test('StrictMode and unmount retain only one timer and remove listeners', () => 
 });
 test('menu-to-practice cancels wink timers and never alters practice', () => {
   const { container } = render(<App />);
+  openMathematics();
   advance(30000);
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
   expect(container.querySelector('.bear')).not.toHaveAttribute('data-winking', 'true');
@@ -140,6 +142,7 @@ test('repeat onsets stay 30.24 seconds apart through menu rerenders', () => {
       <App />
     </StrictMode>,
   );
+  openMathematics();
   const bear = () => container.querySelector('.bear')!;
   advance(15000);
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));

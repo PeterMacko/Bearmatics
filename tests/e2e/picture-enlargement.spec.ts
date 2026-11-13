@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 for (const [width, height] of [
   [320, 568],
@@ -13,6 +14,7 @@ for (const [width, height] of [
         Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 }),
       );
       await page.goto('/');
+      await openMathematics(page);
       if (language === 'sk') {
         await page.locator('.settings-button').click();
         await page.getByRole('button', { name: 'Slovenčina' }).click();

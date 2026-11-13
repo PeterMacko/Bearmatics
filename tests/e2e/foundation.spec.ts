@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { openMathematics } from './course';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
   await page.getByRole('button', { name: gear, exact: true }).click();
@@ -55,6 +56,7 @@ for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap((level) =>
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/');
+    await openMathematics(page);
     await expect(page).toHaveTitle('Bearmatics');
     await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
     await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check();
@@ -99,6 +101,7 @@ test('missed equations return at the end and cycle until a first-attempt success
   page,
 }) => {
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const missed: string[] = [];
@@ -159,6 +162,7 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
   test(`three hint stages explain level ${level} without automatic answering`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/');
+    await openMathematics(page);
     await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
     await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
     await page.getByRole('button', { name: 'Let’s count' }).click();
@@ -207,6 +211,7 @@ test('button colours, bear reactions and gesture-activated native audio follow s
     };
   });
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Sound requested' })).toHaveAttribute(
     'aria-pressed',
@@ -297,6 +302,7 @@ test('blocked audio does not prevent answering and reports its unavailable state
   const errors: string[] = [];
   page.on('pageerror', (e) => errors.push(e.message));
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Let’s count' }).click();
   await page.getByRole('button', { name: 'Settings', exact: true }).click();
   await expect(page.getByText('Sound isn’t available in this browser.')).toBeVisible();
@@ -317,6 +323,7 @@ test('reduced motion keeps the bear expressions but disables reaction animations
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const answer = await answerFor(page);
   await fillAnswer(page, String(answer + 1));
@@ -336,6 +343,7 @@ test('Slovak switching preserves equation, answer and progress; leave dialog tra
   page,
 }) => {
   await page.goto('/');
+  await openMathematics(page);
   await page.getByRole('button', { name: 'Let’s count' }).click();
   const equation = await page.locator('.equation').textContent();
   await fillAnswer(page, '12');
@@ -361,6 +369,7 @@ test('narrow Slovak screens have no horizontal overflow in selection or practice
 }) => {
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/');
+  await openMathematics(page);
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
   expect(
     await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),

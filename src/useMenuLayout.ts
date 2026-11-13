@@ -1,14 +1,14 @@
 import { useLayoutEffect, useRef } from 'react';
 
 /** Menu-only intrinsic feasibility check. No application/selection state lives here. */
-export function useMenuLayout(active: boolean, language: string, level: number) {
+export function useMenuLayout(active: boolean, language: string, level: number, view = '') {
   const ref = useRef<HTMLElement>(null);
   useLayoutEffect(() => {
     const menu = ref.current;
     if (!active || !menu || typeof ResizeObserver === 'undefined') return;
     const list = menu.querySelector<HTMLElement>('.level-options')!;
     const heading = menu.querySelector<HTMLElement>('.menu-heading')!;
-    const controls = menu.querySelector<HTMLElement>('.menu-controls')!;
+    const controls = menu.querySelector<HTMLElement>('.menu-controls');
     const bear = menu.querySelector<HTMLElement>('.companion')!;
     const cards = [...list.querySelectorAll<HTMLElement>('.level-option')];
     let frame = 0;
@@ -33,7 +33,7 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       );
       const required =
         firstRow +
-        controls.getBoundingClientRect().height +
+        (controls?.getBoundingClientRect().height ?? 0) +
         Math.max(...cards.map((card) => card.getBoundingClientRect().height)) +
         16 +
         parseFloat(style.paddingTop) +
@@ -42,7 +42,7 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       menu.dataset.menuMode =
         required > menu.getBoundingClientRect().height + 0.5 ? 'flow' : 'contained';
       reveal(
-        list.querySelector<HTMLInputElement>('input:focus')?.closest('.level-option') ??
+        list.querySelector<HTMLElement>(':focus')?.closest('.level-option') ??
           list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ??
           null,
       );
@@ -54,7 +54,7 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       reveal((event.target as HTMLElement).closest('.level-option'));
     measure();
     const observer = new ResizeObserver(schedule);
-    [heading, controls, bear, ...cards].forEach((element) => observer.observe(element));
+    [heading, controls, bear, ...cards].forEach((element) => element && observer.observe(element));
     window.addEventListener('resize', schedule);
     window.visualViewport?.addEventListener('resize', schedule);
     document.fonts?.addEventListener('loadingdone', schedule);
@@ -69,6 +69,6 @@ export function useMenuLayout(active: boolean, language: string, level: number) 
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
     };
-  }, [active, language, level]);
+  }, [active, language, level, view]);
   return ref;
 }

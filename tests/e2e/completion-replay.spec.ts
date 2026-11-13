@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { openMathematics } from './course';
 
 type Evidence = {
   notes: number[];
@@ -54,6 +55,7 @@ for (const review of [false, true]) {
         await page.getByRole('button', { name: 'Check answer', exact: true }).click();
       };
       await page.goto('/');
+      await openMathematics(page);
       await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
       await page.getByRole('button', { name: 'Let’s count' }).click();
       for (let i = 0; i < 5; i++) {
