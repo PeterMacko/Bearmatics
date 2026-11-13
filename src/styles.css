@@ -1715,7 +1715,8 @@ progress::-moz-progress-bar {
     align-self: center;
   }
   .menu-shell .companion .bear-scene {
-    width: min(100%, 340px);
+    /* Very short windows: the bear never grows taller than the menu itself. */
+    width: min(100%, 340px, calc((100dvh - 48px) * 1.05));
     margin: 0 auto;
   }
   .menu-shell .level-options,

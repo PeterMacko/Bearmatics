@@ -298,3 +298,33 @@ for (const [width, height] of [
       if (course) await page.getByRole('button', { name: 'Back to courses' }).click();
     }
   });
+
+// SCRUM-77 QA D3: very short wide windows keep list-only scrolling (the tall decorative
+// bear must not force page flow when a level fits).
+for (const [width, height] of [
+  [1280, 320],
+  [1000, 320],
+  [820, 320],
+  [1366, 300],
+])
+  test(`very short wide ${width}x${height} keeps the level list scrolling on every menu screen`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    for (const course of [null, 'Mathematics', 'English']) {
+      if (course) await page.getByRole('button', { name: course, exact: true }).click();
+      const workspace = page.locator('.workspace');
+      await expect(workspace, `${course ?? 'courses'}`).toHaveAttribute(
+        'data-menu-mode',
+        'contained',
+      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollHeight - innerHeight),
+      ).toBeLessThanOrEqual(1);
+      if (course) {
+        await expect(page.locator('.start-button')).toBeInViewport({ ratio: 1 });
+        await page.getByRole('button', { name: 'Back to courses' }).click();
+      }
+    }
+  });
