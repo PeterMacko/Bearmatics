@@ -53,6 +53,14 @@ export function useWordGrid(key: unknown) {
       width -= overflow * (cols === 4 ? 4 : 1);
       width = Math.floor(Math.max(Math.min(min, el.parentElement?.clientWidth ?? min), width));
       el.style.width = `${width}px`;
+      // Never past the right edge (8px margin): on short landscape phones the height can allow
+      // bigger squares than the width does (SCRUM-133 moved the top row away).
+      for (let i = 0; i < 3; i++) {
+        const over = el.getBoundingClientRect().right - (document.documentElement.clientWidth - 8);
+        if (!(over > 0.5)) break;
+        width = Math.floor(width - over);
+        el.style.width = `${width}px`;
+      }
       // Check and the word block share one width on phones.
       form?.style.setProperty('--word-block', `${width}px`);
       const square = (width - (cols - 1) * gap) / cols;

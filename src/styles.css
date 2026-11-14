@@ -2796,9 +2796,10 @@ progress::-moz-progress-bar {
 @media (min-width: 621px) {
   .app-shell.menu-shell .app-bar {
     position: fixed;
+    /* 48px buttons whose outer edges keep 8px from the screen edge, outside the menu panel. */
     top: calc(max(8px, env(safe-area-inset-top)) - 2px);
-    inset-inline: calc(max(12px, env(safe-area-inset-left)) - 2px)
-      calc(max(12px, env(safe-area-inset-right)) - 2px);
+    inset-inline: calc(max(12px, env(safe-area-inset-left)) - 4px)
+      calc(max(12px, env(safe-area-inset-right)) - 4px);
   }
 }
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
@@ -2865,5 +2866,18 @@ progress::-moz-progress-bar {
   .menu-shell .menu-heading .eyebrow,
   .menu-shell .menu-heading h2 {
     padding-inline-end: var(--bar-clear, 0px);
+  }
+}
+/* Short landscape phones, during a lesson: the bear column stays under Back (inside the bar's
+   column) as before, so the exercise keeps its width and gains the old top row instead. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  :root .app-shell.compact-practice {
+    padding-left: max(8px, env(safe-area-inset-left));
+  }
+  .app-shell.compact-practice .companion {
+    top: 56px;
+  }
+  .app-shell.compact-practice .practice-header {
+    top: 152px;
   }
 }
