@@ -19,7 +19,6 @@ const COPY = {
     mathHeading: 'Where shall we explore?',
     englishHeading: 'Which level shall we try?',
     back: 'Back to courses',
-    soon: 'Level 3 is coming soon.',
     level3: /^Level 3 /,
   },
   sk: {
@@ -29,7 +28,6 @@ const COPY = {
     mathHeading: 'Kam sa vyberieme?',
     englishHeading: 'Ktorú úroveň skúsime?',
     back: 'Späť na kurzy',
-    soon: 'Úroveň 3 už čoskoro pribudne.',
     level3: /^Úroveň 3 /,
   },
 };
@@ -138,9 +136,8 @@ for (const size of SIZES)
       await expect(page.getByRole('heading', { level: 2 })).toHaveText(c.englishHeading);
       await expect(page.getByRole('heading', { level: 2 })).toBeFocused();
       await checkLayout(page);
-      // Level 3 is still coming: its note must fit too.
+      // All three English levels are playable: with level 3 selected the menu still fits.
       await page.getByRole('radio', { name: c.level3 }).click();
-      await expect(page.getByText(c.soon)).toBeVisible();
       await checkLayout(page);
       await context.close();
     });

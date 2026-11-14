@@ -8,8 +8,7 @@ const SIZES = [5, 10, 20];
 
 /**
  * English course home: levels and exercise count in the same menu layout as Mathematics.
- * Levels 1-2 (listen and choose) can be played; level 3 is not available yet, so with it
- * selected Start stays disabled and says so.
+ * Levels 1-2: listen and choose; level 3: listen and write.
  */
 export default function EnglishHome({
   t,
@@ -30,7 +29,6 @@ export default function EnglishHome({
   onBack: () => void;
   onStart: () => void;
 }) {
-  const available = level !== 3;
   return (
     <section className="selection english-home">
       <MenuHeading
@@ -59,7 +57,6 @@ export default function EnglishHome({
               <span className="level-title">
                 {t.level} {n} · {t.englishLevels[n]}
               </span>
-              {n === 3 && <span className="soon-tag">{t.comingSoon}</span>}
             </span>
             <span className="selection-dot" aria-hidden="true" />
           </label>
@@ -82,18 +79,7 @@ export default function EnglishHome({
             </label>
           ))}
         </fieldset>
-        {!available && (
-          <p id="english-soon" className="coming-soon-note">
-            {t.englishSoon}
-          </p>
-        )}
-        <button
-          type="button"
-          className="primary start-button"
-          aria-disabled={available ? undefined : 'true'}
-          aria-describedby={available ? undefined : 'english-soon'}
-          onClick={available ? onStart : undefined}
-        >
+        <button type="button" className="primary start-button" onClick={onStart}>
           {t.englishStart}
           <span aria-hidden="true"> →</span>
         </button>

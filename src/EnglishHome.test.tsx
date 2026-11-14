@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { expect, test } from 'vitest';
+import { expect, test, vi } from 'vitest';
 import App from './App';
 
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
@@ -20,29 +20,25 @@ test('English home shows three levels, 5/10/20 and focuses its heading', () => {
     ],
   );
   expect(levels[0]).toBeChecked();
-  // Levels 1-2 are playable; only level 3 (listen and write) is still coming.
-  expect(screen.getAllByText('Coming soon')).toHaveLength(1);
-  expect(screen.getByRole('radio', { name: /^Level 3 / })).toHaveAccessibleName(/Coming soon/);
+  // All three levels are playable now.
+  expect(screen.queryByText(/coming soon/i)).toBeNull();
   for (const n of [5, 10, 20])
     expect(screen.getByRole('radio', { name: `${n} exercises` })).toBeInTheDocument();
   expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
   expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
 });
 
-test('English level 3 cannot be started yet and says so clearly', () => {
+test('English level 3 starts the listen-and-write screen', () => {
+  vi.spyOn(HTMLMediaElement.prototype, 'play').mockResolvedValue();
   render(<App />);
   openEnglish();
-  expect(button(/Let’s listen/)).not.toHaveAttribute('aria-disabled');
-  expect(screen.queryByText('Level 3 is coming soon.')).toBeNull();
   fireEvent.click(screen.getByRole('radio', { name: /^Level 3 / }));
   const start = button(/Let’s listen/);
-  expect(start).toHaveAttribute('aria-disabled', 'true');
-  expect(start).toHaveAccessibleDescription('Level 3 is coming soon.');
-  expect(screen.getByText('Level 3 is coming soon.')).toBeVisible();
+  expect(start).not.toHaveAttribute('aria-disabled');
   fireEvent.click(start);
-  expect(heading()).toHaveTextContent('Which level shall we try?');
-  expect(screen.queryByRole('textbox')).toBeNull();
-  expect(screen.queryByRole('progressbar')).toBeNull();
+  expect(screen.getByRole('textbox', { name: 'Write the word you hear' })).toBeInTheDocument();
+  expect(screen.getByRole('progressbar')).toBeInTheDocument();
+  vi.restoreAllMocks();
 });
 
 test('English home is localized and keeps its page and choices across a language switch', () => {
@@ -56,9 +52,7 @@ test('English home is localized and keeps its page and choices across a language
   expect(heading()).toHaveTextContent('Ktorú úroveň skúsime?');
   expect(screen.getByRole('radio', { name: /^Úroveň 2 · Počúvaj a vyber: podobne/ })).toBeChecked();
   expect(screen.getByRole('radio', { name: /^5 / })).toBeChecked();
-  expect(screen.getAllByText('Už čoskoro')).toHaveLength(1);
-  fireEvent.click(screen.getByRole('radio', { name: /^Úroveň 3 / }));
-  expect(button(/Poďme počúvať/)).toHaveAccessibleDescription('Úroveň 3 už čoskoro pribudne.');
+  expect(screen.queryByText(/čoskoro/i)).toBeNull();
 });
 
 test('Back returns to the course choice; English and maths choices stay separate', () => {

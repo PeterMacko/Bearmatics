@@ -2260,3 +2260,172 @@ progress::-moz-progress-bar {
 .compact-practice .english-practice .feedback {
   min-height: 2.6em;
 }
+
+/* SCRUM-80: English listen-and-write (level 3). */
+.write-shown {
+  min-height: 1.9rem;
+  margin: 0;
+  font-size: 1.1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.write-shown strong {
+  color: var(--ink);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+.write-input {
+  width: min(100%, 340px);
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  /* Never show the platform's text-transform or autofill styling. */
+  text-transform: none;
+}
+.write-input:focus-visible {
+  outline: 3px solid #a95120;
+  outline-offset: 3px;
+  border-color: #356da6;
+}
+.write-input[data-state='incorrect'] {
+  border-color: #b63e45;
+}
+.write-input[data-state='correct'] {
+  border-color: #237444;
+  background: #e5f3e9;
+}
+.write-practice .answer-actions {
+  width: min(100%, 340px);
+}
+.compact-practice .write-practice .answer-actions {
+  width: min(100%, 340px);
+}
+
+/* On-screen keyboard open: speaker, word, input and Check fill the visible part of the screen
+   (Android shrinks the page; iPhone/iPad cover it, so we follow the visual viewport). */
+.app-shell .write-practice[data-keyboard] {
+  position: fixed;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  top: var(--kb-top, 0px);
+  height: var(--kb-height, 100dvh);
+  min-height: 0;
+  margin: 0;
+  padding: 8px max(12px, env(safe-area-inset-left)) 8px max(12px, env(safe-area-inset-right));
+  display: grid;
+  align-content: center;
+  overflow: hidden;
+  background: var(--paper);
+}
+.app-shell .write-practice[data-keyboard] .practice-header,
+.app-shell .write-practice[data-keyboard] h2 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.app-shell .write-practice[data-keyboard] form {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'shown shown'
+    'speaker input'
+    'error error'
+    'feedback feedback'
+    'check check';
+  align-items: center;
+  gap: 6px 10px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+}
+.app-shell .write-practice[data-keyboard] .speaker-button {
+  grid-area: speaker;
+  position: static;
+  width: 56px;
+  height: 56px;
+}
+.app-shell .write-practice[data-keyboard] .write-shown {
+  grid-area: shown;
+  min-height: 0;
+}
+.app-shell .write-practice[data-keyboard] .write-input {
+  grid-area: input;
+  width: 100%;
+}
+.app-shell .write-practice[data-keyboard] .word-error {
+  grid-area: error;
+}
+.app-shell .write-practice[data-keyboard] .feedback {
+  grid-area: feedback;
+  min-height: 0;
+}
+.app-shell .write-practice[data-keyboard] .answer-actions {
+  grid-area: check;
+  width: 100%;
+}
+.app-shell .write-practice[data-keyboard='short'] form {
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'speaker input check'
+    'shown feedback feedback'
+    'error error error';
+  width: min(100%, 760px);
+}
+.app-shell .write-practice[data-keyboard='short'] .write-shown {
+  text-align: left;
+  white-space: nowrap;
+}
+.app-shell .write-practice[data-keyboard='short'] .feedback {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+.app-shell .write-practice[data-keyboard='short'] .answer-actions {
+  width: auto;
+}
+.app-shell .write-practice[data-keyboard='short'] .answer-button {
+  min-width: 120px;
+}
+
+/* Short landscape phones (no keyboard): speaker left; word, input, feedback and Check right. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .write-practice form {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr);
+    grid-template-rows: auto auto auto auto;
+    row-gap: 4px;
+  }
+  .compact-practice .write-practice .speaker-button {
+    grid-column: 1;
+    grid-row: 1 / 5;
+  }
+  .compact-practice .write-practice .word-error {
+    grid-column: 1;
+    grid-row: 5;
+  }
+  .compact-practice .write-practice .write-shown {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .compact-practice .write-practice .write-input {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .compact-practice .write-practice .feedback {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .compact-practice .write-practice .answer-actions {
+    grid-column: 2;
+    grid-row: 4;
+  }
+}

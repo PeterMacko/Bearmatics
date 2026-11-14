@@ -1,0 +1,185 @@
+import type { RefObject } from 'react';
+import type { Copy } from '../i18n';
+import type { Feedback } from '../session';
+import { SpeakerIcon } from './EnglishPracticeView';
+import type { KeyboardViewport } from './useKeyboardViewport';
+import type { WriteQuestion } from './write';
+
+/**
+ * Listen-and-write exercise (English level 3): the sound only, one text input for the system
+ * keyboard and Check (Enter also checks). After a wrong try the word is shown and announced and
+ * the child writes it once to continue. With an on-screen keyboard open the speaker, input and
+ * Check move into the visible part of the screen.
+ */
+export default function EnglishWriteView({
+  t,
+  question,
+  position,
+  reviewing,
+  solved,
+  feedback,
+  attempts,
+  prompt,
+  answer,
+  playing,
+  playFailed,
+  nextLabel,
+  keyboard,
+  speakerRef,
+  inputRef,
+  onAnswerChange,
+  onReplay,
+  onRetryPlay,
+  onCheck,
+  onNext,
+}: {
+  t: Copy;
+  question: WriteQuestion;
+  position: string;
+  reviewing: boolean;
+  solved: boolean;
+  feedback: Feedback;
+  attempts: number;
+  /** Gentle prompt after Check with nothing or non-letters written (not a try). */
+  prompt: 'empty' | 'letters' | null;
+  answer: string;
+  playing: boolean;
+  playFailed: boolean;
+  nextLabel: string;
+  keyboard: KeyboardViewport;
+  speakerRef: RefObject<HTMLButtonElement | null>;
+  inputRef: RefObject<HTMLInputElement | null>;
+  onAnswerChange: (value: string) => void;
+  onReplay: () => void;
+  onRetryPlay: () => void;
+  onCheck: () => void;
+  onNext: () => void;
+}) {
+  // The word is shown only after a wrong try in this question (and stays until it is solved).
+  const shown = attempts > 0 ? question.target : null;
+  const status =
+    prompt === 'empty'
+      ? t.writeEmpty
+      : prompt === 'letters'
+        ? t.writeLetters
+        : feedback === 'incorrect'
+          ? t.writeWrong.replace('{word}', question.target)
+          : feedback === 'correct'
+            ? t.correct
+            : '';
+  return (
+    <section
+      className="practice english-practice write-practice"
+      // Very short visible area (phone landscape with keyboard): everything on one row.
+      data-keyboard={keyboard.open ? (keyboard.height < 240 ? 'short' : 'open') : undefined}
+      style={
+        keyboard.open
+          ? ({
+              '--kb-height': `${keyboard.height}px`,
+              '--kb-top': `${keyboard.top}px`,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
+      <div className="practice-header">
+        <div className="practice-top">
+          <span className="level-pill">
+            {t.level} {question.level}
+          </span>
+        </div>
+        <p className="exercise-position" aria-live="polite">
+          {position}
+        </p>
+      </div>
+      <h2 id="write-title">{reviewing ? t.writeReviewTitle : t.writeTitle}</h2>
+      <form
+        noValidate
+        autoComplete="off"
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (solved) onNext();
+          else onCheck();
+        }}
+      >
+        <button
+          ref={speakerRef}
+          type="button"
+          className="speaker-button"
+          data-playing={playing}
+          aria-label={t.playWord}
+          onClick={onReplay}
+        >
+          <SpeakerIcon />
+        </button>
+        {playFailed && (
+          <p className="word-error" role="alert">
+            {t.wordFailed}{' '}
+            <button type="button" className="text-button" onClick={onRetryPlay}>
+              {t.tryAgain}
+            </button>
+          </p>
+        )}
+        <p className="write-shown" aria-hidden={shown ? undefined : 'true'}>
+          {shown && (
+            <>
+              <span className="write-shown-label">{t.writeShown}</span>{' '}
+              <strong lang="en">{shown}</strong>
+            </>
+          )}
+        </p>
+        <input
+          ref={inputRef}
+          className="write-input"
+          type="text"
+          lang="en"
+          name="bearmatics-word"
+          aria-labelledby="write-title"
+          aria-describedby="answer-feedback"
+          aria-invalid={feedback === 'incorrect' || undefined}
+          value={answer}
+          inputMode="text"
+          enterKeyHint={solved ? 'next' : 'done'}
+          autoCapitalize="none"
+          autoCorrect="off"
+          autoComplete="off"
+          spellCheck={false}
+          data-gramm="false"
+          data-lpignore="true"
+          data-1p-ignore="true"
+          data-form-type="other"
+          data-state={solved ? 'correct' : feedback === 'incorrect' ? 'incorrect' : undefined}
+          onChange={(event) => onAnswerChange(event.target.value)}
+        />
+        <p
+          id="answer-feedback"
+          className={`feedback feedback-${prompt ? 'invalid' : feedback}`}
+          role="status"
+          aria-live="polite"
+          aria-atomic="true"
+        >
+          {status}
+        </p>
+        <div className="answer-actions">
+          <button
+            type="submit"
+            className="primary answer-button"
+            data-state={solved ? 'correct' : feedback === 'incorrect' ? 'incorrect' : 'neutral'}
+            // Keep the keyboard open: pressing the button must not move focus off the input.
+            onPointerDown={(event) => {
+              if (document.activeElement === inputRef.current) event.preventDefault();
+            }}
+          >
+            {solved ? (
+              <>
+                {nextLabel}
+                <span aria-hidden="true"> →</span>
+              </>
+            ) : (
+              t.check
+            )}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
