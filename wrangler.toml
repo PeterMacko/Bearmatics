@@ -16,13 +16,13 @@ run_worker_first = ["/api", "/api/*"]
 [[d1_databases]]
 binding = "DB"
 database_name = "bearmatics"
-database_id = "00000000-0000-0000-0000-000000000001"
+database_id = "8489f23b-69cf-4e11-a377-316189ddb584"
 migrations_dir = "migrations"
 
 [[previews.d1_databases]]
 binding = "DB"
 database_name = "bearmatics-preview"
-database_id = "00000000-0000-0000-0000-000000000002"
+database_id = "e62f4a22-742c-4247-a32c-19daf51e4d8f"
 migrations_dir = "migrations"
 
 [observability.logs]
