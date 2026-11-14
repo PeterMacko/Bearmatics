@@ -140,7 +140,9 @@ No hosted GitHub Actions CI workflow is included in this initial app publication
 
 ## Hosting and data
 
-Hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. The MVP is live at https://bearmatics.mr-petermacko.workers.dev (release verification in #13). No server database or accounts are required for the initial app. A future authenticated Worker API with Cloudflare D1 can support saved progress. Do not store children's personal data by default.
+Hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. The MVP is live at https://bearmatics.mr-petermacko.workers.dev (release verification in #13).
+
+Server and database (SCRUM-96, foundation only): a small Worker script (`worker/index.ts`) answers only `/api` and `/api/*` (`assets.run_worker_first`); every other address is served by static assets exactly as before. `GET /api/health` reports whether the server and database are reachable and the schema version (no data); unknown `/api` addresses return a JSON 404. The database is Cloudflare D1 (SQLite): the live app uses `bearmatics`, all branch previews share `bearmatics-preview` (`previews.d1_databases`), and local development uses a local SQLite file under `.wrangler/`. Schema changes are numbered SQL files in `migrations/`, applied with Wrangler; applying is safe to repeat. No user data is stored yet; accounts come with SCRUM-97. Do not store children's personal data by default, and never put personal data in `/api` URLs or logs (invocation logs record URLs).
 
 ## Local development and developer checks
 
@@ -161,7 +163,10 @@ npm run build
 npx playwright install chromium
 npm run test:e2e
 npm run deploy:check
+npm run test:server
 ```
+
+`npm run test:server` runs the server tests in Node: handler unit tests, a configuration guard (previews never point at the live database, TOML matches JSONC, only `/api` reaches the script) and an integration test that starts the real Worker runtime with an empty local D1, applies the migrations twice and checks `/api/health`, the JSON 404 and unchanged app files. It needs a built `dist/` (`npm run build` first). To run the server locally: `npm run build`, `npm run db:migrate:local`, then `npx wrangler dev` and open `http://localhost:8787/api/health`. After changing bindings in `wrangler.jsonc`, run `npm run types:worker` to regenerate `worker/worker-configuration.d.ts`.
 
 Code is formatted with Prettier (pinned dev dependency; `.prettierrc.json`, 100-character lines). Run `npm run format` before committing; `format:check` must pass. Markdown docs, generated output and Cloudflare config are excluded in `.prettierignore`. The one-time reformat commit is listed in `.git-blame-ignore-revs`; use `git config blame.ignoreRevsFile .git-blame-ignore-revs` for useful blame.
 
@@ -183,13 +188,13 @@ After the application PR is merged into `main` with Peter’s approval, and the 
 | Root directory | Repository root |
 | Production branch | `main` |
 | Build command | `npm run build` |
-| Deploy command | `npx wrangler deploy` |
-| Preview command | `npx wrangler preview` |
+| Deploy command | `npm run deploy` (applies live-database migrations, then `wrangler deploy`) |
+| Preview command | `npm run deploy:preview` (applies preview-database migrations, then `wrangler preview`) |
 | Preview builds | Enabled; preview URLs are public unless protected |
 | Build variable | `NODE_VERSION=26.12.1` (or a compatible installed Node version) |
-| App secrets / database bindings | None for this foundation |
+| Database bindings | D1 `DB`: live `bearmatics`, previews `bearmatics-preview` (IDs in `wrangler.jsonc`; `wrangler.preview-migrations.jsonc` must match the preview entry). Created by Peter in the Cloudflare dashboard. |
 
-Wrangler serves static files from `dist` with SPA fallback; no server script is required. Cloudflare installs dependencies before the build. The initial production release was verified in #13. Do not treat a successful dry run as a live release. Feature branches use preview builds (`npx wrangler preview`), never the production deploy command. Add the actual verified stable Preview URL to the draft PR; do not guess it from a branch name. A failed build leaves the last successful preview unchanged, so record the previewed revision and use a deployment-specific URL for exact owner/QA approval when available. Publishing to the production branch can trigger deployment once Git integration is connected; obtain release authorization first.
+Wrangler serves static files from `dist` with SPA fallback; the server script only handles `/api`. The build token must be allowed to edit D1 so the deploy commands can apply migrations. Cloudflare installs dependencies before the build. The initial production release was verified in #13. Do not treat a successful dry run as a live release. Feature branches use preview builds (`npx wrangler preview`), never the production deploy command. Add the actual verified stable Preview URL to the draft PR; do not guess it from a branch name. A failed build leaves the last successful preview unchanged, so record the previewed revision and use a deployment-specific URL for exact owner/QA approval when available. Publishing to the production branch can trigger deployment once Git integration is connected; obtain release authorization first.
 
 ## Planning links
 

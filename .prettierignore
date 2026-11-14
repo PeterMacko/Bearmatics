@@ -9,3 +9,5 @@ playwright-report/
 package-lock.json
 wrangler.jsonc
 wrangler.toml
+wrangler.preview-migrations.jsonc
+worker/worker-configuration.d.ts
