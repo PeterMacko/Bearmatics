@@ -175,7 +175,7 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await page.getByLabel('Nickname').fill('Honey Star');
   await page.getByRole('radio', { name: 'Sunny bear' }).check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(page.getByText('Saved.')).toBeVisible();
+  await expect(page.getByText('Saved.', { exact: true })).toBeVisible();
   await page.getByLabel('Email (optional)').fill('parent@example.com');
   await page.getByRole('button', { name: 'Save email' }).click();
   await expect(page.getByRole('button', { name: 'Remove email' })).toBeVisible();

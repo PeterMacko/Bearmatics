@@ -147,6 +147,8 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
 }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await page.goto('/');
+  await page.keyboard.press('Tab'); // Sign in (SCRUM-97), left of the gear
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
   await page.keyboard.press('Tab'); // settings gear
   await page.keyboard.press('Tab');
   const math = page.getByRole('button', { name: 'Mathematics', exact: true });
