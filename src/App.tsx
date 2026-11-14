@@ -521,12 +521,15 @@ export default function App() {
               setAccount(found);
               openAccount(null);
             };
-            const notice =
-              accountNotice === 'google-unavailable'
-                ? t.account.errors.googleUnavailable
-                : accountNotice === 'google-failed' || accountNotice === 'google-cancelled'
-                  ? t.account.errors.googleFailed
-                  : accountNotice;
+            // Only known results become text; the address bar can never inject a message.
+            const notices: Record<string, string> = {
+              'google-unavailable': t.account.errors.googleUnavailable,
+              'google-failed': t.account.errors.googleFailed,
+              'google-cancelled': t.account.errors.googleFailed,
+              'signed-out': t.account.signedOut,
+              deleted: t.account.deleted,
+            };
+            const notice = notices[accountNotice] ?? '';
             if (accountScreen === 'privacy')
               return (
                 <PrivacyView
@@ -555,9 +558,9 @@ export default function App() {
                   onBack={() => openAccount(null)}
                   account={account}
                   onAccount={setAccount}
-                  onSignedOut={(message) => {
+                  onSignedOut={(reason) => {
                     setAccount(null);
-                    openAccount('signin', message);
+                    openAccount('signin', reason);
                   }}
                 />
               );

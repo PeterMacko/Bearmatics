@@ -117,6 +117,29 @@ async function attemptKey(username: string) {
   return sha256Hex(`login:${username.toLowerCase()}`);
 }
 
+/**
+ * Takes one try from the limit in a single atomic statement, BEFORE the password is checked, so
+ * parallel requests cannot all read the same old count (QA114-01). Returns the try number; a lock
+ * that has run out starts a fresh count. The MAX_FAILURES-th try arms the 15-minute lock.
+ */
+async function takeTry(env: AccountEnv, keyHash: string, time: number) {
+  const lockUntil = time + LOCK_MINUTES * 60 * 1000;
+  const row = await env.DB.prepare(
+    `INSERT INTO login_attempts (key_hash, failures, locked_until, updated_at) VALUES (?1, 1, 0, ?2)
+     ON CONFLICT (key_hash) DO UPDATE SET
+       failures = CASE WHEN locked_until > 0 AND locked_until <= ?2 THEN 1 ELSE failures + 1 END,
+       locked_until = CASE
+         WHEN locked_until > 0 AND locked_until <= ?2 THEN 0
+         WHEN locked_until = 0 AND failures + 1 >= ?3 THEN ?4
+         ELSE locked_until END,
+       updated_at = ?2
+     RETURNING failures`,
+  )
+    .bind(keyHash, time, MAX_FAILURES, lockUntil)
+    .first<{ failures: number }>();
+  return row!.failures;
+}
+
 export async function signIn(request: Request, env: AccountEnv): Promise<Response> {
   const body = await readJson(request);
   // Malformed usernames get the same answer as wrong passwords.
@@ -127,12 +150,8 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
   await env.DB.prepare('DELETE FROM login_attempts WHERE updated_at < ?')
     .bind(time - DAY)
     .run();
-  const attempt = await env.DB.prepare(
-    'SELECT failures, locked_until FROM login_attempts WHERE key_hash = ?',
-  )
-    .bind(keyHash)
-    .first<{ failures: number; locked_until: number }>();
-  if (attempt && attempt.locked_until > time) return json({ error: 'too_many_attempts' }, 429);
+  const attempt = await takeTry(env, keyHash, time);
+  if (attempt > MAX_FAILURES) return json({ error: 'too_many_attempts' }, 429);
 
   const account = /^[A-Za-z0-9]{3,20}$/.test(rawUsername)
     ? await env.DB.prepare('SELECT * FROM accounts WHERE username_key = ?')
@@ -144,18 +163,7 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
     !!account.verifier &&
     sameHex(await passwordVerifier(account.server_salt, key), account.verifier);
   if (!ok) {
-    // A lock that has run out starts a fresh count.
-    const previous = attempt && attempt.locked_until === 0 ? attempt.failures : 0;
-    const failures = previous + 1;
-    const lockedUntil = failures >= MAX_FAILURES ? time + LOCK_MINUTES * 60 * 1000 : 0;
-    await env.DB.prepare(
-      `INSERT INTO login_attempts (key_hash, failures, locked_until, updated_at) VALUES (?, ?, ?, ?)
-       ON CONFLICT (key_hash) DO UPDATE SET failures = excluded.failures,
-         locked_until = excluded.locked_until, updated_at = excluded.updated_at`,
-    )
-      .bind(keyHash, failures, lockedUntil, time)
-      .run();
-    return lockedUntil
+    return attempt >= MAX_FAILURES
       ? json({ error: 'too_many_attempts' }, 429)
       : json({ error: 'wrong_username_or_password' }, 401);
   }
@@ -218,9 +226,16 @@ export async function changePassword(request: Request, env: AccountEnv): Promise
   const newKey = rules.passwordKey(body.newKey, 'newKey');
   const { account } = session;
   if (!account.server_salt || !account.verifier) throw new BadRequest('invalid', 'currentKey');
+  // Same limit as sign-in for guessing the current password with a stolen session.
+  const limitKey = await sha256Hex(`password:${account.id}`);
+  const attempt = await takeTry(env, limitKey, now());
+  if (attempt > MAX_FAILURES) return json({ error: 'too_many_attempts' }, 429);
   if (!sameHex(await passwordVerifier(account.server_salt, currentKey), account.verifier)) {
-    return json({ error: 'wrong_password' }, 403);
+    return attempt >= MAX_FAILURES
+      ? json({ error: 'too_many_attempts' }, 429)
+      : json({ error: 'wrong_password' }, 403);
   }
+  await env.DB.prepare('DELETE FROM login_attempts WHERE key_hash = ?').bind(limitKey).run();
   const serverSalt = randomHex(16);
   await env.DB.batch([
     env.DB.prepare('UPDATE accounts SET server_salt = ?, verifier = ? WHERE id = ?').bind(
@@ -240,9 +255,15 @@ export async function changePassword(request: Request, env: AccountEnv): Promise
 export async function deleteAccount(request: Request, env: AccountEnv): Promise<Response> {
   const session = await currentSession(request, env);
   if (!session) return unauthorized();
+  const { account } = session;
+  const limitKeys = [await sha256Hex(`password:${account.id}`)];
+  if (account.username) limitKeys.push(await attemptKey(account.username));
   await env.DB.batch([
-    env.DB.prepare('DELETE FROM sessions WHERE account_id = ?').bind(session.account.id),
-    env.DB.prepare('DELETE FROM accounts WHERE id = ?').bind(session.account.id),
+    env.DB.prepare('DELETE FROM sessions WHERE account_id = ?').bind(account.id),
+    env.DB.prepare('DELETE FROM accounts WHERE id = ?').bind(account.id),
+    ...limitKeys.map((key) =>
+      env.DB.prepare('DELETE FROM login_attempts WHERE key_hash = ?').bind(key),
+    ),
   ]);
   return json({ account: null }, 200, { 'set-cookie': endSessionCookie() });
 }

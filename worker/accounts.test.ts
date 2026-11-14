@@ -204,6 +204,26 @@ describe('sign-in', () => {
     expect(LOCK_MINUTES).toBe(15);
   });
 
+  it('counts parallel wrong tries atomically (QA114-01)', async () => {
+    await signup('Burst1');
+    const results = await Promise.all(
+      Array.from({ length: 30 }, (_, i) => signin('Burst1', key(100 + i))),
+    );
+    const statuses = results.map((r) => r.status);
+    expect(statuses.filter((s) => s === 401).length).toBeLessThanOrEqual(MAX_FAILURES - 1);
+    expect(statuses.filter((s) => s === 429).length).toBeGreaterThanOrEqual(30 - MAX_FAILURES);
+    expect((await signin('Burst1', key(1))).status).toBe(429);
+  });
+
+  it('a deleted account leaves no attempt rows, so a new account with that name is not locked (QA114-03)', async () => {
+    const cookie = sessionCookie(await signup('Gone1'));
+    for (let i = 0; i < MAX_FAILURES; i++) await signin('Gone1', key(9));
+    expect((await signin('Gone1', key(1))).status).toBe(429);
+    expect((await api('/api/me', { method: 'DELETE', cookie })).status).toBe(200);
+    await signup('Gone1');
+    expect((await signin('Gone1', key(1))).status).toBe(200);
+  });
+
   it('stores attempts only as hashes of the username', async () => {
     const rows = await env.DB.prepare('SELECT key_hash FROM login_attempts').all<{
       key_hash: string;
@@ -275,6 +295,25 @@ describe('signed-in account', () => {
     expect((await signin('Profile1', key(3))).status).toBe(200);
     expect((await read(await api('/api/me', { cookie: other }))).account).toBeNull();
     expect((await read(await api('/api/me', { cookie }))).account.username).toBe('Profile1');
+  });
+
+  it('limits guesses of the current password too', async () => {
+    await signup('Guess1');
+    const own = sessionCookie(await signin('Guess1'));
+    const statuses = [];
+    for (let i = 0; i < MAX_FAILURES + 1; i++) {
+      const r = await api('/api/me/password', {
+        cookie: own,
+        body: { currentKey: key(40 + i), newKey: key(3) },
+      });
+      statuses.push(r.status);
+    }
+    expect(statuses).toEqual([403, 403, 403, 403, 429, 429]);
+    const right = await api('/api/me/password', {
+      cookie: own,
+      body: { currentKey: key(1), newKey: key(3) },
+    });
+    expect(right.status).toBe(429);
   });
 
   it('signs out on this device only', async () => {

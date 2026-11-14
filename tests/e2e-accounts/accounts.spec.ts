@@ -302,3 +302,76 @@ test('the privacy page explains what is stored and how to delete it', async ({ p
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByRole('button', { name: 'Mathematics' })).toBeVisible();
 });
+
+test('200% text on phones: account screens stay inside the screen (QA114-02)', async ({
+  browser,
+}) => {
+  for (const device of DEVICES.filter((d) => d.width <= 390)) {
+    const context = await browser.newContext({
+      viewport: { width: device.width, height: device.height },
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    await openApp(page);
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    const overflow = () =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      );
+    expect(await overflow(), `${device.name} sign in`).toBe(0);
+    await page.getByRole('button', { name: 'Create account' }).click();
+    expect(await overflow(), `${device.name} create account`).toBe(0);
+    await page.getByRole('button', { name: 'Back' }).click();
+    await page.getByRole('button', { name: 'What we store' }).click();
+    expect(await overflow(), `${device.name} privacy`).toBe(0);
+    await context.close();
+  }
+});
+
+test('profile at 200% text on a phone stays inside the screen', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 360, height: 640 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await openApp(page);
+  await createAccount(page, uniqueName('Big'), { email: 'parent@example.com' });
+  await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+  await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
+  await page.getByRole('button', { name: 'Delete account' }).click();
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+    ),
+  ).toBe(0);
+  await context.close();
+});
+
+test('the address bar cannot put a message on the sign-in screen (QA114-04)', async ({ page }) => {
+  await page.goto('/?account=Your%20password%20expired%2C%20enter%20it%20at%20evil.example');
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeVisible();
+  await expect(page.getByText('evil.example', { exact: false })).toHaveCount(0);
+  await expect(page).toHaveURL(/\/$/);
+  await page.goto('/?account=google-failed');
+  await expect(page.getByText('Google sign-in did not work. Try again.')).toBeVisible();
+});
+
+test('the parent checkbox has a large enough tap target (QA114-05)', async ({ browser }) => {
+  for (const device of DEVICES) {
+    const context = await browser.newContext({
+      viewport: { width: device.width, height: device.height },
+      hasTouch: device.touch,
+    });
+    const page = await context.newPage();
+    await openApp(page);
+    await page.getByRole('button', { name: 'Sign in' }).click();
+    await page.getByRole('button', { name: 'Create account' }).click();
+    const label = page.locator('.parent-check label');
+    const box = (await label.boundingBox())!;
+    expect(box.height, device.name).toBeGreaterThanOrEqual(44);
+    await label.click({ position: { x: 4, y: box.height - 4 } });
+    await expect(page.getByLabel('A parent knows I am creating this account')).toBeChecked();
+    await context.close();
+  }
+});

@@ -496,7 +496,7 @@ export function ProfileView({
 }: Common & {
   account: Account;
   onAccount: (account: Account) => void;
-  onSignedOut: (notice: string) => void;
+  onSignedOut: (reason: 'signed-out' | 'deleted') => void;
 }) {
   const [nickname, setNickname] = useState(account.nickname);
   const [bear, setBear] = useState(account.bear);
@@ -665,7 +665,7 @@ export function ProfileView({
           onClick={() =>
             void leave.run(async () => {
               await api.signOut();
-              onSignedOut(t.signedOut);
+              onSignedOut('signed-out');
             }, onError)
           }
         >
@@ -690,7 +690,7 @@ export function ProfileView({
                 onClick={() =>
                   void leave.run(async () => {
                     await api.deleteAccount();
-                    onSignedOut(t.deleted);
+                    onSignedOut('deleted');
                   }, onError)
                 }
               >
