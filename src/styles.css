@@ -2420,3 +2420,13 @@ progress::-moz-progress-bar {
   min-height: 0;
   padding: 2px 6px;
 }
+
+/* Very short visible area: when the word is shown it replaces the feedback text on screen (the
+   feedback stays in the live region for screen readers), so the layout keeps two rows. */
+.app-shell .write-practice[data-keyboard='short'] .write-shown:not(:empty) ~ .feedback {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
