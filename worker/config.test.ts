@@ -33,8 +33,15 @@ describe('Cloudflare configuration', () => {
       d1: c.d1_databases,
       previews: c.previews,
       observability: c.observability,
+      vars: c.vars,
     });
     expect(pick(toml)).toEqual(pick(live));
+  });
+
+  it('gives live and previews the same Google client ID (the secret lives in Cloudflare)', () => {
+    expect(live.vars.GOOGLE_CLIENT_ID).toMatch(/\.apps\.googleusercontent\.com$/);
+    expect(live.previews?.vars?.GOOGLE_CLIENT_ID).toBe(live.vars.GOOGLE_CLIENT_ID);
+    expect(JSON.stringify(live)).not.toMatch(/GOOGLE_CLIENT_SECRET"?\s*[:=]/);
   });
 
   it('runs the server script only for /api', () => {
