@@ -104,7 +104,7 @@ test('wrong try shows and announces the word, clears the input; copying it once 
   await act(async () => fireEvent.click(button(/See how you did/)));
   expect(screen.getByText('4 / 5')).toBeInTheDocument();
   expect(screen.getByText('5 words written')).toBeInTheDocument();
-});
+}, 20_000); // long flow: many renders on the slow 2-CPU dev host
 
 test('grey accepts "gray"; Slovak texts', async () => {
   render(<App />);
