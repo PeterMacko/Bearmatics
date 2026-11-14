@@ -19,6 +19,8 @@
       "migrations_dir": "migrations"
     }
   ],
+  // Google sign-in client ID (not secret). The secret GOOGLE_CLIENT_SECRET is set in Cloudflare.
+  "vars": { "GOOGLE_CLIENT_ID": "182275285165-b98ddo557hgpj0m19gbi1kvcftsspfdh.apps.googleusercontent.com" },
   "observability": {
     "logs": {
       "enabled": true,
@@ -27,6 +29,7 @@
     }
   },
   "previews": {
+    "vars": { "GOOGLE_CLIENT_ID": "182275285165-b98ddo557hgpj0m19gbi1kvcftsspfdh.apps.googleusercontent.com" },
     "d1_databases": [
       {
         "binding": "DB",
