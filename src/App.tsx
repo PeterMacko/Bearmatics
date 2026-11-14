@@ -104,12 +104,15 @@ export default function App() {
     setAccountNotice(notice);
     setAccountScreen(next);
   };
-  // Move focus to the new screen's heading after course navigation (not on first load).
+  const practising = !!active;
+  // After navigation (not on first load): the new screen starts at the top, so the bar is in
+  // view, and focus moves to its heading (also after leaving a lesson, QA139-01/02).
   useEffect(() => {
     if (!focusMenuHeading.current) return;
     focusMenuHeading.current = false;
-    menuHeadingRef.current?.focus();
-  }, [course, accountScreen]);
+    window.scrollTo(0, 0);
+    menuHeadingRef.current?.focus({ preventScroll: true });
+  }, [course, accountScreen, practising]);
   useEffect(() => {
     let live = true;
     loadAccount().then(
@@ -198,6 +201,7 @@ export default function App() {
     inputRef.current?.focus();
   };
   const endPractice = () => {
+    focusMenuHeading.current = true;
     words.stop();
     setSession(null);
     setEnglishSession(null);
@@ -607,7 +611,7 @@ export default function App() {
             firstTry={session.firstTry}
             headingRef={summaryRef}
             onAgain={start}
-            onBack={() => setSession(null)}
+            onBack={endPractice}
           />
         ) : (
           current && (

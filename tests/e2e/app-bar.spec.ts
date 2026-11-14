@@ -206,3 +206,50 @@ for (const [width, height, touch] of DEVICES)
     }
     await page.screenshot({ path: info.outputPath('last.png') });
   });
+
+// QA139-01: leaving a lesson or its summary with Back focuses the menu heading, like every Back.
+test('Back from a lesson and from the summary focuses the menu heading', async ({ page }) => {
+  await page.goto('/');
+  await openMathematics(page);
+  const nav = bar(page);
+  const heading = page.getByRole('heading', { name: 'Where shall we explore?' });
+  await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
+  await page.getByRole('button', { name: 'Let’s count' }).click();
+  await page.getByRole('textbox').fill('1');
+  await nav.getByRole('button', { name: 'Choose level' }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Choose a new trail' }).click();
+  await expect(heading).toBeFocused();
+  await page.getByRole('button', { name: 'Let’s count' }).click();
+  await nav.getByRole('button', { name: 'Choose level' }).click();
+  await expect(heading).toBeFocused();
+  await page.getByRole('button', { name: 'Let’s count' }).click();
+  for (let i = 0; i < 5; i++) {
+    await solve(page);
+    await page
+      .getByRole('button', { name: i < 4 ? 'Next exercise' : 'See how you did', exact: true })
+      .click();
+  }
+  await nav.getByRole('button', { name: 'Choose level' }).click();
+  await expect(heading).toBeFocused();
+});
+
+// QA139-02: a scroll from the previous screen never carries over; the bar stays in view.
+test('account screens open at the top with the bar in view (small phone)', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'Create account' }).click();
+  await expect(page.getByRole('heading', { name: 'Create an account' })).toBeFocused();
+  await page.waitForTimeout(100);
+  for (const name of ['Back', 'Sign in', 'Settings']) {
+    const box = (await bar(page).getByRole('button', { name }).boundingBox())!;
+    expect(box.y, name).toBeGreaterThanOrEqual(0);
+  }
+  await page.evaluate(() => scrollTo(0, document.documentElement.scrollHeight));
+  expect(await page.evaluate(() => scrollY)).toBeGreaterThan(0);
+  await page.getByRole('button', { name: 'What we store' }).last().click();
+  await expect(page.getByRole('heading', { name: 'What we store' })).toBeFocused();
+  expect(await page.evaluate(() => scrollY)).toBe(0);
+});
