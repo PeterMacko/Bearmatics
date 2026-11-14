@@ -39,56 +39,47 @@ The bear SVG, expression variations and procedural sound patterns were created f
 
 | Participant | Responsibility |
 | --- | --- |
-| Peter (product owner) | Approves scope, reviews Dev's delivered work **before independent QA**, and authorizes merge/release. |
-| `dev` | Coordinates work, implements, runs developer checks, presents reviewable deliverables, and verifies evidence before closing tasks. |
+| Peter (product owner) | Approves scope, reviews each new version **in parallel with QA**, gives the final OK and merges/releases. |
+| `dev` | Coordinates work, implements, runs developer checks and the full automatic suite, fixes defects, verifies evidence and releases. |
 | `bearmatics-analyst` | Prepares backlog features in Jira: scope, acceptance criteria, subtasks and dependencies; moves approved features to Ready. |
-| `bearmatics-tester` | Independently tests the owner-approved revision and reports verified results and reproducible defects. |
+| `bearmatics-tester` | Independently tests **only the changed part** of each delivered version and reports rated, reproducible defects. |
 
 ## Delivery workflow
+
+Peter's rules (2026-11-14): QA and Peter's review run at the same time; the Tester tests only what changed; Dev never waits for Peter to fix Tester findings; only Medium/High fixes go back to the Tester; at most 2 retest rounds before asking Peter.
 
 ### Activity diagram
 
 ```mermaid
 flowchart TD
-    A[Peter gives the Analyst a feature idea] --> C[Analyst writes scope, acceptance criteria, Jira feature, subtasks and dependencies]
-    C --> BL[Feature in Backlog; analysis review OWNER task In Review assigned Peter]
-    BL --> D{Peter approves scope?}
+    A[Peter gives the Analyst a feature idea] --> C[Analyst writes scope, acceptance criteria, Jira feature and subtasks]
+    C --> D{Peter approves scope in the analysis review task?}
     D -->|Revise| C
-    D -->|Yes| AD[Analysis review Done; Analyst moves feature to Ready]
-    AD --> SEL{Peter selects it: implement SCRUM-X}
-    SEL -->|Not yet| AD
-    SEL -->|Yes| RC{Dev readiness check: analysis still fits current main?}
-    RC -->|Drift or gaps| C
-    RC -->|Yes| E[Feature In Progress and unassigned; open draft PR and preview early]
-    E --> F[Dev implements with tests, build and code review]
-    F --> G[Completed developer tasks In Review]
-    G --> H[Publish checked revision and verify preview identity]
-    H --> I[Separate DEVELOPMENT review OWNER task; In Review assigned Peter; exact revision]
-    I --> J{Peter approves this revision for QA?}
-    J -->|Changes requested| F
-    J -->|Yes: development review Done| K[Independent Tester checks immutable approved source]
-    K --> L{Confirmed defects?}
-    L -->|Yes| M[Record reproducible Jira fixes; Dev repairs and verifies]
-    M --> G
-    L -->|No| N{Remaining test failures or coverage limits?}
-    N -->|Yes| O[Reopen DEVELOPMENT review task; assign Peter; brief coverage decision]
-    O --> P{Peter accepts documented limits?}
-    P -->|More testing| K
-    P -->|Code change needed| F
-    P -->|Yes: development review Done| Q[Close independently verified work and scoped QA; retain raw failures]
-    N -->|No| Q
-    Q --> R[Complete handoff; mark PR ready; feature In Review assigned Peter]
-    R --> S{Peter merges or explicitly authorizes merge and release?}
-    S -->|Hold| T[Wait; no agent merge or production release]
-    T --> S
-    S -->|Changes requested| U[Feature In Progress and unassigned; PR draft]
-    U --> F
-    S -->|Yes| V[Authorized merge and Cloudflare production deployment]
-    V --> W[Dev verifies deployed revision, assets and acceptance criteria]
-    W --> X{Release verification passes?}
-    X -->|No| Y[Feature In Progress and unassigned; record incident; new draft fix PR]
-    Y --> F
-    X -->|Yes| Z[Feature Done]
+    D -->|Yes| R[Feature Ready]
+    R --> SEL{Peter: implement SCRUM-X}
+    SEL --> RC{Dev readiness check fits current main?}
+    RC -->|Drift| C
+    RC -->|Yes| E[Feature In Progress; branch, draft PR and preview early]
+    E --> F[Dev implements with unit tests, full automatic suite and code review]
+    F --> N[Dev messages Peter: new version ready]
+    N --> PR[Peter reviews the preview when he has time]
+    N --> QA[Tester tests only the changed part]
+    QA --> L{Defects?}
+    PR --> PF{Peter finds something?}
+    PF -->|Yes| FX
+    PF -->|No| FIN
+    L -->|Yes| MSG[Dev tells Peter briefly what is wrong]
+    MSG --> FX[Dev fixes all known findings without waiting for Peter; full suite; test that fails on the old build]
+    FX --> SEV{Any Medium or High?}
+    SEV -->|Yes, round 1-2| QA
+    SEV -->|Yes, after 2 rounds| ASK[Dev asks Peter how to continue]
+    SEV -->|Low only| FIN
+    L -->|No| FIN{QA passed and Peter has nothing open?}
+    FIN -->|Yes| H[PR ready; feature In Review assigned Peter; message: finished, ready for final check]
+    H --> M{Peter merges?}
+    M -->|Changes| F
+    M -->|Yes| V[Dev verifies production bytes against the merged build]
+    V --> Z[Feature Done]
 ```
 
 ### Sequence diagram
@@ -96,104 +87,42 @@ flowchart TD
 ```mermaid
 sequenceDiagram
     actor Peter as Peter - product owner
-    participant Dev as Dev - coordinator
-    participant Analyst as Analyst
-    participant Jira as Jira - planning and decisions
-    participant GitHub as GitHub - code and PR
-    participant Cloudflare as Cloudflare - preview and production
-    participant Tester as Independent Tester
-
-    Peter->>Analyst: Feature idea for the backlog
-    Analyst->>Jira: Create feature in Backlog, native subtasks and dependencies
-    loop Until scope is approved
-        Analyst->>Jira: Analysis review OWNER task In Review, assign Peter
-        Analyst->>Peter: Specification, open questions, request scope approval
-        Peter-->>Analyst: Approve scope, or request changes
+    participant Dev as Dev
+    participant Tester as Tester
+    participant Jira as Jira and GitHub
+    Peter->>Dev: implement SCRUM-X
+    Dev->>Jira: Readiness check, feature In Progress, draft PR and preview
+    Dev->>Dev: Implement, unit tests, full suite, code review
+    par Parallel
+        Dev->>Peter: New version ready, preview link
+        Peter-->>Dev: Optional findings
+    and
+        Dev->>Tester: Short assignment - changed part, criteria, devices
+        Tester-->>Dev: Results with High, Medium or Low defects
     end
-    Peter->>Jira: Analysis review Done, preserve approval
-    Analyst->>Jira: Feature Ready
-    Note over Peter,Jira: Several Ready features can wait in the backlog
-    Peter->>Dev: Implement SCRUM-X
-    Dev->>Jira: Readiness check against current main
-    alt Analysis is stale or incomplete
-        Dev->>Analyst: Return gaps, feature back to Backlog
-    else Ready to build
-        Dev->>Jira: Feature In Progress, unassigned
+    loop At most 2 retest rounds
+        Dev->>Peter: Short note - what is wrong
+        Dev->>Dev: Fix Tester and Peter findings together, full suite, failing-before test
+        Dev->>Tester: Retest the feature only, Medium and High fixes
+        Tester-->>Dev: Retest results
     end
-    Dev->>GitHub: Open early draft PR and push checked increments
-    GitHub->>Cloudflare: Build feature-branch preview
-    Cloudflare-->>Dev: Preview and deployed revision identity
-
-    loop Until exact revision and scoped QA are accepted
-        Dev->>Dev: TDD implementation or fixes, checks and code review
-        Dev->>Jira: Developer-complete tasks In Review
-        Dev->>GitHub: Push checked revision and retain draft status
-        GitHub->>Cloudflare: Update branch preview
-        Cloudflare-->>Dev: Verified preview revision
-        Dev->>Jira: Separate DEVELOPMENT review task In Review, assign Peter
-        Dev->>Peter: Brief review request with exact revision and preview
-        alt Peter requests changes
-            Peter-->>Dev: Required changes, no acceptance QA yet
-        else Peter approves this revision for QA
-            Peter->>Jira: DEVELOPMENT review Done
-            Dev->>Tester: Approved immutable source, criteria and evidence requirements
-            Tester-->>Dev: Independent results, defects and coverage limits
-            Dev->>Dev: Read and verify raw evidence
-            alt Confirmed defect
-                Dev->>Jira: Create fix, return through owner review before retest
-            else Test failures or coverage limits remain
-                Dev->>Jira: Reopen DEVELOPMENT review task, assign Peter
-                Dev->>Peter: Accept documented limits or request more testing
-                alt Peter accepts limits
-                    Peter->>Jira: DEVELOPMENT review Done, scoped acceptance recorded
-                else Peter requests more testing
-                    Dev->>Tester: Additional testing of SAME approved source
-                    Tester-->>Dev: Additional evidence or defects
-                    Dev->>Peter: Updated coverage decision if still needed
-                    Note over Dev,Tester: Testing-only changes repeat QA and coverage decision, not implementation review
-                else Peter requests code changes
-                    Note over Peter,Dev: Return to implementation and Peter's revision review before retesting
-                end
-            else No unresolved test or coverage gate
-                Note over Dev,Tester: QA accepted with verified evidence
-            end
-        end
-    end
-
-    Dev->>Jira: Verified implementation, QA and handoff tasks Done
-    Dev->>GitHub: Mark PR ready, retain failures and accepted limits in report
-    Dev->>Jira: Feature In Review, assign Peter
-    Dev->>Peter: Ready for your merge
-    Note over Peter,Cloudflare: Preview approval and coverage acceptance are NOT merge or release approval
-    Peter->>GitHub: Merge PR, or explicitly authorize Dev to merge
-    GitHub->>Cloudflare: Trigger authorized production deployment
-    Cloudflare-->>Dev: Deployed revision and assets
-    Dev->>Dev: Verify live identity and acceptance criteria
-    alt Release verification passes
-        Dev->>Jira: Feature Done
-    else Verification fails
-        Dev->>Jira: Feature In Progress and unassigned, record incident or fix
-        Dev->>GitHub: Open new draft fix PR if code changes are needed
-        Note over Peter,Dev: Fixes repeat revision review and independent QA, no automatic release permission
-    end
+    Dev->>Jira: PR ready, feature In Review assigned Peter
+    Dev->>Peter: Finished, ready for your final check
+    Peter->>Jira: Merge
+    Dev->>Jira: Verify production bytes, feature Done
 ```
 
-**Backlog first:** Jira statuses are **Backlog** (Analyst drafted, awaiting Peter's analysis approval) → **Ready** (approved, waiting to be selected) → To Do / **In Progress** / **In Review** / **Done**. The Analyst creates and maintains backlog features in Jira; Dev starts only when Peter selects a Ready feature.
+**Rules behind the diagrams**
 
-**Throughout both diagrams:** after selection, the feature stays **In Progress and unassigned** during development, owner preview review, QA and unresolved coverage decisions. Completed developer tasks use **In Review** until independently verified. Use TWO separate **OWNER** subtasks: **analysis/scope review** and **development/exact-revision preview review**. Assign each to Peter only when actionable. Preserve approved analysis review as Done; reopen development review for revised previews, QA fixes and coverage decisions. Reopen analysis review only for material scope changes. Keep requests brief. Final PR review is the feature itself, not a third owner task. At the final gate, the open PR is ready and all testing/coverage decisions are complete; the feature becomes **In Review, assigned Peter**. Accepted limits never turn raw failing tests into passes.
+1. **Scope:** proposals become requirements only when Peter marks the analysis review task Done.
+2. **Early preview:** draft PR and branch preview from the first meaningful commit; they are not approval, QA or release.
+3. **Parallel review and QA:** when a version is ready, Dev messages Peter and sends the Tester a short assignment at the same time. The Tester does not wait for Peter.
+4. **QA scope:** the Tester tests only the changed part (feature acceptance criteria at the defined devices plus screens sharing the changed code). Dev's full automatic suite covers the rest and is not re-run by the Tester.
+5. **Fixes:** Dev reports defects to Peter in one short message and fixes them without waiting for him; Peter's findings that arrive during QA are fixed together with the Tester's. Every fix gets Dev's full suite and a test that fails on the old build. Only Medium/High fixes return to the Tester, who retests the feature only. After 2 retest rounds Dev asks Peter.
+6. **Peter's tweaks after QA passed** (sizes, colours, texts, audio): Dev tests plus Peter's eye/ear; the Tester only if behaviour changes. Changes that do not alter the app bundle skip QA.
+7. **Final handoff:** when QA passed and Peter has nothing open, the PR is ready and the feature is **In Review, assigned Peter**. Agents never merge or release. After the merge Dev verifies the production files and closes the feature.
 
-**Models and limits:** the team runs on Anthropic Claude: Dev and Analyst use Claude Opus 5.5, the Tester uses Claude Sonnet 5.5. Claude enforces its own usage limits; if one is hit, work resumes from the same checkpoint after the reset, without duplicate workers. Waiting for Peter is not permission to continue automatically.
-
-### Required review gates
-
-1. **Scope approval and early previews:** proposals are not requirements until Peter agrees in the **analysis review OWNER task**, which stays Done after approval. For approved feature work, create a feature branch and draft PR as soon as a meaningful first commit is available. Push checked increments throughout development so Peter can follow the Cloudflare branch preview. Draft publication and preview updates are authorized by this workflow; they are not owner acceptance, independent QA, merge, or production-release approval. Keep the PR draft until review gates pass.
-2. **Peter's development review before QA:** use a **separate development review OWNER task**, In Review and assigned Peter when actionable. Dev supplies a short change summary, linked issue/PR or exact revision, a runnable demo/preview when available (screenshots when useful), and developer test/build results with limitations. Peter explicitly approves that revision for QA, or requests changes.
-3. **Independent QA:** the tester may prepare a test plan beforehand, but must not start independent acceptance testing of delivered work until Peter's approval is recorded. Dev's unit tests, build checks, and automated CI are allowed before this gate; they do not replace QA.
-4. **Rework:** implementation changes after Peter's approval, including QA fixes, return through Peter's review before independent QA/retesting. Record the approved revision so old approval is not applied to new code.
-5. **Coverage decision and final handoff:** retain all raw failures and disclose unverified scope. If a decision is needed, reopen the **development review** task and assign Peter; acceptance applies only to that revision and those limits. Complete verified child tasks and mark the PR ready only after the review, QA and coverage gates are settled. Then move the feature from **In Progress/unassigned** to **In Review/assigned Peter** for his final PR review and merge, without a third owner review task.
-6. **Release approval:** Peter's approval to start QA or accept coverage limits is **not** approval to merge or deploy. Merge/release requires separate explicit authorization. If merging triggers Cloudflare production deployment, merge is also a release decision. Close the feature only after live release verification.
-
-Record approval in the relevant issue/PR comment (for example, `Peter: approved revision <commit> for QA`) or in this team's chat, with a concise attributed record linked to the issue. GitHub credentials are currently shared through Peter's account, so a self-approval restriction must not be bypassed or treated as approval; a clear owner decision is required. These are team operating rules, not yet technically enforced branch-protection or CI gates.
+**Models and limits:** Dev and Analyst use Claude Opus 5.5, the Tester uses Claude Sonnet 5.5. If a usage limit is hit, work resumes from the same checkpoint after the reset.
 
 ## Work tracking: Jira and GitHub
 
@@ -201,7 +130,7 @@ Record approval in the relevant issue/PR comment (for example, `Peter: approved 
 - Use native feature/child relationships and explicit Developer, Analyst, Tester or Peter ownership. Agent-owner metadata is separate from the authenticated Jira author and does not automatically launch a Hermes worker. Do not use an unassignable service account as an assignee; preserve owner labels/descriptions until the shared Agent owner dropdown is available.
 - Keep scope, acceptance criteria, dependencies and evidence concise. Comment only for decisions, blockers, handoffs, approvals and verified results; identify the acting participant. Dev reads back evidence before closing work.
 - Current feature: [SCRUM-36](https://project-22.atlassian.net/browse/SCRUM-36), responsive menu scrolling, compact bear header and favicon. Analysis review [SCRUM-41](https://project-22.atlassian.net/browse/SCRUM-41) is approved; development review is separate in [SCRUM-44](https://project-22.atlassian.net/browse/SCRUM-44); [SCRUM-42](https://project-22.atlassian.net/browse/SCRUM-42) owns independent QA. The earlier eight-level contract remains in [development scope](docs/level-progression.md); its acceptance does not accept this new visual feature.
-- Creating or assigning a Jira item does not itself approve unresolved product rules, start acceptance QA, or authorize code publication, merges, cloud provisioning or production deployment. The owner-before-QA and separate-release gates above remain unchanged; checked draft PR/feature preview publication follows the approved early-preview workflow.
+- Creating or assigning a Jira item does not itself approve unresolved product rules, start acceptance QA, or authorize code publication, merges, cloud provisioning or production deployment. The separate-release gate above remains unchanged; checked draft PR/feature preview publication follows the approved early-preview workflow.
 
 ## Accepted QA scope
 
