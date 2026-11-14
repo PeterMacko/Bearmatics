@@ -4,7 +4,7 @@ import type { Feedback } from '../session';
 import type { WordQuestion } from './listen';
 
 /** Animated speaker: replays the word. Its label never contains the word itself. */
-function SpeakerIcon() {
+export function SpeakerIcon() {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
       <path d="M12 24h10l14-11v38L22 40H12z" fill="currentColor" />
