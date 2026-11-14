@@ -47,8 +47,8 @@ async function checkLayout(page: Page) {
       return b.width > 0 && b.height > 0;
     };
     const texts = [
-      ...main.querySelectorAll('h2, .eyebrow, .intro, .level-title, .level-detail, .soon-tag'),
-      ...main.querySelectorAll('.coming-soon-note, .course-title'),
+      ...main.querySelectorAll('h2, .eyebrow, .intro, .level-title, .level-detail'),
+      ...main.querySelectorAll('.course-title'),
     ].filter(visible);
     return {
       horizontalScroll: Math.max(

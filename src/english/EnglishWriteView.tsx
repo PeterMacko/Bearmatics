@@ -57,16 +57,28 @@ export default function EnglishWriteView({
 }) {
   // The word is shown only after a wrong try in this question (and stays until it is solved).
   const shown = attempts > 0 ? question.target : null;
+  // The English word inside a Slovak sentence is marked lang="en" for screen readers.
+  const [before, after] = t.writeWrong.split('{word}');
   const status =
-    prompt === 'empty'
-      ? t.writeEmpty
-      : prompt === 'letters'
-        ? t.writeLetters
-        : feedback === 'incorrect'
-          ? t.writeWrong.replace('{word}', question.target)
-          : feedback === 'correct'
-            ? t.correct
-            : '';
+    prompt === 'empty' ? (
+      t.writeEmpty
+    ) : prompt === 'letters' ? (
+      t.writeLetters
+    ) : feedback === 'incorrect' ? (
+      <>
+        {before}
+        <span lang="en">{question.target}</span>
+        {after}
+      </>
+    ) : feedback === 'correct' ? (
+      t.correct
+    ) : (
+      ''
+    );
+  // Buttons used while typing must not take focus from the input (that closes the keyboard).
+  const keepKeyboard = (event: React.PointerEvent | React.MouseEvent) => {
+    if (document.activeElement === inputRef.current) event.preventDefault();
+  };
   return (
     <section
       className="practice english-practice write-practice"
@@ -107,6 +119,8 @@ export default function EnglishWriteView({
           className="speaker-button"
           data-playing={playing}
           aria-label={t.playWord}
+          onPointerDown={keepKeyboard}
+          onMouseDown={keepKeyboard}
           onClick={onReplay}
         >
           <SpeakerIcon />
@@ -114,7 +128,13 @@ export default function EnglishWriteView({
         {playFailed && (
           <p className="word-error" role="alert">
             {t.wordFailed}{' '}
-            <button type="button" className="text-button" onClick={onRetryPlay}>
+            <button
+              type="button"
+              className="text-button"
+              onPointerDown={keepKeyboard}
+              onMouseDown={keepKeyboard}
+              onClick={onRetryPlay}
+            >
               {t.tryAgain}
             </button>
           </p>
@@ -138,7 +158,8 @@ export default function EnglishWriteView({
           aria-invalid={feedback === 'incorrect' || undefined}
           value={answer}
           inputMode="text"
-          enterKeyHint={solved ? 'next' : 'done'}
+          // 'enter' rather than 'done': the keyboard should stay open between words.
+          enterKeyHint="enter"
           autoCapitalize="none"
           autoCorrect="off"
           autoComplete="off"
@@ -164,10 +185,8 @@ export default function EnglishWriteView({
             type="submit"
             className="primary answer-button"
             data-state={solved ? 'correct' : feedback === 'incorrect' ? 'incorrect' : 'neutral'}
-            // Keep the keyboard open: pressing the button must not move focus off the input.
-            onPointerDown={(event) => {
-              if (document.activeElement === inputRef.current) event.preventDefault();
-            }}
+            onPointerDown={keepKeyboard}
+            onMouseDown={keepKeyboard}
           >
             {solved ? (
               <>

@@ -52,6 +52,7 @@ async function visibleParts(page: Page, visible: number) {
       .map((s) => document.querySelector(s))
       .filter((e): e is Element => e !== null)
       .map((e) => e.getBoundingClientRect());
+    const detail = parts.map((r) => [r.top, r.bottom, r.left, r.right].map(Math.round));
     const inside = parts.every(
       (r) => r.top >= 0 && r.bottom <= visible + 1 && r.left >= 0 && r.right <= innerWidth + 1,
     );
@@ -64,6 +65,7 @@ async function visibleParts(page: Page, visible: number) {
     );
     const input = document.querySelector('.write-input')!;
     return {
+      detail: JSON.stringify({ detail, scrollY, innerHeight, visible }),
       count: parts.length,
       inside,
       overlap,
@@ -105,10 +107,14 @@ for (const mode of ['Android (page shrinks)', 'iPhone/iPad (keyboard covers)'] a
           'data-keyboard',
           /open|short/,
         );
+        // Layout settles a frame after the keyboard event; poll briefly (detail shows on failure).
+        await expect
+          .poll(async () => {
+            const p = await visibleParts(page, visible);
+            return p.count === 4 && p.inside && !p.overlap ? 'ok' : p.detail;
+          })
+          .toBe('ok');
         const parts = await visibleParts(page, visible);
-        expect(parts.count).toBe(4);
-        expect(parts.inside).toBe(true);
-        expect(parts.overlap).toBe(false);
         expect(parts.inputFont).toBeGreaterThanOrEqual(24); // text does not shrink
         expect(parts.checkHeight).toBeGreaterThanOrEqual(44);
         expect(parts.focused).toBe(true);
@@ -156,4 +162,112 @@ test('write on desktop with a physical keyboard: normal layout, Enter checks and
   expect(await page.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1)).toBe(
     true,
   );
+});
+
+test('write: with the keyboard open, tapping the speaker and Check keeps the input focused', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await fakeVisualViewport(page);
+  await startWriting(page);
+  const input = page.getByRole('textbox');
+  await input.tap();
+  await page.evaluate(() => (window as unknown as { keyboard: (h: number) => void }).keyboard(420));
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'open');
+  await page.getByRole('button', { name: 'Play the word again' }).tap();
+  await expect(input).toBeFocused();
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'open');
+  await page.getByRole('button', { name: 'Check answer' }).tap();
+  await expect(page.getByRole('status')).toHaveText('Write the word.');
+  await expect(input).toBeFocused();
+  await context.close();
+});
+
+test('write: keyboard follows the visible area when the page is scrolled (iPhone offsetTop)', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await page.addInitScript(() => {
+    const vv = new EventTarget();
+    let height = innerHeight;
+    let top = 0;
+    Object.defineProperties(vv, {
+      width: { get: () => innerWidth },
+      height: { get: () => height },
+      offsetTop: { get: () => top },
+      offsetLeft: { get: () => 0 },
+      scale: { get: () => 1 },
+    });
+    Object.defineProperty(window, 'visualViewport', { value: vv, configurable: true });
+    (window as unknown as { keyboard: (h: number, t: number) => void }).keyboard = (h, t) => {
+      height = h;
+      top = t;
+      vv.dispatchEvent(new Event('resize'));
+    };
+  });
+  await startWriting(page);
+  await page.getByRole('textbox').tap();
+  await page.evaluate(() =>
+    (window as unknown as { keyboard: (h: number, t: number) => void }).keyboard(400, 120),
+  );
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'open');
+  const box = await page.locator('.write-practice').boundingBox();
+  expect(Math.round(box!.y)).toBe(120);
+  expect(Math.round(box!.height)).toBe(400);
+  await context.close();
+});
+
+test('write: rotating an Android phone with the keyboard open keeps the controls visible', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  // A real phone reports its physical screen (sides swap on rotation); Playwright would report
+  // the shrunken viewport instead.
+  await page.addInitScript(() => {
+    const landscape = () => innerWidth > 600;
+    Object.defineProperty(window, 'screen', {
+      value: {
+        get width() {
+          return landscape() ? 844 : 390;
+        },
+        get height() {
+          return landscape() ? 390 : 844;
+        },
+      },
+      configurable: true,
+    });
+  });
+  await startWriting(page);
+  await page.getByRole('textbox').tap();
+  await page.setViewportSize({ width: 390, height: 420 }); // keyboard opens (page shrinks)
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'open');
+  await page.setViewportSize({ width: 844, height: 160 }); // rotate with the keyboard open
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'short');
+  const parts = await visibleParts(page, 160);
+  expect(parts.inside).toBe(true);
+  expect(parts.overlap).toBe(false);
+  await context.close();
+});
+
+test('write on a PC: making the window shorter never switches to the keyboard layout', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await startWriting(page);
+  await expect(page.getByRole('textbox')).toBeFocused();
+  await page.setViewportSize({ width: 1366, height: 600 });
+  await page.waitForTimeout(200);
+  await expect(page.locator('.write-practice')).not.toHaveAttribute('data-keyboard');
 });

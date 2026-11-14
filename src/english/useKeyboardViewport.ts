@@ -6,23 +6,48 @@ import { useEffect, useState } from 'react';
  * Android usually shrinks the page when the keyboard opens; iPhone/iPad Safari usually keeps the
  * page and covers its lower part (only the visual viewport shrinks). Both show up as the visual
  * viewport becoming clearly shorter than the tallest height seen at this width while the text
- * input has focus. PC with a physical keyboard never shrinks, so the normal layout stays.
+ * input has focus. Only touch devices are watched: a PC window resized by the user (or docked
+ * developer tools) must never switch the layout. Pinch zoom is ignored.
  */
 export type KeyboardViewport = { open: boolean; height: number; top: number };
 
 const CLOSED: KeyboardViewport = { open: false, height: 0, top: 0 };
 const KEYBOARD_MIN = 120; // px a keyboard takes at least; smaller changes are browser bars
+const BROWSER_BARS = 80; // allowance when the height is estimated from the screen size
 const tallest = new Map<number, number>();
+
+/** Layout width (not the zoomed visual width), so pinch zoom keeps the same baseline. */
+const layoutWidth = () => Math.round(document.documentElement.clientWidth || window.innerWidth);
+
+/**
+ * First height for a width never seen before (e.g. the phone was rotated while the keyboard was
+ * open): the other side of the screen minus browser bars.
+ */
+function screenEstimate(width: number) {
+  const { width: a, height: b } = window.screen;
+  if (!a || !b) return 0;
+  const other = Math.abs(width - a) <= Math.abs(width - b) ? b : a;
+  return other - BROWSER_BARS;
+}
 
 function measure() {
   const vv = window.visualViewport;
   const height = vv ? vv.height : window.innerHeight;
-  const width = Math.round(vv ? vv.width : window.innerWidth);
+  const width = layoutWidth();
   // Layout height counts too: on iPhone it keeps the full height while the keyboard covers.
   const full = Math.max(height, window.innerHeight);
-  tallest.set(width, Math.max(tallest.get(width) ?? 0, full));
-  return { height, top: vv ? vv.offsetTop : 0, base: tallest.get(width)! };
+  tallest.set(width, Math.max(tallest.get(width) ?? screenEstimate(width), full));
+  return {
+    height,
+    top: vv ? vv.offsetTop : 0,
+    base: tallest.get(width)!,
+    zoomed: vv ? vv.scale > 1.01 : false,
+  };
 }
+
+const isTouch = () =>
+  (navigator.maxTouchPoints ?? 0) > 0 ||
+  (typeof matchMedia === 'function' && matchMedia('(any-pointer: coarse)').matches);
 
 if (typeof window !== 'undefined') {
   measure();
@@ -36,14 +61,14 @@ export function useKeyboardViewport(
 ): KeyboardViewport {
   const [state, setState] = useState<KeyboardViewport>(CLOSED);
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined') return;
+    if (!enabled || typeof window === 'undefined' || !isTouch()) return;
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);
       frame = requestAnimationFrame(() => {
-        const { height, top, base } = measure();
+        const { height, top, base, zoomed } = measure();
         const focused = input.current !== null && document.activeElement === input.current;
-        const open = focused && base - height >= KEYBOARD_MIN;
+        const open = focused && !zoomed && base - height >= KEYBOARD_MIN;
         setState((previous) =>
           previous.open === open &&
           Math.abs(previous.height - height) < 1 &&
@@ -67,6 +92,8 @@ export function useKeyboardViewport(
       window.removeEventListener('resize', update);
       document.removeEventListener('focusin', update);
       document.removeEventListener('focusout', update);
+      // A new session must not start with the previous keyboard state.
+      setState(CLOSED);
     };
   }, [enabled, input]);
   return enabled ? state : CLOSED;

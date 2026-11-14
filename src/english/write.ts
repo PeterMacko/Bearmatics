@@ -10,7 +10,8 @@ const VARIANTS: Readonly<Record<string, readonly string[]>> = { grey: ['gray'] }
 
 /** Lower case and remove every space, as the checking rule says. */
 export function normalizeWritten(answer: string): string {
-  return answer.toLowerCase().replace(/\s+/gu, '');
+  // NFC joins a letter typed with a separate accent mark into one letter.
+  return answer.normalize('NFC').toLowerCase().replace(/\s+/gu, '');
 }
 
 /** Why an answer is not a try: nothing written, or something other than letters. */

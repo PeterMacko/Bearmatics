@@ -354,7 +354,7 @@ export default function App() {
             <SummaryView
               t={t}
               eyebrow={t.englishTrail}
-              finishedLabel={t.englishFinished}
+              finishedLabel={t.writeFinished}
               total={writeSession.exercises.length}
               firstTry={writeSession.firstTry}
               headingRef={summaryRef}

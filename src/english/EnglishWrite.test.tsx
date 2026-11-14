@@ -100,7 +100,7 @@ test('wrong try shows and announces the word, clears the input; copying it once 
   await write(missed);
   await act(async () => fireEvent.click(button(/See how you did/)));
   expect(screen.getByText('4 / 5')).toBeInTheDocument();
-  expect(screen.getByText('5 words completed')).toBeInTheDocument();
+  expect(screen.getByText('5 words written')).toBeInTheDocument();
 });
 
 test('grey accepts "gray"; Slovak texts', async () => {

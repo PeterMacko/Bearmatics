@@ -1924,22 +1924,7 @@ progress::-moz-progress-bar {
   font-size: 1.4rem;
   font-weight: 700;
 }
-.soon-tag {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 2px 10px;
-  border-radius: 999px;
-  background: #e3f1ff;
-  color: #21466d;
-  font-size: 0.75rem;
-  font-weight: 700;
-}
-.coming-soon-note {
-  margin: 0 0 8px;
-  color: var(--muted);
-  font-size: 0.85rem;
-  font-weight: 700;
-}
+
 .start-button[aria-disabled='true'],
 .start-button[aria-disabled='true']:hover {
   background: #7d8799;
@@ -2025,19 +2010,12 @@ progress::-moz-progress-bar {
   display: none;
 }
 /* Short windows, every menu: the exercise sizes keep one row when it fits (they wrap only
-   for very large text); Start sits beside them when there is room, otherwise on the row below (with the English "coming
-   soon" note next to it). */
+   for very large text); Start sits beside them when there is room, otherwise on the row below. */
 @media (min-width: 480px) and (max-height: 500px) {
   .menu-shell .menu-controls {
     flex-wrap: wrap;
     align-items: center;
     row-gap: 4px;
-  }
-  .menu-shell .coming-soon-note {
-    order: 3;
-    flex: 1 1 12ch;
-    min-width: 0;
-    margin: 0;
   }
 }
 
@@ -2312,7 +2290,8 @@ progress::-moz-progress-bar {
    (Android shrinks the page; iPhone/iPad cover it, so we follow the visual viewport). */
 .app-shell .write-practice[data-keyboard] {
   position: fixed;
-  z-index: 20;
+  /* Above the page, below dialogs (.modal-backdrop is 10). */
+  z-index: 9;
   left: 0;
   right: 0;
   top: var(--kb-top, 0px);
@@ -2322,7 +2301,7 @@ progress::-moz-progress-bar {
   padding: 8px max(12px, env(safe-area-inset-left)) 8px max(12px, env(safe-area-inset-right));
   display: grid;
   align-content: center;
-  overflow: hidden;
+  overflow: auto;
   background: var(--paper);
 }
 .app-shell .write-practice[data-keyboard] .practice-header,
@@ -2350,8 +2329,8 @@ progress::-moz-progress-bar {
 .app-shell .write-practice[data-keyboard] .speaker-button {
   grid-area: speaker;
   position: static;
-  width: 56px;
-  height: 56px;
+  width: 64px;
+  height: 64px;
 }
 .app-shell .write-practice[data-keyboard] .write-shown {
   grid-area: shown;
@@ -2385,10 +2364,8 @@ progress::-moz-progress-bar {
   white-space: nowrap;
 }
 .app-shell .write-practice[data-keyboard='short'] .feedback {
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: ellipsis;
   text-align: left;
+  line-height: 1.2;
 }
 .app-shell .write-practice[data-keyboard='short'] .answer-actions {
   width: auto;
