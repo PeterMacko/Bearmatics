@@ -733,7 +733,7 @@ export function ProfileView({
   );
 }
 
-const LINK = /(https:\/\/\S+[^\s.])/;
+const LINK = /(https:\/\/\S+[^\s.]|[\w.+-]+@[\w-]+(?:\.[\w-]+)+)/;
 
 export function PrivacyView({ t, backLabel, headingRef, onBack }: Omit<Common, 'onPrivacy'>) {
   return (
@@ -750,7 +750,12 @@ export function PrivacyView({ t, backLabel, headingRef, onBack }: Omit<Common, '
           <li key={line}>
             {line.split(LINK).map((part, index) =>
               LINK.test(part) ? (
-                <a key={index} href={part} target="_blank" rel="noreferrer">
+                <a
+                  key={index}
+                  href={part.includes('@') ? `mailto:${part}` : part}
+                  target="_blank"
+                  rel="noreferrer"
+                >
                   {part}
                 </a>
               ) : (

@@ -290,6 +290,10 @@ test('the privacy page explains what is stored and how to delete it', async ({ p
   await expect(page.getByRole('heading', { name: 'What we store' })).toBeFocused();
   await expect(page.getByText('never the password itself', { exact: false })).toBeVisible();
   await expect(page.getByText('Profile → Delete account', { exact: false })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'mr.petermacko@gmail.com' })).toHaveAttribute(
+    'href',
+    'mailto:mr.petermacko@gmail.com',
+  );
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeFocused();
   await page.getByRole('button', { name: 'Back' }).click();
