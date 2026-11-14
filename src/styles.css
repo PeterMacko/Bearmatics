@@ -2260,3 +2260,13 @@ progress::-moz-progress-bar {
 .compact-practice .english-practice .feedback {
   min-height: 2.6em;
 }
+
+/* QA87-01: playback failure shown in the feedback line (no extra row). */
+.english-practice .play-error {
+  color: #934522;
+}
+.english-practice .play-error .text-button {
+  /* Inline link inside the reserved two-line feedback space. */
+  min-height: 0;
+  padding: 2px 6px;
+}
