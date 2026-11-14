@@ -125,20 +125,6 @@ export default function EnglishWriteView({
         >
           <SpeakerIcon />
         </button>
-        {playFailed && (
-          <p className="word-error" role="alert">
-            {t.wordFailed}{' '}
-            <button
-              type="button"
-              className="text-button"
-              onPointerDown={keepKeyboard}
-              onMouseDown={keepKeyboard}
-              onClick={onRetryPlay}
-            >
-              {t.tryAgain}
-            </button>
-          </p>
-        )}
         <p className="write-shown" aria-hidden={shown ? undefined : 'true'}>
           {shown && (
             <>
@@ -171,15 +157,31 @@ export default function EnglishWriteView({
           data-state={solved ? 'correct' : feedback === 'incorrect' ? 'incorrect' : undefined}
           onChange={(event) => onAnswerChange(event.target.value)}
         />
-        <p
-          id="answer-feedback"
-          className={`feedback feedback-${prompt ? 'invalid' : feedback}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {status}
-        </p>
+        {/* A playback failure uses the feedback line's space (QA87-01): no extra row. */}
+        {playFailed ? (
+          <p className="feedback play-error" role="alert">
+            {t.wordFailed}{' '}
+            <button
+              type="button"
+              className="text-button"
+              onPointerDown={keepKeyboard}
+              onMouseDown={keepKeyboard}
+              onClick={onRetryPlay}
+            >
+              {t.tryAgain}
+            </button>
+          </p>
+        ) : (
+          <p
+            id="answer-feedback"
+            className={`feedback feedback-${prompt ? 'invalid' : feedback}`}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {status}
+          </p>
+        )}
         <div className="answer-actions">
           <button
             type="submit"

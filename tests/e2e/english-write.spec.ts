@@ -271,3 +271,25 @@ test('write on a PC: making the window shorter never switches to the keyboard la
   await page.waitForTimeout(200);
   await expect(page.locator('.write-practice')).not.toHaveAttribute('data-keyboard');
 });
+
+for (const [width, height] of [
+  [320, 568],
+  [1280, 520],
+  [844, 390],
+]) {
+  test(`write: "could not play" fits ${width}x${height} without page scroll`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    await page.route('**/audio/words/*.mp3', (route) => route.abort());
+    await startWriting(page);
+    await expect(page.getByRole('alert')).toContainText('The word could not play.');
+    await page.getByRole('textbox').fill('qqq');
+    await page.getByRole('textbox').press('Enter');
+    await expect
+      .poll(() =>
+        page.evaluate(
+          () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+        ),
+      )
+      .toBe(0);
+  });
+}
