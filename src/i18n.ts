@@ -130,7 +130,8 @@ export const copy = {
     writeReviewTitle: 'Let’s write these again',
     writeEmpty: 'Write the word.',
     writeLetters: 'Use letters.',
-    writeWrong: 'Not quite. The word is {word}. Write it.',
+    writeWrong: 'Not quite. You wrote “{answer}”.',
+    writeWrongHint: 'The word is {word}. Write it.',
     writeShown: 'The word is',
   },
   sk: {
@@ -263,7 +264,8 @@ export const copy = {
     writeReviewTitle: 'Napíšme tieto slová ešte raz',
     writeEmpty: 'Napíš slovo.',
     writeLetters: 'Použi písmená.',
-    writeWrong: 'Ešte nie. Slovo je {word}. Napíš ho.',
+    writeWrong: 'Ešte nie. Tvoja odpoveď: „{answer}“.',
+    writeWrongHint: 'Slovo je {word}. Napíš ho.',
     writeShown: 'Slovo je',
   },
 } as const;

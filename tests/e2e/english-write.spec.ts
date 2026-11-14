@@ -397,3 +397,60 @@ test('write QA94-03: small phone 320x568 rotated with the keyboard open switches
   expect(parts.inside, parts.detail).toBe(true);
   await context.close();
 });
+
+// QA94-04: in the very short keyboard layout a playback failure stays visible after a wrong try.
+test('write QA94-04: small phone with tall keyboard keeps "could not play" visible when the word is shown', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await page.route('**/audio/words/*.mp3', (route) => route.abort());
+  await startWriting(page);
+  const input = page.getByRole('textbox');
+  await input.tap();
+  await page.setViewportSize({ width: 320, height: 239 });
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'short');
+  await input.fill('qq');
+  await input.press('Enter');
+  await expect(page.getByRole('alert')).toBeInViewport({ ratio: 1 });
+  await context.close();
+});
+
+// QA94-01b + Peter: Slovak review label and the wrong-answer line at 320x568 with a tall keyboard.
+test('write QA94-01b: Slovak long Check label fits the short keyboard row; wrong answer is quoted', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await startWriting(page, true);
+  const input = page.getByRole('textbox');
+  await input.fill('qq');
+  await input.press('Enter');
+  await expect(page.getByRole('status')).toContainText('Ešte nie. Tvoja odpoveď: „qq“.');
+  await input.tap();
+  await page.setViewportSize({ width: 320, height: 239 });
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'short');
+  // Longest Check label the row can get.
+  await page
+    .locator('.answer-button')
+    .evaluate((b) => (b.textContent = 'Precvičiť náročné príklady →'));
+  const fit = await page.evaluate(() => {
+    const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+    const speaker = r('.speaker-button');
+    const field = r('.write-input');
+    const check = r('.answer-button');
+    return {
+      order: speaker.right <= field.left + 1 && field.right <= check.left + 1,
+      inside: check.right <= innerWidth + 1 && check.bottom <= 239 + 1,
+      inputWide: field.width >= 60,
+    };
+  });
+  expect(fit).toEqual({ order: true, inside: true, inputWide: true });
+  await context.close();
+});

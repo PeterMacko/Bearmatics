@@ -75,15 +75,18 @@ test('wrong try shows and announces the word, clears the input; copying it once 
   await startWriting();
   const missed = target();
   await write('zzz');
-  expect(screen.getByRole('status')).toHaveTextContent(
-    `Not quite. The word is ${missed}. Write it.`,
-  );
+  expect(screen.getByRole('status')).toHaveTextContent('Not quite. You wrote “zzz”.');
+  expect(screen.getByRole('status')).toHaveTextContent(`The word is ${missed}. Write it.`);
   expect(screen.getByText(missed, { selector: 'strong' })).toBeVisible();
   expect(input()).toHaveValue('');
   expect(document.querySelector('.bear')).toHaveAttribute('data-mood', 'sad');
-  // A second wrong copy keeps the word shown.
+  // While copying, what the child wrote stays visible.
+  fireEvent.change(input(), { target: { value: missed.slice(0, 2) } });
+  expect(screen.getByRole('status')).toHaveTextContent('Not quite. You wrote “zzz”.');
+  // A second wrong copy keeps the word shown and shows the new answer.
   await write('zzzz');
   expect(screen.getByText(missed, { selector: 'strong' })).toBeVisible();
+  expect(screen.getByRole('status')).toHaveTextContent('You wrote “zzzz”.');
   await write(missed);
   expect(screen.getByRole('status')).toHaveTextContent('That’s it! Nicely done.');
   for (let i = 2; i <= 5; i++) {
@@ -121,7 +124,8 @@ test('grey accepts "gray"; Slovak texts', async () => {
   const word = played.at(-1)!;
   fireEvent.change(field, { target: { value: 'qqq' } });
   await act(async () => fireEvent.submit(field.closest('form')!));
-  expect(screen.getByRole('status')).toHaveTextContent(`Ešte nie. Slovo je ${word}. Napíš ho.`);
+  expect(screen.getByRole('status')).toHaveTextContent('Ešte nie. Tvoja odpoveď: „qqq“.');
+  expect(screen.getByRole('status')).toHaveTextContent(`Slovo je ${word}. Napíš ho.`);
 });
 
 test('mute silences tones but not the word; leaving with typed text asks first', async () => {

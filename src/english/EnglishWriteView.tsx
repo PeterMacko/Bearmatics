@@ -19,6 +19,7 @@ export default function EnglishWriteView({
   solved,
   feedback,
   attempts,
+  wrongAnswer,
   prompt,
   answer,
   playing,
@@ -40,6 +41,8 @@ export default function EnglishWriteView({
   solved: boolean;
   feedback: Feedback;
   attempts: number;
+  /** The last wrong answer in this question, shown so the child can see the mistake. */
+  wrongAnswer: string | null;
   /** Gentle prompt after Check with nothing or non-letters written (not a try). */
   prompt: 'empty' | 'letters' | null;
   answer: string;
@@ -57,18 +60,31 @@ export default function EnglishWriteView({
 }) {
   // The word is shown only after a wrong try in this question (and stays until it is solved).
   const shown = attempts > 0 ? question.target : null;
-  // The English word inside a Slovak sentence is marked lang="en" for screen readers.
-  const [before, after] = t.writeWrong.split('{word}');
+  // After a wrong try the child sees what they wrote (Peter): it stays while they copy the word.
+  // Screen readers also hear the correct word (the visible label above is not a live region).
+  // English words inside a Slovak sentence are marked lang="en".
+  const [wroteBefore, wroteAfter] = t.writeWrong.split('{answer}');
+  const [hintBefore, hintAfter] = t.writeWrongHint.split('{word}');
   const status =
     prompt === 'empty' ? (
       t.writeEmpty
     ) : prompt === 'letters' ? (
       t.writeLetters
-    ) : feedback === 'incorrect' ? (
+    ) : wrongAnswer !== null && !solved ? (
       <>
-        {before}
-        <span lang="en">{question.target}</span>
-        {after}
+        {wroteBefore}
+        <span className="write-wrong" lang="en">
+          {wrongAnswer}
+        </span>
+        {wroteAfter}
+        {feedback === 'incorrect' && (
+          <span className="visually-hidden">
+            {' '}
+            {hintBefore}
+            <span lang="en">{question.target}</span>
+            {hintAfter}
+          </span>
+        )}
       </>
     ) : feedback === 'correct' ? (
       t.correct

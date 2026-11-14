@@ -2374,8 +2374,11 @@ progress::-moz-progress-bar {
   width: auto;
 }
 .app-shell .write-practice[data-keyboard='short'] .answer-button {
-  padding-inline: 12px;
-  white-space: nowrap;
+  /* Long labels (SK "Precvičiť náročné príklady") wrap inside the row (QA94-01b). */
+  max-width: 8.5rem;
+  padding: 4px 10px;
+  line-height: 1.15;
+  white-space: normal;
 }
 
 /* Short landscape phones (no keyboard): speaker left; word, input, feedback and Check right. */
@@ -2423,10 +2426,34 @@ progress::-moz-progress-bar {
 
 /* Very short visible area: when the word is shown it replaces the feedback text on screen (the
    feedback stays in the live region for screen readers), so the layout keeps two rows. */
-.app-shell .write-practice[data-keyboard='short'] .write-shown:not(:empty) ~ .feedback {
+/* A playback failure always stays visible (QA94-04): then the shown word gives way instead. */
+.app-shell .write-practice[data-keyboard='short'] form:has(.play-error) .write-shown {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+}
+.app-shell
+  .write-practice[data-keyboard='short']
+  .write-shown:not(:empty)
+  ~ .feedback:not(.play-error) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+
+/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
+.write-wrong {
+  font-weight: 700;
+}
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }

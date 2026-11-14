@@ -65,6 +65,7 @@ export default function App() {
   const [writeSession, setWriteSession] = useState<Session<WriteQuestion> | null>(null);
   const [written, setWritten] = useState('');
   const [writeNote, setWriteNote] = useState<'empty' | 'letters' | null>(null);
+  const [wrongAnswer, setWrongAnswer] = useState<string | null>(null);
   const writeInputRef = useRef<HTMLInputElement>(null);
   const keyboard = useKeyboardViewport(writeInputRef, !!writeSession && !writeSession.done);
   // What started the current sound: the speaker or one word button. Only that control animates,
@@ -156,6 +157,7 @@ export default function App() {
     setWriteSession(null);
     setWritten('');
     setWriteNote(null);
+    setWrongAnswer(null);
   };
   const requestLeave = () => {
     if (settingsOpen || hintOpen || leaveOpen) return;
@@ -233,6 +235,7 @@ export default function App() {
       void activateSound();
       setWritten('');
       setWriteNote(null);
+      setWrongAnswer(null);
       const created = createSession(generateWriteSession(englishSize));
       setWriteSession(created);
       setPlaySource('speaker');
@@ -267,7 +270,10 @@ export default function App() {
     const checked = submitAnswer(writeSession, written, checkWritten);
     setWriteSession(checked);
     // Wrong: the word is shown; the input clears for writing it once.
-    if (checked.feedback === 'incorrect') setWritten('');
+    if (checked.feedback === 'incorrect') {
+      setWrongAnswer(written.trim());
+      setWritten('');
+    }
   };
   const nextWrite = () => {
     if (!writeSession) return;
@@ -276,6 +282,7 @@ export default function App() {
     setWriteSession(following);
     setWritten('');
     setWriteNote(null);
+    setWrongAnswer(null);
     const question = currentExercise(following);
     setPlaySource('speaker');
     if (!following.done && question) void words.play(question.target);
@@ -375,6 +382,7 @@ export default function App() {
                 solved={writeSession.solved}
                 feedback={writeSession.feedback}
                 attempts={writeSession.attempts}
+                wrongAnswer={wrongAnswer}
                 prompt={writeNote}
                 answer={written}
                 playing={!!words.playing && playSource === 'speaker'}
