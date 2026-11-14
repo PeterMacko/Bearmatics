@@ -114,13 +114,6 @@ test.describe('signed out', () => {
       await context.close();
     }
   });
-
-  test('Google is not offered until it is configured', async ({ page }) => {
-    await openApp(page);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-    await expect(page.getByText('Signing in is optional')).toBeVisible();
-    await expect(page.getByRole('link', { name: 'Continue with Google' })).toHaveCount(0);
-  });
 });
 
 test('create an account, stay signed in, edit the profile, sign out and in, delete', async ({
@@ -374,4 +367,38 @@ test('the parent checkbox has a large enough tap target (QA114-05)', async ({ br
     await expect(page.getByLabel('A parent knows I am creating this account')).toBeChecked();
     await context.close();
   }
+});
+
+test('Google: first sign-in asks for nickname, bear and parent; later sign-ins go straight in', async ({
+  page,
+}) => {
+  await openApp(page);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('link', { name: 'Continue with Google' }).click();
+  await expect(page.getByRole('heading', { name: 'Almost done!' })).toBeVisible();
+  await expect(page).toHaveURL(/\/$/);
+  await page.getByLabel('Nickname').fill('Maculko');
+  await page.getByRole('radio', { name: 'Cocoa bear' }).check();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  await expect(page.getByRole('alert')).toHaveText('Please tick that a parent knows.');
+  await page.getByLabel('A parent knows I am creating this account').check();
+  await page.getByRole('button', { name: 'Continue' }).click();
+  const profile = page.getByRole('button', { name: 'Your profile: Maculko' });
+  await expect(profile).toBeVisible();
+  await page.reload();
+  await expect(profile).toBeVisible();
+  await profile.click();
+  await expect(page.getByText('Signed in with Google')).toBeVisible();
+  await expect(page.getByLabel('Email (optional)')).toHaveCount(0);
+  await expect(page.getByLabel('Current password')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Sign out' }).click();
+  await page.getByRole('link', { name: 'Continue with Google' }).click();
+  await expect(profile).toBeVisible();
+  await profile.click();
+  await page.getByRole('button', { name: 'Delete account' }).click();
+  await page.getByRole('button', { name: 'Yes, delete forever' }).click();
+  await expect(page.getByText('Your account was deleted.')).toBeVisible();
+  // After deleting, Google asks for nickname and bear again (a new account).
+  await page.getByRole('link', { name: 'Continue with Google' }).click();
+  await expect(page.getByRole('heading', { name: 'Almost done!' })).toBeVisible();
 });

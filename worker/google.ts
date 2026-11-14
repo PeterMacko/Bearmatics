@@ -9,6 +9,8 @@ import * as rules from './rules';
 export interface GoogleEnv extends AccountEnv {
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  /** Local browser tests only: a fake Google. Ignored unless the app runs on localhost. */
+  GOOGLE_TEST_URL?: string;
 }
 
 const STATE_COOKIE = 'bm_google_state';
@@ -20,6 +22,13 @@ const ISSUERS = new Set(['accounts.google.com', 'https://accounts.google.com']);
 
 export const googleConfigured = (env: GoogleEnv) =>
   !!env.GOOGLE_CLIENT_ID && !!env.GOOGLE_CLIENT_SECRET;
+
+const local = (request: Request) =>
+  ['localhost', '127.0.0.1'].includes(new URL(request.url).hostname);
+const authUrl = (request: Request, env: GoogleEnv) =>
+  env.GOOGLE_TEST_URL && local(request) ? `${env.GOOGLE_TEST_URL}/auth` : AUTH_URL;
+const tokenUrl = (request: Request, env: GoogleEnv) =>
+  env.GOOGLE_TEST_URL && local(request) ? `${env.GOOGLE_TEST_URL}/token` : TOKEN_URL;
 
 const callbackUrl = (request: Request) => `${new URL(request.url).origin}/api/auth/google/callback`;
 
@@ -45,7 +54,7 @@ export async function googleStart(request: Request, env: GoogleEnv): Promise<Res
   const challenge = base64url(
     await crypto.subtle.digest('SHA-256', new TextEncoder().encode(verifier)),
   );
-  const url = new URL(AUTH_URL);
+  const url = new URL(authUrl(request, env));
   url.search = new URLSearchParams({
     client_id: env.GOOGLE_CLIENT_ID!,
     redirect_uri: callbackUrl(request),
@@ -92,7 +101,7 @@ export async function googleCallback(
   }
   const code = params.get('code');
   if (!code) return backToApp(request, 'google-cancelled', [clearState]);
-  const tokenResponse = await fetcher(TOKEN_URL, {
+  const tokenResponse = await fetcher(tokenUrl(request, env), {
     method: 'POST',
     headers: { 'content-type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
@@ -146,7 +155,13 @@ export async function googleComplete(request: Request, env: GoogleEnv): Promise<
         .bind(tokenHash, Date.now())
         .first<{ google_sub: string }>()
     : null;
-  if (!pending) return json({ error: 'google_expired' }, 410);
+  if (!pending) {
+    // No personal data: only which step failed.
+    console.error(
+      token ? 'google complete: pending entry not found' : 'google complete: no cookie',
+    );
+    return json({ error: 'google_expired' }, 410);
+  }
   const id = randomHex(16);
   await env.DB.batch([
     env.DB.prepare(

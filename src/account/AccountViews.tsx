@@ -52,8 +52,11 @@ function useAction() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [note, setNote] = useState('');
+  // A ref, not state: a fast double tap must not send the request twice.
+  const running = useRef(false);
   const run = async (work: () => Promise<void>, onError: (e: unknown) => string) => {
-    if (busy) return;
+    if (running.current) return;
+    running.current = true;
     setBusy(true);
     setError('');
     setNote('');
@@ -62,6 +65,7 @@ function useAction() {
     } catch (e) {
       setError(onError(e));
     } finally {
+      running.current = false;
       setBusy(false);
     }
   };
@@ -440,6 +444,7 @@ export function GoogleNewView({
   const [bear, setBear] = useState(1);
   const [parent, setParent] = useState(false);
   const { busy, error, setError, run } = useAction();
+  const [expired, setExpired] = useState(false);
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const problem = !validNickname(nickname) ? t.errors.nickname : !parent ? t.errors.parent : '';
@@ -452,7 +457,10 @@ export function GoogleNewView({
         onSignedIn(
           await api.completeGoogle({ nickname: nickname.trim(), bear, parentConfirmed: parent }),
         ),
-      (e) => errorText(t, e),
+      (e) => {
+        setExpired(e instanceof AccountError && e.code === 'google_expired');
+        return errorText(t, e);
+      },
     );
   };
   return (
@@ -476,9 +484,18 @@ export function GoogleNewView({
         <BearPicker t={t} value={bear} onChange={setBear} />
         <ParentCheck t={t} checked={parent} onChange={setParent} onPrivacy={onPrivacy} />
         <Message error={error} />
-        <button className="primary account-submit" type="submit" disabled={busy}>
-          {busy ? t.working : t.continueLabel}
-        </button>
+        {expired ? (
+          <a className="google-button" href="/api/auth/google/start">
+            <span aria-hidden="true" className="google-mark">
+              G
+            </span>
+            {t.google}
+          </a>
+        ) : (
+          <button className="primary account-submit" type="submit" disabled={busy}>
+            {busy ? t.working : t.continueLabel}
+          </button>
+        )}
       </form>
     </Screen>
   );
