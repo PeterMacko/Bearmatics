@@ -293,3 +293,107 @@ for (const [width, height] of [
       .toBe(0);
   });
 }
+
+// QA94-01: small phone with a tall keyboard (visible 239 px): after a wrong try the shown word
+// must not push Check over the input or off the screen. Checked for 5 different words.
+for (const mode of ['Android', 'iPhone'] as const) {
+  test(`write QA94-01: small phone 320x568, tall keyboard (${mode}), word shown: row fits`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 320, height: 568 },
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    if (mode === 'iPhone') await fakeVisualViewport(page);
+    await page.addInitScript(() => {
+      const played: string[] = [];
+      (window as unknown as { played: string[] }).played = played;
+      const original = HTMLMediaElement.prototype.play;
+      HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+        played.push(decodeURIComponent(this.src.split('/').pop()!.replace('.mp3', '')));
+        return original.call(this).catch(() => undefined);
+      };
+    });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'English', exact: true }).click();
+    await page.getByRole('radio', { name: /^Level 3 / }).click();
+    await page.getByRole('radio', { name: '5 exercises' }).click();
+    await page.getByRole('button', { name: /Let’s listen/ }).click();
+    const input = page.getByRole('textbox');
+    await input.tap();
+    if (mode === 'iPhone')
+      await page.evaluate(() =>
+        (window as unknown as { keyboard: (h: number) => void }).keyboard(239),
+      );
+    else await page.setViewportSize({ width: 320, height: 239 });
+    await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'short');
+    for (let i = 1; i <= 5; i++) {
+      await input.fill('qq');
+      await input.press('Enter');
+      const fit = await page.evaluate(() => {
+        const r = (s: string) => document.querySelector(s)!.getBoundingClientRect();
+        const speaker = r('.speaker-button');
+        const field = r('.write-input');
+        const check = r('.answer-button');
+        const shown = r('.write-shown strong');
+        return {
+          noOverlap: field.right <= check.left + 1 && speaker.right <= field.left + 1,
+          inside: [speaker, field, check, shown].every(
+            (b) => b.left >= 0 && b.right <= innerWidth + 1 && b.top >= 0 && b.bottom <= 239 + 1,
+          ),
+          inputWide: field.width >= 60,
+        };
+      });
+      expect(fit, `word ${i}`).toEqual({ noOverlap: true, inside: true, inputWide: true });
+      const word = await page.evaluate(() =>
+        (window as unknown as { played: string[] }).played.at(-1)!,
+      );
+      await input.fill(word);
+      await input.press('Enter');
+      await input.press('Enter'); // next word
+      if (i === 5) break;
+    }
+    await context.close();
+  });
+}
+
+// QA94-02: a touch device whose window is smaller than its screen (split screen, small window)
+// must not show the keyboard layout while no keyboard is open.
+for (const [label, screen, viewport] of [
+  ['tablet split view', { width: 1180, height: 820 }, { width: 590, height: 820 }],
+  ['tablet small window', { width: 820, height: 1180 }, { width: 820, height: 560 }],
+  ['touch laptop window', { width: 1920, height: 1080 }, { width: 884, height: 838 }],
+] as const) {
+  test(`write QA94-02: ${label} without a keyboard keeps the normal layout`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ viewport, screen, hasTouch: true });
+    const page = await context.newPage();
+    await startWriting(page);
+    await page.getByRole('textbox').tap();
+    await page.waitForTimeout(300);
+    await expect(page.locator('.write-practice')).not.toHaveAttribute('data-keyboard');
+    await context.close();
+  });
+}
+
+// QA94-03: small phone rotated with the keyboard open (Android shrink).
+test('write QA94-03: small phone 320x568 rotated with the keyboard open switches to the keyboard layout', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await startWriting(page);
+  await page.getByRole('textbox').tap();
+  await page.setViewportSize({ width: 320, height: 284 });
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'open');
+  await page.setViewportSize({ width: 568, height: 160 });
+  await expect(page.locator('.write-practice')).toHaveAttribute('data-keyboard', 'short');
+  const parts = await visibleParts(page, 160);
+  expect(parts.inside, parts.detail).toBe(true);
+  await context.close();
+});

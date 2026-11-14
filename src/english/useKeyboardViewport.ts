@@ -13,22 +13,14 @@ export type KeyboardViewport = { open: boolean; height: number; top: number };
 
 const CLOSED: KeyboardViewport = { open: false, height: 0, top: 0 };
 const KEYBOARD_MIN = 120; // px a keyboard takes at least; smaller changes are browser bars
-const BROWSER_BARS = 80; // allowance when the height is estimated from the screen size
+const KEYBOARD_SHARE = 0.25; // ...or at least this share of a short screen (small phone landscape)
+const BROWSER_BARS = 40; // allowance when a rotated height is estimated
 const tallest = new Map<number, number>();
+let lastWidth = 0;
+let keyboardWasOpen = false;
 
 /** Layout width (not the zoomed visual width), so pinch zoom keeps the same baseline. */
 const layoutWidth = () => Math.round(document.documentElement.clientWidth || window.innerWidth);
-
-/**
- * First height for a width never seen before (e.g. the phone was rotated while the keyboard was
- * open): the other side of the screen minus browser bars.
- */
-function screenEstimate(width: number) {
-  const { width: a, height: b } = window.screen;
-  if (!a || !b) return 0;
-  const other = Math.abs(width - a) <= Math.abs(width - b) ? b : a;
-  return other - BROWSER_BARS;
-}
 
 function measure() {
   const vv = window.visualViewport;
@@ -36,7 +28,13 @@ function measure() {
   const width = layoutWidth();
   // Layout height counts too: on iPhone it keeps the full height while the keyboard covers.
   const full = Math.max(height, window.innerHeight);
-  tallest.set(width, Math.max(tallest.get(width) ?? screenEstimate(width), full));
+  // A width never seen before starts from its real height. Only when the phone was rotated
+  // while the keyboard was open is that height already shrunk: then the new full height is
+  // about the previous width (the other side of the screen). Never from window.screen: in split
+  // screen or a smaller window that would report a keyboard that is not there (QA94-02).
+  const seed = !tallest.has(width) && keyboardWasOpen && lastWidth ? lastWidth - BROWSER_BARS : 0;
+  tallest.set(width, Math.max(tallest.get(width) ?? seed, full));
+  lastWidth = width;
   return {
     height,
     top: vv ? vv.offsetTop : 0,
@@ -68,7 +66,9 @@ export function useKeyboardViewport(
       frame = requestAnimationFrame(() => {
         const { height, top, base, zoomed } = measure();
         const focused = input.current !== null && document.activeElement === input.current;
-        const open = focused && !zoomed && base - height >= KEYBOARD_MIN;
+        const open =
+          focused && !zoomed && base - height >= Math.min(KEYBOARD_MIN, base * KEYBOARD_SHARE);
+        keyboardWasOpen = open;
         setState((previous) =>
           previous.open === open &&
           Math.abs(previous.height - height) < 1 &&

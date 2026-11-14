@@ -2352,10 +2352,13 @@ progress::-moz-progress-bar {
   width: 100%;
 }
 .app-shell .write-practice[data-keyboard='short'] form {
+  /* One row for speaker, input and Check; the shown word and feedback on full-width rows
+     below, so they never widen a column (QA94-01). */
   grid-template-columns: auto minmax(0, 1fr) auto;
   grid-template-areas:
     'speaker input check'
-    'shown feedback feedback'
+    'shown shown shown'
+    'feedback feedback feedback'
     'error error error';
   width: min(100%, 760px);
 }
@@ -2371,7 +2374,8 @@ progress::-moz-progress-bar {
   width: auto;
 }
 .app-shell .write-practice[data-keyboard='short'] .answer-button {
-  min-width: 120px;
+  padding-inline: 12px;
+  white-space: nowrap;
 }
 
 /* Short landscape phones (no keyboard): speaker left; word, input, feedback and Check right. */
