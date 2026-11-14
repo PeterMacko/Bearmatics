@@ -8,11 +8,16 @@
   },
   "scripts": {
     "dev": "vite --host 127.0.0.1",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && tsc --noEmit -p worker && vite build",
     "preview": "vite preview --host 127.0.0.1",
     "test": "vitest run",
+    "test:server": "vitest run --config vitest.server.config.ts",
     "test:e2e": "playwright test",
     "deploy:check": "wrangler deploy --dry-run",
+    "deploy": "wrangler d1 migrations apply DB --remote && wrangler deploy",
+    "deploy:preview": "wrangler d1 migrations apply DB --remote --config wrangler.preview-migrations.jsonc && wrangler preview",
+    "db:migrate:local": "wrangler d1 migrations apply DB --local",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "lint": "oxlint"
