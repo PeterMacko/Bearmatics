@@ -22,6 +22,9 @@ import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
 import SummaryView from './SummaryView';
 import { useMenuLayout } from './useMenuLayout';
+import EnglishPracticeView from './english/EnglishPracticeView';
+import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
+import { useWordPlayer } from './english/wordPlayer';
 import { useFeedbackAudio } from './useFeedbackAudio';
 import {
   MAX_HINT_STAGE,
@@ -48,7 +51,15 @@ export default function App() {
   const [course, setCourse] = useState<Course | null>(null);
   const [englishLevel, setEnglishLevel] = useState<EnglishLevel>(1);
   const [englishSize, setEnglishSize] = useState(10);
-  const menuRef = useMenuLayout(!session, language, level, course ?? 'choice');
+  const [englishSession, setEnglishSession] = useState<Session<WordQuestion> | null>(null);
+  const [choice, setChoice] = useState('');
+  // What started the current sound: the speaker or one word button. Only that control animates,
+  // so playing the target never highlights its button and a word tap never animates the speaker.
+  const [playSource, setPlaySource] = useState<string | null>(null);
+  const words = useWordPlayer();
+  // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
+  const active: Session<unknown> | null = session ?? englishSession;
+  const menuRef = useMenuLayout(!active, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusMenuHeading = useRef(false);
   const navigate = (next: Course | null) => {
@@ -106,7 +117,7 @@ export default function App() {
     activateSound,
     toggleSound,
     resetForNewSession,
-  } = useFeedbackAudio(session?.feedback, session?.attempts, session?.done);
+  } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -124,10 +135,15 @@ export default function App() {
     flushSync(() => setInputMode(padMode ? 'native' : 'pad'));
     inputRef.current?.focus();
   };
+  const endPractice = () => {
+    words.stop();
+    setSession(null);
+    setEnglishSession(null);
+  };
   const requestLeave = () => {
     if (settingsOpen || hintOpen || leaveOpen) return;
-    if (session && hasProgress(session, answer)) setLeaveOpen(true);
-    else setSession(null);
+    if (active && hasProgress(active, session ? answer : choice)) setLeaveOpen(true);
+    else endPractice();
   };
   useEffect(() => {
     document.documentElement.lang = language;
@@ -140,6 +156,22 @@ export default function App() {
     // session would re-focus on every attempt or hint step.
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
   }, [session?.index, session?.solved, session?.done]);
+  const speakerRef = useRef<HTMLButtonElement>(null);
+  const englishQuestion = englishSession ? currentExercise(englishSession) : undefined;
+  useEffect(() => {
+    if (englishSession?.done) summaryRef.current?.focus();
+    else if (englishSession?.solved) nextRef.current?.focus();
+    else if (englishSession) speakerRef.current?.focus();
+    // Same rule as maths: move focus only on a new question, solved or done.
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
+  }, [englishQuestion, englishSession?.solved, englishSession?.done]);
+  useEffect(() => {
+    if (!englishSession || !englishQuestion) return;
+    // Warm the cache for this question's buttons and the next target.
+    const following = englishSession.exercises[englishSession.index + 1];
+    words.preload([...englishQuestion.options, ...(following ? following.options : [])]);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- preload once per question
+  }, [englishQuestion]);
   const current = session ? currentExercise(session) : undefined;
   const pictureTheme =
     session && current
@@ -168,25 +200,59 @@ export default function App() {
     setHintOpen(true);
   };
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
+  // English: the Start/Next tap is the gesture that lets the new word play straight away.
+  const startEnglish = () => {
+    // Level 3 (listen and write) is not available yet; Start is disabled for it.
+    if (englishLevel === 3) return;
+    resetForNewSession();
+    void activateSound();
+    setChoice('');
+    const created = createSession(generateWordSession(englishLevel, englishSize));
+    setEnglishSession(created);
+    setPlaySource('speaker');
+    void words.play(created.exercises[0].target);
+  };
+  const chooseWord = (word: string) => {
+    if (!englishSession || englishSession.solved) return;
+    setPlaySource(word);
+    void words.play(word);
+    setChoice(word);
+    setEnglishSession((previous) => previous && clearFeedback(previous));
+  };
+  const checkChoice = () => {
+    void activateSound();
+    setEnglishSession((previous) => previous && submitAnswer(previous, choice, checkWord));
+  };
+  const nextWord = () => {
+    if (!englishSession) return;
+    void activateSound();
+    const following = advance(englishSession);
+    setEnglishSession(following);
+    setChoice('');
+    const question = currentExercise(following);
+    setPlaySource('speaker');
+    if (!following.done && question) void words.play(question.target);
+    else words.stop();
+  };
 
   return (
     <div
-      className={`app-shell ${!session ? 'menu-shell' : ''} ${compact && session && !session.done ? 'compact-practice' : ''}`}
+      className={`app-shell ${!active ? 'menu-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
     >
-      {session && !session.done && (
+      {active && !active.done && (
         <progress
           className="viewport-progress"
-          aria-label={t.trail}
-          max={session.exercises.length}
-          value={progressValue(session)}
+          aria-label={session ? t.trail : t.englishTrail}
+          max={active.exercises.length}
+          value={progressValue(active)}
         />
       )}
       <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>
-        {session && (
+        {active && (
           <button
             className="corner-button back-button"
             aria-label={t.back}
-            onClick={session.done ? () => setSession(null) : requestLeave}
+            onClick={active.done ? endPractice : requestLeave}
           >
             <span aria-hidden="true">←</span>
           </button>
@@ -210,22 +276,68 @@ export default function App() {
       </header>
       <main
         ref={menuRef}
-        className={`workspace ${session ? 'in-session' : ''}`}
+        className={`workspace ${active ? 'in-session' : ''}`}
         inert={leaveOpen || hintOpen || settingsOpen}
       >
         <aside className="companion">
           <div className="bear-scene">
             <span className="scene-ring" />
             <Bear
-              idleWink={!session}
-              key={`${session?.done}:${session?.feedback}:${session?.attempts}`}
-              mood={bearMood(session)}
+              idleWink={!active}
+              key={`${active?.done}:${active?.feedback}:${active?.attempts}`}
+              mood={bearMood(active)}
             />
             <span className="scene-leaf leaf-one" />
             <span className="scene-leaf leaf-two" />
           </div>
         </aside>
-        {!session ? (
+        {englishSession ? (
+          englishSession.done ? (
+            <SummaryView
+              t={t}
+              eyebrow={t.englishTrail}
+              finishedLabel={t.englishFinished}
+              total={englishSession.exercises.length}
+              firstTry={englishSession.firstTry}
+              headingRef={summaryRef}
+              onAgain={startEnglish}
+              onBack={endPractice}
+            />
+          ) : (
+            englishQuestion && (
+              <EnglishPracticeView
+                t={t}
+                question={englishQuestion}
+                position={
+                  englishSession.reviewing
+                    ? `${t.review} · ${englishSession.reviewQueue.length} ${t.remaining}`
+                    : `${t.englishWord} ${englishSession.index + 1} ${t.of} ${englishSession.exercises.length}`
+                }
+                reviewing={englishSession.reviewing}
+                solved={englishSession.solved}
+                feedback={englishSession.feedback}
+                choice={choice}
+                playing={words.playing ? playSource : null}
+                playFailed={words.failed}
+                nextLabel={
+                  nextAction(englishSession) === 'next'
+                    ? t.englishNext
+                    : t[nextAction(englishSession)]
+                }
+                speakerRef={speakerRef}
+                nextRef={nextRef}
+                onReplay={() => {
+                  setPlaySource('speaker');
+                  void words.play(englishQuestion.target);
+                }}
+                onRetryPlay={() => void words.retry()}
+                onChoose={chooseWord}
+                onCheck={checkChoice}
+                onNext={nextWord}
+              />
+            )
+          )
+        ) : !session ? (
           course === 'math' ? (
             <LevelMenu
               t={t}
@@ -246,6 +358,7 @@ export default function App() {
               onLevelChange={setEnglishLevel}
               onSizeChange={setEnglishSize}
               onBack={() => navigate(null)}
+              onStart={startEnglish}
             />
           ) : (
             <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
@@ -328,7 +441,8 @@ export default function App() {
           onLeave={() => {
             setLeaveOpen(false);
             setAnswer('');
-            setSession(null);
+            setChoice('');
+            endPractice();
           }}
         />
       )}
