@@ -167,3 +167,36 @@ test('English word audio files are served for every word', async ({ request }) =
     expect((await response.body()).length).toBeGreaterThan(2000);
   }
 });
+
+// QA87-01: the playback-failure message must not make the page scroll on any defined device.
+for (const [name, width, height] of DEVICES) {
+  test(`English: "could not play" fits ${name} ${width}x${height} without page scroll`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.route('**/audio/words/*.mp3', (route) => route.abort());
+    await page.goto('/');
+    await page.getByRole('button', { name: 'English', exact: true }).click();
+    await page.getByRole('button', { name: /Let’s listen/ }).click();
+    await expect(page.getByRole('alert')).toContainText('The word could not play.');
+    await page.locator('.word-option').first().click();
+    await page.getByRole('button', { name: 'Check answer' }).click();
+    await expect
+      .poll(() =>
+        page.evaluate(() => ({
+          scroll: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+          inView: [
+            ...document.querySelectorAll(
+              '.speaker-button, .word-option, .answer-button, .play-error',
+            ),
+          ]
+            .map((e) => e.getBoundingClientRect())
+            .every((r) => r.top >= 0 && r.bottom <= innerHeight + 1),
+        })),
+      )
+      .toEqual({ scroll: 0, inView: true });
+    await page.unroute('**/audio/words/*.mp3');
+    await page.getByRole('button', { name: 'Try again' }).click();
+    await expect(page.getByRole('alert')).toHaveCount(0);
+  });
+}

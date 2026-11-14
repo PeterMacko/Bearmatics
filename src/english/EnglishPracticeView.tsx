@@ -177,14 +177,6 @@ export default function EnglishPracticeView({
         >
           <SpeakerIcon />
         </button>
-        {playFailed && (
-          <p className="word-error" role="alert">
-            {t.wordFailed}{' '}
-            <button type="button" className="text-button" onClick={onRetryPlay}>
-              {t.tryAgain}
-            </button>
-          </p>
-        )}
         <div ref={gridRef} className="word-options" role="group" aria-label={t.englishWords}>
           {question.options.map((word) => {
             const selected = choice === word;
@@ -205,15 +197,26 @@ export default function EnglishPracticeView({
             );
           })}
         </div>
-        <p
-          id="answer-feedback"
-          className={`feedback feedback-${feedback}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {feedback === 'ready' ? '' : feedback === 'invalid' ? t.chooseFirst : t[feedback]}
-        </p>
+        {/* A playback failure uses the feedback line's reserved space, so the layout never grows
+            (QA87-01). Answer feedback returns once the word plays again. */}
+        {playFailed ? (
+          <p className="feedback play-error" role="alert">
+            {t.wordFailed}{' '}
+            <button type="button" className="text-button" onClick={onRetryPlay}>
+              {t.tryAgain}
+            </button>
+          </p>
+        ) : (
+          <p
+            id="answer-feedback"
+            className={`feedback feedback-${feedback}`}
+            role="status"
+            aria-live="polite"
+            aria-atomic="true"
+          >
+            {feedback === 'ready' ? '' : feedback === 'invalid' ? t.chooseFirst : t[feedback]}
+          </p>
+        )}
         <div className="answer-actions">
           {solved ? (
             <button
