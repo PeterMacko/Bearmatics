@@ -25,6 +25,14 @@ import { useMenuLayout } from './useMenuLayout';
 import EnglishPracticeView from './english/EnglishPracticeView';
 import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
 import { useWordPlayer } from './english/wordPlayer';
+import EnglishWriteView from './english/EnglishWriteView';
+import { useKeyboardViewport } from './english/useKeyboardViewport';
+import {
+  checkWritten,
+  generateWriteSession,
+  writePrompt,
+  type WriteQuestion,
+} from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
 import {
   MAX_HINT_STAGE,
@@ -53,12 +61,19 @@ export default function App() {
   const [englishSize, setEnglishSize] = useState(10);
   const [englishSession, setEnglishSession] = useState<Session<WordQuestion> | null>(null);
   const [choice, setChoice] = useState('');
+  // English level 3 (listen and write).
+  const [writeSession, setWriteSession] = useState<Session<WriteQuestion> | null>(null);
+  const [written, setWritten] = useState('');
+  const [writeNote, setWriteNote] = useState<'empty' | 'letters' | null>(null);
+  const [wrongAnswer, setWrongAnswer] = useState<string | null>(null);
+  const writeInputRef = useRef<HTMLInputElement>(null);
+  const keyboard = useKeyboardViewport(writeInputRef, !!writeSession && !writeSession.done);
   // What started the current sound: the speaker or one word button. Only that control animates,
   // so playing the target never highlights its button and a word tap never animates the speaker.
   const [playSource, setPlaySource] = useState<string | null>(null);
   const words = useWordPlayer();
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
-  const active: Session<unknown> | null = session ?? englishSession;
+  const active: Session<unknown> | null = session ?? englishSession ?? writeSession;
   const menuRef = useMenuLayout(!active, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusMenuHeading = useRef(false);
@@ -139,10 +154,15 @@ export default function App() {
     words.stop();
     setSession(null);
     setEnglishSession(null);
+    setWriteSession(null);
+    setWritten('');
+    setWriteNote(null);
+    setWrongAnswer(null);
   };
   const requestLeave = () => {
     if (settingsOpen || hintOpen || leaveOpen) return;
-    if (active && hasProgress(active, session ? answer : choice)) setLeaveOpen(true);
+    if (active && hasProgress(active, session ? answer : writeSession ? written : choice))
+      setLeaveOpen(true);
     else endPractice();
   };
   useEffect(() => {
@@ -172,6 +192,14 @@ export default function App() {
     words.preload([...englishQuestion.options, ...(following ? following.options : [])]);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- preload once per question
   }, [englishQuestion]);
+  const writeQuestion = writeSession ? currentExercise(writeSession) : undefined;
+  useEffect(() => {
+    if (writeSession?.done) summaryRef.current?.focus();
+    // The input keeps focus through the question (Enter checks, then Enter goes on), so an open
+    // on-screen keyboard stays open between words.
+    else if (writeSession) writeInputRef.current?.focus({ preventScroll: true });
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- move focus per question only
+  }, [writeQuestion, writeSession?.done]);
   const current = session ? currentExercise(session) : undefined;
   const pictureTheme =
     session && current
@@ -202,8 +230,18 @@ export default function App() {
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
-    // Level 3 (listen and write) is not available yet; Start is disabled for it.
-    if (englishLevel === 3) return;
+    if (englishLevel === 3) {
+      resetForNewSession();
+      void activateSound();
+      setWritten('');
+      setWriteNote(null);
+      setWrongAnswer(null);
+      const created = createSession(generateWriteSession(englishSize));
+      setWriteSession(created);
+      setPlaySource('speaker');
+      void words.play(created.exercises[0].target);
+      return;
+    }
     resetForNewSession();
     void activateSound();
     setChoice('');
@@ -222,6 +260,33 @@ export default function App() {
   const checkChoice = () => {
     void activateSound();
     setEnglishSession((previous) => previous && submitAnswer(previous, choice, checkWord));
+  };
+  const checkWrite = () => {
+    if (!writeSession || writeSession.solved) return;
+    void activateSound();
+    const note = writePrompt(written);
+    setWriteNote(note);
+    if (note) return; // empty or not letters: a gentle prompt, not a try
+    const checked = submitAnswer(writeSession, written, checkWritten);
+    setWriteSession(checked);
+    // Wrong: the word is shown; the input clears for writing it once.
+    if (checked.feedback === 'incorrect') {
+      setWrongAnswer(written.trim());
+      setWritten('');
+    }
+  };
+  const nextWrite = () => {
+    if (!writeSession) return;
+    void activateSound();
+    const following = advance(writeSession);
+    setWriteSession(following);
+    setWritten('');
+    setWriteNote(null);
+    setWrongAnswer(null);
+    const question = currentExercise(following);
+    setPlaySource('speaker');
+    if (!following.done && question) void words.play(question.target);
+    else words.stop();
   };
   const nextWord = () => {
     if (!englishSession) return;
@@ -291,7 +356,61 @@ export default function App() {
             <span className="scene-leaf leaf-two" />
           </div>
         </aside>
-        {englishSession ? (
+        {writeSession ? (
+          writeSession.done ? (
+            <SummaryView
+              t={t}
+              eyebrow={t.englishTrail}
+              finishedLabel={t.writeFinished}
+              total={writeSession.exercises.length}
+              firstTry={writeSession.firstTry}
+              headingRef={summaryRef}
+              onAgain={startEnglish}
+              onBack={endPractice}
+            />
+          ) : (
+            writeQuestion && (
+              <EnglishWriteView
+                t={t}
+                question={writeQuestion}
+                position={
+                  writeSession.reviewing
+                    ? `${t.review} · ${writeSession.reviewQueue.length} ${t.remaining}`
+                    : `${t.englishWord} ${writeSession.index + 1} ${t.of} ${writeSession.exercises.length}`
+                }
+                reviewing={writeSession.reviewing}
+                solved={writeSession.solved}
+                feedback={writeSession.feedback}
+                attempts={writeSession.attempts}
+                wrongAnswer={wrongAnswer}
+                prompt={writeNote}
+                answer={written}
+                playing={!!words.playing && playSource === 'speaker'}
+                playFailed={words.failed}
+                nextLabel={
+                  nextAction(writeSession) === 'next' ? t.englishNext : t[nextAction(writeSession)]
+                }
+                keyboard={keyboard}
+                speakerRef={speakerRef}
+                inputRef={writeInputRef}
+                onAnswerChange={(value) => {
+                  if (writeSession.solved) return;
+                  setWritten(value);
+                  setWriteNote(null);
+                  if (writeSession.feedback !== 'ready')
+                    setWriteSession((previous) => previous && clearFeedback(previous));
+                }}
+                onReplay={() => {
+                  setPlaySource('speaker');
+                  void words.play(writeQuestion.target);
+                }}
+                onRetryPlay={() => void words.retry()}
+                onCheck={checkWrite}
+                onNext={nextWrite}
+              />
+            )
+          )
+        ) : englishSession ? (
           englishSession.done ? (
             <SummaryView
               t={t}
