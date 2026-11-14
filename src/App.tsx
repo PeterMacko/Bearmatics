@@ -35,6 +35,16 @@ import {
 } from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
 import {
+  AccountButton,
+  GoogleNewView,
+  PrivacyView,
+  ProfileView,
+  SignInView,
+  SignUpView,
+  type AccountScreen,
+} from './account/AccountViews';
+import { googleAvailable, loadAccount, type Account } from './account/api';
+import {
   MAX_HINT_STAGE,
   advance,
   bearMood,
@@ -74,19 +84,55 @@ export default function App() {
   const words = useWordPlayer();
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null = session ?? englishSession ?? writeSession;
-  const menuRef = useMenuLayout(!active, language, level, course ?? 'choice');
+  // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
+  const [account, setAccount] = useState<Account | null>(null);
+  const [accountScreen, setAccountScreen] = useState<AccountScreen | null>(null);
+  const [privacyFrom, setPrivacyFrom] = useState<AccountScreen | null>(null);
+  const [accountNotice, setAccountNotice] = useState('');
+  const [googleReady, setGoogleReady] = useState(false);
+  const menuRef = useMenuLayout(!active && !accountScreen, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
   const focusMenuHeading = useRef(false);
   const navigate = (next: Course | null) => {
     focusMenuHeading.current = true;
     setCourse(next);
   };
+  const openAccount = (next: AccountScreen | null, notice = '') => {
+    focusMenuHeading.current = true;
+    if (next === 'privacy') setPrivacyFrom(accountScreen);
+    setAccountNotice(notice);
+    setAccountScreen(next);
+  };
   // Move focus to the new screen's heading after course navigation (not on first load).
   useEffect(() => {
     if (!focusMenuHeading.current) return;
     focusMenuHeading.current = false;
     menuHeadingRef.current?.focus();
-  }, [course]);
+  }, [course, accountScreen]);
+  useEffect(() => {
+    let live = true;
+    loadAccount().then(
+      (found) => live && setAccount(found),
+      () => {},
+    );
+    googleAvailable().then(
+      (ready) => live && setGoogleReady(ready),
+      () => {},
+    );
+    // Result of a Google sign-in round trip: /?account=<result>. Remove it from the address.
+    const result = new URLSearchParams(window.location.search).get('account');
+    if (result) {
+      window.history.replaceState(null, '', window.location.pathname);
+      if (result === 'google-new') setAccountScreen('google-new');
+      else if (result !== 'signed-in') {
+        setAccountScreen('signin');
+        setAccountNotice(result);
+      }
+    }
+    return () => {
+      live = false;
+    };
+  }, []);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
   const touch = useTouchCapability();
@@ -302,7 +348,7 @@ export default function App() {
 
   return (
     <div
-      className={`app-shell ${!active ? 'menu-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
+      className={`app-shell ${!active && !accountScreen ? 'menu-shell' : ''} ${!active && accountScreen ? 'account-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
     >
       {active && !active.done && (
         <progress
@@ -325,6 +371,13 @@ export default function App() {
         <div className="wordmark">
           <h1 className="sr-only">Bearmatics</h1>
         </div>
+        {!active && !course && !accountScreen && (
+          <AccountButton
+            t={t.account}
+            account={account}
+            onClick={() => openAccount(account ? 'profile' : 'signin')}
+          />
+        )}
         <button
           ref={settingsRef}
           className="corner-button settings-button"
@@ -456,6 +509,69 @@ export default function App() {
               />
             )
           )
+        ) : !session && accountScreen ? (
+          (() => {
+            const common = {
+              t: t.account,
+              backLabel: t.account.back,
+              headingRef: menuHeadingRef,
+              onPrivacy: () => openAccount('privacy'),
+            };
+            const signedIn = (found: Account) => {
+              setAccount(found);
+              openAccount(null);
+            };
+            const notice =
+              accountNotice === 'google-unavailable'
+                ? t.account.errors.googleUnavailable
+                : accountNotice === 'google-failed' || accountNotice === 'google-cancelled'
+                  ? t.account.errors.googleFailed
+                  : accountNotice;
+            if (accountScreen === 'privacy')
+              return (
+                <PrivacyView
+                  t={t.account}
+                  backLabel={t.account.back}
+                  headingRef={menuHeadingRef}
+                  onBack={() => openAccount(privacyFrom)}
+                />
+              );
+            if (accountScreen === 'signup')
+              return (
+                <SignUpView
+                  {...common}
+                  onBack={() => openAccount('signin')}
+                  onSignedIn={signedIn}
+                />
+              );
+            if (accountScreen === 'google-new')
+              return (
+                <GoogleNewView {...common} onBack={() => openAccount(null)} onSignedIn={signedIn} />
+              );
+            if (accountScreen === 'profile' && account)
+              return (
+                <ProfileView
+                  {...common}
+                  onBack={() => openAccount(null)}
+                  account={account}
+                  onAccount={setAccount}
+                  onSignedOut={(message) => {
+                    setAccount(null);
+                    openAccount('signin', message);
+                  }}
+                />
+              );
+            return (
+              <SignInView
+                {...common}
+                onBack={() => openAccount(null)}
+                googleReady={googleReady}
+                notice={notice}
+                onCreate={() => openAccount('signup')}
+                onSignedIn={signedIn}
+              />
+            );
+          })()
         ) : !session ? (
           course === 'math' ? (
             <LevelMenu
