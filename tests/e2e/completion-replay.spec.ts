@@ -78,11 +78,13 @@ for (const review of [false, true]) {
       await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height - 8);
       const replayBox = await page.getByRole('button', { name: 'Play again' }).boundingBox();
       expect(replayBox).not.toBeNull();
-      await page.mouse.click(
+      // Only the second press of the double-click (detail 2); mouse.click would press twice.
+      await page.mouse.move(
         replayBox!.x + replayBox!.width / 2,
         replayBox!.y + replayBox!.height / 2,
-        { clickCount: 2 },
       );
+      await page.mouse.down({ clickCount: 2 });
+      await page.mouse.up({ clickCount: 2 });
       await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeVisible();
       await expect(page.locator('.completed-total')).toHaveText('5 exercises completed');
       await expect(page.locator('.first-try strong')).toHaveText(`${review ? 4 : 5} / 5`);
