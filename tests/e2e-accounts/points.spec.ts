@@ -256,3 +256,66 @@ test('QA124-05/06: 320x568 bar stays one row with 4-digit points; summary has no
     ),
   ).toBeLessThanOrEqual(0);
 });
+
+// SCRUM-118: the streak next to the badge.
+const streak = (page: Page) =>
+  page
+    .getByRole('navigation', { name: 'Main controls' })
+    .getByRole('img', { name: /^(Streak|Séria)/ });
+
+test('streak: first finished lesson gives 1 day; bar fits at the defined devices (also frozen)', async ({
+  page,
+}) => {
+  await createAccount(page, 'Twelve chars');
+  await expect(streak(page)).toHaveCount(0);
+  await playMaths(page, 5);
+  await expect(streak(page)).toHaveAccessibleName('Streak 1 day');
+  for (const frozen of [false, true]) {
+    if (frozen)
+      await page.route('**/api/progress', (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({ points: 1500, streak: 12, frozen: true }),
+        }),
+      );
+    for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+      await page.setViewportSize({ width, height });
+      for (const screen of ['courses', 'maths']) {
+        await page.goto('/');
+        if (screen === 'maths')
+          await page.getByRole('button', { name: 'Maths', exact: true }).click();
+        await expect(streak(page)).toBeVisible();
+        const where = `${width}x${height} ${screen} frozen=${frozen}`;
+        const m = await page.evaluate(() => {
+          const items = [...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *')].map((el) =>
+            el.getBoundingClientRect(),
+          );
+          const root = document.documentElement;
+          const landscape = matchMedia(
+            '(max-height: 500px) and (max-width: 950px) and (orientation: landscape)',
+          ).matches;
+          const overlap = items.some((a, i) =>
+            items.some(
+              (b, j) =>
+                j > i &&
+                a.left < b.right - 0.5 &&
+                b.left < a.right - 0.5 &&
+                a.top < b.bottom - 0.5 &&
+                b.top < a.bottom - 0.5,
+            ),
+          );
+          const tops = items.map((r) => r.top);
+          return {
+            oneRow: landscape || Math.max(...tops) - Math.min(...tops) < 20,
+            overlap,
+            inside: items.every(
+              (r) => r.left >= 0 && r.right <= root.clientWidth && r.bottom <= root.clientHeight,
+            ),
+            sideScroll: root.scrollWidth - root.clientWidth,
+          };
+        });
+        expect(m, where).toEqual({ oneRow: true, overlap: false, inside: true, sideScroll: 0 });
+      }
+    }
+  }
+});

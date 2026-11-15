@@ -46,10 +46,19 @@ import {
   type AccountScreen,
 } from './account/AccountViews';
 import { googleAvailable, loadAccount, type Account } from './account/api';
-import { finishLesson, loadPoints, startLesson } from './progress/api';
+import {
+  finishLesson,
+  loadProgress,
+  startLesson,
+  type Offer,
+  type Progress,
+  type Streak,
+} from './progress/api';
+import StreakChip from './progress/StreakChip';
+import StreakOffer from './progress/StreakOffer';
 import BadgeButton from './progress/BadgeButton';
 import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
-import { staticFrame, usePointsAnimation } from './progress/animation';
+import { pointsFrames, staticFrame, usePointsAnimation } from './progress/animation';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -198,15 +207,25 @@ export default function App() {
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
   // Points (SCRUM-117): signed-in players only; null while unknown or signed out.
   const [points, setPoints] = useState<number | null>(null);
+  // Streak (SCRUM-118): shown next to the badge; null while unknown or signed out.
+  const [streak, setStreak] = useState<Streak | null>(null);
+  const [offer, setOffer] = useState<{ offer: Offer; points: number } | null>(null);
+  const [offerOpen, setOfferOpen] = useState(false);
+  const [warming, setWarming] = useState(false);
+  const showProgress = (progress: Progress) => {
+    setPoints(progress.points);
+    setStreak({ streak: progress.streak, frozen: progress.frozen });
+  };
   const accountId = account ? `${account.kind}:${account.username ?? account.nickname}` : null;
   useEffect(() => {
     if (!accountId) {
       setPoints(null);
+      setStreak(null);
       return;
     }
     let live = true;
-    loadPoints().then(
-      (found) => live && setPoints(found),
+    loadProgress().then(
+      (found) => live && showProgress(found),
       () => {},
     );
     return () => {
@@ -230,6 +249,7 @@ export default function App() {
   const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
   const beginLesson = (lessonSize: number) => {
     setLessonSave(null);
+    closeOffer();
     waitingStart.current = null;
     const fresh: Lesson = {
       size: lessonSize,
@@ -277,8 +297,10 @@ export default function App() {
       sent = true;
       const result = await finishLesson(id, current.size, current.earned);
       // The bar always gets the saved total, also when the child has already left the summary.
-      setPoints(result.points);
+      showProgress(result);
       if (lesson.current !== current) return;
+      // The unlock offer comes after the summary scene (after the points animation).
+      if (result.offer) setOffer({ offer: result.offer, points: result.points });
       // A retry after a lost answer finds the lesson already counted: show what it gave.
       const added = result.added === 0 && current.retried ? current.earned : result.added;
       setLessonSave({ state: 'saved', added, before: result.points - added, after: result.points });
@@ -325,14 +347,36 @@ export default function App() {
     }
   }, [lessonSave]);
   useEffect(() => () => window.clearTimeout(chimeTimer.current), []);
+  // SCRUM-118: open the unlock offer once the points have filled the bar.
+  useEffect(() => {
+    if (!offer || lessonSave?.state !== 'saved') return;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const fill = pointsFrames(lessonSave.before, lessonSave.after).reduce(
+      (sum, f) => sum + f.hold,
+      0,
+    );
+    const wait = reduce ? 900 : (lessonSave.added > 0 ? 700 + fill : 0) + 900;
+    const timer = window.setTimeout(() => setOfferOpen(true), wait);
+    return () => window.clearTimeout(timer);
+  }, [offer, lessonSave]);
+  const closeOffer = () => {
+    setOfferOpen(false);
+    setOffer(null);
+  };
+  useEffect(() => {
+    if (!warming) return;
+    const timer = window.setTimeout(() => setWarming(false), 1600);
+    return () => window.clearTimeout(timer);
+  }, [warming]);
   // Before the first animation frame the bar still shows the old total (no flash of the new one).
-  const shownFrame =
-    animated ??
-    (animationRun
-      ? staticFrame(animationRun.before)
-      : points === null
-        ? null
-        : staticFrame(points));
+  // After the lesson's animation the total can change again (streak unlock pays points):
+  // then the bar shows the new total.
+  const animating = animationRun !== null && points === animationRun.after;
+  const shownFrame = animating
+    ? (animated ?? staticFrame(animationRun.before))
+    : points === null
+      ? null
+      : staticFrame(points);
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -352,6 +396,7 @@ export default function App() {
   };
   const endPractice = () => {
     lesson.current = null;
+    closeOffer();
     waitingStart.current = null;
     setLessonSave(null);
     focusMenuHeading.current = true;
@@ -567,13 +612,13 @@ export default function App() {
       <AppBar
         label={t.appBar}
         back={back}
-        inert={leaveOpen || hintOpen || settingsOpen}
+        inert={leaveOpen || hintOpen || settingsOpen || offerOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
         {account && points !== null && shownFrame && (
           <BadgeButton t={t.points} points={points} frame={shownFrame} />
         )}
-        {/* SCRUM-118: the streak goes here, before the profile. */}
+        {account && streak && <StreakChip t={t.points} streak={streak} warming={warming} />}
         {!inLesson && (
           <AccountButton
             t={t.account}
@@ -601,7 +646,7 @@ export default function App() {
       <main
         ref={menuRef}
         className={`workspace ${active ? 'in-session' : ''}`}
-        inert={leaveOpen || hintOpen || settingsOpen}
+        inert={leaveOpen || hintOpen || settingsOpen || offerOpen}
       >
         <aside className="companion">
           <div className="bear-scene">
@@ -849,6 +894,19 @@ export default function App() {
           )
         )}
       </main>
+      {offerOpen && offer && (
+        <StreakOffer
+          t={t.points}
+          offer={offer.offer}
+          points={offer.points}
+          onAnswered={showProgress}
+          onWarm={() => {
+            setWarming(true);
+            playBadge();
+          }}
+          onClose={closeOffer}
+        />
+      )}
       {settingsOpen && (
         <SettingsDialog
           t={t}
