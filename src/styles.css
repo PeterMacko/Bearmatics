@@ -2929,8 +2929,20 @@ progress::-moz-progress-bar {
     grid-template-columns: 36px minmax(0, 1fr) max-content;
   }
 }
-@media (max-height: 360px) {
+/* Short landscape phones: the course choice drops its intro line (Firefox's taller lines need
+   the room too), and the shortest windows use slightly smaller card text. */
+@media (max-height: 420px) {
   .menu-shell .course-choice .menu-heading .intro {
     display: none;
+  }
+}
+@media (max-height: 360px) {
+  .course-option .course-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+  .course-option .level-detail {
+    font-size: 0.8rem;
+    line-height: 1.2;
   }
 }
