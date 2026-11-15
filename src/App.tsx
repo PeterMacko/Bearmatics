@@ -49,6 +49,7 @@ import { googleAvailable, loadAccount, type Account } from './account/api';
 import { finishLesson, loadPoints, startLesson } from './progress/api';
 import BadgeButton from './progress/BadgeButton';
 import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
+import { staticFrame, usePointsAnimation } from './progress/animation';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -94,6 +95,8 @@ export default function App() {
   const active: Session<unknown> | null = session ?? englishSession ?? writeSession;
   // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
   const [account, setAccount] = useState<Account | null>(null);
+  // False until the first /api/me answer: a lesson started before it waits for the answer.
+  const [accountKnown, setAccountKnown] = useState(false);
   const [accountScreen, setAccountScreen] = useState<AccountScreen | null>(null);
   const [privacyFrom, setPrivacyFrom] = useState<AccountScreen | null>(null);
   const [accountNotice, setAccountNotice] = useState('');
@@ -122,10 +125,12 @@ export default function App() {
   }, [course, accountScreen, practising]);
   useEffect(() => {
     let live = true;
-    loadAccount().then(
-      (found) => live && setAccount(found),
-      () => {},
-    );
+    loadAccount()
+      .then(
+        (found) => live && setAccount(found),
+        () => {},
+      )
+      .finally(() => live && setAccountKnown(true));
     googleAvailable().then(
       (ready) => live && setGoogleReady(ready),
       () => {},
@@ -193,8 +198,9 @@ export default function App() {
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
   // Points (SCRUM-117): signed-in players only; null while unknown or signed out.
   const [points, setPoints] = useState<number | null>(null);
+  const accountId = account ? `${account.kind}:${account.username ?? account.nickname}` : null;
   useEffect(() => {
-    if (!account) {
+    if (!accountId) {
       setPoints(null);
       return;
     }
@@ -206,36 +212,78 @@ export default function App() {
     return () => {
       live = false;
     };
-  }, [account]);
-  // The running lesson, when it started while signed in. Its ID comes from the server.
-  const lesson = useRef<{ size: number; id: Promise<string | null>; saved: boolean } | null>(null);
+  }, [accountId]);
+  // The running lesson. Its server ID is requested at Start when the player is signed in; a
+  // lesson started before the account has loaded asks for it as soon as the account is known.
+  type Lesson = {
+    size: number;
+    id: Promise<string | null>;
+    saved: boolean;
+    /** The account turned out to be signed out: nothing to save. */
+    signedOut: boolean;
+    /** A finish request was sent and its answer was lost, so "already counted" is expected. */
+    retried: boolean;
+    earned: number;
+  };
+  const lesson = useRef<Lesson | null>(null);
+  const waitingStart = useRef<((id: string | null) => void) | null>(null);
   const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
   const beginLesson = (lessonSize: number) => {
     setLessonSave(null);
-    lesson.current = account
-      ? { size: lessonSize, id: startLesson(lessonSize).catch(() => null), saved: false }
-      : null;
+    waitingStart.current = null;
+    const fresh: Lesson = {
+      size: lessonSize,
+      id: Promise.resolve(null),
+      saved: false,
+      signedOut: false,
+      retried: false,
+      earned: 0,
+    };
+    if (account) fresh.id = startLesson(lessonSize).catch(() => null);
+    else if (!accountKnown)
+      fresh.id = new Promise((resolve) => {
+        waitingStart.current = resolve;
+      });
+    else fresh.signedOut = true;
+    lesson.current = fresh;
   };
+  useEffect(() => {
+    const resolve = waitingStart.current;
+    const current = lesson.current;
+    if (!accountKnown || !resolve || !current) return;
+    waitingStart.current = null;
+    if (account) startLesson(current.size).then(resolve, () => resolve(null));
+    else {
+      current.signedOut = true;
+      resolve(null);
+    }
+  }, [accountKnown, account]);
   const saveLesson = async (firstTry: number) => {
     const current = lesson.current;
-    if (!current) return;
+    if (!current || current.signedOut) return;
+    current.earned = Math.min(firstTry, current.size);
     setLessonSave({ state: 'saving' });
+    let sent = false;
     try {
       let id = await current.id;
+      if (current.signedOut) {
+        if (lesson.current === current) setLessonSave(null);
+        return;
+      }
       if (!id) {
         id = await startLesson(current.size);
         current.id = Promise.resolve(id);
       }
-      const result = await finishLesson(id, current.size, Math.min(firstTry, current.size));
-      if (lesson.current !== current) return;
+      sent = true;
+      const result = await finishLesson(id, current.size, current.earned);
+      // The bar always gets the saved total, also when the child has already left the summary.
       setPoints(result.points);
-      setLessonSave({
-        state: 'saved',
-        added: result.added,
-        before: result.points - result.added,
-        after: result.points,
-      });
+      if (lesson.current !== current) return;
+      // A retry after a lost answer finds the lesson already counted: show what it gave.
+      const added = result.added === 0 && current.retried ? current.earned : result.added;
+      setLessonSave({ state: 'saved', added, before: result.points - added, after: result.points });
     } catch {
+      if (sent) current.retried = true;
       if (lesson.current === current) setLessonSave({ state: 'failed' });
     }
   };
@@ -245,9 +293,46 @@ export default function App() {
     const current = lesson.current;
     if (finishedFirstTry === null || !current || current.saved) return;
     current.saved = true;
+    summaryShownAt.current = Date.now();
     void saveLesson(finishedFirstTry);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs when a lesson finishes
   }, [finishedFirstTry]);
+  // Summary animation: the points fill the bar (top bar and summary) once per saved lesson.
+  const summaryShownAt = useRef(0);
+  const chimeTimer = useRef(0);
+  const [newBadge, setNewBadge] = useState(0);
+  const animationRun =
+    lessonSave?.state === 'saved' && lessonSave.added > 0
+      ? {
+          key: `${lessonSave.before}:${lessonSave.after}:${summaryShownAt.current}`,
+          before: lessonSave.before,
+          after: lessonSave.after,
+          delay: 700,
+        }
+      : null;
+  const animated = usePointsAnimation(animationRun, (badge) => {
+    setNewBadge(badge);
+    // The chime never cuts the completion fanfare (about 2 s after the summary appears).
+    window.clearTimeout(chimeTimer.current);
+    const wait = summaryShownAt.current + 2200 - Date.now();
+    if (wait > 0) chimeTimer.current = window.setTimeout(playBadge, wait);
+    else playBadge();
+  });
+  useEffect(() => {
+    if (lessonSave?.state !== 'saved') {
+      setNewBadge(0);
+      window.clearTimeout(chimeTimer.current);
+    }
+  }, [lessonSave]);
+  useEffect(() => () => window.clearTimeout(chimeTimer.current), []);
+  // Before the first animation frame the bar still shows the old total (no flash of the new one).
+  const shownFrame =
+    animated ??
+    (animationRun
+      ? staticFrame(animationRun.before)
+      : points === null
+        ? null
+        : staticFrame(points));
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -267,6 +352,7 @@ export default function App() {
   };
   const endPractice = () => {
     lesson.current = null;
+    waitingStart.current = null;
     setLessonSave(null);
     focusMenuHeading.current = true;
     words.stop();
@@ -445,16 +531,25 @@ export default function App() {
         ? { label: t.backToCourses, onClick: () => navigate(null) }
         : null;
 
-  const summaryPoints = (
-    <SummaryPoints
-      t={t.points}
-      signedIn={!!account}
-      save={lessonSave}
-      onRetry={() => active && void saveLesson(active.firstTry)}
-      onNewBadge={playBadge}
-    />
-  );
-  const summaryFooter = account ? null : <SignInHint t={t.points} />;
+  const summaryPoints =
+    account && shownFrame ? (
+      <SummaryPoints
+        t={t.points}
+        save={lessonSave}
+        frame={shownFrame}
+        newBadge={newBadge}
+        onRetry={() => active && void saveLesson(active.firstTry)}
+      />
+    ) : account && lessonSave ? (
+      <SummaryPoints
+        t={t.points}
+        save={lessonSave.state === 'saved' ? null : lessonSave}
+        frame={staticFrame(0)}
+        newBadge={0}
+        onRetry={() => active && void saveLesson(active.firstTry)}
+      />
+    ) : null;
+  const summaryFooter = accountKnown && !account ? <SignInHint t={t.points} /> : null;
 
   return (
     <div
@@ -475,7 +570,9 @@ export default function App() {
         inert={leaveOpen || hintOpen || settingsOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
-        {account && points !== null && <BadgeButton t={t.points} points={points} />}
+        {account && points !== null && shownFrame && (
+          <BadgeButton t={t.points} points={points} frame={shownFrame} />
+        )}
         {/* SCRUM-118: the streak goes here, before the profile. */}
         {!inLesson && (
           <AccountButton

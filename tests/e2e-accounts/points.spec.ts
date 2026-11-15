@@ -9,18 +9,18 @@ const uniqueName = () =>
     20,
   );
 
-async function createAccount(page: Page) {
+async function createAccount(page: Page, nickname = 'Brave Cub') {
   await page.goto('/');
   await page.getByRole('button', { name: 'Sign in' }).click();
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByLabel('Username').fill(uniqueName());
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
   await page.getByLabel('Password again').fill(PASSWORD);
-  await page.getByLabel('Nickname').fill('Brave Cub');
+  await page.getByLabel('Nickname').fill(nickname);
   await page.getByRole('radio', { name: 'Panda' }).check();
   await page.getByLabel('A parent knows I am creating this account').check();
   await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('button', { name: 'Your profile: Brave Cub' })).toBeVisible();
+  await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();
 }
 
 async function answer(page: Page): Promise<number> {
@@ -172,4 +172,36 @@ test('badge in the app bar at the defined devices', async ({ browser }) => {
     }
   }
   await context.close();
+});
+
+test('QA124-04: a long nickname plus the badge never cover the menu heading (742x702, 884x600)', async ({
+  page,
+}) => {
+  await createAccount(page, 'W'.repeat(20));
+  for (const [width, height] of [
+    [742, 702],
+    [884, 600],
+    [1280, 520],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Maths', exact: true }).click();
+    await expect(badge(page)).toBeVisible();
+    const hits = await page.evaluate(() => {
+      const bar = [...document.querySelectorAll('.app-bar-end > *')].map((el) =>
+        el.getBoundingClientRect(),
+      );
+      const found: string[] = [];
+      for (const el of document.querySelectorAll('.menu-heading .eyebrow, .menu-heading h2')) {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        for (const r of range.getClientRects())
+          for (const b of bar)
+            if (b.left < r.right && r.left < b.right && b.top < r.bottom && r.top < b.bottom)
+              found.push(el.textContent ?? '');
+      }
+      return found;
+    });
+    expect(hits, `${width}x${height}`).toEqual([]);
+  }
 });

@@ -2867,6 +2867,9 @@ progress::-moz-progress-bar {
   .menu-shell .menu-heading h2 {
     padding-inline-end: var(--bar-clear, 0px);
   }
+  .menu-shell .menu-heading {
+    padding-top: var(--bar-drop, 0px);
+  }
 }
 /* Short landscape phones, during a lesson: the bear column stays under Back (inside the bar's
    column) as before, so the exercise keeps its width and gains the old top row instead. */
@@ -2952,37 +2955,92 @@ progress::-moz-progress-bar {
   }
 }
 
-/* ---------- SCRUM-117: points and bear badges ---------- */
+/* ---------- SCRUM-117: points and bear badges ----------
+   Bar: the bear badge, then (no border around them) the points over a thin bar to the next
+   badge. One 48px-high button. */
 .badge-button {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
   min-width: 48px;
   min-height: 48px;
-  padding: 2px 12px 2px 4px;
-  border: 1.5px solid var(--line);
-  border-radius: 999px;
-  background: var(--paper);
+  padding: 0 4px 0 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
   color: #315783;
+  font: inherit;
+}
+.badge-button:hover .badge-medal {
+  transform: scale(1.06);
+}
+.badge-medal {
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.badge-medal.level-up {
+  animation: medal-level-up 0.9s ease-out;
+}
+@keyframes medal-level-up {
+  0% {
+    transform: scale(0.4) rotate(-25deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.35) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+.bar-progress {
+  display: grid;
+  gap: 3px;
+  width: 52px;
+  justify-items: start;
+}
+.bar-progress-points {
   font-size: 0.95rem;
   font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
-.badge-button:hover {
-  background: var(--sky);
+.progress-track {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: #e6ddd6;
+  overflow: hidden;
 }
-.badge-button .badge-icon {
-  flex: none;
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e8a33d;
+  transition: width 0.18s linear;
 }
-/* Phones and short windows: only the badge with its number (points stay in the label). */
-@media (max-width: 620px), (max-height: 500px) {
+.progress-fill.jump {
+  transition: none;
+}
+/* Short landscape phones: the bar is a narrow column on the left; points + bar under the badge. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
   .app-shell .app-bar .badge-button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0;
     width: 48px;
-    padding: 0;
-    justify-content: center;
-    border-radius: 50%;
   }
-  .badge-button .badge-points {
-    display: none;
+  .app-shell .app-bar .bar-progress {
+    width: 42px;
+    justify-items: center;
+  }
+  .app-shell .app-bar .badge-medal svg {
+    width: 34px;
+    height: 34px;
   }
 }
 .badge-details {
@@ -3013,17 +3071,8 @@ progress::-moz-progress-bar {
   margin: 4px 0 0;
   font-size: 0.95rem;
 }
-.badge-meter-bar {
+.badge-meter .progress-track {
   height: 10px;
-  border-radius: 999px;
-  background: #efe9e5;
-  overflow: hidden;
-}
-.badge-meter-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: #e8a33d;
 }
 /* Compact: points and a new badge share one row, the progress line sits under them. */
 .summary-points {
@@ -3039,9 +3088,8 @@ progress::-moz-progress-bar {
   display: grid;
   justify-items: center;
 }
-.summary-points .badge-meter-bar {
+.summary-points .badge-meter .progress-track {
   width: min(100%, 320px);
-  height: 8px;
 }
 .points-added {
   margin: 0;
@@ -3088,7 +3136,11 @@ progress::-moz-progress-bar {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .new-badge {
+  .new-badge,
+  .badge-medal.level-up {
     animation: none;
+  }
+  .progress-fill {
+    transition: none;
   }
 }

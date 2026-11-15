@@ -43,7 +43,7 @@ export default function HintDialog({
     <div className="modal-backdrop hint-backdrop">
       <div
         ref={dialogRef}
-        id={titleId === 'hint-title' ? 'hint-dialog' : 'settings-dialog'}
+        id={titleId.replace(/-title$/, '-dialog')}
         className="hint-dialog"
         role="dialog"
         aria-modal="true"

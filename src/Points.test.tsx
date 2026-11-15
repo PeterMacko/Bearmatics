@@ -9,10 +9,20 @@ import { openMathematics } from './testing/openMathematics';
 type Call = { path: string; method: string; body: unknown };
 const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
 
-function server(start: number, options: { failFinish?: number } = {}) {
+function server(
+  start: number,
+  options: {
+    failFinish?: number;
+    loseAnswer?: number;
+    meDelay?: number;
+    finishDelay?: number;
+  } = {},
+) {
   const calls: Call[] = [];
   let total = start;
   let failures = options.failFinish ?? 0;
+  let lost = options.loseAnswer ?? 0;
+  const counted = new Set<string>();
   const reply = (body: unknown, status = 200) =>
     Promise.resolve(
       new Response(JSON.stringify(body), {
@@ -26,7 +36,10 @@ function server(start: number, options: { failFinish?: number } = {}) {
       const method = init.method ?? 'GET';
       const body = init.body ? JSON.parse(String(init.body)) : undefined;
       calls.push({ path, method, body });
-      if (path === '/api/me') return reply({ account: ACCOUNT });
+      if (path === '/api/me')
+        return new Promise((done) =>
+          setTimeout(() => done(reply({ account: ACCOUNT })), options.meDelay ?? 0),
+        );
       if (path === '/api/auth/google') return reply({ available: false });
       if (path === '/api/progress') return reply({ points: total });
       if (path === '/api/progress/lessons') return reply({ lessonId: 'a'.repeat(32) }, 201);
@@ -35,9 +48,18 @@ function server(start: number, options: { failFinish?: number } = {}) {
           failures--;
           return Promise.reject(new TypeError('offline'));
         }
-        const added = (body as { points: number }).points;
+        const { points: earned, lessonId } = body as { points: number; lessonId: string };
+        const added = counted.has(lessonId) ? 0 : earned;
+        counted.add(lessonId);
         total += added;
-        return reply({ points: total, added });
+        if (lost > 0) {
+          lost--;
+          return Promise.reject(new TypeError('answer lost'));
+        }
+        const answer = reply({ points: total, added });
+        return options.finishDelay
+          ? new Promise((done) => setTimeout(() => done(answer), options.finishDelay))
+          : answer;
       }
       return reply({ error: 'not_found' }, 404);
     }),
@@ -107,8 +129,11 @@ test('signed in: first-try points are saved once, the badge moves up and is anno
   await playFive(1);
   // 4 of 5 on the first try (one mistake, fixed in review).
   expect(await screen.findByText('+4 points')).toBeInTheDocument();
-  expect(screen.getByRole('status', { name: 'New bear badge 1!' })).toBeInTheDocument();
-  expect(screen.getByText('30 points to go to bear badge 2')).toBeInTheDocument();
+  // The bar fills 28 -> 30, the level changes, then 30 -> 32 fills the next bar from zero.
+  expect(
+    await screen.findByRole('status', { name: 'New bear badge 1!' }, { timeout: 4000 }),
+  ).toBeInTheDocument();
+  expect(await screen.findByText('30 points to go to bear badge 2', {}, { timeout: 4000 }));
   expect(within(nav).getByRole('button', { name: 'Bear badge 1, 32 points' })).toBeInTheDocument();
   const finishes = calls.filter((c) => c.path === '/api/progress/lessons/finish');
   expect(finishes).toHaveLength(1);
@@ -157,4 +182,37 @@ test('the badge opens a details panel with points to the next badge (Slovak too)
   const sk = screen.getByRole('dialog', { name: 'Tvoj medvedí odznak' });
   expect(within(sk).getByText('Ešte 18 bodov do medvedieho odznaku 4')).toBeInTheDocument();
   await waitFor(() => expect(within(sk).getByText('112 bodov')).toBeInTheDocument());
+});
+
+test('QA124-01: a lesson started before the account has loaded still collects its points', async () => {
+  const calls = server(10, { meDelay: 300 });
+  render(<App />);
+  await playFive();
+  expect(await screen.findByText('+5 points', {}, { timeout: 3000 })).toBeInTheDocument();
+  expect(calls.find((c) => c.path === '/api/progress/lessons')?.body).toEqual({ size: 5 });
+  expect(screen.queryByText('Sign in to collect points')).toBeNull();
+});
+
+test('QA124-02: Try again after a lost answer shows what the lesson gave', async () => {
+  server(10, { loseAnswer: 1 });
+  render(<App />);
+  await screen.findByRole('button', { name: 'No bear badge yet, 10 points' });
+  await playFive(1);
+  expect(await screen.findByText('Points could not be saved.')).toBeInTheDocument();
+  click('Try again');
+  expect(await screen.findByText('+4 points')).toBeInTheDocument();
+  expect(
+    await screen.findByRole('button', { name: 'No bear badge yet, 14 points' }),
+  ).toBeInTheDocument();
+});
+
+test('QA124-03: leaving the summary before a slow save still updates the bar', async () => {
+  server(10, { finishDelay: 400 });
+  render(<App />);
+  await screen.findByRole('button', { name: 'No bear badge yet, 10 points' });
+  await playFive();
+  fireEvent.click(screen.getByText('Choose level', { selector: '.text-button' }));
+  expect(
+    await screen.findByRole('button', { name: 'No bear badge yet, 15 points' }, { timeout: 3000 }),
+  ).toBeInTheDocument();
 });

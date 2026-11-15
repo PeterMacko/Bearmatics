@@ -1,40 +1,30 @@
-import { useEffect } from 'react';
 import { fill, pointsText, type Copy } from '../i18n';
+import type { PointsFrame } from './animation';
 import BadgeIcon from './BadgeIcon';
 import { BadgeMeter } from './BadgeButton';
-import { badgeFor } from './badges';
 
 export type LessonSave =
   | { state: 'saving' }
   | { state: 'failed' }
   | { state: 'saved'; added: number; before: number; after: number };
 
-/** Points on the summary (SCRUM-117). Signed out: only the sign-in hint. */
+/**
+ * Points on the summary (SCRUM-117), signed in only. `frame` moves while the points fill the
+ * bar; `newBadge` is set from the level change moment on.
+ */
 export default function SummaryPoints({
   t,
-  signedIn,
   save,
+  frame,
+  newBadge,
   onRetry,
-  onNewBadge,
 }: {
   t: Copy['points'];
-  signedIn: boolean;
   save: LessonSave | null;
+  frame: PointsFrame;
+  newBadge: number;
   onRetry: () => void;
-  onNewBadge: () => void;
 }) {
-  const newBadge =
-    save?.state === 'saved' && badgeFor(save.after).badge > badgeFor(save.before).badge
-      ? badgeFor(save.after).badge
-      : 0;
-  useEffect(() => {
-    // After the completion fanfare (about 2 s), so the two sounds do not cut each other.
-    if (!newBadge) return;
-    const timer = window.setTimeout(onNewBadge, 2200);
-    return () => window.clearTimeout(timer);
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per new badge
-  }, [newBadge]);
-  if (!signedIn) return null;
   if (!save) return null;
   if (save.state === 'saving')
     return (
@@ -66,7 +56,7 @@ export default function SummaryPoints({
           <span aria-hidden="true">{t.newBadge}</span>
         </div>
       ) : null}
-      <BadgeMeter t={t} points={save.after} />
+      <BadgeMeter t={t} frame={frame} />
     </div>
   );
 }

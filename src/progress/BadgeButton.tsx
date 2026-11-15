@@ -1,11 +1,25 @@
 import { useRef, useState } from 'react';
 import HintDialog from '../HintDialog';
 import { fill, pointsText, type Copy } from '../i18n';
+import { staticFrame, type PointsFrame } from './animation';
 import BadgeIcon from './BadgeIcon';
 import { badgeFor, badgeThreshold } from './badges';
 
-/** Badge and points in the app bar (signed in only); a tap opens the details panel. */
-export default function BadgeButton({ t, points }: { t: Copy['points']; points: number }) {
+/**
+ * Badge in the app bar (signed in only): the bear badge, and next to it, outside any border,
+ * the current points over a bar showing the way to the next badge. One button; a tap opens the
+ * details panel. `frame` is what is shown right now (it moves during the summary animation);
+ * the accessible name always says the saved total.
+ */
+export default function BadgeButton({
+  t,
+  points,
+  frame,
+}: {
+  t: Copy['points'];
+  points: number;
+  frame: PointsFrame;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
   const progress = badgeFor(points);
@@ -25,9 +39,12 @@ export default function BadgeButton({ t, points }: { t: Copy['points']; points: 
         aria-expanded={open}
         onClick={() => setOpen(true)}
       >
-        <BadgeIcon badge={progress.badge} size={36} />
-        <span className="badge-points" aria-hidden="true">
-          {progress.points}
+        <span className={`badge-medal${frame.levelUp ? ' level-up' : ''}`} key={frame.badge}>
+          <BadgeIcon badge={frame.badge} size={40} />
+        </span>
+        <span className="bar-progress" aria-hidden="true">
+          <span className="bar-progress-points">{frame.points}</span>
+          <ProgressTrack frame={frame} />
         </span>
       </button>
       {open && (
@@ -45,6 +62,18 @@ export default function BadgeButton({ t, points }: { t: Copy['points']; points: 
   );
 }
 
+/** The bar to the next badge. It jumps (no transition) when it starts again from zero. */
+export function ProgressTrack({ frame }: { frame: PointsFrame }) {
+  return (
+    <span className="progress-track" aria-hidden="true">
+      <span
+        className={`progress-fill${frame.jump ? ' jump' : ''}`}
+        style={{ width: `${Math.round(frame.share * 1000) / 10}%` }}
+      />
+    </span>
+  );
+}
+
 export function BadgeDetails({ t, points }: { t: Copy['points']; points: number }) {
   const progress = badgeFor(points);
   return (
@@ -54,25 +83,25 @@ export function BadgeDetails({ t, points }: { t: Copy['points']; points: number 
         {progress.badge ? fill(t.badgeName, { badge: progress.badge }) : t.noBadgeName}
       </p>
       <p className="badge-total">{pointsText(t.units, progress.points)}</p>
-      <BadgeMeter t={t} points={points} />
+      <BadgeMeter t={t} frame={staticFrame(points)} />
       <p className="badge-how">{t.how}</p>
     </div>
   );
 }
 
-/** Progress to the next badge: a bar plus the same information as text. */
-export function BadgeMeter({ t, points }: { t: Copy['points']; points: number }) {
-  const progress = badgeFor(points);
-  // Share of the way from the current badge to the next one.
-  const from = badgeThreshold(progress.badge);
-  const share = (progress.points - from) / (progress.nextAt - from);
+/** Progress to the next badge: the bar plus the same information as text. */
+export function BadgeMeter({ t, frame }: { t: Copy['points']; frame: PointsFrame }) {
+  // The badge being filled right now (during the animation it can lag one step behind).
+  const next = frame.badge + 1;
+  const toNext = Math.max(0, badgeThreshold(next) - frame.points);
   return (
     <div className="badge-meter">
-      <div className="badge-meter-bar" aria-hidden="true">
-        <span style={{ width: `${Math.round(share * 100)}%` }} />
-      </div>
+      <ProgressTrack frame={frame} />
       <p>
-        {fill(t.toNext, { points: pointsText(t.units, progress.toNext), next: progress.badge + 1 })}
+        {fill(t.toNext, {
+          points: pointsText(t.units, toNext),
+          next,
+        })}
       </p>
     </div>
   );
