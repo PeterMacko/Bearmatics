@@ -287,9 +287,9 @@ test('streak: first finished lesson gives 1 day; bar fits at the defined devices
         await expect(streak(page)).toBeVisible();
         const where = `${width}x${height} ${screen} frozen=${frozen}`;
         const m = await page.evaluate(() => {
-          const items = [...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *')].map((el) =>
-            el.getBoundingClientRect(),
-          );
+          const items = [
+            ...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *'),
+          ].map((el) => el.getBoundingClientRect());
           const root = document.documentElement;
           const landscape = matchMedia(
             '(max-height: 500px) and (max-width: 950px) and (orientation: landscape)',
