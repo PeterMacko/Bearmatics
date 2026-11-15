@@ -34,7 +34,7 @@ export default function SummaryPoints({
     return () => window.clearTimeout(timer);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per new badge
   }, [newBadge]);
-  if (!signedIn) return <p className="points-hint">{t.signIn}</p>;
+  if (!signedIn) return null;
   if (!save) return null;
   if (save.state === 'saving')
     return (
@@ -69,4 +69,9 @@ export default function SummaryPoints({
       <BadgeMeter t={t} points={save.after} />
     </div>
   );
+}
+
+/** Signed out: one line inviting to sign in (SCRUM-117 scope 4). */
+export function SignInHint({ t }: { t: Copy['points'] }) {
+  return <p className="points-hint">{t.signIn}</p>;
 }

@@ -48,7 +48,7 @@ import {
 import { googleAvailable, loadAccount, type Account } from './account/api';
 import { finishLesson, loadPoints, startLesson } from './progress/api';
 import BadgeButton from './progress/BadgeButton';
-import SummaryPoints, { type LessonSave } from './progress/SummaryPoints';
+import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -454,6 +454,7 @@ export default function App() {
       onNewBadge={playBadge}
     />
   );
+  const summaryFooter = account ? null : <SignInHint t={t.points} />;
 
   return (
     <div
@@ -527,6 +528,7 @@ export default function App() {
               firstTry={writeSession.firstTry}
               headingRef={summaryRef}
               points={summaryPoints}
+              footer={summaryFooter}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -582,6 +584,7 @@ export default function App() {
               firstTry={englishSession.firstTry}
               headingRef={summaryRef}
               points={summaryPoints}
+              footer={summaryFooter}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -711,6 +714,7 @@ export default function App() {
             firstTry={session.firstTry}
             headingRef={summaryRef}
             points={summaryPoints}
+            footer={summaryFooter}
             onAgain={start}
             onBack={endPractice}
           />

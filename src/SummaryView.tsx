@@ -10,6 +10,7 @@ export default function SummaryView({
   firstTry,
   headingRef,
   points,
+  footer,
   onAgain,
   onBack,
 }: {
@@ -19,8 +20,10 @@ export default function SummaryView({
   total: number;
   firstTry: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
-  /** Points and badge for the lesson (SCRUM-117), or the sign-in hint. */
+  /** Points and badge for the lesson (SCRUM-117), shown above the buttons. */
   points?: ReactNode;
+  /** Signed out: the sign-in hint, below the buttons (keeps the Finish → Replay geometry). */
+  footer?: ReactNode;
   onAgain: () => void;
   onBack: () => void;
 }) {
@@ -60,6 +63,7 @@ export default function SummaryView({
       <button className="text-button" onClick={onBack}>
         {t.back}
       </button>
+      {footer}
     </section>
   );
 }

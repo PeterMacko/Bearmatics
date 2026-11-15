@@ -3049,7 +3049,10 @@ progress::-moz-progress-bar {
   font-weight: 800;
   color: #b2611a;
 }
-.points-hint,
+.points-hint {
+  margin-block: 12px 0;
+  color: var(--muted, #6f625a);
+}
 .points-saving {
   margin-block: 0 12px;
   color: var(--muted, #6f625a);
