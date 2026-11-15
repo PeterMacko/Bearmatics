@@ -87,7 +87,9 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
     if (error instanceof BadRequest) {
       return json({ error: error.code, ...(error.field ? { field: error.field } : {}) }, 400);
     }
-    console.error('api: request failed');
+    // The error name and first line only (no request data), so failures can be told apart.
+    const detail = error instanceof Error ? `${error.name}: ${error.message.split('\n')[0]}` : '';
+    console.error('api: request failed', detail.slice(0, 200));
     return json({ error: 'server_error' }, 500);
   }
 }

@@ -172,3 +172,68 @@ describe('points (SCRUM-117)', () => {
       ).toBe(0);
   });
 });
+
+describe('account deleted while a points request runs (QA124 OBS-1)', () => {
+  // The session was valid when read, then the account is deleted (another device) before the
+  // write: the foreign key fails. That is "not signed in" (401), not a server error.
+  async function racing(cookie: string, sqlStart: string) {
+    const accountId = (await env.DB.prepare('SELECT id FROM accounts WHERE username = ?')
+      .bind(`player${users}x`)
+      .first<{ id: string }>())!.id;
+    let armed = false;
+    const real = env.DB;
+    const db = Object.create(real) as D1Database;
+    db.prepare = (sql: string) => {
+      if (sql.trim().startsWith(sqlStart)) armed = true;
+      return real.prepare(sql);
+    };
+    db.batch = async (statements) => {
+      if (armed) {
+        armed = false;
+        await real.prepare('DELETE FROM accounts WHERE id = ?').bind(accountId).run();
+      }
+      return real.batch(statements);
+    };
+    return { db, cookie };
+  }
+
+  it('lesson start answers 401', async () => {
+    const cookie = await newPlayer();
+    const { db } = await racing(cookie, 'INSERT INTO lessons');
+    const saved = env;
+    env = { DB: db };
+    try {
+      const response = await start(cookie, 10);
+      expect(response.status).toBe(401);
+      expect(await read(response)).toEqual({ error: 'not_signed_in' });
+    } finally {
+      for (const table of ['lessons', 'progress'])
+        expect(
+          await env.DB.prepare(
+            `SELECT COUNT(*) AS n FROM ${table} WHERE account_id NOT IN (SELECT id FROM accounts)`,
+          ).first('n'),
+        ).toBe(0);
+      env = saved;
+    }
+  });
+
+  it('lesson finish answers 401', async () => {
+    const cookie = await newPlayer();
+    const id = await lesson(cookie, 10);
+    const { db } = await racing(cookie, 'INSERT INTO progress');
+    const saved = env;
+    env = { DB: db };
+    try {
+      const response = await finish(cookie, { lessonId: id, size: 10, points: 3 });
+      expect(response.status).toBe(401);
+    } finally {
+      env = saved;
+    }
+    for (const table of ['lessons', 'progress'])
+      expect(
+        await env.DB.prepare(
+          `SELECT COUNT(*) AS n FROM ${table} WHERE account_id NOT IN (SELECT id FROM accounts)`,
+        ).first('n'),
+      ).toBe(0);
+  });
+});

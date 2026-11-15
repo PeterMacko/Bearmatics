@@ -3171,16 +3171,23 @@ progress::-moz-progress-bar {
 }
 @media (max-width: 360px) {
   .app-bar .bar-progress .progress-track {
-    width: 32px;
+    width: 26px;
   }
   .app-bar .bar-progress {
-    gap: 4px;
+    gap: 3px;
+  }
+  .app-bar .badge-button {
+    gap: 3px;
+    padding-inline: 0;
+  }
+  .app-bar .bar-progress-points {
+    font-size: 0.85rem;
   }
 }
 @media (max-width: 620px) and (max-height: 600px) {
   .workspace.in-session:has(.summary) {
     padding-top: 8px;
-    padding-bottom: 12px;
+    padding-bottom: 6px;
   }
   .workspace .summary {
     padding-top: 0;

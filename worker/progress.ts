@@ -39,12 +39,16 @@ export async function startLesson(request: Request, env: AccountEnv): Promise<Re
   const size = lessonSize(body.size);
   const id = randomHex(16);
   const time = now();
-  await env.DB.batch([
+  // Only while the account still exists: it can be deleted (another device) after the session
+  // was read. Then nothing is stored and the player is signed out.
+  const [, inserted] = await env.DB.batch([
     env.DB.prepare('DELETE FROM lessons WHERE started_at < ?').bind(time - KEEP_LESSONS_MS),
     env.DB.prepare(
-      'INSERT INTO lessons (id, account_id, size, started_at) VALUES (?, ?, ?, ?)',
-    ).bind(id, session.account.id, size, time),
+      `INSERT INTO lessons (id, account_id, size, started_at)
+       SELECT ?, ?, ?, ? WHERE EXISTS (SELECT 1 FROM accounts WHERE id = ?)`,
+    ).bind(id, session.account.id, size, time, session.account.id),
   ]);
+  if (!inserted.meta.changes) return notSignedIn();
   return json({ lessonId: id }, 201, { 'set-cookie': session.renew });
 }
 
@@ -83,9 +87,21 @@ export async function finishLesson(request: Request, env: AccountEnv): Promise<R
     env.DB.prepare(
       `INSERT INTO progress (account_id, points)
        SELECT ?, ? WHERE EXISTS (SELECT 1 FROM lessons WHERE id = ? AND claim = ?)
+         AND EXISTS (SELECT 1 FROM accounts WHERE id = ?)
        ON CONFLICT (account_id) DO UPDATE SET points = points + excluded.points`,
-    ).bind(accountId, earned, id, claim),
+    ).bind(accountId, earned, id, claim, accountId),
   ]);
+  const stillThere = await env.DB.prepare('SELECT 1 AS ok FROM accounts WHERE id = ?')
+    .bind(accountId)
+    .first();
+  if (!stillThere) {
+    // Deleted meanwhile: remove anything this request may have written.
+    await env.DB.batch([
+      env.DB.prepare('DELETE FROM lessons WHERE account_id = ?').bind(accountId),
+      env.DB.prepare('DELETE FROM progress WHERE account_id = ?').bind(accountId),
+    ]);
+    return notSignedIn();
+  }
   const counted = await env.DB.prepare('SELECT 1 AS ok FROM lessons WHERE id = ? AND claim = ?')
     .bind(id, claim)
     .first();

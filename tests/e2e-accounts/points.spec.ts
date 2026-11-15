@@ -226,3 +226,33 @@ test('Peter review: the signed-in summary needs no scrolling on phones', async (
     expect(scroll, `${width}x${height}`).toBeLessThanOrEqual(0);
   }
 });
+
+test('QA124-05/06: 320x568 bar stays one row with 4-digit points; summary has no scroll', async ({
+  page,
+}) => {
+  await createAccount(page, 'Twelve chars');
+  await page.route('**/api/progress', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify({ points: 1500 }) }),
+  );
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Maths', exact: true }).click();
+  await expect(badge(page)).toHaveAccessibleName('Bear badge 25, 1500 points');
+  const rows = await page.evaluate(() => {
+    const tops = [...document.querySelectorAll('.app-bar > *, .app-bar-end > *')].map((el) =>
+      Math.round(el.getBoundingClientRect().top),
+    );
+    return Math.max(...tops) - Math.min(...tops);
+  });
+  expect(rows).toBeLessThan(20);
+  await page.unroute('**/api/progress');
+  await page.goto('/');
+  await playMaths(page, 5);
+  await expect(page.locator('.summary-points .badge-meter')).toBeVisible();
+  await page.waitForTimeout(3500);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    ),
+  ).toBeLessThanOrEqual(0);
+});
