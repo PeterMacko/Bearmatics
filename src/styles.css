@@ -2881,3 +2881,25 @@ progress::-moz-progress-bar {
     top: 152px;
   }
 }
+/* Wider but short lesson windows (e.g. an unfolded foldable with the browser's tab and address
+   bars, about 884x600): pill and position share one line and the question stays on one line,
+   so Check stays on screen without page scrolling. Phones use the compact layout instead. */
+@media (min-width: 621px) and (max-height: 700px) {
+  .app-shell:not(.compact-practice) .practice-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: 12px;
+  }
+  .app-shell:not(.compact-practice) .practice-header > * {
+    margin-block: 0;
+  }
+  .app-shell:not(.compact-practice) .practice h2 {
+    max-width: none;
+    font-size: 1.5rem;
+    margin-block: 4px 0;
+  }
+  .app-shell:not(.compact-practice) .equation {
+    padding-top: 4px;
+  }
+}

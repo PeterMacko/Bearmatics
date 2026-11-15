@@ -97,6 +97,8 @@ const DEVICES: [number, number, boolean][] = [
   [1180, 820, true],
   [884, 1004, true],
   [884, 838, true],
+  // Peter's unfolded foldable in Vivaldi (tab row + address bar).
+  [884, 600, true],
   [742, 702, true],
   [1280, 520, false],
   [733, 500, false],
@@ -253,3 +255,34 @@ test('account screens open at the top with the bar in view (small phone)', async
   await expect(page.getByRole('heading', { name: 'What we store' })).toBeFocused();
   expect(await page.evaluate(() => scrollY)).toBe(0);
 });
+
+// Peter's foldable with the browser's tab row: picture lesson (level 0) fits without page scroll.
+for (const lang of ['en', 'sk'])
+  test(`picture lesson keeps Check on screen at 884x600 ${lang}`, async ({ page }) => {
+    await page.setViewportSize({ width: 884, height: 600 });
+    await page.addInitScript(() =>
+      Object.defineProperty(navigator, 'maxTouchPoints', { get: () => 5 }),
+    );
+    await page.goto('/');
+    if (lang === 'sk') {
+      await page.getByRole('button', { name: 'Settings' }).click();
+      await page.getByRole('button', { name: 'Slovenčina' }).click();
+      await page.keyboard.press('Escape');
+    }
+    await openMathematics(page);
+    for (const level of ['0', '1', '4']) {
+      await page.locator(`input[name=level][value="${level}"]`).check({ force: true });
+      await page.locator('.start-button').click();
+      const m = await page.evaluate(() => {
+        const root = document.documentElement;
+        const check = document.querySelector('.answer-actions')!.getBoundingClientRect();
+        return {
+          scroll: root.scrollHeight - root.clientHeight,
+          check: check.bottom - root.clientHeight,
+        };
+      });
+      expect(m.scroll, `level ${level}`).toBeLessThanOrEqual(0);
+      expect(m.check, `level ${level}`).toBeLessThanOrEqual(0);
+      await page.locator('.back-button').click();
+    }
+  });
