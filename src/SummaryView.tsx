@@ -61,7 +61,17 @@ export default function SummaryView({
       >
         {t.again}
       </button>
-      <button className="text-button" onClick={onBack}>
+      <button
+        className="text-button"
+        onClick={(event) => {
+          // Same guard: the summary is shorter now, so a double tap on Finish can reach here.
+          if (event.detail > 1) {
+            event.preventDefault();
+            return;
+          }
+          onBack();
+        }}
+      >
         {t.back}
       </button>
       {footer}
