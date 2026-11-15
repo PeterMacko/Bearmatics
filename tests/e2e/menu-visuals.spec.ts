@@ -96,12 +96,12 @@ for (const language of ['en', 'sk'])
         await page.mouse.wheel(0, -2000);
         await expect.poll(() => list.evaluate((el) => el.scrollTop)).toBe(0);
       }
-      // Native arrow-key selection, focus reveal and Tab escape in DOM order.
+      // Native arrow-key selection, focus reveal and Tab escape in DOM order (Maths: levels 1-7).
       await page
         .locator('input[name=level]')
         .first()
         .evaluate((el) => (el as HTMLInputElement).focus({ preventScroll: true }));
-      for (let n = 0; n < 8; n++) {
+      for (let n = 0; n < 7; n++) {
         if (n) await page.keyboard.press('ArrowDown');
         const radio = page.locator('input[name=level]').nth(n);
         await expect(radio).toBeFocused();
