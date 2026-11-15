@@ -87,7 +87,11 @@ export default function StreakOffer({
     >
       <div className={`streak-offer step-${step}`} ref={body}>
         <div className={`streak-offer-art${step === 'warmed' ? ' warm' : ''}`} aria-hidden="true">
-          <StreakIcon frozen={step !== 'warmed' && step !== 'restarted'} size={72} />
+          <StreakIcon
+            look={step === 'warmed' || step === 'restarted' ? 'flame' : 'ice'}
+            size={72}
+            flicker={step === 'warmed'}
+          />
         </div>
         {(step === 'offer' || (step === 'busy' && !done)) && (
           <>

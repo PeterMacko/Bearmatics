@@ -261,14 +261,20 @@ test('QA124-05/06: 320x568 bar stays one row with 4-digit points; summary has no
 const streak = (page: Page) =>
   page
     .getByRole('navigation', { name: 'Main controls' })
-    .getByRole('img', { name: /^(Streak|Séria)/ });
+    .getByRole('img', { name: /^(Streak|Séria|No streak)/ });
 
 test('streak: first finished lesson gives 1 day; bar fits at the defined devices (also frozen)', async ({
   page,
 }) => {
   await createAccount(page, 'Twelve chars');
-  await expect(streak(page)).toHaveCount(0);
+  await expect(
+    page.getByRole('img', { name: 'No streak yet. Finish a lesson to start one' }),
+  ).toBeVisible();
   await playMaths(page, 5);
+  // Beside the check mark: 0 for a second, then 1 with a burning flame.
+  const summaryStreak = page.locator('.summary-streak');
+  await expect(summaryStreak).toHaveAccessibleName('Streak 1 day');
+  await expect(summaryStreak.locator('.summary-streak-days')).toHaveText('1');
   await expect(streak(page)).toHaveAccessibleName('Streak 1 day');
   for (const frozen of [false, true]) {
     if (frozen)

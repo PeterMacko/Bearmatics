@@ -10,6 +10,7 @@ export default function SummaryView({
   firstTry,
   headingRef,
   points,
+  streak,
   footer,
   onAgain,
   onBack,
@@ -22,6 +23,8 @@ export default function SummaryView({
   headingRef: RefObject<HTMLHeadingElement | null>;
   /** Points and badge for the lesson (SCRUM-117), shown above the buttons. */
   points?: ReactNode;
+  /** The streak beside the check mark (SCRUM-118). */
+  streak?: ReactNode;
   /** Signed out: the sign-in hint, below the buttons (keeps the Finish → Replay geometry). */
   footer?: ReactNode;
   onAgain: () => void;
@@ -30,9 +33,12 @@ export default function SummaryView({
   return (
     <section className="summary">
       <p className="eyebrow">{eyebrow ?? t.trail}</p>
-      <span className="completion-mark" aria-hidden="true">
-        ✓
-      </span>
+      <div className="completion-row">
+        <span className="completion-mark" aria-hidden="true">
+          ✓
+        </span>
+        {streak}
+      </div>
       {/* Peter (SCRUM-117 review): no visible title or intro line; the heading stays for screen
           readers and as the focus target. */}
       <h2 ref={headingRef} tabIndex={-1} className="sr-only">

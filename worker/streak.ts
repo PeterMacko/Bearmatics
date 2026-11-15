@@ -104,11 +104,14 @@ export function streakView(
   before: StreakState,
   today: string,
   points: number,
-): { streak: number; frozen: boolean } {
+): { streak: number; frozen: boolean; today: boolean } {
   const state = settle(before, today);
-  if (!state.lastDay || state.streak < 1) return { streak: 0, frozen: false };
+  // today: a lesson already counted for the streak today (Peter: lit flame only then).
+  if (!state.lastDay || state.streak < 1) return { streak: 0, frozen: false, today: false };
+  if (state.lastDay === today) return { streak: state.streak, frozen: false, today: true };
   const missed = daysBetween(state.lastDay, today) - 1;
-  if (missed <= 0) return { streak: state.streak, frozen: false };
-  if (missed <= MAX_MISSED && points > 0) return { streak: state.streak, frozen: true };
-  return { streak: 0, frozen: false };
+  if (missed <= 0) return { streak: state.streak, frozen: false, today: false };
+  if (missed <= MAX_MISSED && points > 0)
+    return { streak: state.streak, frozen: true, today: false };
+  return { streak: 0, frozen: false, today: false };
 }

@@ -1,7 +1,8 @@
 // Browser side of the points and streak API (SCRUM-117/118). Only for signed-in players.
 import { call } from '../account/api';
 
-export type Streak = { streak: number; frozen: boolean };
+/** today: a lesson already counted for the streak today (lit flame). */
+export type Streak = { streak: number; frozen: boolean; today: boolean };
 export type Progress = { points: number } & Streak;
 export type Offer = { streak: number; missed: number; cost: number };
 

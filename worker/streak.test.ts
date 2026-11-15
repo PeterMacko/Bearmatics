@@ -123,18 +123,43 @@ describe('unanswered offer (rule 6)', () => {
 describe('view', () => {
   const today = '2026-11-16';
   it('active, frozen, lost', () => {
-    expect(streakView(s(0, null), today, 10)).toEqual({ streak: 0, frozen: false });
-    expect(streakView(s(5, today), today, 10)).toEqual({ streak: 5, frozen: false });
-    expect(streakView(s(5, '2026-11-15'), today, 10)).toEqual({ streak: 5, frozen: false });
-    expect(streakView(s(5, '2026-11-14'), today, 10)).toEqual({ streak: 5, frozen: true });
-    expect(streakView(s(5, '2026-11-08'), today, 10)).toEqual({ streak: 5, frozen: true });
-    expect(streakView(s(5, '2026-11-07'), today, 10)).toEqual({ streak: 0, frozen: false });
-    expect(streakView(s(5, '2026-11-14'), today, 0)).toEqual({ streak: 0, frozen: false });
+    expect(streakView(s(0, null), today, 10)).toEqual({ streak: 0, frozen: false, today: false });
+    expect(streakView(s(5, today), today, 10)).toEqual({ streak: 5, frozen: false, today: true });
+    expect(streakView(s(5, '2026-11-15'), today, 10)).toEqual({
+      streak: 5,
+      frozen: false,
+      today: false,
+    });
+    expect(streakView(s(5, '2026-11-14'), today, 10)).toEqual({
+      streak: 5,
+      frozen: true,
+      today: false,
+    });
+    expect(streakView(s(5, '2026-11-08'), today, 10)).toEqual({
+      streak: 5,
+      frozen: true,
+      today: false,
+    });
+    expect(streakView(s(5, '2026-11-07'), today, 10)).toEqual({
+      streak: 0,
+      frozen: false,
+      today: false,
+    });
+    expect(streakView(s(5, '2026-11-14'), today, 0)).toEqual({
+      streak: 0,
+      frozen: false,
+      today: false,
+    });
     // Open offer today: still frozen; offer from yesterday unanswered: streak 1 from yesterday.
-    expect(streakView(s(5, '2026-11-14', today), today, 10)).toEqual({ streak: 5, frozen: true });
+    expect(streakView(s(5, '2026-11-14', today), today, 10)).toEqual({
+      streak: 5,
+      frozen: true,
+      today: false,
+    });
     expect(streakView(s(5, '2026-11-13', '2026-11-15'), today, 10)).toEqual({
       streak: 1,
       frozen: false,
+      today: false,
     });
   });
 });

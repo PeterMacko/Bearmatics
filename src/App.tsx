@@ -56,6 +56,7 @@ import {
 } from './progress/api';
 import StreakChip from './progress/StreakChip';
 import StreakOffer from './progress/StreakOffer';
+import SummaryStreak from './progress/SummaryStreak';
 import BadgeButton from './progress/BadgeButton';
 import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
 import { pointsFrames, staticFrame, usePointsAnimation } from './progress/animation';
@@ -212,9 +213,11 @@ export default function App() {
   const [offer, setOffer] = useState<{ offer: Offer; points: number } | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
   const [warming, setWarming] = useState(false);
+  // The streak number shown when the lesson started (the summary switches from it).
+  const streakAtStart = useRef<number | null>(null);
   const showProgress = (progress: Progress) => {
     setPoints(progress.points);
-    setStreak({ streak: progress.streak, frozen: progress.frozen });
+    setStreak({ streak: progress.streak, frozen: progress.frozen, today: progress.today });
   };
   const accountId = account ? `${account.kind}:${account.username ?? account.nickname}` : null;
   useEffect(() => {
@@ -248,6 +251,7 @@ export default function App() {
   const waitingStart = useRef<((id: string | null) => void) | null>(null);
   const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
   const beginLesson = (lessonSize: number) => {
+    streakAtStart.current = streak ? streak.streak : null;
     setLessonSave(null);
     closeOffer();
     waitingStart.current = null;
@@ -595,6 +599,10 @@ export default function App() {
       />
     ) : null;
   const summaryFooter = accountKnown && !account ? <SignInHint t={t.points} /> : null;
+  const summaryStreak =
+    account && streak && lessonSave?.state === 'saved' ? (
+      <SummaryStreak t={t.points} before={streakAtStart.current} streak={streak} />
+    ) : null;
 
   return (
     <div
@@ -671,6 +679,7 @@ export default function App() {
               headingRef={summaryRef}
               points={summaryPoints}
               footer={summaryFooter}
+              streak={summaryStreak}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -727,6 +736,7 @@ export default function App() {
               headingRef={summaryRef}
               points={summaryPoints}
               footer={summaryFooter}
+              streak={summaryStreak}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -857,6 +867,7 @@ export default function App() {
             headingRef={summaryRef}
             points={summaryPoints}
             footer={summaryFooter}
+            streak={summaryStreak}
             onAgain={start}
             onBack={endPractice}
           />

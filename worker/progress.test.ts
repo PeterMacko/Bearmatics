@@ -268,12 +268,14 @@ describe('streak (SCRUM-118) through the API', () => {
       points: 0,
       streak: 0,
       frozen: false,
+      today: false,
     });
     const id = await lesson(cookie, 5);
     expect(await read(await finish(cookie, { lessonId: id, size: 5, points: 5 }))).toEqual({
       points: 5,
       streak: 1,
       frozen: false,
+      today: true,
       added: 5,
       offer: null,
     });
@@ -304,7 +306,7 @@ describe('streak (SCRUM-118) through the API', () => {
     expect(await read(changed)).toMatchObject({ error: 'offer_changed', offer: { cost: 14 } });
     const yes = await answer(cookie, { unlock: true, cost: 14 });
     expect(yes.status).toBe(200);
-    expect(await read(yes)).toEqual({ points: 126, streak: 13, frozen: false });
+    expect(await read(yes)).toEqual({ points: 126, streak: 13, frozen: false, today: true });
     // Answered: no second payment.
     expect((await answer(cookie, { unlock: true, cost: 14 })).status).toBe(409);
     expect(await play(cookie, 0)).toMatchObject({ points: 126, streak: 13, offer: null });
@@ -320,6 +322,7 @@ describe('streak (SCRUM-118) through the API', () => {
       points: 55,
       streak: 1,
       frozen: false,
+      today: true,
     });
     await setRow(id, 50, 6, day(-9));
     expect(await play(cookie)).toMatchObject({ streak: 1, offer: null });
@@ -348,6 +351,7 @@ describe('streak (SCRUM-118) through the API', () => {
       points: 16,
       streak: 5,
       frozen: false,
+      today: true,
     });
   });
 

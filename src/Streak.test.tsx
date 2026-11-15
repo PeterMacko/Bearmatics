@@ -13,6 +13,7 @@ function server(state: {
   points: number;
   streak: number;
   frozen: boolean;
+  today?: boolean;
   offer?: { streak: number; missed: number; cost: number } | null;
   changedCost?: number;
 }) {
@@ -31,7 +32,12 @@ function server(state: {
       const method = init.method ?? 'GET';
       const body = init.body ? JSON.parse(String(init.body)) : undefined;
       calls.push({ path, method, body });
-      const view = () => ({ points: state.points, streak: state.streak, frozen: state.frozen });
+      const view = () => ({
+        points: state.points,
+        streak: state.streak,
+        frozen: state.frozen,
+        today: !!state.today,
+      });
       if (path === '/api/me') return reply({ account: ACCOUNT });
       if (path === '/api/auth/google') return reply({ available: false });
       if (path === '/api/progress') return reply(view());
@@ -39,6 +45,10 @@ function server(state: {
       if (path === '/api/progress/lessons/finish') {
         const added = (body as { points: number }).points;
         state.points += added;
+        if (!state.frozen && !state.today) {
+          state.streak += 1;
+          state.today = true;
+        }
         return reply({ ...view(), added, offer: state.offer ?? null });
       }
       if (path === '/api/progress/streak') {
@@ -54,6 +64,7 @@ function server(state: {
           state.streak += 1;
         } else state.streak = 1;
         state.frozen = false;
+        state.today = true;
         return reply(view());
       }
       return reply({ error: 'not_found' }, 404);
@@ -86,12 +97,38 @@ async function playFive() {
 
 const offerDialog = () => screen.findByRole('dialog', { name: 'Frozen streak' }, { timeout: 6000 });
 
-test('the streak is shown next to the badge; frozen shows the ice and the warm-up text', async () => {
+test("lit flame only after today's lesson: shadow before; the summary switches 5 -> 6 after 1 s", async () => {
   server({ points: 50, streak: 5, frozen: false });
   render(<App />);
   const nav = await screen.findByRole('navigation', { name: 'Main controls' });
-  expect(await within(nav).findByRole('img', { name: 'Streak 5 days' })).toBeInTheDocument();
-  vi.unstubAllGlobals();
+  const chip = await within(nav).findByRole('img', {
+    name: 'Streak 5 days. Finish a lesson today to keep it',
+  });
+  expect(chip).toHaveClass('shadow');
+  await playFive();
+  const summary = await within(screen.getByRole('main')).findByRole(
+    'img',
+    { name: 'Streak 6 days' },
+    { timeout: 3000 },
+  );
+  expect(summary).toHaveClass('summary-streak', 'flame');
+  // First the old number, then the new one.
+  expect(summary).toHaveTextContent('5');
+  await act(async () => {
+    await new Promise((done) => setTimeout(done, 1100));
+  });
+  expect(summary).toHaveTextContent('6');
+  expect(within(nav).getByRole('img', { name: 'Streak 6 days' })).toHaveClass('flame');
+});
+
+test('no streak yet: shadow flame without a number', async () => {
+  server({ points: 0, streak: 0, frozen: false });
+  render(<App />);
+  const chip = await screen.findByRole('img', {
+    name: 'No streak yet. Finish a lesson to start one',
+  });
+  expect(chip).toHaveClass('shadow');
+  expect(chip).toHaveTextContent('');
 });
 
 test('frozen streak: accessible name says how to warm it up', async () => {
@@ -136,7 +173,11 @@ test('the example: unlock offer after the summary, confirmation, Yes pays 14 and
     unlock: true,
     cost: 14,
   });
-  expect(screen.getByRole('img', { name: 'Streak 13 days' })).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('navigation', { name: 'Main controls' })).getByRole('img', {
+      name: 'Streak 13 days',
+    }),
+  ).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Bear badge 3, 126 points' })).toBeInTheDocument();
 }, 15000);
 
@@ -159,7 +200,11 @@ test('No thanks starts again at 1', async () => {
     unlock: false,
     cost: 5,
   });
-  expect(screen.getByRole('img', { name: 'Streak 1 day' })).toBeInTheDocument();
+  expect(
+    within(screen.getByRole('navigation', { name: 'Main controls' })).getByRole('img', {
+      name: 'Streak 1 day',
+    }),
+  ).toBeInTheDocument();
 }, 15000);
 
 test('Decide later closes without an answer; a changed price shows the new offer', async () => {
