@@ -260,6 +260,8 @@ export async function deleteAccount(request: Request, env: AccountEnv): Promise<
   if (account.username) limitKeys.push(await attemptKey(account.username));
   await env.DB.batch([
     env.DB.prepare('DELETE FROM sessions WHERE account_id = ?').bind(account.id),
+    env.DB.prepare('DELETE FROM lessons WHERE account_id = ?').bind(account.id),
+    env.DB.prepare('DELETE FROM progress WHERE account_id = ?').bind(account.id),
     env.DB.prepare('DELETE FROM accounts WHERE id = ?').bind(account.id),
     ...limitKeys.map((key) =>
       env.DB.prepare('DELETE FROM login_attempts WHERE key_hash = ?').bind(key),

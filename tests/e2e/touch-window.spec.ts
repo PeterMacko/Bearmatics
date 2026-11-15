@@ -147,9 +147,8 @@ for (const [width, height] of [
           await page.evaluate(() => {
             document.documentElement.style.fontSize = '200%';
           });
-          expect(
-            await page.evaluate(() => document.documentElement.scrollHeight > innerHeight),
-          ).toBe(true);
+          // Enlarged text may or may not need scrolling (the summary got shorter in SCRUM-117);
+          // every button must stay reachable and full size either way.
           for (const button of await page.locator('.summary button, .site-header button').all()) {
             await button.scrollIntoViewIfNeeded();
             await expect(button).toBeInViewport();

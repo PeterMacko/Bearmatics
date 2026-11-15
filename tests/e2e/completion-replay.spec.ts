@@ -72,9 +72,19 @@ for (const review of [false, true]) {
       const finish = page.getByRole('button', { name: 'See how you did' });
       const box = await finish.boundingBox();
       expect(box).not.toBeNull();
-      // The lower part overlaps Replay in both flows/browsers; centre-only
-      // Chromium review clicks can miss Replay and conceal the regression.
-      await finish.dblclick({ position: { x: box!.width / 2, y: box!.height - 8 } });
+      // A double-click whose second click lands on Replay. The second click goes exactly to
+      // Replay (not to the old overlap of both buttons), so summary content above the buttons,
+      // like points (SCRUM-117), cannot hide the regression.
+      await page.mouse.click(box!.x + box!.width / 2, box!.y + box!.height - 8);
+      const replayBox = await page.getByRole('button', { name: 'Play again' }).boundingBox();
+      expect(replayBox).not.toBeNull();
+      // Only the second press of the double-click (detail 2); mouse.click would press twice.
+      await page.mouse.move(
+        replayBox!.x + replayBox!.width / 2,
+        replayBox!.y + replayBox!.height / 2,
+      );
+      await page.mouse.down({ clickCount: 2 });
+      await page.mouse.up({ clickCount: 2 });
       await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeVisible();
       await expect(page.locator('.completed-total')).toHaveText('5 exercises completed');
       await expect(page.locator('.first-try strong')).toHaveText(`${review ? 4 : 5} / 5`);

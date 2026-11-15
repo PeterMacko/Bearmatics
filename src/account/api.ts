@@ -16,7 +16,8 @@ export type ApiError =
   | 'wrong_password'
   | 'not_signed_in'
   | 'google_expired'
-  | 'server_error';
+  | 'server_error'
+  | 'unknown_lesson';
 
 export class AccountError extends Error {
   constructor(
@@ -27,7 +28,7 @@ export class AccountError extends Error {
   }
 }
 
-async function call<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
+export async function call<T>(path: string, method = 'GET', body?: unknown): Promise<T> {
   let response: Response;
   try {
     response = await fetch(path, {

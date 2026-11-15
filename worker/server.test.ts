@@ -49,7 +49,7 @@ describe('server with a local database', () => {
     expect(migrate()).toMatch(/No migrations to apply/i);
     const response = await get('/api/health');
     expect(response.status).toBe(200);
-    expect(await response.json()).toEqual({ status: 'ok', database: 'ok', schema: '2' });
+    expect(await response.json()).toEqual({ status: 'ok', database: 'ok', schema: '3' });
   }, 120_000);
 
   it('returns a JSON 404 for unknown /api addresses', async () => {

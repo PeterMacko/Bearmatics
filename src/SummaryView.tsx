@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { Copy } from './i18n';
 
 /** Completion screen with the first-try score. */
@@ -9,6 +9,8 @@ export default function SummaryView({
   total,
   firstTry,
   headingRef,
+  points,
+  footer,
   onAgain,
   onBack,
 }: {
@@ -18,6 +20,10 @@ export default function SummaryView({
   total: number;
   firstTry: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /** Points and badge for the lesson (SCRUM-117), shown above the buttons. */
+  points?: ReactNode;
+  /** Signed out: the sign-in hint, below the buttons (keeps the Finish → Replay geometry). */
+  footer?: ReactNode;
   onAgain: () => void;
   onBack: () => void;
 }) {
@@ -27,10 +33,11 @@ export default function SummaryView({
       <span className="completion-mark" aria-hidden="true">
         ✓
       </span>
-      <h2 ref={headingRef} tabIndex={-1}>
+      {/* Peter (SCRUM-117 review): no visible title or intro line; the heading stays for screen
+          readers and as the focus target. */}
+      <h2 ref={headingRef} tabIndex={-1} className="sr-only">
         {t.complete}
       </h2>
-      <p className="intro">{t.summary}</p>
       <p className="completed-total">
         {total} {finishedLabel ?? t.finished}
       </p>
@@ -40,6 +47,7 @@ export default function SummaryView({
           {firstTry} / {total}
         </strong>
       </p>
+      {points}
       <button
         className="primary"
         onClick={(event) => {
@@ -53,9 +61,20 @@ export default function SummaryView({
       >
         {t.again}
       </button>
-      <button className="text-button" onClick={onBack}>
+      <button
+        className="text-button"
+        onClick={(event) => {
+          // Same guard: the summary is shorter now, so a double tap on Finish can reach here.
+          if (event.detail > 1) {
+            event.preventDefault();
+            return;
+          }
+          onBack();
+        }}
+      >
         {t.back}
       </button>
+      {footer}
     </section>
   );
 }

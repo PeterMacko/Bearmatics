@@ -33,13 +33,21 @@ export default function AppBar({
     const update = () => {
       const heading = document.querySelector('.menu-shell .menu-heading');
       let clear = 0;
+      let drop = 0;
       if (heading) {
         const e = end.getBoundingClientRect();
         const h = heading.getBoundingClientRect();
-        if (e.left > h.left && h.top < e.bottom && h.right > e.left - 8)
+        if (h.top < e.bottom && h.right > e.left - 8 && h.left < e.right)
           clear = Math.ceil(h.right - e.left) + 8;
+        // When the end group (badge, long nickname) would leave the heading too narrow, the
+        // heading moves down below the bar instead (SCRUM-117, QA124-04).
+        if (clear > h.width * 0.4) {
+          drop = Math.ceil(e.bottom - h.top) + 4;
+          clear = 0;
+        }
       }
       root.style.setProperty('--bar-clear', `${clear}px`);
+      root.style.setProperty('--bar-drop', `${drop}px`);
     };
     update();
     window.addEventListener('resize', update);

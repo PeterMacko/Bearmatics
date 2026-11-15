@@ -1,5 +1,6 @@
 // /api routing and health check. Never log request bodies, URLs or personal data.
 import * as accounts from './accounts';
+import * as progress from './progress';
 import {
   googleCallback,
   googleComplete,
@@ -14,7 +15,7 @@ export interface Env extends GoogleEnv {
 }
 
 /** Schema version the code needs; /api/health reports an error until migrations reach it. */
-export const EXPECTED_SCHEMA = '2';
+export const EXPECTED_SCHEMA = '3';
 
 export { json };
 
@@ -53,6 +54,9 @@ const routes: Record<string, Record<string, { handler: Handler; write?: boolean 
     DELETE: { handler: accounts.deleteAccount, write: true },
   },
   '/api/me/password': { POST: { handler: accounts.changePassword, write: true } },
+  '/api/progress': { GET: { handler: progress.getProgress } },
+  '/api/progress/lessons': { POST: { handler: progress.startLesson, write: true } },
+  '/api/progress/lessons/finish': { POST: { handler: progress.finishLesson, write: true } },
   '/api/auth/signup': { POST: { handler: accounts.signUp, write: true } },
   '/api/auth/signin': { POST: { handler: accounts.signIn, write: true } },
   '/api/auth/signout': { POST: { handler: accounts.signOut, write: true } },
@@ -83,7 +87,9 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
     if (error instanceof BadRequest) {
       return json({ error: error.code, ...(error.field ? { field: error.field } : {}) }, 400);
     }
-    console.error('api: request failed');
+    // The error name and first line only (no request data), so failures can be told apart.
+    const detail = error instanceof Error ? `${error.name}: ${error.message.split('\n')[0]}` : '';
+    console.error('api: request failed', detail.slice(0, 200));
     return json({ error: 'server_error' }, 500);
   }
 }

@@ -2867,6 +2867,9 @@ progress::-moz-progress-bar {
   .menu-shell .menu-heading h2 {
     padding-inline-end: var(--bar-clear, 0px);
   }
+  .menu-shell .menu-heading {
+    padding-top: var(--bar-drop, 0px);
+  }
 }
 /* Short landscape phones, during a lesson: the bear column stays under Back (inside the bar's
    column) as before, so the exercise keeps its width and gains the old top row instead. */
@@ -2949,5 +2952,253 @@ progress::-moz-progress-bar {
   .course-option .level-detail {
     font-size: 0.8rem;
     line-height: 1.2;
+  }
+}
+
+/* ---------- SCRUM-117: points and bear badges ----------
+   Bar: the bear badge, then (no border around them) the points over a thin bar to the next
+   badge. One 48px-high button. */
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0 4px 0 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: #315783;
+  font: inherit;
+}
+.badge-button:hover .badge-medal {
+  transform: scale(1.06);
+}
+.badge-medal {
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.badge-medal.level-up {
+  animation: medal-level-up 0.9s ease-out;
+}
+@keyframes medal-level-up {
+  0% {
+    transform: scale(0.4) rotate(-25deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.35) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+.bar-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bar-progress .progress-track {
+  width: 52px;
+}
+.bar-progress-points {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.progress-track {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: #e6ddd6;
+  overflow: hidden;
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e8a33d;
+  transition: width 0.18s linear;
+}
+.progress-fill.jump {
+  transition: none;
+}
+/* Short landscape phones: the bar is a narrow column on the left; points + bar under the badge. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  .app-shell .app-bar .badge-button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0;
+    width: 48px;
+  }
+  .app-shell .app-bar .bar-progress {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .app-shell .app-bar .bar-progress .progress-track {
+    width: 40px;
+  }
+  .app-shell .app-bar .badge-medal svg {
+    width: 34px;
+    height: 34px;
+  }
+}
+.badge-details {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.badge-details p {
+  margin: 0;
+}
+.badge-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.badge-total {
+  font-weight: 700;
+}
+.badge-how {
+  color: var(--muted, #6f625a);
+  font-size: 0.9rem;
+}
+.badge-meter {
+  width: 100%;
+  max-width: 320px;
+}
+.badge-meter p {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+}
+.badge-meter .progress-track {
+  height: 10px;
+}
+/* Compact: points and a new badge share one row, the progress line sits under them. */
+.summary-points {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 14px;
+  margin-block: 0 10px;
+}
+.summary-points .badge-meter {
+  flex: 1 0 100%;
+  display: grid;
+  justify-items: center;
+}
+.summary-points .badge-meter .progress-track {
+  width: min(100%, 320px);
+}
+.points-added {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #b2611a;
+}
+.points-hint {
+  margin-block: 12px 0;
+  color: var(--muted, #6f625a);
+}
+.points-saving {
+  margin-block: 0 12px;
+  color: var(--muted, #6f625a);
+}
+.points-failed {
+  margin-block: 0 12px;
+}
+.points-failed p {
+  margin: 0;
+  color: #a12d2d;
+  font-weight: 700;
+}
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #7a4a00;
+  animation: new-badge-pop 0.6s ease-out;
+}
+@keyframes new-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-badge,
+  .badge-medal.level-up {
+    animation: none;
+  }
+  .progress-fill {
+    transition: none;
+  }
+}
+
+/* SCRUM-117 review: the summary fits small screens without scrolling (title and intro removed,
+   points block added). */
+@media (max-height: 760px) {
+  .summary .completion-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+    margin: 8px 0;
+  }
+  .summary .completed-total {
+    margin: 10px 0 4px;
+  }
+  .summary .first-try {
+    margin-bottom: 12px;
+  }
+  .summary .summary-points {
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .app-bar .bar-progress .progress-track {
+    width: 26px;
+  }
+  .app-bar .bar-progress {
+    gap: 3px;
+  }
+  .app-bar .badge-button {
+    gap: 3px;
+    padding-inline: 0;
+  }
+  .app-bar .bar-progress-points {
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 620px) and (max-height: 600px) {
+  .workspace.in-session:has(.summary) {
+    padding-top: 8px;
+    padding-bottom: 6px;
+  }
+  .workspace .summary {
+    padding-top: 0;
+  }
+}
+/* Short landscape phones: the decorative check mark gives its room to the points. */
+@media (max-height: 420px) {
+  .summary .completion-mark {
+    display: none;
+  }
+  .summary .eyebrow {
+    margin-bottom: 6px;
   }
 }

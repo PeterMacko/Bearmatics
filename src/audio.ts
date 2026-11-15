@@ -1,4 +1,4 @@
-export type SoundOutcome = 'correct' | 'incorrect' | 'complete';
+export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge';
 
 /** Original procedural tones. Context activation is only requested by user gestures. */
 export class FeedbackAudio {
@@ -32,8 +32,12 @@ export class FeedbackAudio {
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
-      const notes =
-        outcome === 'complete'
+      // A new bear badge (SCRUM-117) rings like a correct answer, a little higher.
+      const badge = outcome === 'badge';
+      if (badge) outcome = 'correct';
+      const notes = badge
+        ? [783.99, 987.77, 1318.51]
+        : outcome === 'complete'
           ? [523.25, 659.25, 783.99, 1046.5]
           : outcome === 'correct'
             ? [523.25, 659.25, 783.99]

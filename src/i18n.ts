@@ -139,6 +139,25 @@ export const copy = {
     writeWrong: 'Not quite. You wrote “{answer}”.',
     writeWrongHint: 'The word is {word}. Write it.',
     writeShown: 'The word is',
+    points: {
+      // {points} is a number with its word ("1 point", "12 points"); see pointsText.
+      units: ['point', 'points', 'points'],
+      badge: 'Bear badge {badge}, {points}',
+      noBadge: 'No bear badge yet, {points}',
+      title: 'Your bear badge',
+      close: 'Close badge details',
+      badgeName: 'Bear badge {badge}',
+      noBadgeName: 'No badge yet',
+      toNext: '{points} to go to bear badge {next}',
+      how: 'You get 1 point for every example solved on the first try in a finished lesson.',
+      added: '+{points}',
+      newBadge: 'New badge!',
+      newBadgeSaid: 'New bear badge {badge}!',
+      signIn: 'Sign in to collect points',
+      saving: 'Saving points…',
+      failed: 'Points could not be saved.',
+      retry: 'Try again',
+    },
     account: {
       signIn: 'Sign in',
       back: 'Back',
@@ -229,7 +248,8 @@ export const copy = {
         'Username and password account: we store the username, a scrambled check value of the password (never the password itself), the nickname, the bear, the time when "A parent knows" was ticked, and an email address only if you add one.',
         'Google account: we store only a number from Google that identifies the account – not your name, email or photo – plus the nickname, the bear and the time when "A parent knows" was ticked.',
         'A cookie keeps you signed in on this device. It ends 30 days after your last visit, or when you sign out.',
-        'Why: so you can come back to your account. Later, your progress will be saved there too.',
+        'Points: we store one number, your point total, and for 2 days your last lessons (a random ID, size, start and finish time) so that a lesson counts only once. No answers, no lists of lessons.',
+        'Why: so you can come back to your account and keep your points and bear badge.',
         'We do not sell or share this data and we show no ads.',
         'Delete everything at once: Profile → Delete account.',
         'Questions or deleting data for a child: write to mr.petermacko@gmail.com.',
@@ -375,6 +395,24 @@ export const copy = {
     writeWrong: 'Ešte nie. Tvoja odpoveď: „{answer}“.',
     writeWrongHint: 'Slovo je {word}. Napíš ho.',
     writeShown: 'Slovo je',
+    points: {
+      units: ['bod', 'body', 'bodov'],
+      badge: 'Medvedí odznak {badge}, {points}',
+      noBadge: 'Zatiaľ bez medvedieho odznaku, {points}',
+      title: 'Tvoj medvedí odznak',
+      close: 'Zavrieť odznak',
+      badgeName: 'Medvedí odznak {badge}',
+      noBadgeName: 'Zatiaľ bez odznaku',
+      toNext: 'Ešte {points} do medvedieho odznaku {next}',
+      how: 'Za každý príklad vyriešený na prvý pokus v dokončenej lekcii dostaneš 1 bod.',
+      added: '+{points}',
+      newBadge: 'Nový odznak!',
+      newBadgeSaid: 'Nový medvedí odznak {badge}!',
+      signIn: 'Prihlás sa a zbieraj body',
+      saving: 'Ukladám body…',
+      failed: 'Body sa nepodarilo uložiť.',
+      retry: 'Skúsiť znova',
+    },
     account: {
       signIn: 'Prihlásiť sa',
       back: 'Späť',
@@ -464,7 +502,8 @@ export const copy = {
         'Účet s menom a heslom: ukladáme používateľské meno, zakódovanú kontrolnú hodnotu hesla (nikdy nie samotné heslo), prezývku, medvedíka, čas zaškrtnutia „Rodič vie“ a e-mail, len ak ho pridáš.',
         'Účet Google: ukladáme len číslo od Googlu, ktoré účet označuje – nie meno, e-mail ani fotku – a k tomu prezývku, medvedíka a čas zaškrtnutia „Rodič vie“.',
         'Súbor cookie ťa drží prihláseného na tomto zariadení. Platí 30 dní od poslednej návštevy alebo do odhlásenia.',
-        'Prečo: aby si sa mohol vrátiť k svojmu účtu. Neskôr sa v ňom bude ukladať aj tvoj pokrok.',
+        'Body: ukladáme jedno číslo, tvoj súčet bodov, a na 2 dni tvoje posledné lekcie (náhodné označenie, veľkosť, čas začiatku a konca), aby sa lekcia započítala len raz. Žiadne odpovede ani zoznamy lekcií.',
+        'Prečo: aby si sa mohol vrátiť k svojmu účtu a mal svoje body a medvedí odznak.',
         'Tieto údaje nepredávame ani nezdieľame a nezobrazujeme reklamy.',
         'Všetko naraz zmažeš v Profil → Zmazať účet.',
         'Otázky alebo zmazanie údajov dieťaťa: napíš na mr.petermacko@gmail.com.',
@@ -475,3 +514,12 @@ export const copy = {
 
 /** Copy for one language. */
 export type Copy = (typeof copy)[Language];
+
+/** "1 point", "3 points" / "1 bod", "3 body", "5 bodov". */
+export function pointsText(units: readonly string[], n: number): string {
+  const word = n === 1 ? units[0] : n >= 2 && n <= 4 ? units[1] : units[2];
+  return `${n} ${word}`;
+}
+
+export const fill = (text: string, values: Record<string, string | number>) =>
+  text.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ''));

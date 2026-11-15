@@ -86,6 +86,10 @@ export function useFeedbackAudio(
       setAudioUnavailable(false);
     }
   };
+  /** A new bear badge (SCRUM-117): plays only when sound is on and already allowed. */
+  const playBadge = () => {
+    if (desiredSound.current && readySound.current) audio.play('badge');
+  };
   /** Call when a new session starts so its reactions and fanfare can play. */
   const resetForNewSession = () => {
     completionConsumed.current = false;
@@ -99,5 +103,6 @@ export function useFeedbackAudio(
     activateSound,
     toggleSound,
     resetForNewSession,
+    playBadge,
   };
 }
