@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { ReactNode, RefObject } from 'react';
 import type { Copy } from './i18n';
 
 /** Completion screen with the first-try score. */
@@ -9,6 +9,7 @@ export default function SummaryView({
   total,
   firstTry,
   headingRef,
+  points,
   onAgain,
   onBack,
 }: {
@@ -18,6 +19,8 @@ export default function SummaryView({
   total: number;
   firstTry: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /** Points and badge for the lesson (SCRUM-117), or the sign-in hint. */
+  points?: ReactNode;
   onAgain: () => void;
   onBack: () => void;
 }) {
@@ -40,6 +43,7 @@ export default function SummaryView({
           {firstTry} / {total}
         </strong>
       </p>
+      {points}
       <button
         className="primary"
         onClick={(event) => {

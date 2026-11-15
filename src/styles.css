@@ -2951,3 +2951,141 @@ progress::-moz-progress-bar {
     line-height: 1.2;
   }
 }
+
+/* ---------- SCRUM-117: points and bear badges ---------- */
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 2px 12px 2px 4px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: #315783;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+.badge-button:hover {
+  background: var(--sky);
+}
+.badge-button .badge-icon {
+  flex: none;
+}
+/* Phones and short windows: only the badge with its number (points stay in the label). */
+@media (max-width: 620px), (max-height: 500px) {
+  .app-shell .app-bar .badge-button {
+    width: 48px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .badge-button .badge-points {
+    display: none;
+  }
+}
+.badge-details {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.badge-details p {
+  margin: 0;
+}
+.badge-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.badge-total {
+  font-weight: 700;
+}
+.badge-how {
+  color: var(--muted, #6f625a);
+  font-size: 0.9rem;
+}
+.badge-meter {
+  width: 100%;
+  max-width: 320px;
+}
+.badge-meter p {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+}
+.badge-meter-bar {
+  height: 10px;
+  border-radius: 999px;
+  background: #efe9e5;
+  overflow: hidden;
+}
+.badge-meter-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e8a33d;
+}
+/* Compact: points and a new badge share one row, the progress line sits under them. */
+.summary-points {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 14px;
+  margin-block: 0 10px;
+}
+.summary-points .badge-meter {
+  flex: 1 0 100%;
+  display: grid;
+  justify-items: center;
+}
+.summary-points .badge-meter-bar {
+  width: min(100%, 320px);
+  height: 8px;
+}
+.points-added {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #b2611a;
+}
+.points-hint,
+.points-saving {
+  margin-block: 0 12px;
+  color: var(--muted, #6f625a);
+}
+.points-failed {
+  margin-block: 0 12px;
+}
+.points-failed p {
+  margin: 0;
+  color: #a12d2d;
+  font-weight: 700;
+}
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #7a4a00;
+  animation: new-badge-pop 0.6s ease-out;
+}
+@keyframes new-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-badge {
+    animation: none;
+  }
+}

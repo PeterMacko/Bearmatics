@@ -46,6 +46,9 @@ import {
   type AccountScreen,
 } from './account/AccountViews';
 import { googleAvailable, loadAccount, type Account } from './account/api';
+import { finishLesson, loadPoints, startLesson } from './progress/api';
+import BadgeButton from './progress/BadgeButton';
+import SummaryPoints, { type LessonSave } from './progress/SummaryPoints';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -186,7 +189,65 @@ export default function App() {
     activateSound,
     toggleSound,
     resetForNewSession,
+    playBadge,
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
+  // Points (SCRUM-117): signed-in players only; null while unknown or signed out.
+  const [points, setPoints] = useState<number | null>(null);
+  useEffect(() => {
+    if (!account) {
+      setPoints(null);
+      return;
+    }
+    let live = true;
+    loadPoints().then(
+      (found) => live && setPoints(found),
+      () => {},
+    );
+    return () => {
+      live = false;
+    };
+  }, [account]);
+  // The running lesson, when it started while signed in. Its ID comes from the server.
+  const lesson = useRef<{ size: number; id: Promise<string | null>; saved: boolean } | null>(null);
+  const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
+  const beginLesson = (lessonSize: number) => {
+    setLessonSave(null);
+    lesson.current = account
+      ? { size: lessonSize, id: startLesson(lessonSize).catch(() => null), saved: false }
+      : null;
+  };
+  const saveLesson = async (firstTry: number) => {
+    const current = lesson.current;
+    if (!current) return;
+    setLessonSave({ state: 'saving' });
+    try {
+      let id = await current.id;
+      if (!id) {
+        id = await startLesson(current.size);
+        current.id = Promise.resolve(id);
+      }
+      const result = await finishLesson(id, current.size, Math.min(firstTry, current.size));
+      if (lesson.current !== current) return;
+      setPoints(result.points);
+      setLessonSave({
+        state: 'saved',
+        added: result.added,
+        before: result.points - result.added,
+        after: result.points,
+      });
+    } catch {
+      if (lesson.current === current) setLessonSave({ state: 'failed' });
+    }
+  };
+  const finishedFirstTry = active?.done ? active.firstTry : null;
+  useEffect(() => {
+    // Once per finished lesson (including its review round); leaving early saves nothing.
+    const current = lesson.current;
+    if (finishedFirstTry === null || !current || current.saved) return;
+    current.saved = true;
+    void saveLesson(finishedFirstTry);
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs when a lesson finishes
+  }, [finishedFirstTry]);
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -205,6 +266,8 @@ export default function App() {
     inputRef.current?.focus();
   };
   const endPractice = () => {
+    lesson.current = null;
+    setLessonSave(null);
     focusMenuHeading.current = true;
     words.stop();
     setSession(null);
@@ -264,6 +327,7 @@ export default function App() {
     resetForNewSession();
     void activateSound();
     setAnswer('');
+    beginLesson(course === 'small' ? smallSize : size);
     setSession(
       createSession(
         course === 'small' ? generateSession(smallLevel, smallSize) : generateSession(level, size),
@@ -289,6 +353,7 @@ export default function App() {
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
+    beginLesson(englishSize);
     if (englishLevel === 3) {
       resetForNewSession();
       void activateSound();
@@ -380,6 +445,16 @@ export default function App() {
         ? { label: t.backToCourses, onClick: () => navigate(null) }
         : null;
 
+  const summaryPoints = (
+    <SummaryPoints
+      t={t.points}
+      signedIn={!!account}
+      save={lessonSave}
+      onRetry={() => active && void saveLesson(active.firstTry)}
+      onNewBadge={playBadge}
+    />
+  );
+
   return (
     <div
       className={`app-shell ${!active && !accountScreen ? 'menu-shell' : ''} ${!active && accountScreen ? 'account-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
@@ -399,7 +474,8 @@ export default function App() {
         inert={leaveOpen || hintOpen || settingsOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
-        {/* SCRUM-117/118: badge/points and streak go here, before the profile. */}
+        {account && points !== null && <BadgeButton t={t.points} points={points} />}
+        {/* SCRUM-118: the streak goes here, before the profile. */}
         {!inLesson && (
           <AccountButton
             t={t.account}
@@ -450,6 +526,7 @@ export default function App() {
               total={writeSession.exercises.length}
               firstTry={writeSession.firstTry}
               headingRef={summaryRef}
+              points={summaryPoints}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -504,6 +581,7 @@ export default function App() {
               total={englishSession.exercises.length}
               firstTry={englishSession.firstTry}
               headingRef={summaryRef}
+              points={summaryPoints}
               onAgain={startEnglish}
               onBack={endPractice}
             />
@@ -632,6 +710,7 @@ export default function App() {
             total={session.exercises.length}
             firstTry={session.firstTry}
             headingRef={summaryRef}
+            points={summaryPoints}
             onAgain={start}
             onBack={endPractice}
           />
