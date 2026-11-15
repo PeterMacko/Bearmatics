@@ -20,6 +20,7 @@ import EnglishHome, { type EnglishLevel } from './EnglishHome';
 import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
+import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
 import { useMenuLayout } from './useMenuLayout';
 import EnglishPracticeView from './english/EnglishPracticeView';
@@ -103,12 +104,15 @@ export default function App() {
     setAccountNotice(notice);
     setAccountScreen(next);
   };
-  // Move focus to the new screen's heading after course navigation (not on first load).
+  const practising = !!active;
+  // After navigation (not on first load): the new screen starts at the top, so the bar is in
+  // view, and focus moves to its heading (also after leaving a lesson, QA139-01/02).
   useEffect(() => {
     if (!focusMenuHeading.current) return;
     focusMenuHeading.current = false;
-    menuHeadingRef.current?.focus();
-  }, [course, accountScreen]);
+    window.scrollTo(0, 0);
+    menuHeadingRef.current?.focus({ preventScroll: true });
+  }, [course, accountScreen, practising]);
   useEffect(() => {
     let live = true;
     loadAccount().then(
@@ -197,6 +201,7 @@ export default function App() {
     inputRef.current?.focus();
   };
   const endPractice = () => {
+    focusMenuHeading.current = true;
     words.stop();
     setSession(null);
     setEnglishSession(null);
@@ -346,6 +351,27 @@ export default function App() {
     else words.stop();
   };
 
+  // A lesson in progress (not its summary): the bar shows no profile, so a child cannot leave
+  // the lesson by mistake (SCRUM-133). Back still asks before leaving.
+  const inLesson = !!active && !active.done;
+  const back: BarBack | null = active
+    ? { label: t.back, onClick: active.done ? endPractice : requestLeave }
+    : accountScreen
+      ? {
+          label: t.account.back,
+          onClick: () =>
+            openAccount(
+              accountScreen === 'privacy'
+                ? privacyFrom
+                : accountScreen === 'signup'
+                  ? 'signin'
+                  : null,
+            ),
+        }
+      : course
+        ? { label: t.backToCourses, onClick: () => navigate(null) }
+        : null;
+
   return (
     <div
       className={`app-shell ${!active && !accountScreen ? 'menu-shell' : ''} ${!active && accountScreen ? 'account-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
@@ -358,24 +384,22 @@ export default function App() {
           value={progressValue(active)}
         />
       )}
-      <header className="site-header" inert={leaveOpen || hintOpen || settingsOpen}>
-        {active && (
-          <button
-            className="corner-button back-button"
-            aria-label={t.back}
-            onClick={active.done ? endPractice : requestLeave}
-          >
-            <span aria-hidden="true">←</span>
-          </button>
-        )}
-        <div className="wordmark">
-          <h1 className="sr-only">Bearmatics</h1>
-        </div>
-        {!active && !course && !accountScreen && (
+      <h1 className="sr-only">Bearmatics</h1>
+      <AppBar
+        label={t.appBar}
+        back={back}
+        inert={leaveOpen || hintOpen || settingsOpen}
+        layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
+      >
+        {/* SCRUM-117/118: badge/points and streak go here, before the profile. */}
+        {!inLesson && (
           <AccountButton
             t={t.account}
             account={account}
-            onClick={() => openAccount(account ? 'profile' : 'signin')}
+            onClick={() => {
+              if (active) endPractice(); // only on the summary: nothing left to lose
+              openAccount(account ? 'profile' : 'signin');
+            }}
           />
         )}
         <button
@@ -391,7 +415,7 @@ export default function App() {
         >
           <span aria-hidden="true">⚙</span>
         </button>
-      </header>
+      </AppBar>
       <main
         ref={menuRef}
         className={`workspace ${active ? 'in-session' : ''}`}
@@ -513,7 +537,6 @@ export default function App() {
           (() => {
             const common = {
               t: t.account,
-              backLabel: t.account.back,
               headingRef: menuHeadingRef,
               onPrivacy: () => openAccount('privacy'),
             };
@@ -531,31 +554,14 @@ export default function App() {
             };
             const notice = notices[accountNotice] ?? '';
             if (accountScreen === 'privacy')
-              return (
-                <PrivacyView
-                  t={t.account}
-                  backLabel={t.account.back}
-                  headingRef={menuHeadingRef}
-                  onBack={() => openAccount(privacyFrom)}
-                />
-              );
-            if (accountScreen === 'signup')
-              return (
-                <SignUpView
-                  {...common}
-                  onBack={() => openAccount('signin')}
-                  onSignedIn={signedIn}
-                />
-              );
+              return <PrivacyView t={t.account} headingRef={menuHeadingRef} />;
+            if (accountScreen === 'signup') return <SignUpView {...common} onSignedIn={signedIn} />;
             if (accountScreen === 'google-new')
-              return (
-                <GoogleNewView {...common} onBack={() => openAccount(null)} onSignedIn={signedIn} />
-              );
+              return <GoogleNewView {...common} onSignedIn={signedIn} />;
             if (accountScreen === 'profile' && account)
               return (
                 <ProfileView
                   {...common}
-                  onBack={() => openAccount(null)}
                   account={account}
                   onAccount={setAccount}
                   onSignedOut={(reason) => {
@@ -567,7 +573,6 @@ export default function App() {
             return (
               <SignInView
                 {...common}
-                onBack={() => openAccount(null)}
                 googleReady={googleReady}
                 notice={notice}
                 onCreate={() => openAccount('signup')}
@@ -580,7 +585,6 @@ export default function App() {
             <LevelMenu
               t={t}
               headingRef={menuHeadingRef}
-              onBack={() => navigate(null)}
               level={level}
               size={size}
               onLevelChange={setLevel}
@@ -595,7 +599,6 @@ export default function App() {
               headingRef={menuHeadingRef}
               onLevelChange={setEnglishLevel}
               onSizeChange={setEnglishSize}
-              onBack={() => navigate(null)}
               onStart={startEnglish}
             />
           ) : (
@@ -608,7 +611,7 @@ export default function App() {
             firstTry={session.firstTry}
             headingRef={summaryRef}
             onAgain={start}
-            onBack={() => setSession(null)}
+            onBack={endPractice}
           />
         ) : (
           current && (

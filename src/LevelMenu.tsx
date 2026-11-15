@@ -14,7 +14,6 @@ export default function LevelMenu({
   onLevelChange,
   onSizeChange,
   onStart,
-  onBack,
   headingRef,
 }: {
   t: Copy;
@@ -23,19 +22,11 @@ export default function LevelMenu({
   onLevelChange: (level: Level) => void;
   onSizeChange: (size: number) => void;
   onStart: () => void;
-  onBack: () => void;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   return (
     <section className="selection">
-      <MenuHeading
-        eyebrow={t.trail}
-        title={t.choose}
-        intro={t.intro}
-        headingRef={headingRef}
-        backLabel={t.backToCourses}
-        onBack={onBack}
-      />
+      <MenuHeading eyebrow={t.trail} title={t.choose} intro={t.intro} headingRef={headingRef} />
       <fieldset className="level-options">
         <legend className="sr-only">{t.level}</legend>
         {LEVELS.map((n) => (

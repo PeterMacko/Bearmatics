@@ -411,9 +411,10 @@ test('phone bear sits left beside the heading without a vacant branding row', as
   expect(bear.x + bear.width).toBeLessThanOrEqual(heading.x);
   expect(bear.y).toBeLessThan(heading.y + heading.height);
   expect(heading.y).toBeLessThan(bear.y + bear.height);
-  expect(Math.min(bear.y, heading.y)).toBeLessThan(40);
-  expect(gear.width).toBeGreaterThanOrEqual(44);
-  expect(gear.height).toBeGreaterThanOrEqual(44);
+  // SCRUM-133: on phones the app bar is its own row; the menu starts right below it.
+  expect(Math.min(bear.y, heading.y)).toBeLessThan(gear.y + gear.height + 12);
+  expect(gear.width).toBeGreaterThanOrEqual(48);
+  expect(gear.height).toBeGreaterThanOrEqual(48);
   expect(heading.y).toBeGreaterThanOrEqual(gear.y + gear.height);
   await page.screenshot({ path: testInfo.outputPath('composition.png') });
 });

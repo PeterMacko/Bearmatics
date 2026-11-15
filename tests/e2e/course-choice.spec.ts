@@ -158,6 +158,11 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   await expect(page.getByRole('heading', { name: 'Where shall we explore?' })).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.getByRole('radio', { name: /^Level 1 / })).toBeFocused();
+  // SCRUM-133: the app bar comes before the screen, in visual order: Back, Sign in, Settings.
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('button', { name: 'Back to courses' })).toBeFocused();
   await page.keyboard.press('Space');

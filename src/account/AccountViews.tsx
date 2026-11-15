@@ -197,28 +197,17 @@ function Screen({
   title,
   intro,
   headingRef,
-  backLabel,
-  onBack,
   children,
 }: {
   t: T;
   title: string;
   intro: string;
   headingRef: RefObject<HTMLHeadingElement | null>;
-  backLabel: string;
-  onBack: () => void;
   children: ReactNode;
 }) {
   return (
     <section className="account-screen">
-      <MenuHeading
-        eyebrow={t.eyebrow}
-        title={title}
-        intro={intro}
-        headingRef={headingRef}
-        backLabel={backLabel}
-        onBack={onBack}
-      />
+      <MenuHeading eyebrow={t.eyebrow} title={title} intro={intro} headingRef={headingRef} />
       {children}
     </section>
   );
@@ -226,17 +215,13 @@ function Screen({
 
 type Common = {
   t: T;
-  backLabel: string;
   headingRef: RefObject<HTMLHeadingElement | null>;
-  onBack: () => void;
   onPrivacy: () => void;
 };
 
 export function SignInView({
   t,
-  backLabel,
   headingRef,
-  onBack,
   onPrivacy,
   googleReady,
   notice,
@@ -259,14 +244,7 @@ export function SignInView({
     );
   };
   return (
-    <Screen
-      t={t}
-      title={t.signInTitle}
-      intro={t.signInIntro}
-      headingRef={headingRef}
-      backLabel={backLabel}
-      onBack={onBack}
-    >
+    <Screen t={t} title={t.signInTitle} intro={t.signInIntro} headingRef={headingRef}>
       {googleReady && (
         <>
           <a className="google-button" href="/api/auth/google/start">
@@ -315,9 +293,7 @@ export function SignInView({
 
 export function SignUpView({
   t,
-  backLabel,
   headingRef,
-  onBack,
   onPrivacy,
   onSignedIn,
 }: Common & { onSignedIn: (account: Account) => void }) {
@@ -366,14 +342,7 @@ export function SignUpView({
     );
   };
   return (
-    <Screen
-      t={t}
-      title={t.createTitle}
-      intro={t.createIntro}
-      headingRef={headingRef}
-      backLabel={backLabel}
-      onBack={onBack}
-    >
+    <Screen t={t} title={t.createTitle} intro={t.createIntro} headingRef={headingRef}>
       <form className="account-form" onSubmit={submit} noValidate aria-busy={busy}>
         <Field
           label={t.username}
@@ -434,9 +403,7 @@ export function SignUpView({
 
 export function GoogleNewView({
   t,
-  backLabel,
   headingRef,
-  onBack,
   onPrivacy,
   onSignedIn,
 }: Common & { onSignedIn: (account: Account) => void }) {
@@ -464,14 +431,7 @@ export function GoogleNewView({
     );
   };
   return (
-    <Screen
-      t={t}
-      title={t.googleNewTitle}
-      intro={t.googleNewIntro}
-      headingRef={headingRef}
-      backLabel={backLabel}
-      onBack={onBack}
-    >
+    <Screen t={t} title={t.googleNewTitle} intro={t.googleNewIntro} headingRef={headingRef}>
       <form className="account-form" onSubmit={submit} noValidate aria-busy={busy}>
         <Field
           label={t.nickname}
@@ -503,9 +463,7 @@ export function GoogleNewView({
 
 export function ProfileView({
   t,
-  backLabel,
   headingRef,
-  onBack,
   onPrivacy,
   account,
   onAccount,
@@ -582,8 +540,6 @@ export function ProfileView({
           : fill(t.signedInAs, { username: account.username ?? '' })
       }
       headingRef={headingRef}
-      backLabel={backLabel}
-      onBack={onBack}
     >
       <div className="profile-badge" aria-hidden="true">
         <BearIcon bear={account.bear} size={72} />
@@ -735,16 +691,9 @@ export function ProfileView({
 
 const LINK = /(https:\/\/\S+[^\s.]|[\w.+-]+@[\w-]+(?:\.[\w-]+)+)/;
 
-export function PrivacyView({ t, backLabel, headingRef, onBack }: Omit<Common, 'onPrivacy'>) {
+export function PrivacyView({ t, headingRef }: Omit<Common, 'onPrivacy'>) {
   return (
-    <Screen
-      t={t}
-      title={t.privacyTitle}
-      intro={t.privacy[0]}
-      headingRef={headingRef}
-      backLabel={backLabel}
-      onBack={onBack}
-    >
+    <Screen t={t} title={t.privacyTitle} intro={t.privacy[0]} headingRef={headingRef}>
       <ul className="privacy-list">
         {t.privacy.slice(1).map((line) => (
           <li key={line}>

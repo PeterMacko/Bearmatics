@@ -169,7 +169,7 @@ for (const [width, height] of [
         await page.locator('progress').evaluate((el) => el.parentElement!.firstElementChild === el),
       ).toBe(true);
       await expect(page.locator('progress')).toHaveCSS('border-bottom-width', '0px');
-      await expect(page.locator('header')).toHaveCSS('border-bottom-width', '0px');
+      await expect(page.locator('.app-bar')).toHaveCSS('border-bottom-width', '0px');
       const gap = bear.y - (progress.y + progress.height);
       for (const selector of ['.settings-button', '.back-button']) {
         const corner = (await page.locator(selector).boundingBox())!;
@@ -316,7 +316,7 @@ for (const language of ['en', 'sk']) {
     });
     await expect(dialog).toHaveAttribute('aria-modal', 'true');
     await expect(close).toBeFocused();
-    for (const background of ['header', 'main'])
+    for (const background of ['.app-bar', 'main'])
       await expect(page.locator(background)).toHaveAttribute('inert', '');
     await expect(page.locator('footer')).toHaveCount(0);
     await input.evaluate((el) => (el as HTMLElement).focus());

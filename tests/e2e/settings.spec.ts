@@ -31,7 +31,7 @@ for (const language of ['en', 'sk']) {
     const dialog = page.getByRole('dialog');
     const close = dialog.locator('.hint-dialog-header button');
     await expect(close).toBeFocused();
-    for (const selector of ['header', 'main'])
+    for (const selector of ['.app-bar', 'main'])
       await expect(page.locator(selector)).toHaveAttribute('inert', '');
     await expect(page.locator('footer')).toHaveCount(0);
     for (const selector of ['.hint-button', '.back-button']) {
@@ -108,7 +108,7 @@ for (const language of ['en', 'sk']) {
     await expect(dialog).toHaveAccessibleName(
       language === 'sk' ? 'Opustiť túto cestu?' : 'Leave this trail?',
     );
-    await expect(page.locator('header')).toHaveAttribute('inert', '');
+    await expect(page.locator('.app-bar')).toHaveAttribute('inert', '');
     await page.keyboard.press('Escape');
     await expect(page.locator('.back-button')).toBeFocused();
     await page.locator('.back-button').click();

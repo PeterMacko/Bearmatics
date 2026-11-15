@@ -17,7 +17,6 @@ export default function EnglishHome({
   headingRef,
   onLevelChange,
   onSizeChange,
-  onBack,
   onStart,
 }: {
   t: Copy;
@@ -26,7 +25,6 @@ export default function EnglishHome({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onLevelChange: (level: EnglishLevel) => void;
   onSizeChange: (size: number) => void;
-  onBack: () => void;
   onStart: () => void;
 }) {
   return (
@@ -36,8 +34,6 @@ export default function EnglishHome({
         title={t.englishChoose}
         intro={t.englishIntro}
         headingRef={headingRef}
-        backLabel={t.backToCourses}
-        onBack={onBack}
       />
       <fieldset className="level-options">
         <legend className="sr-only">{t.level}</legend>

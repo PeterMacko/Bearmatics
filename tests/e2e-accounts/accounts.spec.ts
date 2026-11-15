@@ -259,9 +259,16 @@ test('Slovak texts and keyboard-only sign-up', async ({ page }) => {
   await page.getByRole('button', { name: 'Vytvoriť účet' }).focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Nový účet' })).toBeFocused();
-  // The back arrow comes before the heading; after it the form fields in visual order.
+  // The app bar (Back, profile, settings) comes before the heading; after it the form fields
+  // in visual order (SCRUM-133).
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Nastavenia' })).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(page.getByRole('button', { name: 'Prihlásiť sa' })).toBeFocused();
   await page.keyboard.press('Shift+Tab');
   await expect(page.getByRole('button', { name: 'Späť' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
   await page.keyboard.press('Tab');
   await expect(page.getByLabel('Používateľské meno')).toBeFocused();
   await page.keyboard.type(username);
