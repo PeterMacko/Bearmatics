@@ -182,7 +182,7 @@ for (const hasTouch of [false, true]) {
               await expect(label.getByRole('radio')).toBeChecked();
               expect(await page.evaluate(() => scrollX)).toBe(0);
             }
-            await expect(page.locator('.level-option')).toHaveCount(8);
+            await expect(page.locator('.level-option')).toHaveCount(7);
           }
           await testInfo.attach('all-geometry', {
             body: JSON.stringify(measurements, null, 2),

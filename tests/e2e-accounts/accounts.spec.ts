@@ -24,7 +24,7 @@ const uniqueName = (prefix: string) =>
 
 async function openApp(page: Page) {
   await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Mathematics' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
 }
 
 async function toSlovak(page: Page) {
@@ -304,7 +304,7 @@ test('the privacy page explains what is stored and how to delete it', async ({ p
   await page.getByRole('button', { name: 'Back' }).click();
   await expect(page.getByRole('heading', { name: 'Sign in' })).toBeFocused();
   await page.getByRole('button', { name: 'Back' }).click();
-  await expect(page.getByRole('button', { name: 'Mathematics' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
 });
 
 test('200% text on phones: account screens stay inside the screen (QA114-02)', async ({

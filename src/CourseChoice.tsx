@@ -2,7 +2,26 @@ import type { RefObject } from 'react';
 import type { Copy } from './i18n';
 import MenuHeading from './MenuHeading';
 
-export type Course = 'math' | 'english';
+export type Course = 'small' | 'math' | 'english';
+
+function SmallMathIcon() {
+  // A die face: count the dots.
+  const dots = [
+    [20, 20],
+    [44, 20],
+    [32, 32],
+    [20, 44],
+    [44, 44],
+  ];
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#f7a8a0" />
+      {dots.map(([cx, cy]) => (
+        <circle key={`${cx}-${cy}`} cx={cx} cy={cy} r="6" fill="#7a2e33" />
+      ))}
+    </svg>
+  );
+}
 
 function MathIcon() {
   return (
@@ -38,9 +57,9 @@ function EnglishIcon() {
   );
 }
 
-const ICONS = { math: MathIcon, english: EnglishIcon };
+const ICONS = { small: SmallMathIcon, math: MathIcon, english: EnglishIcon };
 
-/** First screen: choose Mathematics or English. */
+/** First screen: choose Small maths, Maths or English. */
 export default function CourseChoice({
   t,
   headingRef,
@@ -51,6 +70,7 @@ export default function CourseChoice({
   onChoose: (course: Course) => void;
 }) {
   const courses: { id: Course; title: string; detail: string }[] = [
+    { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
     { id: 'math', title: t.mathCourse, detail: t.mathCourseDetail },
     { id: 'english', title: t.englishCourse, detail: t.englishCourseDetail },
   ];

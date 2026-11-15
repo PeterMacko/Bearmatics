@@ -2903,3 +2903,51 @@ progress::-moz-progress-bar {
     padding-top: 4px;
   }
 }
+/* SCRUM-141 QA146-01: three course cards on short landscape phones. Lower cards (targets stay
+   above 48px) so Small maths, Maths and English are all visible without scrolling the list. */
+@media (max-height: 500px) {
+  .course-option {
+    min-height: 64px;
+    padding-block: 6px;
+    grid-template-columns: 44px minmax(0, 1fr) max-content;
+  }
+  .course-icon svg {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (max-height: 360px) {
+  .course-option {
+    min-height: 52px;
+    padding-block: 2px;
+  }
+  .course-icon svg {
+    width: 36px;
+    height: 36px;
+  }
+  .course-option {
+    grid-template-columns: 36px minmax(0, 1fr) max-content;
+  }
+}
+/* Short landscape phones: the course choice drops its intro line (Firefox's taller lines need
+   the room too), and the shortest windows use slightly smaller card text. */
+@media (max-height: 420px) {
+  .menu-shell .course-choice .menu-heading .intro {
+    display: none;
+  }
+  /* One title line in both engines (Firefox wrapped it at 568x320). */
+  .menu-shell .course-choice .menu-heading h2 {
+    font-size: 1.5rem;
+    line-height: 1.15;
+  }
+}
+@media (max-height: 360px) {
+  .course-option .course-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+  .course-option .level-detail {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+}

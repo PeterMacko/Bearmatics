@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics, openSmallMaths } from './course';
 import { writeFile } from 'node:fs/promises';
 
 for (const [width, height] of [
@@ -26,13 +26,16 @@ for (const [width, height] of [
         await page.getByRole('button', { name: 'Slovenčina' }).click();
         await page.keyboard.press('Escape');
       }
-      await expect(page.locator('.level-option')).toHaveCount(8);
+      await expect(page.locator('.level-option')).toHaveCount(7);
       for (const card of await page.locator('.level-option').all()) {
         await card.scrollIntoViewIfNeeded();
         await expect(card).toBeInViewport();
         const box = (await card.boundingBox())!;
         expect(box.height).toBeGreaterThanOrEqual(44);
       }
+      // SCRUM-141: the picture level is Small maths Level 1.
+      await page.getByRole('button', { name: /^(Back to courses|Späť na kurzy)$/ }).click();
+      await openSmallMaths(page);
       await page.locator('input[name=level][value="0"]').check();
       await page.locator('.start-button').click();
       await expect(page.getByRole('textbox')).toHaveAttribute('readonly', '');

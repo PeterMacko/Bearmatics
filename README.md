@@ -8,9 +8,11 @@ A child-friendly math practice web app for ages **6–9**, in **Slovak and Engli
 
 The implemented [SCRUM-26 progression](docs/level-progression.md) extends Peter's revision in [#15](https://github.com/PeterMacko/Bearmatics/issues/15). This feature still requires exact-revision owner review and independent QA; the earlier MVP acceptance below does not accept these changes:
 
+Since [SCRUM-141](https://project-22.atlassian.net/browse/SCRUM-141) maths has two courses on the course choice (next to English): **Small maths** holds the picture level (engine level 0, shown to the child as **Level 1**; more Small maths levels will follow), and **Maths** holds levels 1–7 under their numbers. The engine levels, their rules and the "level 0" names below are unchanged.
+
 | Level | Practice |
 | --- | --- |
-| 0 | Picture addition, all quantities 0–6, missing result only |
+| 0 | Small maths Level 1: picture addition, all quantities 0–6, missing result only |
 | 1 | Addition only, up to 10; any missing term |
 | 2 | Addition and subtraction, up to 10; any missing term |
 | 3 | Addition and subtraction, up to 20; missing result only |

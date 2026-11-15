@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics, openSmallMaths } from './course';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
   await page.getByRole('button', { name: gear, exact: true }).click();
@@ -49,6 +49,17 @@ async function answerFor(page: Page): Promise<number> {
   });
 }
 
+// SCRUM-141: engine level 0 (count the pictures) is Small maths Level 1; Maths has levels 1-7.
+async function openCourseLevel(page: Page, level: number) {
+  if (level === 0) {
+    await openSmallMaths(page);
+    await page.getByRole('radio', { name: /^Level 1 · Count the pictures/ }).check();
+  } else {
+    await openMathematics(page);
+    await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
+  }
+}
+
 for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap((level) =>
   [5, 10, 20].map((size) => [level, size]),
 )) {
@@ -56,9 +67,8 @@ for (const [level, size] of [0, 1, 2, 3, 4, 5, 6, 7].flatMap((level) =>
     const errors: string[] = [];
     page.on('pageerror', (e) => errors.push(e.message));
     await page.goto('/');
-    await openMathematics(page);
+    await openCourseLevel(page, level);
     await expect(page).toHaveTitle('Bearmatics');
-    await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
     await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check();
     await page.getByRole('button', { name: 'Let’s count' }).click();
     const originalFacts: string[] = [];
@@ -162,8 +172,7 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
   test(`three hint stages explain level ${level} without automatic answering`, async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 740 });
     await page.goto('/');
-    await openMathematics(page);
-    await page.getByRole('radio', { name: new RegExp(`Level ${level} ·`) }).check();
+    await openCourseLevel(page, level);
     await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
     await page.getByRole('button', { name: 'Let’s count' }).click();
     const expected = await answerFor(page);

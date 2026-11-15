@@ -57,7 +57,7 @@ test('English home is localized and keeps its page and choices across a language
 
 test('Back returns to the course choice; English and maths choices stay separate', () => {
   render(<App />);
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   fireEvent.click(screen.getByRole('radio', { name: /^Level 6 / }));
   fireEvent.click(button('Back to courses'));
   openEnglish();
@@ -65,7 +65,7 @@ test('Back returns to the course choice; English and maths choices stay separate
   fireEvent.click(button('Back to courses'));
   expect(heading()).toHaveTextContent('What shall we learn today?');
   expect(document.activeElement).toBe(heading());
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   expect(screen.getByRole('radio', { name: /^Level 6 / })).toBeChecked();
   fireEvent.click(button('Back to courses'));
   openEnglish();

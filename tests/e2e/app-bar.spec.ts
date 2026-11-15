@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics, openSmallMaths } from './course';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
 
@@ -78,7 +78,7 @@ test('Slovak names for the bar and its buttons', async ({ page }) => {
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await page.keyboard.press('Escape');
-  await page.getByRole('button', { name: 'Matematika' }).click();
+  await page.getByRole('button', { name: 'Matematika', exact: true }).click();
   const nav = page.getByRole('navigation', { name: 'Hlavné ovládanie' });
   const names = await nav
     .getByRole('button')
@@ -169,6 +169,7 @@ for (const [width, height, touch] of DEVICES)
     const left = height <= 500 && width <= 950 && width > height;
     const screens: [string, () => Promise<void>][] = [
       ['course choice', async () => {}],
+      ['small maths menu', () => openSmallMaths(page)],
       ['maths menu', () => openMathematics(page)],
       ['english menu', () => page.getByRole('button', { name: 'English', exact: true }).click()],
       [
@@ -269,8 +270,9 @@ for (const lang of ['en', 'sk'])
       await page.getByRole('button', { name: 'Slovenčina' }).click();
       await page.keyboard.press('Escape');
     }
-    await openMathematics(page);
     for (const level of ['0', '1', '4']) {
+      // SCRUM-141: the picture level (engine 0) is in Small maths.
+      await (level === '0' ? openSmallMaths(page) : openMathematics(page));
       await page.locator(`input[name=level][value="${level}"]`).check({ force: true });
       await page.locator('.start-button').click();
       const m = await page.evaluate(() => {
@@ -283,6 +285,7 @@ for (const lang of ['en', 'sk'])
       });
       expect(m.scroll, `level ${level}`).toBeLessThanOrEqual(0);
       expect(m.check, `level ${level}`).toBeLessThanOrEqual(0);
+      await page.locator('.back-button').click();
       await page.locator('.back-button').click();
     }
   });

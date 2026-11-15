@@ -5,12 +5,11 @@ import App from './App';
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const heading = () => screen.getByRole('heading', { level: 2 });
 
-test('the app opens on the course choice with both courses and nothing else to start', () => {
+test('the app opens on the course choice with the three courses and nothing else to start', () => {
   render(<App />);
   expect(heading()).toHaveTextContent('What shall we learn today?');
-  expect(button('Mathematics')).toHaveAccessibleDescription(
-    'Count, add, subtract, multiply and share',
-  );
+  expect(button('Maths')).toHaveAccessibleDescription('Count, add, subtract, multiply and share');
+  expect(button('Small maths')).toHaveAccessibleDescription('Count pictures and add up to 6');
   expect(button('English')).toHaveAccessibleDescription('Listen to English words and learn them');
   expect(screen.queryByRole('radio')).toBeNull();
   expect(screen.queryByRole('button', { name: /Back to courses/ })).toBeNull();
@@ -25,14 +24,15 @@ test('course choice is localized in Slovak', () => {
   fireEvent.click(button('Slovenčina'));
   fireEvent.click(button('Zavrieť nastavenia'));
   expect(heading()).toHaveTextContent('Čo sa dnes naučíme?');
+  expect(button('Malá matematika')).toHaveAccessibleDescription('Počítaj obrázky a sčítaj do 6');
   expect(button('Matematika')).toBeInTheDocument();
   expect(button('Angličtina')).toBeInTheDocument();
   expect(screen.getByRole('list', { name: 'Kurzy' })).toBeInTheDocument();
 });
 
-test('Mathematics opens the unchanged level menu and focuses its heading', () => {
+test('Maths opens the unchanged level menu and focuses its heading', () => {
   render(<App />);
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   expect(heading()).toHaveTextContent('Where shall we explore?');
   expect(document.activeElement).toBe(heading());
   expect(screen.getByRole('radio', { name: /^Level 1 / })).toBeChecked();
@@ -42,20 +42,20 @@ test('Mathematics opens the unchanged level menu and focuses its heading', () =>
 
 test('Back returns to the course choice, focuses it and keeps the maths level and count', () => {
   render(<App />);
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   fireEvent.click(screen.getByRole('radio', { name: /^Level 5 / }));
   fireEvent.click(screen.getByRole('radio', { name: '20 exercises' }));
   fireEvent.click(button('Back to courses'));
   expect(heading()).toHaveTextContent('What shall we learn today?');
   expect(document.activeElement).toBe(heading());
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   expect(screen.getByRole('radio', { name: /^Level 5 / })).toBeChecked();
   expect(screen.getByRole('radio', { name: '20 exercises' })).toBeChecked();
 });
 
 test('leaving practice returns to the maths menu, not the course choice', () => {
   render(<App />);
-  fireEvent.click(button('Mathematics'));
+  fireEvent.click(button('Maths'));
   fireEvent.click(button('Let’s count'));
   fireEvent.click(button('Choose level'));
   expect(heading()).toHaveTextContent('Where shall we explore?');

@@ -4,11 +4,12 @@ import * as math from './math/engine';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
 
-test('offers eight correctly localized trails with level 1 selected by default', () => {
+test('Maths offers seven correctly localized trails with level 1 selected by default', () => {
   const { container } = render(<App />);
   openMathematics();
-  expect(container.querySelectorAll('input[name="level"]')).toHaveLength(8);
-  expect(screen.getByRole('radio', { name: /Level 0 · Count the pictures/ })).toBeInTheDocument();
+  expect(container.querySelectorAll('input[name="level"]')).toHaveLength(7);
+  // SCRUM-141: picture counting moved to Small maths.
+  expect(screen.queryByRole('radio', { name: /Count the pictures/ })).toBeNull();
   expect(screen.getByRole('radio', { name: /Level 1 · Hello, addition!/ })).toBeChecked();
   const english = [
     'Hello, addition!',
