@@ -353,3 +353,27 @@ for (const [width, height, screens] of [
       }
     }
   });
+
+// SCRUM-141 QA146-01: on short landscape phones all three course cards are fully visible
+// without scrolling the card list.
+for (const [width, height] of [
+  [844, 390],
+  [568, 320],
+  [733, 500],
+] as const)
+  for (const lang of ['en', 'sk'])
+    test(`all three course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      await page.goto('/');
+      if (lang === 'sk') await toSlovak(page);
+      const cards = page.locator('.course-option');
+      await expect(cards).toHaveCount(3);
+      for (const card of await cards.all()) {
+        await expect(card).toBeInViewport({ ratio: 1 });
+        expect((await card.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+      }
+      const list = await page
+        .locator('.course-options')
+        .evaluate((l) => ({ hidden: l.scrollHeight - l.clientHeight, top: l.scrollTop }));
+      expect(list.hidden).toBeLessThanOrEqual(1);
+    });
