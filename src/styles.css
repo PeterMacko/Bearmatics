@@ -2935,6 +2935,11 @@ progress::-moz-progress-bar {
   .menu-shell .course-choice .menu-heading .intro {
     display: none;
   }
+  /* One title line in both engines (Firefox wrapped it at 568x320). */
+  .menu-shell .course-choice .menu-heading h2 {
+    font-size: 1.5rem;
+    line-height: 1.15;
+  }
 }
 @media (max-height: 360px) {
   .course-option .course-title {
