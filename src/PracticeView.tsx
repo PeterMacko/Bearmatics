@@ -1,5 +1,5 @@
 import type { FormEvent, KeyboardEvent, RefObject } from 'react';
-import type { Exercise, Level } from './math/engine';
+import type { Exercise } from './math/engine';
 import type { Copy } from './i18n';
 import PictureGroup, { type PictureTheme } from './PictureGroup';
 import { OPERATOR_SYMBOLS } from './operatorSymbols';
@@ -34,7 +34,8 @@ export default function PracticeView({
   onToggleInputMode,
 }: {
   t: Copy;
-  level: Level;
+  /** The level number shown to the child (Small maths shows engine level 0 as 1). */
+  level: number;
   current: Exercise;
   pictureTheme: PictureTheme;
   position: string;

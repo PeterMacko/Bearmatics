@@ -23,6 +23,7 @@ import SettingsDialog from './SettingsDialog';
 import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
 import { useMenuLayout } from './useMenuLayout';
+import { MATH_LEVELS, SMALL_MATH_LEVELS, shownLevel } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
 import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
 import { useWordPlayer } from './english/wordPlayer';
@@ -65,6 +66,9 @@ export default function App() {
   const [language, setLanguage] = useState<Language>('en');
   const [level, setLevel] = useState<Level>(1);
   const [size, setSize] = useState(10);
+  // Small maths (SCRUM-141) keeps its own choice while the app is open.
+  const [smallLevel, setSmallLevel] = useState<Level>(SMALL_MATH_LEVELS[0].value);
+  const [smallSize, setSmallSize] = useState(10);
   const [session, setSession] = useState<Session | null>(null);
   // Course screen state: null is the course choice. Nothing is stored between visits.
   const [course, setCourse] = useState<Course | null>(null);
@@ -260,7 +264,11 @@ export default function App() {
     resetForNewSession();
     void activateSound();
     setAnswer('');
-    setSession(createSession(generateSession(level, size)));
+    setSession(
+      createSession(
+        course === 'small' ? generateSession(smallLevel, smallSize) : generateSession(level, size),
+      ),
+    );
   };
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -581,9 +589,23 @@ export default function App() {
             );
           })()
         ) : !session ? (
-          course === 'math' ? (
+          course === 'small' ? (
             <LevelMenu
               t={t}
+              levels={SMALL_MATH_LEVELS}
+              heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
+              headingRef={menuHeadingRef}
+              level={smallLevel}
+              size={smallSize}
+              onLevelChange={setSmallLevel}
+              onSizeChange={setSmallSize}
+              onStart={start}
+            />
+          ) : course === 'math' ? (
+            <LevelMenu
+              t={t}
+              levels={MATH_LEVELS}
+              heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
               headingRef={menuHeadingRef}
               level={level}
               size={size}
@@ -617,7 +639,7 @@ export default function App() {
           current && (
             <PracticeView
               t={t}
-              level={level}
+              level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
               current={current}
               pictureTheme={pictureTheme}
               position={

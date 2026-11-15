@@ -6,6 +6,8 @@ Tracking: [feature SCRUM-26](https://project-22.atlassian.net/browse/SCRUM-26), 
 
 ## Confirmed scope
 
+> SCRUM-141: level 0 is now offered in the separate **Small maths** course and shown to children as Level 1; Maths shows levels 1–7. The engine numbering below is unchanged.
+
 | New level | Content |
 | --- | --- |
 | 0 | Addition only: integers a, b, c in 0–6 with a + b = c; missing result only. Include zero as an empty group. Show numeric quantities and repeated pictures in standard die-pip patterns. |

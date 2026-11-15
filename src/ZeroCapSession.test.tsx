@@ -2,7 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
-import { openMathematics } from './testing/openMathematics';
+import { openSmallMaths } from './testing/openMathematics';
 
 const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 const enter = (value: string) =>
@@ -20,8 +20,8 @@ test('real twenty-question generation keeps per-presentation themes and exact ze
   const missed = [first, repeated, zero].sort((a, b) => a - b);
   expect(new Set(missed).size).toBe(3);
   const { container } = render(<App />);
-  openMathematics();
-  fireEvent.click(screen.getByRole('radio', { name: /Level 0 ·/ }));
+  openSmallMaths();
+  fireEvent.click(screen.getByRole('radio', { name: /Level 1 · Count the pictures/ }));
   fireEvent.click(screen.getByRole('radio', { name: '20 exercises' }));
   click('Let’s count');
   const equations = new Map<number, string>();
