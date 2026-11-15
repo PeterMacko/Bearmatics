@@ -42,9 +42,10 @@ export default function BadgeButton({
         <span className={`badge-medal${frame.levelUp ? ' level-up' : ''}`} key={frame.badge}>
           <BadgeIcon badge={frame.badge} size={40} />
         </span>
+        {/* Peter: badge, then the bar, then the points. */}
         <span className="bar-progress" aria-hidden="true">
-          <span className="bar-progress-points">{frame.points}</span>
           <ProgressTrack frame={frame} />
+          <span className="bar-progress-points">{frame.points}</span>
         </span>
       </button>
       {open && (

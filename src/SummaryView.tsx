@@ -33,10 +33,11 @@ export default function SummaryView({
       <span className="completion-mark" aria-hidden="true">
         ✓
       </span>
-      <h2 ref={headingRef} tabIndex={-1}>
+      {/* Peter (SCRUM-117 review): no visible title or intro line; the heading stays for screen
+          readers and as the focus target. */}
+      <h2 ref={headingRef} tabIndex={-1} className="sr-only">
         {t.complete}
       </h2>
-      <p className="intro">{t.summary}</p>
       <p className="completed-total">
         {total} {finishedLabel ?? t.finished}
       </p>

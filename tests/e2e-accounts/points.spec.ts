@@ -205,3 +205,24 @@ test('QA124-04: a long nickname plus the badge never cover the menu heading (742
     expect(hits, `${width}x${height}`).toEqual([]);
   }
 });
+
+test('Peter review: the signed-in summary needs no scrolling on phones', async ({ page }) => {
+  await createAccount(page);
+  for (const [width, height] of [
+    [390, 844],
+    [369, 700],
+    [360, 640],
+    [320, 568],
+    [844, 390],
+  ]) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await playMaths(page, 5);
+    await expect(page.locator('.summary-points .badge-meter')).toBeVisible();
+    await expect(page.getByText('Every little step helps your brain grow.')).toHaveCount(0);
+    const scroll = await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    );
+    expect(scroll, `${width}x${height}`).toBeLessThanOrEqual(0);
+  }
+});

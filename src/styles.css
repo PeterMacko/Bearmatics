@@ -2997,10 +2997,12 @@ progress::-moz-progress-bar {
   }
 }
 .bar-progress {
-  display: grid;
-  gap: 3px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bar-progress .progress-track {
   width: 52px;
-  justify-items: start;
 }
 .bar-progress-points {
   font-size: 0.95rem;
@@ -3035,8 +3037,11 @@ progress::-moz-progress-bar {
     width: 48px;
   }
   .app-shell .app-bar .bar-progress {
-    width: 42px;
-    justify-items: center;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .app-shell .app-bar .bar-progress .progress-track {
+    width: 40px;
   }
   .app-shell .app-bar .badge-medal svg {
     width: 34px;
@@ -3142,5 +3147,51 @@ progress::-moz-progress-bar {
   }
   .progress-fill {
     transition: none;
+  }
+}
+
+/* SCRUM-117 review: the summary fits small screens without scrolling (title and intro removed,
+   points block added). */
+@media (max-height: 760px) {
+  .summary .completion-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+    margin: 8px 0;
+  }
+  .summary .completed-total {
+    margin: 10px 0 4px;
+  }
+  .summary .first-try {
+    margin-bottom: 12px;
+  }
+  .summary .summary-points {
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .app-bar .bar-progress .progress-track {
+    width: 32px;
+  }
+  .app-bar .bar-progress {
+    gap: 4px;
+  }
+}
+@media (max-width: 620px) and (max-height: 600px) {
+  .workspace.in-session:has(.summary) {
+    padding-top: 8px;
+    padding-bottom: 12px;
+  }
+  .workspace .summary {
+    padding-top: 0;
+  }
+}
+/* Short landscape phones: the decorative check mark gives its room to the points. */
+@media (max-height: 420px) {
+  .summary .completion-mark {
+    display: none;
+  }
+  .summary .eyebrow {
+    margin-bottom: 6px;
   }
 }
