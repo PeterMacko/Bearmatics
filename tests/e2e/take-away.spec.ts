@@ -72,12 +72,12 @@ for (const [width, height, touch] of DEVICES)
     const pictures = page.locator('.basket-picture');
     await expect(pictures).toHaveCount(6);
     // Take two out: both areas hold pictures.
-    if (touch) {
-      await pictures.first().tap();
-      await page.locator('.in-basket .basket-picture').first().tap();
-    } else {
-      await pictures.first().click();
-      await page.locator('.in-basket .basket-picture').first().click();
+    // Two deliberate taps (a quick second tap is ignored, QA162-01).
+    for (let i = 0; i < 2; i++) {
+      const picture = page.locator('.in-basket .basket-picture').first();
+      if (touch) await picture.tap();
+      else await picture.click();
+      await page.waitForTimeout(400);
     }
     await expect(page.locator('.taken-out .basket-picture')).toHaveCount(2);
     // Let the short pop-in animation end before measuring.
