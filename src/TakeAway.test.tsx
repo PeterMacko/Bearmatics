@@ -127,3 +127,17 @@ test('Slovak names', async () => {
   ).toHaveAccessibleName('Pirát medzi vybranými');
   expect(screen.getByText('V košíku: 1. Vybrané: 1.')).toBeInTheDocument();
 });
+
+test('QA162-01: a double tap moves one picture only; a deliberate second tap later moves another', async () => {
+  await start([ex(5, 2), ex(3, 1), ex(4, 4), ex(5, 0), ex(2, 1)]);
+  fireEvent.click(inBasket()[0], { detail: 1 });
+  // The second tap of the double tap lands on the picture that slid into place.
+  fireEvent.click(inBasket()[0], { detail: 2 });
+  fireEvent.click(inBasket()[0], { detail: 1 });
+  expect(out()).toHaveLength(1);
+  await act(async () => {
+    await new Promise((done) => setTimeout(done, 400));
+  });
+  fireEvent.click(inBasket()[0], { detail: 1 });
+  expect(out()).toHaveLength(2);
+});

@@ -3875,3 +3875,12 @@ progress::-moz-progress-bar {
     font-size: 1.9rem;
   }
 }
+/* Wide-short windows (884x600 in Firefox, QA162-02): a little more compact. */
+@media (min-width: 621px) and (max-height: 620px) {
+  .practice:has(.take-away) .equation {
+    font-size: 1.7rem;
+  }
+  .practice:has(.take-away) .take-away {
+    margin-top: 10px;
+  }
+}

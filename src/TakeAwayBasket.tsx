@@ -30,6 +30,9 @@ export default function TakeAwayBasket({
     refocus.current = null;
   }, [out]);
   const name = t.names[theme];
+  // After a move the next picture slides under the finger: the second tap of a double tap
+  // (detail 2, or a fresh tap within a moment) must not move it too (QA162-01).
+  const movedAt = useRef(-Infinity);
   const move = (index: number, hadFocus: boolean) => {
     const next = out.map((value, i) => (i === index ? !value : value));
     setOut(next);
@@ -66,7 +69,13 @@ export default function TakeAwayBasket({
                 if (element) buttons.current.set(index, element);
                 else buttons.current.delete(index);
               }}
-              onClick={(event) => move(index, document.activeElement === event.currentTarget)}
+              onClick={(event) => {
+                // Keyboard activation (detail 0) is always deliberate.
+                if (event.detail > 1) return;
+                if (event.detail === 1 && performance.now() - movedAt.current < 350) return;
+                movedAt.current = performance.now();
+                move(index, document.activeElement === event.currentTarget);
+              }}
             >
               <PictureMotif theme={theme} />
             </button>
