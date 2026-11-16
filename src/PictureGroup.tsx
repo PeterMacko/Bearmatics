@@ -56,7 +56,7 @@ const dicePositions: readonly (readonly (readonly [number, number])[])[] = [
 ];
 
 /** Original local vectors, one object per pip; never an asset or network request. */
-function PictureMotif({ theme }: { theme: PictureTheme }) {
+export function PictureMotif({ theme }: { theme: PictureTheme }) {
   return (
     <svg
       viewBox="0 0 64 64"

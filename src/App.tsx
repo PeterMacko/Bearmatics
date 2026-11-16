@@ -206,6 +206,7 @@ export default function App() {
     toggleSound,
     resetForNewSession,
     playBadge,
+    playPop,
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
   // Points (SCRUM-117): signed-in players only; null while unknown or signed out.
   const [points, setPoints] = useState<number | null>(null);
@@ -458,11 +459,15 @@ export default function App() {
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- move focus per question only
   }, [writeQuestion, writeSession?.done]);
   const current = session ? currentExercise(session) : undefined;
+  // Counts presentations (new example, review repeat, new lesson): the take-away basket
+  // starts full for each (SCRUM-156).
+  const [presentation, setPresentation] = useState(0);
   const pictureTheme =
     session && current
       ? PICTURE_THEMES[session.exercises.indexOf(current) % PICTURE_THEMES.length]
       : PICTURE_THEMES[0];
   const start = () => {
+    setPresentation((n) => n + 1);
     resetForNewSession();
     void activateSound();
     setAnswer('');
@@ -480,6 +485,7 @@ export default function App() {
   }
   const next = () => {
     void activateSound();
+    setPresentation((n) => n + 1);
     setHintOpen(false);
     setSession((previous) => previous && advance(previous));
     setAnswer('');
@@ -890,6 +896,8 @@ export default function App() {
               level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
               current={current}
               pictureTheme={pictureTheme}
+              presentation={presentation}
+              onPop={playPop}
               position={
                 session.reviewing
                   ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}`

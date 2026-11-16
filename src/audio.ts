@@ -1,4 +1,4 @@
-export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge';
+export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop';
 
 /** Original procedural tones. Context activation is only requested by user gestures. */
 export class FeedbackAudio {
@@ -32,6 +32,30 @@ export class FeedbackAudio {
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
+      if (outcome === 'pop') {
+        // SCRUM-156: a short soft pop when a picture moves (a quick falling blip, quieter
+        // than the answer sounds).
+        const oscillator = context.createOscillator();
+        const gain = context.createGain();
+        const note = { oscillator, gain };
+        this.active.add(note);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(720, anchor);
+        oscillator.frequency.exponentialRampToValueAtTime(320, anchor + 0.09);
+        gain.gain.setValueAtTime(0, anchor);
+        gain.gain.linearRampToValueAtTime(0.35, anchor + 0.008);
+        gain.gain.exponentialRampToValueAtTime(0.001, anchor + 0.12);
+        oscillator.connect(gain);
+        gain.connect(context.destination);
+        oscillator.onended = () => {
+          this.active.delete(note);
+          oscillator.disconnect();
+          gain.disconnect();
+        };
+        oscillator.start(anchor);
+        oscillator.stop(anchor + 0.13);
+        return true;
+      }
       // A new bear badge (SCRUM-117) rings like a correct answer, a little higher.
       const badge = outcome === 'badge';
       if (badge) outcome = 'correct';
