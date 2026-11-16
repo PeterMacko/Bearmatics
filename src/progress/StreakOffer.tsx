@@ -57,6 +57,18 @@ export default function StreakOffer({
       }
       action();
     };
+  // Closing uncovers the summary: a quick second tap must not land on Play again behind the
+  // dialog (QA131-06), so clicks are swallowed for a moment after closing.
+  const close = () => {
+    const swallow = (event: MouseEvent) => {
+      if (!(event.target instanceof Element) || !event.target.closest('.summary')) return;
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    document.addEventListener('click', swallow, true);
+    window.setTimeout(() => document.removeEventListener('click', swallow, true), 600);
+    onClose();
+  };
   const after = currentPoints - offer.cost;
   const fromBadge = badgeFor(currentPoints).badge;
   const toBadge = badgeFor(after).badge;
@@ -96,7 +108,7 @@ export default function StreakOffer({
       titleId="streak-title"
       title={done ? t.streakTitle : t.offerTitle}
       closeLabel={done ? t.closeDone : t.closeOffer}
-      onClose={onClose}
+      onClose={close}
       triggerRef={trigger}
     >
       <div className={`streak-offer step-${step}`} ref={body}>
@@ -176,7 +188,7 @@ export default function StreakOffer({
               })}
             </p>
             <div className="streak-offer-actions">
-              <button type="button" className="primary" onClick={deliberate(onClose)}>
+              <button type="button" className="primary" onClick={deliberate(close)}>
                 {t.ok}
               </button>
             </div>

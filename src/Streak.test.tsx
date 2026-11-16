@@ -230,7 +230,8 @@ test('Decide later closes without an answer; a changed price shows the new offer
   fireEvent.click(within(dialog).getByRole('button', { name: 'Decide later' }));
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(calls.filter((c) => c.path === '/api/progress/streak')).toEqual([]);
-  // Next lesson the same day: the offer comes back.
+  // Next lesson the same day: the offer comes back (taps right after closing are ignored).
+  await settle();
   click('Play again');
   for (let i = 0; i < 5; i++) {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
@@ -293,3 +294,36 @@ test('QA131-01/02: a double tap never answers the next question; focus goes to O
   fireEvent.keyDown(ok, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
 }, 15000);
+
+test('QA131-06: a quick second tap after OK does not start a new lesson', async () => {
+  server({ points: 135, streak: 12, frozen: true, offer: { streak: 12, missed: 2, cost: 14 } });
+  render(<App />);
+  await screen.findByRole('img', { name: /frozen/ });
+  await playFive();
+  const dialog = await offerDialog();
+  await press(dialog, 'Unlock');
+  await press(dialog, 'Yes');
+  await within(dialog).findByRole('button', { name: 'OK' });
+  await press(dialog, 'OK');
+  // The second tap of a double tap lands on Play again below the closed dialog.
+  fireEvent.click(screen.getByRole('button', { name: 'Play again' }), { detail: 1 });
+  expect(screen.getByRole('button', { name: 'Play again' })).toBeInTheDocument();
+  // A deliberate tap later works.
+  await settle();
+  fireEvent.click(screen.getByRole('button', { name: 'Play again' }), { detail: 1 });
+  expect(screen.queryByRole('button', { name: 'Play again' })).toBeNull();
+}, 15000);
+
+test('QA131-07: no streak yet: the summary shows 1 at once, never a lit flame with 0', async () => {
+  server({ points: 0, streak: 0, frozen: false });
+  render(<App />);
+  await screen.findByRole('img', { name: /No streak yet/ });
+  await playFive();
+  const summary = await within(screen.getByRole('main')).findByRole(
+    'img',
+    { name: 'Streak 1 day' },
+    { timeout: 3000 },
+  );
+  expect(summary).toHaveTextContent('1');
+  expect(summary).not.toHaveTextContent('0');
+});

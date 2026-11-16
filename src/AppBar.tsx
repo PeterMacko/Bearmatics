@@ -31,6 +31,29 @@ export default function AppBar({
     if (!end) return;
     const root = document.documentElement;
     const update = () => {
+      // The frozen streak's warm-up text is only an extra: when it makes the bar wrap into two
+      // rows or reach the course eyebrow, show the ice and number only (QA131-05 B/C).
+      root.classList.remove('bar-tight');
+      const overlaps = (selector: string) => {
+        const target = document.querySelector(selector);
+        if (!target) return false;
+        const e = end.getBoundingClientRect();
+        const r = target.getBoundingClientRect();
+        return (
+          r.width > 0 &&
+          r.top < e.bottom &&
+          r.bottom > e.top &&
+          r.right > e.left &&
+          r.left < e.right
+        );
+      };
+      const items = [...end.children].map((child) => child.getBoundingClientRect());
+      const wraps = items.some((item) => item.top > items[0].bottom - 4);
+      if (end.querySelector('.streak-warm-up') && (wraps || overlaps('.menu-shell .eyebrow')))
+        root.classList.add('bar-tight');
+      // Wider screens: the bar is absolute, so the page keeps room for its real height (it
+      // grows at 200% text, QA131-05 A).
+      root.style.setProperty('--bar-height', `${Math.ceil(end.getBoundingClientRect().bottom)}px`);
       const heading = document.querySelector('.menu-shell .menu-heading');
       let clear = 0;
       let drop = 0;

@@ -3456,7 +3456,7 @@ progress::-moz-progress-bar {
    the menus (content keeps its 1180px column). Absolute to the page, so no horizontal scroll. */
 @media (min-width: 621px) and (min-height: 501px), (min-width: 951px) {
   .app-shell:not(.menu-shell) {
-    padding-top: 60px;
+    padding-top: max(60px, calc(var(--bar-height, 0px) + 8px));
   }
   .app-shell:not(.menu-shell) .app-bar {
     position: absolute;
@@ -3478,4 +3478,8 @@ progress::-moz-progress-bar {
   .streak-offer-art {
     display: none;
   }
+}
+/* The bar would wrap or reach the course eyebrow: frozen streak = ice + number (QA131-05). */
+.bar-tight .streak-chip .streak-warm-up {
+  display: none;
 }
