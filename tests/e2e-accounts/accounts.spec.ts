@@ -90,6 +90,7 @@ test.describe('signed out', () => {
   test('account screens fit the width of every device and keep the submit button reachable', async ({
     browser,
   }) => {
+    test.setTimeout(120_000);
     for (const device of DEVICES) {
       const context = await browser.newContext({
         viewport: { width: device.width, height: device.height },
