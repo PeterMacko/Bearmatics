@@ -19,7 +19,8 @@ export default function SummaryStreak({
   before: number | null;
   streak: Streak;
 }) {
-  const changes = before !== null && before !== streak.streak;
+  // No streak before (0): show the new number at once; a lit flame with 0 looked wrong (QA131-07).
+  const changes = before !== null && before > 0 && before !== streak.streak;
   // The new number this summary has already switched to (after the 1 second).
   const [switchedTo, setSwitchedTo] = useState<number | null>(null);
   useEffect(() => {
