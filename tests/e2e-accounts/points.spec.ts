@@ -266,6 +266,7 @@ const streak = (page: Page) =>
 test('streak: first finished lesson gives 1 day; bar fits at the defined devices (also frozen)', async ({
   page,
 }) => {
+  test.setTimeout(120_000); // 15 devices x 2 screens x 2 states
   await createAccount(page, 'Twelve chars');
   await expect(
     page.getByRole('img', { name: 'No streak yet. Finish a lesson to start one' }),
