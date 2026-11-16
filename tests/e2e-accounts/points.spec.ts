@@ -325,3 +325,48 @@ test('streak: first finished lesson gives 1 day; bar fits at the defined devices
     }
   }
 });
+
+test('QA131-03: at 568x320 every offer and confirmation button is in view', async ({ page }) => {
+  await createAccount(page);
+  const state = { points: 135, streak: 12, frozen: true, today: false };
+  await page.route('**/api/progress', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(state) }),
+  );
+  await page.route('**/api/progress/lessons/finish', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ ...body, ...state, offer: { streak: 12, missed: 2, cost: 14 } }),
+    });
+  });
+  await page.setViewportSize({ width: 568, height: 320 });
+  await page.goto('/');
+  await playMaths(page, 5);
+  const dialog = page.getByRole('dialog', { name: 'Frozen streak' });
+  await expect(dialog).toBeVisible({ timeout: 8000 });
+  for (const name of ['Unlock', 'No thanks'])
+    await expect(dialog.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+  await page.waitForTimeout(700);
+  await dialog.getByRole('button', { name: 'Unlock' }).click();
+  for (const name of ['Yes', 'Back'])
+    await expect(dialog.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+});
+
+test('frozen streak text shows on tablets, ice only on phones', async ({ page }) => {
+  await createAccount(page);
+  await page.route('**/api/progress', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ points: 135, streak: 12, frozen: true, today: false }),
+    }),
+  );
+  for (const [width, height, text] of [
+    [820, 1180, true],
+    [390, 844, false],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await expect(page.locator('.streak-warm-up')).toBeVisible({ visible: text });
+  }
+});

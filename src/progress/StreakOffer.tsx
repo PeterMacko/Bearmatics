@@ -37,12 +37,26 @@ export default function StreakOffer({
     typeof document === 'undefined' ? null : (document.activeElement as HTMLButtonElement | null),
   );
   const body = useRef<HTMLDivElement>(null);
+  // When the step changes, the new buttons appear where the old ones were. A double tap (or a
+  // tap right after the change) must not answer the new question (QA131-01).
+  const stepAt = useRef(0);
+  const opened = useRef(false);
   useEffect(() => {
-    // Each step moves focus to its main button (the old one is gone).
+    stepAt.current = performance.now();
     if (step === 'busy') return;
-    const target = body.current?.querySelector<HTMLElement>('.primary') ?? null;
-    if (step !== 'offer' || error) target?.focus();
+    // Each later step moves focus to its main button (the old one is gone, QA131-02); the
+    // first one keeps the dialog's own first focus.
+    if (opened.current) body.current?.querySelector<HTMLElement>('.primary')?.focus();
+    opened.current = true;
   }, [step, error]);
+  const deliberate =
+    (action: () => void) => (event: { detail: number; preventDefault: () => void }) => {
+      if (event.detail > 1 || performance.now() - stepAt.current < 600) {
+        event.preventDefault();
+        return;
+      }
+      action();
+    };
   const after = currentPoints - offer.cost;
   const fromBadge = badgeFor(currentPoints).badge;
   const toBadge = badgeFor(after).badge;
@@ -81,7 +95,7 @@ export default function StreakOffer({
     <HintDialog
       titleId="streak-title"
       title={done ? t.streakTitle : t.offerTitle}
-      closeLabel={done ? t.ok : t.closeOffer}
+      closeLabel={done ? t.closeDone : t.closeOffer}
       onClose={onClose}
       triggerRef={trigger}
     >
@@ -100,10 +114,18 @@ export default function StreakOffer({
             </p>
             {step === 'offer' && (
               <div className="streak-offer-actions">
-                <button type="button" className="primary" onClick={() => setStep('confirm')}>
+                <button
+                  type="button"
+                  className="primary"
+                  onClick={deliberate(() => setStep('confirm'))}
+                >
                   {t.unlock}
                 </button>
-                <button type="button" className="text-button" onClick={() => void answer(false)}>
+                <button
+                  type="button"
+                  className="text-button"
+                  onClick={deliberate(() => void answer(false))}
+                >
                   {t.noThanks}
                 </button>
               </div>
@@ -124,10 +146,18 @@ export default function StreakOffer({
               )}
             </p>
             <div className="streak-offer-actions">
-              <button type="button" className="primary" onClick={() => void answer(true)}>
+              <button
+                type="button"
+                className="primary"
+                onClick={deliberate(() => void answer(true))}
+              >
                 {t.yes}
               </button>
-              <button type="button" className="text-button" onClick={() => setStep('offer')}>
+              <button
+                type="button"
+                className="text-button"
+                onClick={deliberate(() => setStep('offer'))}
+              >
                 {t.back}
               </button>
             </div>
@@ -139,11 +169,18 @@ export default function StreakOffer({
           </p>
         )}
         {done && (
-          <p role="status">
-            {fill(step === 'warmed' ? t.warmed : t.restarted, {
-              days: pointsText(t.dayUnits, days),
-            })}
-          </p>
+          <>
+            <p role="status">
+              {fill(step === 'warmed' ? t.warmed : t.restarted, {
+                days: pointsText(t.dayUnits, days),
+              })}
+            </p>
+            <div className="streak-offer-actions">
+              <button type="button" className="primary" onClick={deliberate(onClose)}>
+                {t.ok}
+              </button>
+            </div>
+          </>
         )}
       </div>
     </HintDialog>

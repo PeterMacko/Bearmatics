@@ -197,6 +197,10 @@ export async function finishLesson(request: Request, env: AccountEnv): Promise<R
       if (attempt >= 4) throw new Error('streak update kept conflicting');
       row = await readRow(env, accountId);
     }
+  } else {
+    // A repeated save (e.g. Try again after a lost answer) changes nothing, but still shows
+    // today's open offer (QA131-04).
+    offer = openOffer(row.state, today, row.points);
   }
   return json({ ...progressBody(row, today), added: counted ? earned : 0, offer }, 200, {
     'set-cookie': session.renew,

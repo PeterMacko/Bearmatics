@@ -338,6 +338,13 @@ describe('streak (SCRUM-118) through the API', () => {
     // Cost from the points after each lesson: min(20, 10% of 105 / 110).
     expect((await play(cookie, 5)).offer).toEqual({ streak: 3, missed: 2, cost: 10 });
     expect((await play(cookie, 5)).offer).toEqual({ streak: 3, missed: 2, cost: 11 });
+    // QA131-04: a repeated save of a counted lesson (lost answer, Try again) shows the offer too.
+    const again = await lesson(cookie, 5);
+    const first = await read(await finish(cookie, { lessonId: again, size: 5, points: 0 }));
+    const repeat = await read(await finish(cookie, { lessonId: again, size: 5, points: 0 }));
+    expect(repeat.added).toBe(0);
+    expect(repeat.offer).toEqual(first.offer);
+    expect(repeat.offer).not.toBeNull();
   });
 
   it('parallel lessons on a new day add one day only', async () => {

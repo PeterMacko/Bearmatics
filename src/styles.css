@@ -3244,7 +3244,7 @@ progress::-moz-progress-bar {
   }
 }
 /* Phones and short windows: frozen = the ice icon only (text stays in the accessible name). */
-@media (max-width: 900px), (max-height: 500px) {
+@media (max-width: 620px), (max-height: 500px) {
   .streak-chip .streak-warm-up {
     display: none;
   }
@@ -3470,6 +3470,12 @@ progress::-moz-progress-bar {
    the streak under the exercise header; it is back on the summary and the menus. */
 @media (max-height: 340px) and (orientation: landscape) {
   .app-shell.compact-practice .app-bar .streak-chip {
+    display: none;
+  }
+}
+/* QA131-03: short landscape phones keep all dialog buttons in view (no art). */
+@media (max-height: 420px) {
+  .streak-offer-art {
     display: none;
   }
 }

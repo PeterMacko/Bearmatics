@@ -95,6 +95,18 @@ async function playFive() {
   }
 }
 
+// Buttons in the offer ignore taps in the first 600 ms after a step change (QA131-01).
+const settle = () =>
+  act(async () => {
+    await new Promise((done) => setTimeout(done, 650));
+  });
+const press = async (dialog: HTMLElement, name: string) => {
+  await settle();
+  await act(async () => {
+    fireEvent.click(within(dialog).getByRole('button', { name }), { detail: 1 });
+  });
+};
+
 const offerDialog = () => screen.findByRole('dialog', { name: 'Frozen streak' }, { timeout: 6000 });
 
 test("lit flame only after today's lesson: shadow before; the summary switches 5 -> 6 after 1 s", async () => {
@@ -155,17 +167,15 @@ test('the example: unlock offer after the summary, confirmation, Yes pays 14 and
   expect(
     within(dialog).getByText('Your 12-day streak is frozen. Unlock it for 14 points?'),
   ).toBeInTheDocument();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Unlock' }));
+  await press(dialog, 'Unlock');
   expect(
     within(dialog).getByText('You will have 126 points. Your bear badge goes from 4 to 3.'),
   ).toBeInTheDocument();
   // Back returns to the offer; nothing is paid without Yes.
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Back' }));
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Unlock' }));
+  await press(dialog, 'Back');
+  await press(dialog, 'Unlock');
   expect(calls.filter((c) => c.path === '/api/progress/streak')).toEqual([]);
-  await act(async () => {
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Yes' }));
-  });
+  await press(dialog, 'Yes');
   expect(
     await within(dialog).findByText('Your streak is warm again: 13 days!'),
   ).toBeInTheDocument();
@@ -192,9 +202,7 @@ test('No thanks starts again at 1', async () => {
   await screen.findByRole('img', { name: /frozen/ });
   await playFive();
   const dialog = await offerDialog();
-  await act(async () => {
-    fireEvent.click(within(dialog).getByRole('button', { name: 'No thanks' }));
-  });
+  await press(dialog, 'No thanks');
   expect(await within(dialog).findByText('A new streak starts today: 1 day.')).toBeInTheDocument();
   expect(calls.find((c) => c.path === '/api/progress/streak')?.body).toEqual({
     unlock: false,
@@ -230,10 +238,8 @@ test('Decide later closes without an answer; a changed price shows the new offer
     click(i < 4 ? 'Next exercise' : 'See how you did');
   }
   dialog = await offerDialog();
-  fireEvent.click(within(dialog).getByRole('button', { name: 'Unlock' }));
-  await act(async () => {
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Yes' }));
-  });
+  await press(dialog, 'Unlock');
+  await press(dialog, 'Yes');
   expect(
     await within(dialog).findByText('Your 3-day streak is frozen. Unlock it for 11 points?'),
   ).toBeInTheDocument();
@@ -252,3 +258,38 @@ test('Slovak texts', async () => {
     }),
   ).toBeInTheDocument();
 });
+
+test('QA131-01/02: a double tap never answers the next question; focus goes to OK at the end', async () => {
+  const calls = server({
+    points: 135,
+    streak: 12,
+    frozen: true,
+    offer: { streak: 12, missed: 2, cost: 14 },
+  });
+  render(<App />);
+  await screen.findByRole('img', { name: /frozen/ });
+  await playFive();
+  const dialog = await offerDialog();
+  await settle();
+  // Double tap on Unlock: the first tap opens the confirmation, the second (detail 2, or a
+  // quick second tap) lands on Yes and is ignored.
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Unlock' }), { detail: 1 });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Yes' }), { detail: 2 });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Yes' }), { detail: 1 });
+  // Double tap on Back: the second tap lands on No thanks and is ignored.
+  await settle();
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Back' }), { detail: 1 });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'No thanks' }), { detail: 2 });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'No thanks' }), { detail: 1 });
+  await act(async () => {});
+  expect(calls.filter((c) => c.path === '/api/progress/streak')).toEqual([]);
+  expect(within(dialog).getByRole('button', { name: 'Unlock' })).toHaveFocus();
+  await press(dialog, 'Unlock');
+  expect(within(dialog).getByRole('button', { name: 'Yes' })).toHaveFocus();
+  await press(dialog, 'Yes');
+  const ok = await within(dialog).findByRole('button', { name: 'OK' });
+  await act(async () => {});
+  expect(ok).toHaveFocus();
+  fireEvent.keyDown(ok, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).toBeNull();
+}, 15000);
