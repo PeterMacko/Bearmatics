@@ -16,7 +16,7 @@ function fakeDb(answer: (sql: string) => Row | Error): D1Database {
   } as unknown as D1Database;
 }
 
-const migrated = fakeDb((sql) => (sql.includes('app_meta') ? { value: '4' } : { 1: 1 }));
+const migrated = fakeDb((sql) => (sql.includes('app_meta') ? { value: '5' } : { 1: 1 }));
 
 function call(path: string, env: Env, init?: RequestInit) {
   return worker.fetch(new Request(`https://bearmatics.test${path}`, init), env);
@@ -28,7 +28,7 @@ describe('server /api', () => {
     expect(response.status).toBe(200);
     expect(response.headers.get('content-type')).toContain('application/json');
     expect(response.headers.get('cache-control')).toBe('no-store');
-    expect(await response.json()).toEqual({ status: 'ok', database: 'ok', schema: '4' });
+    expect(await response.json()).toEqual({ status: 'ok', database: 'ok', schema: '5' });
   });
 
   it('answers HEAD without a body', async () => {

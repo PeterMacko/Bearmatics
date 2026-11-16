@@ -22,6 +22,7 @@ interface AccountRow {
   email: string | null;
   nickname: string;
   bear: number;
+  leaderboard: number;
 }
 
 /** What the browser may see about the signed-in account. */
@@ -32,6 +33,7 @@ function publicAccount(row: AccountRow) {
     nickname: row.nickname,
     bear: row.bear,
     email: row.email,
+    leaderboard: row.leaderboard !== 0,
   };
 }
 
@@ -210,10 +212,18 @@ export async function updateProfile(request: Request, env: AccountEnv): Promise<
     if (account.google_sub) throw new BadRequest('invalid', 'email');
     email = rules.email(body.email);
   }
-  await env.DB.prepare('UPDATE accounts SET nickname = ?, bear = ?, email = ? WHERE id = ?')
-    .bind(nickname, bear, email, account.id)
+  // SCRUM-148: show me on the leaderboard (on by default).
+  let leaderboard = account.leaderboard;
+  if ('leaderboard' in body) {
+    if (typeof body.leaderboard !== 'boolean') throw new BadRequest('invalid', 'leaderboard');
+    leaderboard = body.leaderboard ? 1 : 0;
+  }
+  await env.DB.prepare(
+    'UPDATE accounts SET nickname = ?, bear = ?, email = ?, leaderboard = ? WHERE id = ?',
+  )
+    .bind(nickname, bear, email, leaderboard, account.id)
     .run();
-  return json({ account: publicAccount({ ...account, nickname, bear, email }) }, 200, {
+  return json({ account: publicAccount({ ...account, nickname, bear, email, leaderboard }) }, 200, {
     'set-cookie': session.renew,
   });
 }

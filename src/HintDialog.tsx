@@ -60,7 +60,13 @@ export default function HintDialog({
             if (!controls?.length) return;
             const first = controls[0],
               last = controls[controls.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
+            const active = document.activeElement as HTMLElement | null;
+            if (!active || ![...controls].includes(active)) {
+              // Focus sits on a non-tabbable element (e.g. the leaderboard box after Try
+              // again): the browser would leave the dialog (QA154-07).
+              event.preventDefault();
+              (event.shiftKey ? last : first).focus();
+            } else if (event.shiftKey && document.activeElement === first) {
               event.preventDefault();
               last.focus();
             } else if (!event.shiftKey && document.activeElement === last) {

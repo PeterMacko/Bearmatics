@@ -56,6 +56,7 @@ import {
 } from './progress/api';
 import StreakChip from './progress/StreakChip';
 import StreakOffer from './progress/StreakOffer';
+import LeaderboardDialog from './progress/LeaderboardDialog';
 import SummaryStreak from './progress/SummaryStreak';
 import BadgeButton from './progress/BadgeButton';
 import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
@@ -213,6 +214,9 @@ export default function App() {
   const [offer, setOffer] = useState<{ offer: Offer; points: number } | null>(null);
   const [offerOpen, setOfferOpen] = useState(false);
   const [warming, setWarming] = useState(false);
+  // SCRUM-148: the leaderboard window (from the points + bar button).
+  const [boardOpen, setBoardOpen] = useState(false);
+  const boardTrigger = useRef<HTMLButtonElement | null>(null);
   // The streak number shown when the lesson started (the summary switches from it).
   const streakAtStart = useRef<number | null>(null);
   const showProgress = (progress: Progress) => {
@@ -620,11 +624,19 @@ export default function App() {
       <AppBar
         label={t.appBar}
         back={back}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen}
+        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
         {account && points !== null && shownFrame && (
-          <BadgeButton t={t.points} points={points} frame={shownFrame} />
+          <BadgeButton
+            t={t.points}
+            points={points}
+            frame={shownFrame}
+            onLeaderboard={(button) => {
+              boardTrigger.current = button;
+              setBoardOpen(true);
+            }}
+          />
         )}
         {account && streak && <StreakChip t={t.points} streak={streak} warming={warming} />}
         {!inLesson && (
@@ -654,7 +666,7 @@ export default function App() {
       <main
         ref={menuRef}
         className={`workspace ${active ? 'in-session' : ''}`}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen}
+        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
       >
         <aside className="companion">
           <div className="bear-scene">
@@ -905,6 +917,14 @@ export default function App() {
           )
         )}
       </main>
+      {boardOpen && account && (
+        <LeaderboardDialog
+          t={t.points}
+          hidden={!account.leaderboard}
+          triggerRef={boardTrigger}
+          onClose={() => setBoardOpen(false)}
+        />
+      )}
       {offerOpen && offer && (
         <StreakOffer
           t={t.points}

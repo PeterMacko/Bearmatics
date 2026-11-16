@@ -71,6 +71,7 @@ describe('sign-up', () => {
         nickname: 'Little Bear',
         bear: 3,
         email: 'parent@example.com',
+        leaderboard: true,
       },
     });
     const setCookie = response.headers.get('set-cookie')!;
@@ -89,6 +90,7 @@ describe('sign-up', () => {
       'email',
       'google_sub',
       'id',
+      'leaderboard',
       'nickname',
       'parent_confirmed_at',
       'server_salt',

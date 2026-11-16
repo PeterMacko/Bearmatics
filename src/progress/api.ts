@@ -18,3 +18,16 @@ export const finishLesson = (lessonId: string, size: number, points: number) =>
 /** Answer today's unlock offer; `cost` is the price the child agreed to. */
 export const answerStreak = (unlock: boolean, cost: number) =>
   call<Progress>('/api/progress/streak', 'POST', { unlock, cost });
+
+/** SCRUM-148: leaderboard rows (only nickname, bear, streak and points of other players). */
+export type LeaderboardRow = {
+  place: number;
+  nickname: string;
+  bear: number;
+  points: number;
+  streak: number;
+  frozen: boolean;
+  me: boolean;
+};
+export const loadLeaderboard = () =>
+  call<{ rows: LeaderboardRow[]; gapBefore: number | null }>('/api/leaderboard');

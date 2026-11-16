@@ -15,10 +15,13 @@ export default function BadgeButton({
   t,
   points,
   frame,
+  onLeaderboard,
 }: {
   t: Copy['points'];
   points: number;
   frame: PointsFrame;
+  /** SCRUM-148: points and bar open the leaderboard. */
+  onLeaderboard: (button: HTMLButtonElement) => void;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLButtonElement>(null);
@@ -27,12 +30,14 @@ export default function BadgeButton({
   const label = progress.badge
     ? fill(t.badge, { badge: progress.badge, points: amount })
     : fill(t.noBadge, { points: amount });
+  const boardLabel = fill(t.leaderboardButton, { points: amount });
   return (
-    <>
+    <span className="badge-button">
+      {/* SCRUM-148: two buttons. The badge opens the badge details, points + bar the leaderboard. */}
       <button
         ref={ref}
         type="button"
-        className="badge-button"
+        className="badge-medal-button"
         aria-label={label}
         title={label}
         aria-haspopup="dialog"
@@ -42,10 +47,18 @@ export default function BadgeButton({
         <span className={`badge-medal${frame.levelUp ? ' level-up' : ''}`} key={frame.badge}>
           <BadgeIcon badge={frame.badge} size={40} />
         </span>
-        {/* Peter: badge, then the bar, then the points. */}
-        <span className="bar-progress" aria-hidden="true">
-          <ProgressTrack frame={frame} />
-          <span className="bar-progress-points">{frame.points}</span>
+      </button>
+      <button
+        type="button"
+        className="bar-progress"
+        aria-label={boardLabel}
+        title={boardLabel}
+        aria-haspopup="dialog"
+        onClick={(event) => onLeaderboard(event.currentTarget)}
+      >
+        <ProgressTrack frame={frame} />
+        <span className="bar-progress-points" aria-hidden="true">
+          {frame.points}
         </span>
       </button>
       {open && (
@@ -59,7 +72,7 @@ export default function BadgeButton({
           <BadgeDetails t={t} points={points} />
         </HintDialog>
       )}
-    </>
+    </span>
   );
 }
 

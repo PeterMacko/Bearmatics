@@ -3479,7 +3479,196 @@ progress::-moz-progress-bar {
     display: none;
   }
 }
+
+/* SCRUM-148: the badge area is two buttons: medal (badge details) and points + bar (leaderboard). */
+.badge-medal-button,
+.badge-button .bar-progress {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.badge-medal-button {
+  min-width: 44px;
+}
+.badge-button .bar-progress {
+  min-width: 48px;
+}
+.badge-medal-button:hover .badge-medal {
+  transform: scale(1.06);
+}
+.badge-button .bar-progress:hover .progress-track {
+  outline: 2px solid #f3c27a;
+  outline-offset: 1px;
+}
+.badge-button:hover .badge-medal {
+  transform: none;
+}
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  .app-shell .app-bar .badge-medal-button,
+  .app-shell .app-bar .badge-button .bar-progress {
+    width: 48px;
+    min-height: 40px;
+  }
+}
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard-table th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted, #6f625a);
+  text-align: start;
+  padding: 2px 6px 6px;
+}
+.leaderboard-table td {
+  padding: 5px 6px;
+  border-top: 1px solid #efe6df;
+  vertical-align: middle;
+}
+.leaderboard-table .num {
+  text-align: end;
+  white-space: nowrap;
+}
+.leaderboard-table tr.me td {
+  background: #fff1dc;
+  font-weight: 800;
+}
+.leaderboard-table tr.me td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+.leaderboard-table tr.me td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+.leaderboard-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.leaderboard-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+.leaderboard-gap td {
+  text-align: center;
+  color: var(--muted, #6f625a);
+  letter-spacing: 0.3em;
+}
+.leaderboard-state {
+  text-align: center;
+  margin: 8px 0;
+}
+.leaderboard-note {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted, #6f625a);
+}
+/* Small phones: the summary with the streak row still fits without scrolling. */
+@media (max-width: 620px) and (max-height: 600px) {
+  .summary .completion-row {
+    margin: 2px 0 4px;
+  }
+  .summary .completion-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  .summary-streak {
+    font-size: 1.1rem;
+  }
+  .summary-streak .streak-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .summary .completed-total {
+    margin-top: 6px;
+  }
+}
+/* Smallest landscape phones during a lesson: only the badge stays in the left column. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .app-shell.compact-practice .app-bar .badge-button .bar-progress {
+    display: none;
+  }
+}
+/* Phones: lessons, summary and account screens use the same width for the bar as the menus
+   (into the page padding), so badge, streak, profile and settings fit next to Back. */
+@media (max-width: 620px) and (min-height: 501px) {
+  .app-shell:not(.menu-shell) .app-bar {
+    margin-inline: -8px;
+  }
+}
+.leaderboard-player > .bear-icon {
+  flex: none;
+}
 /* The bar would wrap or reach the course eyebrow: frozen streak = ice + number (QA131-05). */
 .bar-tight .streak-chip .streak-warm-up {
   display: none;
+}
+/* Small phones (320 wide): the menu bar uses the page edges too, so Back, medal, points + bar,
+   streak, profile and settings stay one row (QA154-03). */
+@media (max-width: 360px) and (min-height: 501px) {
+  .app-shell.menu-shell .app-bar {
+    inset-inline: 8px;
+  }
+}
+/* Narrow leaderboard (phones, large text): no bear column, tighter cells, so Points fit
+   (QA154-02); nicknames wrap but never down to one letter per line (QA154-04). */
+.leaderboard {
+  container-type: inline-size;
+}
+.leaderboard-player > span:last-child {
+  min-width: 5.5em;
+}
+@container (max-width: 20em) {
+  .leaderboard-table {
+    font-size: 0.82em;
+  }
+  .leaderboard-table th {
+    font-size: 0.58rem;
+  }
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding-inline: 2px;
+  }
+  .leaderboard-player > .bear-icon {
+    display: none;
+  }
+  .leaderboard-player > span:last-child {
+    min-width: 3em;
+  }
+  .leaderboard-streak .streak-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+.leaderboard:focus {
+  outline: none;
+}
+.leaderboard-table .th-short {
+  display: none;
+}
+@container (max-width: 20em) {
+  .leaderboard-table .th-short {
+    display: inline;
+  }
+  .leaderboard-table .th-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
 }
