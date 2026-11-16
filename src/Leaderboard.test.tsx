@@ -93,11 +93,10 @@ test('badge opens the badge details; points + bar open the leaderboard with my r
   expect(within(me).getByText('Mia')).toBeInTheDocument();
   expect(within(me).getByLabelText('Place 14')).toBeInTheDocument();
   expect(within(me).getByLabelText('Streak 3 days, frozen')).toBeInTheDocument();
-  expect(
-    within(table)
-      .getAllByRole('columnheader')
-      .map((h) => h.textContent),
-  ).toEqual(['Place', 'Player', 'Streak', 'Points']);
+  // Accessible names (narrow windows show "#" for Place, hidden from screen readers).
+  for (const name of ['Place', 'Player', 'Streak', 'Points'])
+    expect(within(table).getByRole('columnheader', { name })).toBeInTheDocument();
+  expect(within(table).getAllByRole('columnheader')).toHaveLength(4);
   fireEvent.keyDown(dialog, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(within(nav).getByRole('button', { name: 'Leaderboard, 112 points' })).toHaveFocus();
@@ -119,6 +118,9 @@ test('offline: says so and Try again loads it', async () => {
   expect(await within(dialog).findByRole('table')).toBeInTheDocument();
   // QA154-01: focus stays in the window, so Escape still closes it.
   expect(dialog).toContainElement(document.activeElement as HTMLElement);
+  // QA154-07: Tab from the box goes to a dialog button, not out of the dialog.
+  fireEvent.keyDown(document.activeElement!, { key: 'Tab' });
+  expect(document.activeElement).toBe(within(dialog).getByRole('button', { name: /Close/ }));
   fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
 });

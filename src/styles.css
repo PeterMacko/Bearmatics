@@ -3656,3 +3656,19 @@ progress::-moz-progress-bar {
 .leaderboard:focus {
   outline: none;
 }
+.leaderboard-table .th-short {
+  display: none;
+}
+@container (max-width: 20em) {
+  .leaderboard-table .th-short {
+    display: inline;
+  }
+  .leaderboard-table .th-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}

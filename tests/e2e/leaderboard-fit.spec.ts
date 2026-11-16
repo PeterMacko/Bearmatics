@@ -23,7 +23,7 @@ const ROWS = [
     me: false,
   })),
   { place: 23, nickname: 'Miška', bear: 3, points: 140, streak: 2, frozen: false, me: false },
-  { place: 24, nickname: 'Brave Cub', bear: 2, points: 135, streak: 5, frozen: false, me: true },
+  { place: 24, nickname: 'Medvedík77', bear: 2, points: 200, streak: 365, frozen: true, me: true },
   { place: 25, nickname: 'Adam', bear: 5, points: 120, streak: 0, frozen: false, me: false },
 ];
 
@@ -85,21 +85,29 @@ test('QA154-03: 320x568 maths menu: Back and every bar item stay in one row', as
   }
 });
 
-for (const [width, height] of [
-  [320, 568],
-  [360, 640],
-  [369, 700],
-  [390, 844],
+for (const [width, height, language] of [
+  [320, 568, 'English'],
+  [320, 568, 'Slovenčina'],
+  [360, 640, 'Slovenčina'],
+  [369, 700, 'English'],
+  [390, 844, 'Slovenčina'],
 ] as const) {
-  test(`QA154-02: 200% text at ${width}x${height}: the leaderboard table fits its window`, async ({
+  test(`QA154-02: 200% text at ${width}x${height} ${language}: the leaderboard table fits`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height });
     await mock(page, 135, 5);
     await page.goto('/');
+    if (language !== 'English') {
+      await page.getByRole('button', { name: 'Settings' }).click();
+      await page.getByRole('button', { name: language }).click();
+      await page.keyboard.press('Escape');
+    }
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
-    await page.getByRole('button', { name: /^Leaderboard,/ }).click();
-    const dialog = page.getByRole('dialog', { name: 'Leaderboard' });
+    await page.getByRole('button', { name: /^(Leaderboard|Rebríček),/ }).click();
+    const dialog = page.getByRole('dialog', {
+      name: language === 'English' ? 'Leaderboard' : 'Rebríček',
+    });
     await expect(dialog.getByRole('table')).toBeVisible();
     const m = await dialog.evaluate((box) => {
       const table = box.querySelector('table')!.getBoundingClientRect();

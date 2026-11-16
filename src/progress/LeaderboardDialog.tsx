@@ -85,7 +85,13 @@ export default function LeaderboardDialog({
           <table className="leaderboard-table" aria-labelledby="leaderboard-title">
             <thead>
               <tr>
-                <th scope="col">{t.place}</th>
+                <th scope="col">
+                  {/* Narrow windows show "#" (the Slovak "Poradie" is too wide, QA154-02b). */}
+                  <span className="th-long">{t.place}</span>
+                  <span className="th-short" aria-hidden="true">
+                    #
+                  </span>
+                </th>
                 <th scope="col">{t.player}</th>
                 <th scope="col" className="num">
                   {t.streakColumn}
