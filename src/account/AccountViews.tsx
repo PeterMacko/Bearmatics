@@ -586,9 +586,11 @@ export function ProfileView({
             id={switchId}
             type="checkbox"
             checked={boardOn}
-            disabled={board.busy}
+            aria-disabled={board.busy || undefined}
             aria-describedby={`${switchId}-hint`}
             onChange={(event) => {
+              // Not `disabled` while saving: that drops keyboard focus (QA154-05).
+              if (board.busy) return;
               const leaderboard = event.target.checked;
               setBoardOn(leaderboard); // at once; back if saving fails
               void board.run(

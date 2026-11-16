@@ -1,0 +1,132 @@
+import { expect, test, type Page } from '@playwright/test';
+
+// SCRUM-148 QA154-02/03/05 with mocked server answers.
+const ROWS = [
+  ...[
+    'Zuzka',
+    'Maťko',
+    'Medvedík77',
+    'Ema',
+    'Lucia',
+    'Šimon',
+    'Peter',
+    'Dominik',
+    'Hugo',
+    'Kubko',
+  ].map((nickname, i) => ({
+    place: i + 1,
+    nickname,
+    bear: (i % 8) + 1,
+    points: 1234 - i * 37,
+    streak: 12 - i,
+    frozen: i === 3,
+    me: false,
+  })),
+  { place: 23, nickname: 'Miška', bear: 3, points: 140, streak: 2, frozen: false, me: false },
+  { place: 24, nickname: 'Brave Cub', bear: 2, points: 135, streak: 5, frozen: false, me: true },
+  { place: 25, nickname: 'Adam', bear: 5, points: 120, streak: 0, frozen: false, me: false },
+];
+
+async function mock(page: Page, points: number, streak: number, nickname = 'Brave Cub') {
+  let leaderboard = true;
+  await page.route('**/api/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    const json = (body: unknown) =>
+      route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+    const account = () => ({
+      kind: 'password',
+      username: 'kid',
+      nickname,
+      bear: 2,
+      email: null,
+      leaderboard,
+    });
+    if (path === '/api/me' && route.request().method() === 'PATCH') {
+      await new Promise((done) => setTimeout(done, 300));
+      leaderboard = JSON.parse(route.request().postData() ?? '{}').leaderboard ?? leaderboard;
+      return json({ account: account() });
+    }
+    if (path === '/api/me') return json({ account: account() });
+    if (path === '/api/progress') return json({ points, streak, frozen: false, today: true });
+    if (path === '/api/leaderboard') return json({ rows: ROWS, gapBefore: 10 });
+    return json({ available: false });
+  });
+}
+
+const frames = (page: Page) =>
+  page.evaluate(
+    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+  );
+
+test('QA154-03: 320x568 maths menu: Back and every bar item stay in one row', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  for (const [points, streak] of [
+    [40, 12],
+    [1234, 12],
+    [9999, 365],
+  ]) {
+    await page.unrouteAll();
+    await mock(page, points, streak);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Maths', exact: true }).click();
+    await expect(page.locator('.streak-chip')).toBeVisible();
+    await frames(page);
+    const m = await page.evaluate(() => {
+      const items = [
+        ...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *'),
+      ].map((e) => e.getBoundingClientRect());
+      return {
+        rows: Math.max(...items.map((r) => r.top)) - Math.min(...items.map((r) => r.top)),
+        scroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      };
+    });
+    expect(m.rows, `${points}/${streak}`).toBeLessThan(20);
+    expect(m.scroll, `${points}/${streak}`).toBeLessThanOrEqual(0);
+  }
+});
+
+for (const [width, height] of [
+  [320, 568],
+  [360, 640],
+  [369, 700],
+  [390, 844],
+] as const) {
+  test(`QA154-02: 200% text at ${width}x${height}: the leaderboard table fits its window`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await mock(page, 135, 5);
+    await page.goto('/');
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    await page.getByRole('button', { name: /^Leaderboard,/ }).click();
+    const dialog = page.getByRole('dialog', { name: 'Leaderboard' });
+    await expect(dialog.getByRole('table')).toBeVisible();
+    const m = await dialog.evaluate((box) => {
+      const table = box.querySelector('table')!.getBoundingClientRect();
+      const content = box.querySelector('.leaderboard')!.getBoundingClientRect();
+      const name = [...box.querySelectorAll('tbody tr:not(.leaderboard-gap) td:nth-child(2)')].map(
+        (cell) => cell.getBoundingClientRect().width,
+      );
+      return { over: table.right - content.right, narrowest: Math.min(...name) };
+    });
+    expect(m.over).toBeLessThanOrEqual(1);
+    // Nicknames never break down to single letters.
+    expect(m.narrowest).toBeGreaterThan(40);
+  });
+}
+
+test('QA154-05: the profile switch keeps keyboard focus after Space', async ({ page }) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await mock(page, 135, 5);
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
+  const box = page.getByRole('checkbox', { name: 'Show me on the leaderboard' });
+  await box.focus();
+  await page.keyboard.press('Space');
+  await expect(box).not.toBeChecked();
+  await expect(page.getByText('Saved.')).toBeVisible();
+  await expect(box).not.toHaveAttribute('aria-disabled');
+  await expect(box).toBeFocused();
+  await page.keyboard.press('Space');
+  await expect(box).toBeChecked();
+});

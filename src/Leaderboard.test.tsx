@@ -111,10 +111,16 @@ test('offline: says so and Try again loads it', async () => {
   expect(
     await within(dialog).findByText('The leaderboard could not be loaded.'),
   ).toBeInTheDocument();
+  const retry = within(dialog).getByRole('button', { name: 'Try again' });
+  retry.focus();
   await act(async () => {
-    fireEvent.click(within(dialog).getByRole('button', { name: 'Try again' }));
+    fireEvent.click(retry);
   });
   expect(await within(dialog).findByRole('table')).toBeInTheDocument();
+  // QA154-01: focus stays in the window, so Escape still closes it.
+  expect(dialog).toContainElement(document.activeElement as HTMLElement);
+  fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+  expect(screen.queryByRole('dialog')).toBeNull();
 });
 
 test('profile switch turns the leaderboard off at once; hidden note in the window', async () => {
@@ -124,10 +130,13 @@ test('profile switch turns the leaderboard off at once; hidden note in the windo
   const box = await screen.findByRole('checkbox', { name: 'Show me on the leaderboard' });
   expect(box).toBeChecked();
   expect(box).toHaveAccessibleDescription('Others see your nickname, streak and points.');
+  box.focus();
   await act(async () => {
     fireEvent.click(box);
   });
   expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ leaderboard: false });
+  // QA154-05: the switch keeps keyboard focus while and after saving.
+  expect(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' })).toHaveFocus();
   expect(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' })).not.toBeChecked();
   fireEvent.click(screen.getByRole('button', { name: 'Leaderboard, 112 points' }));
   expect(

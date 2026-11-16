@@ -3616,3 +3616,43 @@ progress::-moz-progress-bar {
 .bar-tight .streak-chip .streak-warm-up {
   display: none;
 }
+/* Small phones (320 wide): the menu bar uses the page edges too, so Back, medal, points + bar,
+   streak, profile and settings stay one row (QA154-03). */
+@media (max-width: 360px) and (min-height: 501px) {
+  .app-shell.menu-shell .app-bar {
+    inset-inline: 8px;
+  }
+}
+/* Narrow leaderboard (phones, large text): no bear column, tighter cells, so Points fit
+   (QA154-02); nicknames wrap but never down to one letter per line (QA154-04). */
+.leaderboard {
+  container-type: inline-size;
+}
+.leaderboard-player > span:last-child {
+  min-width: 5.5em;
+}
+@container (max-width: 20em) {
+  .leaderboard-table {
+    font-size: 0.82em;
+  }
+  .leaderboard-table th {
+    font-size: 0.58rem;
+  }
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding-inline: 2px;
+  }
+  .leaderboard-player > .bear-icon {
+    display: none;
+  }
+  .leaderboard-player > span:last-child {
+    min-width: 3em;
+  }
+  .leaderboard-streak .streak-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+.leaderboard:focus {
+  outline: none;
+}

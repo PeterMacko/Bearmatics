@@ -25,6 +25,23 @@ describe('nickname filter (SCRUM-148)', () => {
       'jebať',
       'superkokotko',
       'p0rn',
+      // QA154-06 gaps
+      'jebaný',
+      'pojebaný',
+      'kurvy',
+      'Pičovina',
+      'kurwa',
+      'ass',
+      'shyt',
+      'fck',
+      'phuck',
+      'azzhole',
+      'kokоt', // Cyrillic о
+      'ｆｕｃｋ', // full-width
+      'Dicky',
+      'mr cock',
+      'Pica',
+      'sexy',
     ])
       expect(isRudeNickname(name), name).toBe(true);
   });
@@ -48,6 +65,20 @@ describe('nickname filter (SCRUM-148)', () => {
       'Dominik',
       'Hugo',
       'Kubko',
+      // QA154-06 false positives
+      'Larsen',
+      'Dickens',
+      'Hancock',
+      'Essex',
+      'Sexton',
+      'Middlesex',
+      'Marseille',
+      'Pearse',
+      'Cockpit',
+      'Picasso',
+      'Prdelka',
+      'Ash',
+      'Asa',
     ])
       expect(isRudeNickname(name), name).toBe(false);
   });

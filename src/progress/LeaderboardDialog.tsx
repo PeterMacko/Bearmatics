@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState, type RefObject } from 'react';
+import { Fragment, useEffect, useRef, useState, type RefObject } from 'react';
 import BearIcon from '../account/BearIcon';
 import HintDialog from '../HintDialog';
 import { fill, pointsText, type Copy } from '../i18n';
@@ -29,6 +29,14 @@ export default function LeaderboardDialog({
 }) {
   const [state, setState] = useState<State>({ kind: 'loading' });
   const [attempt, setAttempt] = useState(0);
+  // Try again removes its own button: keep focus in the window (QA154-01), and on a new failure
+  // put it on the new Try again.
+  const box = useRef<HTMLDivElement>(null);
+  const retried = useRef(false);
+  useEffect(() => {
+    if (!retried.current || state.kind !== 'failed') return;
+    box.current?.querySelector<HTMLElement>('.leaderboard-state button')?.focus();
+  }, [state]);
   useEffect(() => {
     let live = true;
     loadLeaderboard().then(
@@ -47,7 +55,7 @@ export default function LeaderboardDialog({
       onClose={onClose}
       triggerRef={triggerRef}
     >
-      <div className="leaderboard" aria-busy={state.kind === 'loading'}>
+      <div className="leaderboard" aria-busy={state.kind === 'loading'} ref={box} tabIndex={-1}>
         {state.kind === 'loading' && (
           <p className="leaderboard-state" role="status">
             {t.loading}
@@ -60,6 +68,8 @@ export default function LeaderboardDialog({
               type="button"
               className="text-button"
               onClick={() => {
+                retried.current = true;
+                box.current?.focus();
                 setState({ kind: 'loading' });
                 setAttempt((n) => n + 1);
               }}
