@@ -1,4 +1,5 @@
-export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
+/** 0-7 as before; 8 = Small maths "Take away" (SCRUM-156): a - b with a 1-6, result only. */
+export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
 export type Operation = '+' | '-' | '*' | '/';
 export type Blank = 0 | 1 | 2;
 export type Fact = readonly [number, number, number];
@@ -18,13 +19,13 @@ export function checkAnswer(exercise: Exercise, input: string): AnswerResult {
 
 const pools = new Map<Level, readonly Exercise[]>();
 
-/** Bounded sampling; only level-0 size-20 rounds repeat four nonzero facts. */
+/** Bounded sampling; only level-0/8 size-20 rounds repeat four nonzero facts. */
 export function generateSession(
   level: Level,
   size: number = 10,
   rng: () => number = Math.random,
 ): readonly Exercise[] {
-  if (![0, 1, 2, 3, 4, 5, 6, 7].includes(level) || ![5, 10, 20].includes(size))
+  if (![0, 1, 2, 3, 4, 5, 6, 7, 8].includes(level) || ![5, 10, 20].includes(size))
     throw new RangeError('Unsupported session settings');
   let pool = pools.get(level);
   if (!pool) {
@@ -32,7 +33,7 @@ export function generateSession(
     const addFact = (operation: Operation, values: Fact) => {
       if (!isValidFact(level, values, operation)) return;
       const frozen = Object.freeze(values);
-      for (const blank of level === 0 || level === 3
+      for (const blank of level === 0 || level === 3 || level === 8
         ? ([2] as const)
         : level === 4
           ? ([0, 1] as const)
@@ -42,7 +43,9 @@ export function generateSession(
         exercises.push(exercise);
       }
     };
-    if (level <= 5) {
+    if (level === 8) {
+      for (let a = 1; a <= 6; a++) for (let b = 0; b <= a; b++) addFact('-', [a, b, a - b]);
+    } else if (level <= 5) {
       const max = [6, 10, 10, 20, 20, 100][level];
       for (let a = 0; a <= max; a++)
         for (let b = 0; b <= max; b++) {
@@ -86,19 +89,27 @@ export function generateSession(
     selected.push(available.splice(index, 1)[0]);
   };
   const operations: Operation[] =
-    level <= 1 ? ['+'] : level <= 5 ? ['+', '-'] : level === 6 ? ['*'] : ['*', '/'];
+    level <= 1
+      ? ['+']
+      : level <= 5
+        ? ['+', '-']
+        : level === 6
+          ? ['*']
+          : level === 8
+            ? ['-']
+            : ['*', '/'];
   for (const operation of operations) take((e) => e.operation === operation);
   if (level === 4) {
     take((e) => e.blank === 0);
     take((e) => e.blank === 1);
   } else {
     take((e) => e.blank === 2);
-    if (level !== 0 && level !== 3) take((e) => e.blank !== 2);
+    if (level !== 0 && level !== 3 && level !== 8) take((e) => e.blank !== 2);
   }
   selected.push(...available.slice(0, size - selected.length));
   const ordered = shuffle(selected);
-  if (level === 0 && size === 20) {
-    // Only 15 nonzero facts exist. Reuse four different ones, separated from
+  if ((level === 0 || level === 8) && size === 20) {
+    // Only 15 nonzero facts exist (in both levels). Reuse four different ones, separated from
     // their first presentations and from each other, without random retries.
     const repeats = ordered.filter((e) => !e.values.includes(0)).slice(0, 4);
     const extended: Exercise[] = [];
@@ -115,7 +126,7 @@ export function solveBlank(exercise: Exercise): number {
   const { level, operation, values, blank } = exercise;
   if (
     (level === 4 && blank === 2) ||
-    ((level === 0 || level === 3) && blank !== 2) ||
+    ((level === 0 || level === 3 || level === 8) && blank !== 2) ||
     ![0, 1, 2].includes(blank) ||
     !isValidFact(level, values, operation)
   )
@@ -141,6 +152,7 @@ export function isValidFact(level: number, values: readonly number[], operation:
       ((operation === '+' && a + b === c) || (level > 1 && operation === '-' && a - b === c))
     );
   }
+  if (level === 8) return operation === '-' && a >= 1 && a <= 6 && b <= a && a - b === c;
   if (level === 6 || level === 7) {
     const max = level === 6 ? 5 : 10;
     const factor = (n: number) => n >= 1 && n <= max;

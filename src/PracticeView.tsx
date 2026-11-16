@@ -2,6 +2,7 @@ import type { FormEvent, KeyboardEvent, RefObject } from 'react';
 import type { Exercise } from './math/engine';
 import type { Copy } from './i18n';
 import PictureGroup, { type PictureTheme } from './PictureGroup';
+import TakeAwayBasket from './TakeAwayBasket';
 import { OPERATOR_SYMBOLS } from './operatorSymbols';
 import type { Feedback } from './session';
 
@@ -13,6 +14,8 @@ export default function PracticeView({
   level,
   current,
   pictureTheme,
+  presentation,
+  onPop,
   position,
   reviewing,
   solved,
@@ -38,6 +41,9 @@ export default function PracticeView({
   level: number;
   current: Exercise;
   pictureTheme: PictureTheme;
+  /** Changes for every new example and review repeat (the take-away basket starts full). */
+  presentation: number;
+  onPop: () => void;
   position: string;
   reviewing: boolean;
   solved: boolean;
@@ -86,7 +92,7 @@ export default function PracticeView({
         noValidate
       >
         <div
-          className={`equation ${current.level === 0 ? 'picture-equation' : ''}`}
+          className={`equation ${current.level === 0 ? 'picture-equation' : ''}${current.level === 8 ? 'take-away-equation' : ''}`}
           data-feedback={feedback}
           role="group"
           aria-label={equationDescription}
@@ -141,6 +147,15 @@ export default function PracticeView({
             </span>
           ))}
         </div>
+        {current.level === 8 && (
+          <TakeAwayBasket
+            key={presentation}
+            t={t.basket}
+            theme={pictureTheme}
+            total={current.values[0]}
+            onMove={onPop}
+          />
+        )}
         <p
           id="answer-feedback"
           className={`feedback feedback-${feedback}`}
@@ -203,20 +218,22 @@ export default function PracticeView({
               {t.check}
             </button>
           )}
-          <button
-            ref={hintRef}
-            type="button"
-            className="hint-button"
-            aria-label={t.showHint}
-            title={t.showHint}
-            aria-haspopup="dialog"
-            aria-controls={hintOpen ? 'hint-dialog' : undefined}
-            aria-expanded={hintOpen}
-            disabled={solved}
-            onClick={onOpenHint}
-          >
-            <span aria-hidden="true">i</span>
-          </button>
+          {current.level !== 8 && (
+            <button
+              ref={hintRef}
+              type="button"
+              className="hint-button"
+              aria-label={t.showHint}
+              title={t.showHint}
+              aria-haspopup="dialog"
+              aria-controls={hintOpen ? 'hint-dialog' : undefined}
+              aria-expanded={hintOpen}
+              disabled={solved}
+              onClick={onOpenHint}
+            >
+              <span aria-hidden="true">i</span>
+            </button>
+          )}
         </div>
         {!touch && (
           <div className="practice-tools">

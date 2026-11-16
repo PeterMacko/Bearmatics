@@ -90,6 +90,9 @@ export function useFeedbackAudio(
   const playBadge = () => {
     if (desiredSound.current && readySound.current) audio.play('badge');
   };
+  const playPop = () => {
+    if (desiredSound.current && readySound.current) audio.play('pop');
+  };
   /** Call when a new session starts so its reactions and fanfare can play. */
   const resetForNewSession = () => {
     completionConsumed.current = false;
@@ -104,5 +107,6 @@ export function useFeedbackAudio(
     toggleSound,
     resetForNewSession,
     playBadge,
+    playPop,
   };
 }

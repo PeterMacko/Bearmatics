@@ -77,7 +77,7 @@ test('level zero boundaries and policy are enforced by validator solver checker 
   ])
     expect(isValidFact(0, values, '+')).toBe(false);
   expect(isValidFact(0, [6, 3, 3], '-')).toBe(false);
-  for (const level of [-1, 8, 0.5, NaN])
+  for (const level of [-1, 9, 0.5, NaN])
     expect(() => generateSession(level as 0, 5)).toThrow(RangeError);
   for (const size of [0, 4, 21, NaN]) expect(() => generateSession(0, size)).toThrow(RangeError);
   for (const value of [-1, 1, NaN, Infinity])
