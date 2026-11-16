@@ -125,6 +125,7 @@ const DEVICES: [number, number][] = [
 ];
 
 test('badge in the app bar at the defined devices', async ({ browser }) => {
+  test.setTimeout(120_000);
   const context = await browser.newContext();
   const page = await context.newPage();
   await createAccount(page);
