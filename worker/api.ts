@@ -1,5 +1,6 @@
 // /api routing and health check. Never log request bodies, URLs or personal data.
 import * as accounts from './accounts';
+import * as leaderboard from './leaderboard';
 import * as progress from './progress';
 import {
   googleCallback,
@@ -15,7 +16,7 @@ export interface Env extends GoogleEnv {
 }
 
 /** Schema version the code needs; /api/health reports an error until migrations reach it. */
-export const EXPECTED_SCHEMA = '4';
+export const EXPECTED_SCHEMA = '5';
 
 export { json };
 
@@ -58,6 +59,7 @@ const routes: Record<string, Record<string, { handler: Handler; write?: boolean 
   '/api/progress/lessons': { POST: { handler: progress.startLesson, write: true } },
   '/api/progress/lessons/finish': { POST: { handler: progress.finishLesson, write: true } },
   '/api/progress/streak': { POST: { handler: progress.answerStreak, write: true } },
+  '/api/leaderboard': { GET: { handler: leaderboard.getLeaderboard } },
   '/api/auth/signup': { POST: { handler: accounts.signUp, write: true } },
   '/api/auth/signin': { POST: { handler: accounts.signIn, write: true } },
   '/api/auth/signout': { POST: { handler: accounts.signOut, write: true } },

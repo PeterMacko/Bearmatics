@@ -107,6 +107,7 @@ describe('Google sign-in', () => {
       nickname: 'Cub',
       bear: 2,
       email: null,
+      leaderboard: true,
     });
     const row = await env.DB.prepare('SELECT * FROM accounts WHERE google_sub = ?')
       .bind('1098765')

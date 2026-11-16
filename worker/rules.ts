@@ -1,5 +1,6 @@
 // Input rules shared by the server (and mirrored in src/account/rules.ts for the forms).
 import { BadRequest } from './http';
+import { isRudeNickname } from './nicknameFilter';
 
 export const BEAR_COUNT = 8;
 const USERNAME = /^[A-Za-z0-9]{3,20}$/;
@@ -23,6 +24,8 @@ export function passwordKey(value: unknown, field = 'key'): string {
 export function nickname(value: unknown): string {
   const trimmed = typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
   if (!NICKNAME.test(trimmed)) throw new BadRequest('invalid', 'nickname');
+  // SCRUM-148: nicknames are shown to other players.
+  if (isRudeNickname(trimmed)) throw new BadRequest('not_allowed', 'nickname');
   return trimmed;
 }
 
