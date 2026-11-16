@@ -3202,3 +3202,284 @@ progress::-moz-progress-bar {
     margin-bottom: 6px;
   }
 }
+
+/* ---------- SCRUM-118: streak ---------- */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: 48px;
+  padding-inline: 2px;
+  color: #b2611a;
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.streak-chip.frozen {
+  color: #2f6f9a;
+}
+.streak-warm-up {
+  margin-inline-start: 6px;
+  max-width: 190px;
+  white-space: normal;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.streak-chip.warming .streak-icon {
+  animation: streak-warm 1.2s ease-out;
+}
+@keyframes streak-warm {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.3;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* Phones and short windows: frozen = the ice icon only (text stays in the accessible name). */
+@media (max-width: 620px), (max-height: 500px) {
+  .streak-chip .streak-warm-up {
+    display: none;
+  }
+  .streak-chip.frozen .streak-days {
+    display: none;
+  }
+}
+@media (max-width: 420px) {
+  .streak-chip .streak-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+/* Short landscape phones: left column, icon over the number. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  .app-shell .app-bar .streak-chip {
+    flex-direction: column;
+    min-height: 0;
+    width: 48px;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+}
+.streak-offer {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.streak-offer p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.streak-offer-art {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #e8f5fd;
+}
+.streak-offer-art.warm {
+  background: #fff1dc;
+}
+.streak-offer-art.warm .streak-icon {
+  animation: streak-warm 1.2s ease-out;
+}
+.streak-offer-actions {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.streak-offer-actions button.primary {
+  width: 100%;
+  border: 0;
+  background: #326ca5;
+  color: #fffdf8;
+  font-weight: 800;
+  box-shadow: 0 3px 0 #23507d;
+}
+.streak-offer-actions button.text-button {
+  border: 0;
+  background: transparent;
+  color: #315783;
+  text-decoration: underline;
+}
+.streak-offer-error {
+  color: #a12d2d;
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak-chip.warming .streak-icon,
+  .streak-offer-art.warm .streak-icon {
+    animation: none;
+  }
+}
+/* Smallest phones: badge, streak, profile and settings still fit next to Back in one row. */
+@media (max-width: 420px) {
+  .app-shell .app-bar .app-bar-end {
+    gap: 2px;
+  }
+  .app-shell .app-bar .bar-progress .progress-track {
+    width: 20px;
+  }
+  .app-shell .app-bar .streak-chip {
+    padding-inline: 0;
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 420px) {
+  .app-shell .app-bar .badge-medal svg {
+    width: 32px;
+    height: 32px;
+  }
+  .app-shell .app-bar .badge-button,
+  .app-shell .app-bar .bar-progress {
+    gap: 2px;
+  }
+  .app-shell .app-bar .bar-progress-points,
+  .app-shell .app-bar .streak-chip {
+    font-size: 0.8rem;
+    letter-spacing: -0.02em;
+  }
+  .app-shell .app-bar .streak-chip .streak-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Peter's review (SCRUM-118): shadow flame until today's lesson, burning flame on the summary. */
+.streak-chip.shadow {
+  color: #8d8079;
+}
+.completion-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+.completion-row .completion-mark {
+  margin: 0;
+}
+.summary-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b2611a;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.summary-streak.ice {
+  color: #2f6f9a;
+}
+.summary-streak.shadow {
+  color: #8d8079;
+}
+.summary-streak-days.switched {
+  animation: streak-number-pop 0.5s ease-out;
+}
+@keyframes streak-number-pop {
+  0% {
+    transform: translateY(8px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-2px) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+.streak-icon.flicker {
+  overflow: visible;
+}
+.streak-icon.flicker .flame-outer {
+  transform-origin: 50% 90%;
+  animation: flame-flicker 0.9s ease-in-out infinite alternate;
+}
+.streak-icon.flicker .flame-inner {
+  transform-origin: 50% 90%;
+  animation: flame-flicker-inner 0.6s ease-in-out infinite alternate;
+}
+@keyframes flame-flicker {
+  0% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  35% {
+    transform: scale(0.96, 1.06) skewX(-3deg);
+  }
+  70% {
+    transform: scale(1.03, 0.97) skewX(2deg);
+  }
+  100% {
+    transform: scale(0.98, 1.08) skewX(-1deg);
+  }
+}
+@keyframes flame-flicker-inner {
+  0% {
+    transform: scale(1, 1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85, 1.15);
+    opacity: 0.85;
+  }
+}
+@media (max-height: 760px) {
+  .summary .completion-row {
+    margin: 8px 0;
+  }
+  .summary-streak {
+    font-size: 1.3rem;
+  }
+  .summary-streak .streak-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak-icon.flicker .flame-outer,
+  .streak-icon.flicker .flame-inner,
+  .summary-streak-days.switched {
+    animation: none;
+  }
+}
+/* Lessons, summary and account screens on wider screens: the bar sits at the page edges like on
+   the menus (content keeps its 1180px column). Absolute to the page, so no horizontal scroll. */
+@media (min-width: 621px) and (min-height: 501px), (min-width: 951px) {
+  .app-shell:not(.menu-shell) {
+    padding-top: max(60px, calc(var(--bar-height, 0px) + 4px));
+  }
+  .app-shell:not(.menu-shell) .app-bar {
+    position: absolute;
+    top: 0;
+    left: calc(max(12px, env(safe-area-inset-left)) - 4px);
+    right: calc(max(12px, env(safe-area-inset-right)) - 4px);
+    border-bottom: 0;
+  }
+}
+/* Smallest landscape phones (568x320) during a running lesson: the left column has no room for
+   the streak under the exercise header; it is back on the summary and the menus. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .app-shell.compact-practice .app-bar .streak-chip {
+    display: none;
+  }
+}
+/* QA131-03: short landscape phones keep all dialog buttons in view (no art). */
+@media (max-height: 420px) {
+  .streak-offer-art {
+    display: none;
+  }
+}
+/* The bar would wrap or reach the course eyebrow: frozen streak = ice + number (QA131-05). */
+.bar-tight .streak-chip .streak-warm-up {
+  display: none;
+}

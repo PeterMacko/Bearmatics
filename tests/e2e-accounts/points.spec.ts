@@ -256,3 +256,118 @@ test('QA124-05/06: 320x568 bar stays one row with 4-digit points; summary has no
     ),
   ).toBeLessThanOrEqual(0);
 });
+
+// SCRUM-118: the streak next to the badge.
+const streak = (page: Page) =>
+  page
+    .getByRole('navigation', { name: 'Main controls' })
+    .getByRole('img', { name: /^(Streak|Séria|No streak)/ });
+
+test('streak: first finished lesson gives 1 day; bar fits at the defined devices (also frozen)', async ({
+  page,
+}) => {
+  test.setTimeout(120_000); // 15 devices x 2 screens x 2 states
+  await createAccount(page, 'Twelve chars');
+  await expect(
+    page.getByRole('img', { name: 'No streak yet. Finish a lesson to start one' }),
+  ).toBeVisible();
+  await playMaths(page, 5);
+  // Beside the check mark: 0 for a second, then 1 with a burning flame.
+  const summaryStreak = page.locator('.summary-streak');
+  await expect(summaryStreak).toHaveAccessibleName('Streak 1 day');
+  await expect(summaryStreak.locator('.summary-streak-days')).toHaveText('1');
+  await expect(streak(page)).toHaveAccessibleName('Streak 1 day');
+  for (const frozen of [false, true]) {
+    if (frozen)
+      await page.route('**/api/progress', (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify({ points: 1500, streak: 12, frozen: true }),
+        }),
+      );
+    for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+      await page.setViewportSize({ width, height });
+      for (const screen of ['courses', 'maths']) {
+        await page.goto('/');
+        if (screen === 'maths')
+          await page.getByRole('button', { name: 'Maths', exact: true }).click();
+        await expect(streak(page)).toBeVisible();
+        const where = `${width}x${height} ${screen} frozen=${frozen}`;
+        const m = await page.evaluate(() => {
+          const items = [
+            ...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *'),
+          ].map((el) => el.getBoundingClientRect());
+          const root = document.documentElement;
+          const landscape = matchMedia(
+            '(max-height: 500px) and (max-width: 950px) and (orientation: landscape)',
+          ).matches;
+          const overlap = items.some((a, i) =>
+            items.some(
+              (b, j) =>
+                j > i &&
+                a.left < b.right - 0.5 &&
+                b.left < a.right - 0.5 &&
+                a.top < b.bottom - 0.5 &&
+                b.top < a.bottom - 0.5,
+            ),
+          );
+          const tops = items.map((r) => r.top);
+          return {
+            oneRow: landscape || Math.max(...tops) - Math.min(...tops) < 20,
+            overlap,
+            inside: items.every(
+              (r) => r.left >= 0 && r.right <= root.clientWidth && r.bottom <= root.clientHeight,
+            ),
+            sideScroll: root.scrollWidth - root.clientWidth,
+          };
+        });
+        expect(m, where).toEqual({ oneRow: true, overlap: false, inside: true, sideScroll: 0 });
+      }
+    }
+  }
+});
+
+test('QA131-03: at 568x320 every offer and confirmation button is in view', async ({ page }) => {
+  await createAccount(page);
+  const state = { points: 135, streak: 12, frozen: true, today: false };
+  await page.route('**/api/progress', (route) =>
+    route.fulfill({ contentType: 'application/json', body: JSON.stringify(state) }),
+  );
+  await page.route('**/api/progress/lessons/finish', async (route) => {
+    const response = await route.fetch();
+    const body = await response.json();
+    await route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ ...body, ...state, offer: { streak: 12, missed: 2, cost: 14 } }),
+    });
+  });
+  await page.setViewportSize({ width: 568, height: 320 });
+  await page.goto('/');
+  await playMaths(page, 5);
+  const dialog = page.getByRole('dialog', { name: 'Frozen streak' });
+  await expect(dialog).toBeVisible({ timeout: 8000 });
+  for (const name of ['Unlock', 'No thanks'])
+    await expect(dialog.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+  await page.waitForTimeout(700);
+  await dialog.getByRole('button', { name: 'Unlock' }).click();
+  for (const name of ['Yes', 'Back'])
+    await expect(dialog.getByRole('button', { name })).toBeInViewport({ ratio: 1 });
+});
+
+test('frozen streak text shows on tablets, ice only on phones', async ({ page }) => {
+  await createAccount(page);
+  await page.route('**/api/progress', (route) =>
+    route.fulfill({
+      contentType: 'application/json',
+      body: JSON.stringify({ points: 135, streak: 12, frozen: true, today: false }),
+    }),
+  );
+  for (const [width, height, text] of [
+    [820, 1180, true],
+    [390, 844, false],
+  ] as const) {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    await expect(page.locator('.streak-warm-up')).toBeVisible({ visible: text });
+  }
+});

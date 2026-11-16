@@ -82,8 +82,8 @@ describe('points (SCRUM-117)', () => {
     const id = await lesson(cookie);
     const first = await finish(cookie, { lessonId: id, size: 10, points: 7 });
     expect(first.status).toBe(200);
-    expect(await read(first)).toEqual({ points: 7, added: 7 });
-    expect(await read(await finish(cookie, { lessonId: id, size: 10, points: 7 }))).toEqual({
+    expect(await read(first)).toMatchObject({ points: 7, added: 7 });
+    expect(await read(await finish(cookie, { lessonId: id, size: 10, points: 7 }))).toMatchObject({
       points: 7,
       added: 0,
     });
@@ -235,5 +235,146 @@ describe('account deleted while a points request runs (QA124 OBS-1)', () => {
           `SELECT COUNT(*) AS n FROM ${table} WHERE account_id NOT IN (SELECT id FROM accounts)`,
         ).first('n'),
       ).toBe(0);
+  });
+});
+
+describe('streak (SCRUM-118) through the API', () => {
+  const day = (offset: number) => {
+    const ms = Date.now() + offset * 86_400_000;
+    return new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/Bratislava' }).format(ms);
+  };
+  async function accountOf(cookie: string) {
+    void cookie;
+    return (await env.DB.prepare('SELECT id FROM accounts WHERE username = ?')
+      .bind(`player${users}x`)
+      .first<{ id: string }>())!.id;
+  }
+  const setRow = (id: string, points: number, streak: number, lastDay: string | null) =>
+    env.DB.prepare(
+      'UPDATE progress SET points = ?, streak = ?, last_day = ?, offer_day = NULL WHERE account_id = ?',
+    )
+      .bind(points, streak, lastDay, id)
+      .run();
+  const play = async (cookie: string, points = 5) => {
+    const id = await lesson(cookie, 5);
+    return read(await finish(cookie, { lessonId: id, size: 5, points }));
+  };
+  const answer = (cookie: string, body: Record<string, unknown>) =>
+    api('/api/progress/streak', { body, cookie });
+
+  it('first lesson -> streak 1; same day again -> still 1; saved twice -> once', async () => {
+    const cookie = await newPlayer();
+    expect(await read(await api('/api/progress', { cookie }))).toEqual({
+      points: 0,
+      streak: 0,
+      frozen: false,
+      today: false,
+    });
+    const id = await lesson(cookie, 5);
+    expect(await read(await finish(cookie, { lessonId: id, size: 5, points: 5 }))).toEqual({
+      points: 5,
+      streak: 1,
+      frozen: false,
+      today: true,
+      added: 5,
+      offer: null,
+    });
+    expect(await read(await finish(cookie, { lessonId: id, size: 5, points: 5 }))).toMatchObject({
+      streak: 1,
+      added: 0,
+    });
+    expect(await play(cookie)).toMatchObject({ points: 10, streak: 1 });
+  });
+
+  it('yesterday -> +1; the example: 12 days, 2 missed, 140 points -> cost 14, Yes -> 126 / 13', async () => {
+    const cookie = await newPlayer();
+    await play(cookie, 0);
+    const id = await accountOf(cookie);
+    await setRow(id, 10, 4, day(-1));
+    expect(await play(cookie)).toMatchObject({ streak: 5, frozen: false, offer: null });
+    await setRow(id, 135, 12, day(-3));
+    expect(await read(await api('/api/progress', { cookie }))).toMatchObject({
+      streak: 12,
+      frozen: true,
+    });
+    const offered = await play(cookie, 5);
+    expect(offered).toMatchObject({ points: 140, streak: 12, frozen: true });
+    expect(offered.offer).toEqual({ streak: 12, missed: 2, cost: 14 });
+    // Wrong price (it changed meanwhile) -> the new offer, nothing paid.
+    const changed = await answer(cookie, { unlock: true, cost: 10 });
+    expect(changed.status).toBe(409);
+    expect(await read(changed)).toMatchObject({ error: 'offer_changed', offer: { cost: 14 } });
+    const yes = await answer(cookie, { unlock: true, cost: 14 });
+    expect(yes.status).toBe(200);
+    expect(await read(yes)).toEqual({ points: 126, streak: 13, frozen: false, today: true });
+    // Answered: no second payment.
+    expect((await answer(cookie, { unlock: true, cost: 14 })).status).toBe(409);
+    expect(await play(cookie, 0)).toMatchObject({ points: 126, streak: 13, offer: null });
+  });
+
+  it('No thanks -> 1; 8 missed -> 1 without offer; 0 points -> 1', async () => {
+    const cookie = await newPlayer();
+    await play(cookie, 0);
+    const id = await accountOf(cookie);
+    await setRow(id, 50, 6, day(-2));
+    expect((await play(cookie)).offer).toEqual({ streak: 6, missed: 1, cost: 5 });
+    expect(await read(await answer(cookie, { unlock: false }))).toEqual({
+      points: 55,
+      streak: 1,
+      frozen: false,
+      today: true,
+    });
+    await setRow(id, 50, 6, day(-9));
+    expect(await play(cookie)).toMatchObject({ streak: 1, offer: null });
+    await setRow(id, 0, 6, day(-2));
+    expect(await play(cookie, 0)).toMatchObject({ streak: 1, offer: null });
+  });
+
+  it('an unanswered offer comes back after the next lesson the same day', async () => {
+    const cookie = await newPlayer();
+    await play(cookie, 0);
+    const id = await accountOf(cookie);
+    await setRow(id, 100, 3, day(-3));
+    // Cost from the points after each lesson: min(20, 10% of 105 / 110).
+    expect((await play(cookie, 5)).offer).toEqual({ streak: 3, missed: 2, cost: 10 });
+    expect((await play(cookie, 5)).offer).toEqual({ streak: 3, missed: 2, cost: 11 });
+    // QA131-04: a repeated save of a counted lesson (lost answer, Try again) shows the offer too.
+    const again = await lesson(cookie, 5);
+    const first = await read(await finish(cookie, { lessonId: again, size: 5, points: 0 }));
+    const repeat = await read(await finish(cookie, { lessonId: again, size: 5, points: 0 }));
+    expect(repeat.added).toBe(0);
+    expect(repeat.offer).toEqual(first.offer);
+    expect(repeat.offer).not.toBeNull();
+  });
+
+  it('parallel lessons on a new day add one day only', async () => {
+    const cookie = await newPlayer();
+    await play(cookie, 0);
+    const id = await accountOf(cookie);
+    await setRow(id, 10, 4, day(-1));
+    const ids = await Promise.all(Array.from({ length: 6 }, () => lesson(cookie, 5)));
+    await Promise.all(ids.map((lessonId) => finish(cookie, { lessonId, size: 5, points: 1 })));
+    expect(await read(await api('/api/progress', { cookie }))).toEqual({
+      points: 16,
+      streak: 5,
+      frozen: false,
+      today: true,
+    });
+  });
+
+  it('answer needs a signed-in player, our Origin and a boolean', async () => {
+    expect((await api('/api/progress/streak', { body: { unlock: true } })).status).toBe(401);
+    const cookie = await newPlayer();
+    expect((await answer(cookie, { unlock: 'yes' })).status).toBe(400);
+    expect(
+      (
+        await api('/api/progress/streak', {
+          body: { unlock: false },
+          cookie,
+          origin: 'https://evil.test',
+        })
+      ).status,
+    ).toBe(403);
+    expect((await answer(cookie, { unlock: false })).status).toBe(409);
   });
 });

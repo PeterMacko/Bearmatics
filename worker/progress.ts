@@ -4,6 +4,15 @@
 import { currentSession, type AccountEnv } from './accounts';
 import { randomHex } from './crypto';
 import { BadRequest, json, readJson } from './http';
+import {
+  answerOffer,
+  finishDay,
+  openOffer,
+  slovakDay,
+  streakView,
+  type Offer,
+  type StreakState,
+} from './streak';
 
 export const LESSON_SIZES = [5, 10, 20] as const;
 const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
@@ -11,19 +20,81 @@ const now = () => Date.now();
 
 const notSignedIn = () => json({ error: 'not_signed_in' }, 401);
 
-async function points(env: AccountEnv, accountId: string): Promise<number> {
-  const row = await env.DB.prepare('SELECT points FROM progress WHERE account_id = ?')
+type Row = { points: number; state: StreakState };
+
+async function readRow(env: AccountEnv, accountId: string): Promise<Row> {
+  const row = await env.DB.prepare(
+    'SELECT points, streak, last_day, offer_day FROM progress WHERE account_id = ?',
+  )
     .bind(accountId)
-    .first<{ points: number }>();
-  return row?.points ?? 0;
+    .first<{ points: number; streak: number; last_day: string | null; offer_day: string | null }>();
+  return {
+    points: row?.points ?? 0,
+    state: {
+      streak: row?.streak ?? 0,
+      lastDay: row?.last_day ?? null,
+      offerDay: row?.offer_day ?? null,
+    },
+  };
+}
+
+/** Points plus the streak as the app shows it (SCRUM-118). */
+function progressBody(row: Row, today: string) {
+  return { points: row.points, ...streakView(row.state, today, row.points) };
+}
+
+/**
+ * Writes a new streak state (and points) only if the row is still as read: two lessons
+ * finishing at the same moment cannot both add a day. Returns false when the row changed.
+ */
+async function writeRow(env: AccountEnv, accountId: string, read: Row, next: Row) {
+  const result = await env.DB.prepare(
+    `UPDATE progress SET points = ?, streak = ?, last_day = ?, offer_day = ?
+     WHERE account_id = ? AND points = ? AND streak = ? AND last_day IS ? AND offer_day IS ?`,
+  )
+    .bind(
+      next.points,
+      next.state.streak,
+      next.state.lastDay,
+      next.state.offerDay,
+      accountId,
+      read.points,
+      read.state.streak,
+      read.state.lastDay,
+      read.state.offerDay,
+    )
+    .run();
+  return result.meta.changes > 0;
 }
 
 export async function getProgress(request: Request, env: AccountEnv): Promise<Response> {
   const session = await currentSession(request, env);
   if (!session) return notSignedIn();
-  return json({ points: await points(env, session.account.id) }, 200, {
-    'set-cookie': session.renew,
-  });
+  const row = await readRow(env, session.account.id);
+  return json(progressBody(row, slovakDay(now())), 200, { 'set-cookie': session.renew });
+}
+
+/** The child answers today's unlock offer: {unlock: true|false, cost} (SCRUM-118 rule 5). */
+export async function answerStreak(request: Request, env: AccountEnv): Promise<Response> {
+  const session = await currentSession(request, env);
+  if (!session) return notSignedIn();
+  const body = await readJson(request);
+  if (typeof body.unlock !== 'boolean') throw new BadRequest('invalid', 'unlock');
+  const accountId = session.account.id;
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const today = slovakDay(now());
+    const row = await readRow(env, accountId);
+    const offer = openOffer(row.state, today, row.points);
+    if (!offer) return json({ error: 'no_offer', ...progressBody(row, today) }, 409);
+    // The child agreed to a price; if it changed meanwhile, show the new offer instead.
+    if (body.unlock && body.cost !== offer.cost)
+      return json({ error: 'offer_changed', offer, ...progressBody(row, today) }, 409);
+    const answer = answerOffer(row.state, today, row.points, body.unlock)!;
+    const next = { points: answer.points, state: answer.state };
+    if (await writeRow(env, accountId, row, next))
+      return json(progressBody(next, today), 200, { 'set-cookie': session.renew });
+  }
+  throw new Error('streak answer kept conflicting');
 }
 
 function lessonSize(value: unknown): number {
@@ -105,7 +176,33 @@ export async function finishLesson(request: Request, env: AccountEnv): Promise<R
   const counted = await env.DB.prepare('SELECT 1 AS ok FROM lessons WHERE id = ? AND claim = ?')
     .bind(id, claim)
     .first();
-  return json({ points: await points(env, accountId), added: counted ? earned : 0 }, 200, {
+  // SCRUM-118: a counted lesson is a played day. A repeated save of the same lesson never
+  // reaches this, so it cannot add a day or make a second offer.
+  let offer: Offer | null = null;
+  let row = await readRow(env, accountId);
+  const today = slovakDay(now());
+  if (counted) {
+    for (let attempt = 0; ; attempt++) {
+      const day = finishDay(row.state, today, row.points);
+      offer = day.offer;
+      const next = { points: row.points, state: day.state };
+      const same =
+        next.state.streak === row.state.streak &&
+        next.state.lastDay === row.state.lastDay &&
+        next.state.offerDay === row.state.offerDay;
+      if (same || (await writeRow(env, accountId, row, next))) {
+        row = next;
+        break;
+      }
+      if (attempt >= 4) throw new Error('streak update kept conflicting');
+      row = await readRow(env, accountId);
+    }
+  } else {
+    // A repeated save (e.g. Try again after a lost answer) changes nothing, but still shows
+    // today's open offer (QA131-04).
+    offer = openOffer(row.state, today, row.points);
+  }
+  return json({ ...progressBody(row, today), added: counted ? earned : 0, offer }, 200, {
     'set-cookie': session.renew,
   });
 }

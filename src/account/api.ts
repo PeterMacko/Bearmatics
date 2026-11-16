@@ -17,12 +17,16 @@ export type ApiError =
   | 'not_signed_in'
   | 'google_expired'
   | 'server_error'
-  | 'unknown_lesson';
+  | 'unknown_lesson'
+  | 'no_offer'
+  | 'offer_changed';
 
 export class AccountError extends Error {
   constructor(
     readonly code: ApiError,
     readonly field?: string,
+    /** The whole error answer, for errors that carry data (streak offer changed). */
+    readonly data?: unknown,
   ) {
     super(code);
   }
@@ -45,7 +49,7 @@ export async function call<T>(path: string, method = 'GET', body?: unknown): Pro
     throw new AccountError('offline');
   }
   const data = (await response.json()) as T & { error?: ApiError; field?: string };
-  if (!response.ok) throw new AccountError(data.error ?? 'server_error', data.field);
+  if (!response.ok) throw new AccountError(data.error ?? 'server_error', data.field, data);
   return data;
 }
 
