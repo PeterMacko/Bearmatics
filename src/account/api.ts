@@ -5,6 +5,8 @@ export type Account = {
   nickname: string;
   bear: number;
   email: string | null;
+  /** SCRUM-148: shown on the leaderboard (on by default). */
+  leaderboard: boolean;
 };
 
 export type ApiError =
@@ -19,7 +21,8 @@ export type ApiError =
   | 'server_error'
   | 'unknown_lesson'
   | 'no_offer'
-  | 'offer_changed';
+  | 'offer_changed'
+  | 'not_allowed';
 
 export class AccountError extends Error {
   constructor(
@@ -70,6 +73,7 @@ export const signIn = (username: string, key: string) =>
   call<AccountReply>('/api/auth/signin', 'POST', { username, key }).then((r) => r.account!);
 export const signOut = () => call<AccountReply>('/api/auth/signout', 'POST', {});
 export const updateProfile = (changes: {
+  leaderboard?: boolean;
   nickname?: string;
   bear?: number;
   email?: string | null;

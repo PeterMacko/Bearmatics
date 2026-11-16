@@ -13,7 +13,14 @@ import BearIcon from './BearIcon';
 import * as api from './api';
 import { AccountError, type Account } from './api';
 import { passwordKey } from './passwordKey';
-import { BEARS, validEmail, validNickname, validPassword, validUsername } from './rules';
+import {
+  BEARS,
+  isRudeNickname,
+  validEmail,
+  validNickname,
+  validPassword,
+  validUsername,
+} from './rules';
 
 export type AccountScreen = 'signin' | 'signup' | 'profile' | 'google-new' | 'privacy';
 type T = Copy['account'];
@@ -42,9 +49,18 @@ export function errorText(t: T, error: unknown): string {
       if (error.field === 'nickname') return t.errors.nickname;
       if (error.field === 'parentConfirmed') return t.errors.parent;
       return t.errors.generic;
+    case 'not_allowed':
+      return t.errors.nicknameRude;
     default:
       return t.errors.generic;
   }
+}
+
+/** Form check of a nickname: '' when fine (the server checks again). */
+function nicknameProblem(t: T, nickname: string): string {
+  if (!validNickname(nickname)) return t.errors.nickname;
+  if (isRudeNickname(nickname)) return t.errors.nicknameRude;
+  return '';
 }
 
 /** Runs one request at a time with a busy flag and a single message line. */
@@ -314,8 +330,8 @@ export function SignUpView({
         ? t.errors.mismatch
         : !validEmail(email)
           ? t.errors.email
-          : !validNickname(nickname)
-            ? t.errors.nickname
+          : nicknameProblem(t, nickname)
+            ? nicknameProblem(t, nickname)
             : !parent
               ? t.errors.parent
               : '';
@@ -388,7 +404,7 @@ export function SignUpView({
           onChange={setNickname}
           autoComplete="off"
           maxLength={20}
-          invalid={checked && !validNickname(nickname)}
+          invalid={checked && !!nicknameProblem(t, nickname)}
         />
         <BearPicker t={t} value={bear} onChange={setBear} />
         <ParentCheck t={t} checked={parent} onChange={setParent} onPrivacy={onPrivacy} />
@@ -414,7 +430,7 @@ export function GoogleNewView({
   const [expired, setExpired] = useState(false);
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    const problem = !validNickname(nickname) ? t.errors.nickname : !parent ? t.errors.parent : '';
+    const problem = nicknameProblem(t, nickname) || (!parent ? t.errors.parent : '');
     if (problem) {
       setError(problem);
       return;
@@ -484,6 +500,9 @@ export function ProfileView({
   const mail = useAction();
   const pass = useAction();
   const leave = useAction();
+  const board = useAction();
+  const [boardOn, setBoardOn] = useState(account.leaderboard);
+  const switchId = useId();
   const keepRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
   const firstConfirm = useRef(true);
@@ -497,7 +516,7 @@ export function ProfileView({
   const onError = (e: unknown) => errorText(t, e);
   const saveLook = (event: FormEvent) => {
     event.preventDefault();
-    if (!validNickname(nickname)) return look.setError(t.errors.nickname);
+    if (nicknameProblem(t, nickname)) return look.setError(nicknameProblem(t, nickname));
     void look.run(async () => {
       onAccount(await api.updateProfile({ nickname: nickname.trim(), bear }));
       look.setNote(t.saved);
@@ -560,6 +579,37 @@ export function ProfileView({
           {look.busy ? t.working : t.save}
         </button>
       </form>
+      <section className="account-form leaderboard-setting" aria-busy={board.busy}>
+        <h3>{t.leaderboardTitle}</h3>
+        <div className="parent-check">
+          <input
+            id={switchId}
+            type="checkbox"
+            checked={boardOn}
+            disabled={board.busy}
+            aria-describedby={`${switchId}-hint`}
+            onChange={(event) => {
+              const leaderboard = event.target.checked;
+              setBoardOn(leaderboard); // at once; back if saving fails
+              void board.run(
+                async () => {
+                  onAccount(await api.updateProfile({ leaderboard }));
+                  board.setNote(t.saved);
+                },
+                (failure) => {
+                  setBoardOn(!leaderboard);
+                  return onError(failure);
+                },
+              );
+            }}
+          />
+          <label htmlFor={switchId}>{t.leaderboardSwitch}</label>
+        </div>
+        <p className="account-hint" id={`${switchId}-hint`}>
+          {t.leaderboardHint}
+        </p>
+        <Message error={board.error} note={board.note} />
+      </section>
       {account.kind === 'password' && (
         <>
           <form

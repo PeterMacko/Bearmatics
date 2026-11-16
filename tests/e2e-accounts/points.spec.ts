@@ -136,6 +136,11 @@ test('badge in the app bar at the defined devices', async ({ browser }) => {
         await page.getByRole('button', { name: 'Maths', exact: true }).click();
       if (screen === 'lesson') await page.getByRole('button', { name: 'Let’s count' }).click();
       await expect(badge(page)).toBeVisible();
+      // The streak arrives with the points; let the bar clearance settle (two frames).
+      await expect(page.locator('.streak-chip')).toHaveCount(1);
+      await page.evaluate(
+        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+      );
       const where = `${width}x${height} ${screen}`;
       const m = await page.evaluate(() => {
         const button = document.querySelector('.badge-button')!.getBoundingClientRect();
@@ -187,6 +192,10 @@ test('QA124-04: a long nickname plus the badge never cover the menu heading (742
     await page.goto('/');
     await page.getByRole('button', { name: 'Maths', exact: true }).click();
     await expect(badge(page)).toBeVisible();
+    await expect(page.locator('.streak-chip')).toHaveCount(1);
+    await page.evaluate(
+      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
+    );
     const hits = await page.evaluate(() => {
       const bar = [...document.querySelectorAll('.app-bar-end > *')].map((el) =>
         el.getBoundingClientRect(),
@@ -369,5 +378,54 @@ test('frozen streak text shows on tablets, ice only on phones', async ({ page })
     await page.setViewportSize({ width, height });
     await page.goto('/');
     await expect(page.locator('.streak-warm-up')).toBeVisible({ visible: text });
+  }
+});
+
+// SCRUM-148: leaderboard against the real server.
+test('leaderboard: two players see each other; switch off hides me; window fits the devices', async ({
+  browser,
+}) => {
+  test.setTimeout(120_000);
+  const first = await (await browser.newContext()).newPage();
+  await createAccount(first, 'Board One');
+  await playMaths(first, 5);
+  const second = await (await browser.newContext()).newPage();
+  await createAccount(second, 'Board Two');
+  await playMaths(second, 5, true);
+  const open = async (page: Page) => {
+    await page.goto('/');
+    await page
+      .getByRole('navigation', { name: 'Main controls' })
+      .getByRole('button', { name: /^Leaderboard,/ })
+      .click();
+    const dialog = page.getByRole('dialog', { name: 'Leaderboard' });
+    await expect(dialog.getByRole('table')).toBeVisible();
+    return dialog;
+  };
+  let dialog = await open(second);
+  await expect(dialog.getByRole('row', { name: /Board One/ })).toBeVisible();
+  await expect(dialog.locator('tr.me')).toContainText('Board Two');
+  // The first player switches it off: gone for the second at once.
+  await first.getByRole('button', { name: 'Your profile: Board One' }).click();
+  await first.getByRole('checkbox', { name: 'Show me on the leaderboard' }).uncheck();
+  await expect(
+    first.getByRole('checkbox', { name: 'Show me on the leaderboard' }),
+  ).not.toBeChecked();
+  dialog = await open(second);
+  await expect(dialog.getByRole('row', { name: /Board One/ })).toHaveCount(0);
+  for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+    await second.setViewportSize({ width, height });
+    dialog = await open(second);
+    const where = `${width}x${height}`;
+    const box = (await dialog.boundingBox())!;
+    expect(box.x, where).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width, where).toBeLessThanOrEqual(width + 0.5);
+    expect(
+      await second.evaluate(
+        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      ),
+      where,
+    ).toBeLessThanOrEqual(0);
+    await second.keyboard.press('Escape');
   }
 });

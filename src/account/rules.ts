@@ -5,5 +5,6 @@ export const validPassword = (value: string) => [...value].length >= 8;
 export const validEmail = (value: string) =>
   value.trim() === '' ||
   (value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()));
+export { isRudeNickname } from '../../worker/nicknameFilter';
 export const validNickname = (value: string) =>
   /^[\p{L}\p{N} ._-]{1,20}$/u.test(value.trim().replace(/\s+/g, ' '));
