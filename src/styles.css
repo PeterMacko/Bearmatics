@@ -3609,3 +3609,6 @@ progress::-moz-progress-bar {
     margin-inline: -8px;
   }
 }
+.leaderboard-player > .bear-icon {
+  flex: none;
+}
