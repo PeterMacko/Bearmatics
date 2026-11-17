@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openMathematics } from './support/course';
+import { setLanguage } from './support/language';
 
 test('clock-controlled wink cadence survives selection and locale; visibility and reduced motion cancel it', async ({
   page,
@@ -12,9 +13,7 @@ test('clock-controlled wink cadence survives selection and locale; visibility an
   await page.clock.runFor(15000);
   await page.locator('input[name=level]').last().check();
   await page.locator('input[name=size]').last().check();
-  await page.locator('.settings-button').click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
+  await setLanguage(page, 'Slovenčina');
   await page.clock.runFor(14999);
   await expect(page.locator('.bear-wink-eye')).toHaveCount(0);
   await page.clock.runFor(1);

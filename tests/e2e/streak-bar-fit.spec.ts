@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { setLanguage } from './support/language';
 
 // QA131-05: the frozen streak's warm-up text never pushes the bar into the page content or a
 // second row (200% text, long nickname, 4-digit points). Server answers are mocked.
@@ -55,9 +56,7 @@ for (const [width, height, language] of [
     await signedIn(page, 'WWWWWWWWWWWWWWWWWWWW', 1500, 365);
     await page.goto('/');
     if (language !== 'English') {
-      await page.getByRole('button', { name: 'Settings' }).click();
-      await page.getByRole('button', { name: language }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, language, { gear: 'name' });
     }
     await expect(page.locator('.streak-chip')).toBeVisible();
     await page.evaluate(

@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openSmallMaths } from './support/course';
+import { setLanguage } from './support/language';
 
 test('level zero keeps main results concealed and stable through hints locale orientation and mastery review', async ({
   page,
@@ -48,9 +49,7 @@ test('level zero keeps main results concealed and stable through hints locale or
         .locator('.picture-group')
         .first()
         .evaluate((el) => [...el.querySelectorAll('svg')].map((svg) => svg.outerHTML).join(''));
-      await page.locator('.settings-button').click();
-      await page.getByRole('button', { name: 'Slovenčina' }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, 'Slovenčina');
       await expect(page.getByRole('textbox')).toHaveValue('007');
       expect(
         await page
@@ -60,9 +59,7 @@ test('level zero keeps main results concealed and stable through hints locale or
       ).toBe(pictures);
       await page.setViewportSize({ width: 568, height: 320 });
       await expect(result).toHaveAttribute('aria-label', 'Chýbajúci počet');
-      await page.locator('.settings-button').click();
-      await page.getByRole('button', { name: 'English' }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, 'English');
       await page.setViewportSize({ width: 1366, height: 768 });
     }
     await enter(String(expected));

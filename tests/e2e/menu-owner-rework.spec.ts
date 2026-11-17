@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openMathematics } from './support/course';
+import { setLanguage } from './support/language';
 for (const language of ['en', 'sk'])
   for (const [width, height] of [
     [754, 655],
@@ -15,9 +16,7 @@ for (const language of ['en', 'sk'])
       await page.goto('/');
       await openMathematics(page);
       if (language === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
       const data = await page.evaluate(() => {

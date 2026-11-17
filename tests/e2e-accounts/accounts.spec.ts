@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
+import { setLanguage } from '../e2e/support/language';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
 const PASSWORD = 'honeyPot42';
@@ -13,12 +14,6 @@ const uniqueName = (prefix: string) =>
 async function openApp(page: Page) {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
-}
-
-async function toSlovak(page: Page) {
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
 }
 
 async function createAccount(page: Page, username: string, extra: { email?: string } = {}) {
@@ -239,7 +234,7 @@ test('too many wrong passwords lock the username for a while', async ({ page }) 
 test('Slovak texts and keyboard-only sign-up', async ({ page }) => {
   const username = uniqueName('Kb');
   await openApp(page);
-  await toSlovak(page);
+  await setLanguage(page, 'Slovenčina', { gear: 'name' });
   const signInButton = page.getByRole('button', { name: 'Prihlásiť sa' });
   await signInButton.focus();
   await page.keyboard.press('Enter');

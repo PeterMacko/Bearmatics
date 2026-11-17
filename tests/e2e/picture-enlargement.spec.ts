@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { openSmallMaths } from './support/course';
+import { setLanguage } from './support/language';
 
 for (const [width, height] of [
   [320, 568],
@@ -16,9 +17,7 @@ for (const [width, height] of [
       await page.goto('/');
       await openSmallMaths(page);
       if (language === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await page.locator('input[name=level][value="0"]').check();
       await page.locator('.start-button').click();

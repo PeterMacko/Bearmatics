@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
 import { writeFile } from 'node:fs/promises';
+import { setLanguage } from './support/language';
 
 for (const [width, height] of [
   [320, 568],
@@ -22,9 +23,7 @@ for (const [width, height] of [
       await page.goto('/');
       await openMathematics(page);
       if (lang === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await expect(page.locator('.level-option')).toHaveCount(7);
       for (const card of await page.locator('.level-option').all()) {

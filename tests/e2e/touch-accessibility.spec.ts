@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openMathematics } from './support/course';
 import { writeFile } from 'node:fs/promises';
+import { setLanguage } from './support/language';
 
 for (const language of ['en', 'sk']) {
   test(`touch tablet orientation and locale preserve practice ${language}`, async ({
@@ -64,9 +65,7 @@ for (const language of ['en', 'sk']) {
     await page.goto('/');
     await openMathematics(page);
     if (language === 'sk') {
-      await page.locator('.settings-button').click();
-      await page.getByRole('button', { name: 'Slovenčina' }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, 'Slovenčina');
     }
     await page.evaluate(() => {
       document.documentElement.style.fontSize = '200%';

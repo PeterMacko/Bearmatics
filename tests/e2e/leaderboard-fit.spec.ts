@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { setLanguage } from './support/language';
 
 // SCRUM-148 QA154-02/03/05 with mocked server answers.
 const ROWS = [
@@ -99,9 +100,7 @@ for (const [width, height, language] of [
     await mock(page, 135, 5);
     await page.goto('/');
     if (language !== 'English') {
-      await page.getByRole('button', { name: 'Settings' }).click();
-      await page.getByRole('button', { name: language }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, language, { gear: 'name' });
     }
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
     await page.getByRole('button', { name: /^(Leaderboard|Rebríček),/ }).click();

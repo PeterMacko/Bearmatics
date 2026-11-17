@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { COURSE_CHOICE_DEVICES } from './support/devices';
+import { setLanguage } from './support/language';
 
 // SCRUM-71: course choice and English home across devices, languages and input methods.
 const SIZES = COURSE_CHOICE_DEVICES;
@@ -23,12 +24,6 @@ const COPY = {
     level3: /^Úroveň 3 /,
   },
 };
-
-async function toSlovak(page: Page) {
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
-}
 
 /** Layout invariants for the current menu screen. */
 async function checkLayout(page: Page) {
@@ -115,7 +110,7 @@ for (const size of SIZES)
       const page = await context.newPage();
       const c = COPY[lang];
       await page.goto('/');
-      if (lang === 'sk') await toSlovak(page);
+      if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
       await expect(page.getByRole('heading', { level: 2 })).toHaveText(c.courses);
       await checkLayout(page);
       await page.getByRole('button', { name: c.math, exact: true }).click();
@@ -357,7 +352,7 @@ for (const [width, height] of [
     test(`all three course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
-      if (lang === 'sk') await toSlovak(page);
+      if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
       const cards = page.locator('.course-option');
       await expect(cards).toHaveCount(3);
       for (const card of await cards.all()) {

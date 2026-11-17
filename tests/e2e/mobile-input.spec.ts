@@ -1,13 +1,8 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
 import { openMathematics } from './support/course';
+import { switchLanguage } from './support/language';
 import { answerFor } from './support/maths';
 import { mkdir, writeFile } from 'node:fs/promises';
-
-async function switchLanguage(page: Page, language: string, gear: string, close: string) {
-  await page.getByRole('button', { name: gear, exact: true }).click();
-  await page.getByRole('button', { name: language, exact: true }).click();
-  await page.getByRole('button', { name: close, exact: true }).click();
-}
 
 async function enter(page: Page, value: number) {
   const input = page.getByRole('textbox');

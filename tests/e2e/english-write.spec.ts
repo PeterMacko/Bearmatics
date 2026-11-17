@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { DEVICE, type Device } from './support/devices';
+import { setLanguage } from './support/language';
 
 // SCRUM-80: English listen-and-write. On-screen keyboard simulated two ways at the defined
 // devices: Android shrinks the page; iPhone/iPad keep the page and cover its lower part (only the
@@ -38,9 +39,7 @@ async function fakeVisualViewport(page: Page) {
 async function startWriting(page: Page, slovak = false) {
   await page.goto('/');
   if (slovak) {
-    await page.getByRole('button', { name: 'Settings' }).click();
-    await page.getByRole('button', { name: 'Slovenčina' }).click();
-    await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
+    await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
   }
   await page.getByRole('button', { name: slovak ? 'Angličtina' : 'English', exact: true }).click();
   await page.getByRole('radio', { name: slovak ? /^Úroveň 3 / : /^Level 3 / }).click();

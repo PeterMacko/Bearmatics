@@ -1,12 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
+import { switchLanguage } from './support/language';
 import { answerFor, fillAnswer } from './support/maths';
-
-async function switchLanguage(page: Page, language: string, gear: string, close: string) {
-  await page.getByRole('button', { name: gear, exact: true }).click();
-  await page.getByRole('button', { name: language, exact: true }).click();
-  await page.getByRole('button', { name: close, exact: true }).click();
-}
 
 // SCRUM-141: engine level 0 (count the pictures) is Small maths Level 1; Maths has levels 1-7.
 async function openCourseLevel(page: Page, level: number) {

@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
 import { APP_BAR_DEVICES } from './support/devices';
 import { solve } from './support/maths';
+import { setLanguage } from './support/language';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
 
@@ -75,9 +76,7 @@ test('the bar is on every screen with the approved items, and Back works as befo
 
 test('Slovak names for the bar and its buttons', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
+  await setLanguage(page, 'Slovenčina', { gear: 'name' });
   await page.getByRole('button', { name: 'Matematika', exact: true }).click();
   const nav = page.getByRole('navigation', { name: 'Hlavné ovládanie' });
   const names = await nav
@@ -250,9 +249,7 @@ for (const lang of ['en', 'sk'])
     );
     await page.goto('/');
     if (lang === 'sk') {
-      await page.getByRole('button', { name: 'Settings' }).click();
-      await page.getByRole('button', { name: 'Slovenčina' }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, 'Slovenčina', { gear: 'name' });
     }
     for (const level of ['0', '1', '4']) {
       // SCRUM-141: the picture level (engine 0) is in Small maths.
