@@ -183,7 +183,11 @@ async function captureState(browser, engine, url, device, lang, name, dir) {
     await mockApi(page, !!state.signedIn);
     await state.steps(page, lang);
     // The last click leaves the pointer over its button, and :hover rules would then hide that
-    // button's own style (e.g. the green Next colour). Move the pointer off the page.
+    // button's own style (e.g. the green Next colour). Move the pointer off the page. Firefox often
+    // ignores a move outside the viewport and keeps :hover on the clicked element, which then
+    // differs randomly between two runs of the same build; the move to the corner first makes
+    // that case deterministic (it lands on the page background, not on a control).
+    await page.mouse.move(0, 0);
     await page.mouse.move(-10, -10);
     await page.evaluate(settle);
     result = await page.evaluate(snapshot, PROPERTIES);
