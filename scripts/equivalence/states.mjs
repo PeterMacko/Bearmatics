@@ -298,7 +298,11 @@ export const STATES = {
       await signedInHome(page, lang);
       await startLesson(page, 'maths', 0);
       await finishLesson(page);
-      // Points animation, streak count-up and badge chime run on timers: let them finish.
+      // Points animation, streak count-up and badge chime run on timers that start only after
+      // the (mocked) save answered: wait for the saved summary, then run the timers out.
+      await page.locator('.summary-streak-days').waitFor();
+      await page.clock.runFor(10_000);
+      await page.locator('.summary-streak-days.switched').waitFor();
       await page.clock.runFor(10_000);
     },
   },
