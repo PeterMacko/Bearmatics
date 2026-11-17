@@ -80,15 +80,6 @@ fieldset {
   justify-content: space-between;
   border-bottom: 1px solid var(--line);
 }
-.wordmark {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-}
-.wordmark h1 {
-  font-size: 1.4rem;
-  letter-spacing: -0.045em;
-}
 .language-switch {
   display: flex;
   padding: 4px;
@@ -409,17 +400,11 @@ progress::-webkit-progress-value {
 .feedback-invalid {
   color: #934522;
 }
-.practice form > .primary {
-  width: 100%;
-}
 .summary {
   padding-block: 36px;
 }
 .summary h2 {
   margin-bottom: 16px;
-}
-.summary .intro {
-  color: var(--muted);
 }
 .completion-mark {
   display: grid;
@@ -486,9 +471,6 @@ progress::-webkit-progress-value {
     gap: 30px;
     grid-template-columns: 0.65fr 1fr;
   }
-  .companion .eyebrow {
-    font-size: 0.65rem;
-  }
   .bear-scene {
     margin-block: 18px;
   }
@@ -507,9 +489,6 @@ progress::-webkit-progress-value {
   .site-header {
     padding-block: 18px;
     gap: 10px;
-  }
-  .wordmark h1 {
-    font-size: 1.15rem;
   }
   .language-switch {
     padding: 2px;
@@ -531,9 +510,6 @@ progress::-webkit-progress-value {
     align-items: center;
     gap: 16px;
     padding: 0;
-  }
-  .companion .eyebrow {
-    display: none;
   }
   .companion .bear-scene {
     width: 82px;
@@ -844,11 +820,6 @@ progress::-webkit-progress-value {
 .site-header {
   flex-wrap: wrap;
 }
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 .sound-toggle {
   display: inline-flex;
   align-items: center;
@@ -932,12 +903,6 @@ progress::-webkit-progress-value {
 @media (max-width: 620px) {
   .site-header {
     display: block;
-  }
-  .header-controls {
-    width: 100%;
-    justify-content: space-between;
-    margin-top: 12px;
-    gap: 8px;
   }
   .sound-toggle {
     font-size: 0.72rem;
@@ -1031,7 +996,6 @@ progress::-moz-progress-bar {
   padding: 0;
   width: 86px;
 }
-.compact-practice .companion .eyebrow,
 .compact-practice .scene-leaf {
   display: none;
 }
@@ -1070,13 +1034,6 @@ progress::-moz-progress-bar {
   font-size: 0.75rem;
   line-height: 1.2;
   overflow-wrap: anywhere;
-}
-.compact-practice .practice h2 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
 }
 .compact-practice .equation {
   min-height: 56px;
@@ -1279,15 +1236,19 @@ progress::-moz-progress-bar {
   left: max(8px, env(safe-area-inset-left));
   top: max(8px, env(safe-area-inset-top));
 }
-.header-controls {
-  flex-wrap: wrap;
-}
 .hint-dialog .header-controls {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   margin: 0;
   gap: 16px;
+  flex-wrap: wrap;
+}
+@media (max-width: 620px) {
+  .hint-dialog .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
 }
 .hint-dialog .language-switch {
   flex-wrap: wrap;
@@ -1380,10 +1341,6 @@ progress::-moz-progress-bar {
   padding: 8px 0;
   border: 0;
   gap: 8px;
-}
-.site-header .wordmark {
-  grid-column: 2;
-  justify-self: center;
 }
 .site-header .settings-button {
   grid-column: 3;
@@ -1509,13 +1466,6 @@ progress::-moz-progress-bar {
   display: grid;
   min-height: 52px;
   padding: 4px 0;
-}
-.compact-practice .wordmark {
-  position: static;
-  width: auto;
-  height: auto;
-  overflow: visible;
-  clip-path: none;
 }
 .compact-practice .workspace {
   padding-top: 4px;
@@ -1907,15 +1857,6 @@ progress::-moz-progress-bar {
   font-weight: 700;
 }
 
-.start-button[aria-disabled='true'],
-.start-button[aria-disabled='true']:hover {
-  background: #7d8799;
-  box-shadow: 0 4px 0 #5d6678;
-  cursor: default;
-}
-.start-button[aria-disabled='true']:active {
-  transform: none;
-}
 @media (max-width: 620px) {
   .course-option {
     min-height: 92px;
@@ -2050,11 +1991,6 @@ progress::-moz-progress-bar {
   outline: 3px solid #a95120;
   outline-offset: 3px;
 }
-.word-error {
-  color: #934522;
-  font-size: 0.9rem;
-  text-align: center;
-}
 .word-options {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -2130,10 +2066,6 @@ progress::-moz-progress-bar {
   .compact-practice .english-practice .speaker-button {
     grid-column: 1;
     grid-row: 1;
-  }
-  .compact-practice .english-practice .word-error {
-    grid-column: 1;
-    grid-row: 2;
   }
   .compact-practice .english-practice .word-options {
     grid-column: 2;
@@ -2267,14 +2199,6 @@ progress::-moz-progress-bar {
   overflow: auto;
   background: var(--paper);
 }
-.app-shell .write-practice[data-keyboard] .practice-header,
-.app-shell .write-practice[data-keyboard] h2 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
 .app-shell .write-practice[data-keyboard] form {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -2302,9 +2226,6 @@ progress::-moz-progress-bar {
 .app-shell .write-practice[data-keyboard] .write-input {
   grid-area: input;
   width: 100%;
-}
-.app-shell .write-practice[data-keyboard] .word-error {
-  grid-area: error;
 }
 .app-shell .write-practice[data-keyboard] .feedback {
   grid-area: feedback;
@@ -2355,10 +2276,6 @@ progress::-moz-progress-bar {
     grid-column: 1;
     grid-row: 1 / 5;
   }
-  .compact-practice .write-practice .word-error {
-    grid-column: 1;
-    grid-row: 5;
-  }
   .compact-practice .write-practice .write-shown {
     grid-column: 2;
     grid-row: 1;
@@ -2397,28 +2314,30 @@ progress::-moz-progress-bar {
   overflow: hidden;
   clip-path: inset(50%);
 }
+/* Visually hidden but still read by screen readers, in the layouts named here. (.sr-only also
+   resets padding, margin and border; these elements keep their own values.) The :has() rule above
+   stays separate so a browser without :has() does not drop this whole list. */
+.compact-practice .practice h2,
+.app-shell .write-practice[data-keyboard] .practice-header,
+.app-shell .write-practice[data-keyboard] h2,
 .app-shell
   .write-practice[data-keyboard='short']
   .write-shown:not(:empty)
-  ~ .feedback:not(.play-error) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
-.write-wrong {
-  font-weight: 700;
-}
+  ~ .feedback:not(.play-error),
 .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+}
+.visually-hidden {
   white-space: nowrap;
+}
+
+/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
+.write-wrong {
+  font-weight: 700;
 }
 
 /* ---------- Optional accounts (SCRUM-97) ---------- */
@@ -2463,9 +2382,6 @@ progress::-moz-progress-bar {
   align-items: center;
   gap: 6px;
   width: auto;
-}
-.menu-shell .site-header:has(.account-button) .wordmark {
-  display: none;
 }
 @media (max-width: 620px), (max-height: 500px) {
   /* Phones and short windows: icon only (the name stays in its label and tooltip). */
@@ -2970,9 +2886,6 @@ progress::-moz-progress-bar {
   background: transparent;
   color: #315783;
   font: inherit;
-}
-.badge-button:hover .badge-medal {
-  transform: scale(1.06);
 }
 .badge-medal {
   display: grid;
