@@ -1054,9 +1054,11 @@ progress::-moz-progress-bar {
   padding: 2px 0;
   font-size: 1.9rem;
   gap: 6px;
+  flex-wrap: wrap;
 }
 .compact-practice .equation-part {
   gap: 6px;
+  flex-shrink: 0;
 }
 .compact-practice .equation input {
   width: 2.2em;
@@ -1079,6 +1081,8 @@ progress::-moz-progress-bar {
 .compact-practice .practice-tools {
   gap: 6px;
   margin-top: 4px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  display: block;
 }
 .compact-practice .practice-tools button {
   margin: 0;
@@ -1086,6 +1090,7 @@ progress::-moz-progress-bar {
   padding: 4px 6px;
   font-size: 0.75rem;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 @media (orientation: portrait) {
@@ -1233,10 +1238,6 @@ progress::-moz-progress-bar {
 .corner-button {
   display: grid;
   place-items: center;
-  width: 44px;
-  height: 44px;
-  min-width: 44px;
-  min-height: 44px;
   padding: 0;
   border: 0;
   border-radius: 50%;
@@ -1248,7 +1249,6 @@ progress::-moz-progress-bar {
   background: #e3f1ff;
 }
 .back-button {
-  position: fixed;
   z-index: 1;
   left: max(8px, env(safe-area-inset-left));
   top: max(8px, env(safe-area-inset-top));
@@ -1315,20 +1315,8 @@ progress::-moz-progress-bar {
   max-width: 100%;
   overflow-wrap: anywhere;
 }
-.compact-practice .equation {
-  flex-wrap: wrap;
-}
-.compact-practice .equation-part {
-  flex-shrink: 0;
-}
 .corner-button span {
   font-size: 24px;
-}
-.compact-practice .practice-tools {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-}
-.compact-practice .practice-tools button {
-  overflow-wrap: anywhere;
 }
 
 /* A minimal navigation row, not a branded header/footer band. */
@@ -1475,9 +1463,6 @@ progress::-moz-progress-bar {
 .compact-practice .answer-actions {
   grid-column: 1;
   grid-row: 3;
-}
-.compact-practice .practice-tools {
-  display: block;
 }
 @media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
   .compact-practice .practice-header {
@@ -2674,9 +2659,6 @@ progress::-moz-progress-bar {
   height: 48px;
   min-width: 48px;
   min-height: 48px;
-}
-.app-shell .app-bar .back-button {
-  position: static;
 }
 .app-shell .app-bar .account-button {
   min-width: 48px;
