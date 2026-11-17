@@ -49,7 +49,8 @@ const { values: args } = parseArgs({
 const USAGE = `node scripts/equivalence/run.mjs --base <git-ref> --head <git-ref|WORKTREE> [options]
   --base-dist DIR / --head-dist DIR   use already built dist directories instead of refs
   --browsers chromium,firefox         (firefox needs PLAYWRIGHT_BROWSERS_PATH with Firefox installed)
-  --only 390x844,844x390              devices (default: all ${DEVICES.length} defined devices)
+  --only 390x844,844x390              devices (default: all ${DEVICES.length} defined devices);
+                                      any other WxH is a touch device, WxH-mouse a desktop window
   --quick                             devices ${QUICK.join(', ')}
   --states course,menu-maths          states (default: all ${Object.keys(STATES).length}; --list-states)
   --langs en,sk                       languages (default: en,sk)
@@ -242,9 +243,15 @@ async function main() {
   const devices = args.only
     ? args.only.split(',').map((id) => {
         const d = DEVICES.find((x) => x.id === id);
-        if (!d)
-          throw new Error(`unknown device ${id}; defined: ${DEVICES.map((x) => x.id).join(' ')}`);
-        return d;
+        if (d) return d;
+        // Any other WIDTHxHEIGHT (e.g. breakpoint boundaries): a touch device; suffix
+        // "-mouse" for a desktop window without touch.
+        const m = /^(\d+)x(\d+)(-mouse)?$/.exec(id);
+        if (!m)
+          throw new Error(
+            `unknown device ${id}; defined: ${DEVICES.map((x) => x.id).join(' ')} or any WxH[-mouse]`,
+          );
+        return { id, width: Number(m[1]), height: Number(m[2]), touch: !m[3] };
       })
     : args.quick
       ? DEVICES.filter((d) => QUICK.includes(d.id))
