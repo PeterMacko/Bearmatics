@@ -182,6 +182,9 @@ async function captureState(browser, engine, url, device, lang, name, dir) {
     await page.addInitScript(initScript, seedOf(name));
     await mockApi(page, !!state.signedIn);
     await state.steps(page, lang);
+    // The last click leaves the pointer over its button, and :hover rules would then hide that
+    // button's own style (e.g. the green Next colour). Move the pointer off the page.
+    await page.mouse.move(-10, -10);
     await page.evaluate(settle);
     result = await page.evaluate(snapshot, PROPERTIES);
     if (args.screenshots)
