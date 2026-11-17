@@ -483,6 +483,8 @@ progress::-webkit-progress-value {
   border-radius: 20px;
   background: var(--paper);
   box-shadow: 0 20px 80px #0003;
+  max-height: calc(100dvh - 48px);
+  overflow: auto;
 }
 .leave-dialog h2 {
   font-size: 1.8rem;
@@ -1172,6 +1174,7 @@ progress::-moz-progress-bar {
   border-radius: 16px;
   padding: 12px;
   box-shadow: 0 20px 80px #0003;
+  min-width: 0;
 }
 .hint-dialog-header {
   display: flex;
@@ -1179,10 +1182,13 @@ progress::-moz-progress-bar {
   justify-content: space-between;
   gap: 12px;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 .hint-dialog-header h2 {
   font-size: 1.25rem;
   margin: 0;
+  overflow-wrap: anywhere;
+  min-width: 0;
 }
 .hint-dialog button {
   min-height: 48px;
@@ -1304,20 +1310,6 @@ progress::-moz-progress-bar {
   .compact-practice .companion {
     top: max(56px, env(safe-area-inset-top));
   }
-}
-.leave-dialog {
-  max-height: calc(100dvh - 48px);
-  overflow: auto;
-}
-.hint-dialog {
-  min-width: 0;
-}
-.hint-dialog-header {
-  flex-wrap: wrap;
-}
-.hint-dialog-header h2 {
-  overflow-wrap: anywhere;
-  min-width: 0;
 }
 .hint-dialog-header button {
   max-width: 100%;
