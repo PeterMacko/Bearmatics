@@ -3916,3 +3916,16 @@ progress::-moz-progress-bar {
     max-inline-size: 72px;
   }
 }
+/* Wide-short windows (884x600, 1280x520): dice a little smaller so Next stays in view. */
+@media (min-width: 621px) and (max-height: 620px) {
+  .dice-equation .picture-group {
+    inline-size: 72px;
+    min-block-size: 72px;
+  }
+  .dice-equation .dice-pair .picture-group {
+    max-inline-size: 72px;
+  }
+  .practice:has(.dice-equation) h2 {
+    margin-block: 4px;
+  }
+}
