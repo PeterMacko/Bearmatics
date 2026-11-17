@@ -1035,13 +1035,6 @@ progress::-moz-progress-bar {
   line-height: 1.2;
   overflow-wrap: anywhere;
 }
-.compact-practice .practice h2 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
 .compact-practice .equation {
   min-height: 56px;
   padding: 2px 0;
@@ -2206,14 +2199,6 @@ progress::-moz-progress-bar {
   overflow: auto;
   background: var(--paper);
 }
-.app-shell .write-practice[data-keyboard] .practice-header,
-.app-shell .write-practice[data-keyboard] h2 {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
 .app-shell .write-practice[data-keyboard] form {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
@@ -2329,28 +2314,30 @@ progress::-moz-progress-bar {
   overflow: hidden;
   clip-path: inset(50%);
 }
+/* Visually hidden but still read by screen readers, in the layouts named here. (.sr-only also
+   resets padding, margin and border; these elements keep their own values.) The :has() rule above
+   stays separate so a browser without :has() does not drop this whole list. */
+.compact-practice .practice h2,
+.app-shell .write-practice[data-keyboard] .practice-header,
+.app-shell .write-practice[data-keyboard] h2,
 .app-shell
   .write-practice[data-keyboard='short']
   .write-shown:not(:empty)
-  ~ .feedback:not(.play-error) {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-}
-
-/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
-.write-wrong {
-  font-weight: 700;
-}
+  ~ .feedback:not(.play-error),
 .visually-hidden {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
+}
+.visually-hidden {
   white-space: nowrap;
+}
+
+/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
+.write-wrong {
+  font-weight: 700;
 }
 
 /* ---------- Optional accounts (SCRUM-97) ---------- */
