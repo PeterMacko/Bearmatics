@@ -40,6 +40,15 @@
   --line: #e3d9d0;
   --paper: #fffdf8;
   --sky: #e3f1ff;
+  --blue: #356da6;
+  --blue-shadow: #244f7d;
+  --blue-offer: #326ca5;
+  --blue-offer-shadow: #23507d;
+  --blue-ink: #315783;
+  --green: #237444;
+  --focus: #a95120;
+  --page: #fff8ec;
+  --target: 48px;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
 }
@@ -67,7 +76,7 @@ label {
 button:focus-visible,
 input:focus-visible,
 [tabindex]:focus-visible {
-  outline: 3px solid #a95120;
+  outline: 3px solid var(--focus);
   outline-offset: 5px;
 }
 h1,
@@ -126,7 +135,7 @@ fieldset {
 }
 .language-switch button[aria-pressed='true'] {
   background: var(--paper);
-  color: #315783;
+  color: var(--blue-ink);
   box-shadow: 0 1px 4px #43305b12;
 }
 .workspace {
@@ -222,7 +231,7 @@ fieldset {
 }
 .level-option:has(input:focus-visible),
 .session-options label:has(input:focus-visible) {
-  outline: 3px solid #a95120;
+  outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
 .level-option input,
@@ -307,19 +316,19 @@ fieldset {
 .primary {
   border: 0;
   border-radius: 12px;
-  color: #fffdf8;
+  color: var(--paper);
   padding: 17px 24px;
   min-height: 56px;
   font-weight: 700;
   font-size: 1rem;
   line-height: 1.4;
   /* Neutral action, then explicit semantic feedback rather than a red default. */
-  background: #356da6;
-  box-shadow: 0 4px 0 #244f7d;
+  background: var(--blue);
+  box-shadow: 0 4px 0 var(--blue-shadow);
 }
 .primary:active {
   transform: translateY(2px);
-  box-shadow: 0 2px 0 #244f7d;
+  box-shadow: 0 2px 0 var(--blue-shadow);
 }
 .start-button {
   width: 100%;
@@ -332,7 +341,7 @@ fieldset {
   padding: 10px 12px;
   border: 0;
   background: none;
-  color: #315783;
+  color: var(--blue-ink);
   font-size: 0.85rem;
   font-weight: 700;
   text-decoration: underline;
@@ -371,14 +380,14 @@ progress {
   overflow: hidden;
   background: #f0e0d8;
   margin-bottom: 34px;
-  accent-color: #356da6;
+  accent-color: var(--blue);
 }
 progress::-webkit-progress-bar {
   background: #f0e0d8;
 }
 progress::-webkit-progress-value {
   border-radius: 8px;
-  background: #356da6;
+  background: var(--blue);
 }
 .practice h2 {
   font-size: clamp(1.45rem, 2.3vw, 2rem);
@@ -418,7 +427,7 @@ progress::-webkit-progress-value {
   letter-spacing: -0.05em;
   line-height: 1.2;
   background: #e9f2ff;
-  color: #315783;
+  color: var(--blue-ink);
 }
 .feedback {
   min-height: 74px;
@@ -435,13 +444,13 @@ progress::-webkit-progress-value {
 .completion-mark {
   display: grid;
   place-items: center;
-  border: 2px solid #237444;
+  border: 2px solid var(--green);
   width: 64px;
   height: 64px;
   border-radius: 50%;
   font-size: 2rem;
   margin: 18px 0;
-  color: #237444;
+  color: var(--green);
   background: #e5f3e9;
 }
 .completed-total {
@@ -646,7 +655,7 @@ progress::-webkit-progress-value {
   border: 1.5px solid #91afd2;
   border-radius: 12px;
   background: #e9f2ff;
-  color: #315783;
+  color: var(--blue-ink);
   font-weight: 700;
 }
 .hint-button:hover:not(:disabled) {
@@ -693,7 +702,7 @@ progress::-webkit-progress-value {
   border: 1px solid #d3deee;
   border-radius: 10px;
   padding: 12px 8px;
-  background: #fffdf8;
+  background: var(--paper);
   text-align: center;
 }
 .quantity:last-child {
@@ -785,47 +794,47 @@ progress::-webkit-progress-value {
 }
 .zero-dots {
   font-size: 0.75rem;
-  color: #626178;
+  color: var(--muted);
 }
 
 .primary:hover {
   background: #295d94;
 }
 .answer-button[data-state='correct'] {
-  background: #237444;
+  background: var(--green);
   box-shadow: 0 4px 0 #18532f;
 }
 .answer-button[data-state='correct']:hover {
   background: #1c6539;
 }
 .answer-button[data-state='incorrect'] {
-  background: #b63e45;
+  background: var(--accent);
   box-shadow: 0 4px 0 #842a36;
 }
 .answer-button[data-state='incorrect']:hover {
   background: #a4323e;
 }
 .equation[data-feedback='incorrect'] input {
-  border-color: #b63e45;
+  border-color: var(--accent);
   background: #fff0ee;
   color: #a4323e;
 }
 .equation input:disabled {
   border-style: solid;
   opacity: 1;
-  border-color: #237444;
+  border-color: var(--green);
   background: #e5f3e9;
-  color: #237444;
-  -webkit-text-fill-color: #237444;
+  color: var(--green);
+  -webkit-text-fill-color: var(--green);
 }
 .feedback-correct {
-  color: #237444;
+  color: var(--green);
 }
 .feedback-incorrect {
-  color: #b63e45;
+  color: var(--accent);
 }
 .feedback-invalid {
-  color: #626178;
+  color: var(--muted);
 }
 .sound-toggle {
   display: inline-flex;
@@ -836,14 +845,14 @@ progress::-webkit-progress-value {
   padding: 9px 12px;
   border: 1px solid #b8c9df;
   border-radius: 10px;
-  background: #fffdf8;
-  color: #315783;
+  background: var(--paper);
+  color: var(--blue-ink);
   font-size: 0.8rem;
   font-weight: 700;
 }
 .sound-toggle[aria-pressed='true'] {
   background: #e2efff;
-  border-color: #356da6;
+  border-color: var(--blue);
 }
 .sound-toggle:disabled {
   opacity: 0.7;
@@ -855,7 +864,7 @@ progress::-webkit-progress-value {
   flex-basis: 100%;
   text-align: right;
   font-size: 0.75rem;
-  color: #626178;
+  color: var(--muted);
 }
 .bear-character {
   transform-origin: 130px 250px;
@@ -927,7 +936,7 @@ progress::-webkit-progress-value {
 }
 
 progress::-moz-progress-bar {
-  background: #356da6;
+  background: var(--blue);
 }
 
 .number-pad {
@@ -937,12 +946,12 @@ progress::-moz-progress-bar {
   margin-bottom: 8px;
 }
 .number-pad button {
-  min-width: 48px;
-  min-height: 48px;
+  min-width: var(--target);
+  min-height: var(--target);
   border: 1px solid #91afd2;
   border-radius: 10px;
-  color: #315783;
-  background: #fffdf8;
+  color: var(--blue-ink);
+  background: var(--paper);
   font-size: 1.2rem;
   font-weight: 700;
   touch-action: manipulation;
@@ -969,7 +978,7 @@ progress::-moz-progress-bar {
   border-radius: 8px;
   padding: 8px;
   background: transparent;
-  color: #315783;
+  color: var(--blue-ink);
   font-size: 0.85rem;
   text-decoration: underline;
 }
@@ -1056,7 +1065,7 @@ progress::-moz-progress-bar {
   margin: 0 0 4px;
 }
 .compact-practice .answer-button {
-  min-height: 48px;
+  min-height: var(--target);
   padding: 8px;
   font-size: 0.95rem;
 }
@@ -1068,7 +1077,7 @@ progress::-moz-progress-bar {
 }
 .compact-practice .practice-tools button {
   margin: 0;
-  min-height: 48px;
+  min-height: var(--target);
   padding: 4px 6px;
   font-size: 0.75rem;
   line-height: 1.2;
@@ -1178,12 +1187,12 @@ progress::-moz-progress-bar {
   min-width: 0;
 }
 .hint-dialog button {
-  min-height: 48px;
+  min-height: var(--target);
   padding: 8px 12px;
   border: 1px solid #91afd2;
   border-radius: 10px;
   background: #deedff;
-  color: #315783;
+  color: var(--blue-ink);
   font: inherit;
 }
 .hint-dialog-content {
@@ -1224,11 +1233,11 @@ progress::-moz-progress-bar {
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: #315783;
+  color: var(--blue-ink);
   font-size: 1.5rem;
 }
 .corner-button:hover {
-  background: #e3f1ff;
+  background: var(--sky);
 }
 .back-button {
   z-index: 1;
@@ -1254,7 +1263,7 @@ progress::-moz-progress-bar {
 }
 .hint-dialog .language-switch button {
   flex: 1 1 auto;
-  min-width: 48px;
+  min-width: var(--target);
   overflow-wrap: anywhere;
 }
 .hint-dialog .audio-notice {
@@ -1304,9 +1313,9 @@ progress::-moz-progress-bar {
   gap: 8px;
 }
 .answer-actions .hint-button {
-  width: 48px;
+  width: var(--target);
   min-width: 44px;
-  min-height: 48px;
+  min-height: var(--target);
   margin: 0;
   padding: 4px;
   font-size: 1.4rem;
@@ -1322,8 +1331,8 @@ progress::-moz-progress-bar {
   font-style: italic;
 }
 .hint-dialog .dialog-close {
-  min-width: 48px;
-  min-height: 48px;
+  min-width: var(--target);
+  min-height: var(--target);
   flex-shrink: 0;
   font-size: 1.6rem;
   padding: 4px;
@@ -1371,7 +1380,7 @@ progress::-moz-progress-bar {
     font-size: 2.8rem;
   }
   .feedback {
-    min-height: 48px;
+    min-height: var(--target);
     padding: 4px 0 8px;
   }
   .summary {
@@ -1518,7 +1527,7 @@ progress::-moz-progress-bar {
   flex: 1 1 auto;
 }
 .menu-shell .session-options label > span {
-  min-height: 48px;
+  min-height: var(--target);
 }
 .menu-shell .level-option input {
   inset: 0;
@@ -1734,7 +1743,7 @@ progress::-moz-progress-bar {
   outline: none;
 }
 .menu-heading h2:focus-visible {
-  outline: 3px solid #a95120;
+  outline: 3px solid var(--focus);
   outline-offset: 4px;
 }
 .course-options {
@@ -1842,7 +1851,7 @@ progress::-moz-progress-bar {
   border-radius: 50%;
   border: 3px solid #6489b3;
   background: #e9f2ff;
-  color: #315783;
+  color: var(--blue-ink);
   cursor: pointer;
   box-shadow: 0 4px 0 #b9cde4;
 }
@@ -1858,7 +1867,7 @@ progress::-moz-progress-bar {
   opacity: 0.35;
 }
 .speaker-button[data-playing='true'] {
-  border-color: #356da6;
+  border-color: var(--blue);
   background: #d6e8ff;
 }
 .speaker-button[data-playing='true'] .speaker-wave {
@@ -1887,13 +1896,13 @@ progress::-moz-progress-bar {
     opacity: 1;
   }
   .speaker-button[data-playing='true'] {
-    outline: 3px solid #356da6;
+    outline: 3px solid var(--blue);
     outline-offset: 3px;
   }
 }
 .speaker-button:focus-visible,
 .word-option:focus-visible {
-  outline: 3px solid #a95120;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
 .word-options {
@@ -1924,25 +1933,25 @@ progress::-moz-progress-bar {
   font-size: var(--word-font, clamp(1rem, 2.6vw + 0.3rem, 1.2rem));
 }
 .word-option[aria-pressed='true'] {
-  border-color: #356da6;
+  border-color: var(--blue);
   background: #e9f2ff;
-  color: #315783;
-  box-shadow: 0 0 0 2px #356da6;
+  color: var(--blue-ink);
+  box-shadow: 0 0 0 2px var(--blue);
 }
 .word-option[data-playing='true'] {
   background: #d6e8ff;
 }
 .word-option[data-state='incorrect'] {
-  border-color: #b63e45;
+  border-color: var(--accent);
   background: #fff0ee;
   color: #a4323e;
-  box-shadow: 0 0 0 2px #b63e45;
+  box-shadow: 0 0 0 2px var(--accent);
 }
 .word-option[data-state='correct'] {
-  border-color: #237444;
+  border-color: var(--green);
   background: #e5f3e9;
-  color: #237444;
-  box-shadow: 0 0 0 2px #237444;
+  color: var(--green);
+  box-shadow: 0 0 0 2px var(--green);
 }
 .word-option:disabled {
   cursor: default;
@@ -2068,15 +2077,15 @@ progress::-moz-progress-bar {
   text-transform: none;
 }
 .write-input:focus-visible {
-  outline: 3px solid #a95120;
+  outline: 3px solid var(--focus);
   outline-offset: 3px;
-  border-color: #356da6;
+  border-color: var(--blue);
 }
 .write-input[data-state='incorrect'] {
-  border-color: #b63e45;
+  border-color: var(--accent);
 }
 .write-input[data-state='correct'] {
-  border-color: #237444;
+  border-color: var(--green);
   background: #e5f3e9;
 }
 .write-practice .answer-actions {
@@ -2257,7 +2266,7 @@ progress::-moz-progress-bar {
   border: 1.5px solid var(--line);
   border-radius: 999px;
   background: var(--paper);
-  color: #315783;
+  color: var(--blue-ink);
   font-size: 0.9rem;
   font-weight: 700;
 }
@@ -2356,7 +2365,7 @@ progress::-moz-progress-bar {
 .account-field input {
   width: 100%;
   min-width: 0;
-  min-height: 48px;
+  min-height: var(--target);
   padding: 10px 12px;
   border: 1.5px solid var(--line);
   border-radius: 12px;
@@ -2365,7 +2374,7 @@ progress::-moz-progress-bar {
   font-size: 1rem;
 }
 .account-field input:focus-visible {
-  border-color: #356da6;
+  border-color: var(--blue);
 }
 .account-field input[aria-invalid='true'] {
   border-color: var(--accent);
@@ -2397,15 +2406,15 @@ progress::-moz-progress-bar {
 }
 .secondary-button,
 .danger-button {
-  min-height: 48px;
+  min-height: var(--target);
   padding: 10px 18px;
   border-radius: 12px;
   font-weight: 700;
 }
 .secondary-button {
-  border: 1.5px solid #356da6;
+  border: 1.5px solid var(--blue);
   background: var(--paper);
-  color: #315783;
+  color: var(--blue-ink);
 }
 .danger-button {
   border: 1.5px solid var(--accent);
@@ -2420,7 +2429,7 @@ progress::-moz-progress-bar {
   padding: 0 4px;
   border: 0;
   background: none;
-  color: #315783;
+  color: var(--blue-ink);
   font-weight: 700;
   text-decoration: underline;
   text-underline-offset: 3px;
@@ -2456,7 +2465,7 @@ progress::-moz-progress-bar {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: #356da6;
+  background: var(--blue);
   color: #fff;
   font-size: 0.95rem;
 }
@@ -2497,10 +2506,10 @@ progress::-moz-progress-bar {
   border-radius: 14px;
 }
 .bear-option:has(input:checked) {
-  border-color: #356da6;
+  border-color: var(--blue);
 }
 .bear-option:has(input:focus-visible) {
-  outline: 3px solid #356da6;
+  outline: 3px solid var(--blue);
   outline-offset: 2px;
 }
 .parent-check {
@@ -2554,7 +2563,7 @@ progress::-moz-progress-bar {
   line-height: 1.45;
 }
 .privacy-list a {
-  color: #315783;
+  color: var(--blue-ink);
   overflow-wrap: anywhere;
 }
 
@@ -2595,18 +2604,18 @@ progress::-moz-progress-bar {
 }
 /* Every bar button is a 48px target. */
 .app-shell .app-bar .corner-button {
-  width: 48px;
-  height: 48px;
-  min-width: 48px;
-  min-height: 48px;
+  width: var(--target);
+  height: var(--target);
+  min-width: var(--target);
+  min-height: var(--target);
 }
 .app-shell .app-bar .account-button {
-  min-width: 48px;
-  min-height: 48px;
+  min-width: var(--target);
+  min-height: var(--target);
 }
 @media (max-width: 620px), (max-height: 500px) {
   .app-shell .app-bar .account-button {
-    width: 48px;
+    width: var(--target);
   }
 }
 /* Menus: the bar floats over the top corners (same centre lines as the SCRUM-71 arrow and gear),
@@ -2617,7 +2626,7 @@ progress::-moz-progress-bar {
   top: 6px;
   inset-inline: 18px;
   width: auto;
-  min-height: 48px;
+  min-height: var(--target);
   padding: 0;
   gap: 6px;
   pointer-events: none;
@@ -2642,7 +2651,7 @@ progress::-moz-progress-bar {
     position: fixed;
     z-index: 3;
     inset: 0 auto 0 max(4px, env(safe-area-inset-left));
-    width: 48px;
+    width: var(--target);
     min-height: 0;
     flex-direction: column;
     justify-content: space-between;
@@ -2790,13 +2799,13 @@ progress::-moz-progress-bar {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  min-width: 48px;
-  min-height: 48px;
+  min-width: var(--target);
+  min-height: var(--target);
   padding: 0 4px 0 2px;
   border: 0;
   border-radius: 12px;
   background: transparent;
-  color: #315783;
+  color: var(--blue-ink);
   font: inherit;
 }
 .badge-medal {
@@ -2859,7 +2868,7 @@ progress::-moz-progress-bar {
     flex-direction: column;
     gap: 2px;
     padding: 2px 0;
-    width: 48px;
+    width: var(--target);
   }
   .app-shell .app-bar .bar-progress {
     flex-direction: column;
@@ -2890,7 +2899,7 @@ progress::-moz-progress-bar {
   font-weight: 700;
 }
 .badge-how {
-  color: var(--muted, #6f625a);
+  color: var(--muted);
   font-size: 0.9rem;
 }
 .badge-meter {
@@ -2929,11 +2938,11 @@ progress::-moz-progress-bar {
 }
 .points-hint {
   margin-block: 12px 0;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
 }
 .points-saving {
   margin-block: 0 12px;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
 }
 .points-failed {
   margin-block: 0 12px;
@@ -3023,7 +3032,7 @@ progress::-moz-progress-bar {
   display: inline-flex;
   align-items: center;
   gap: 2px;
-  min-height: 48px;
+  min-height: var(--target);
   padding-inline: 2px;
   color: #b2611a;
   font-weight: 800;
@@ -3078,7 +3087,7 @@ progress::-moz-progress-bar {
   .app-shell .app-bar .streak-chip {
     flex-direction: column;
     min-height: 0;
-    width: 48px;
+    width: var(--target);
     justify-content: center;
     font-size: 0.85rem;
   }
@@ -3116,15 +3125,15 @@ progress::-moz-progress-bar {
 .streak-offer-actions button.primary {
   width: 100%;
   border: 0;
-  background: #326ca5;
-  color: #fffdf8;
+  background: var(--blue-offer);
+  color: var(--paper);
   font-weight: 800;
-  box-shadow: 0 3px 0 #23507d;
+  box-shadow: 0 3px 0 var(--blue-offer-shadow);
 }
 .streak-offer-actions button.text-button {
   border: 0;
   background: transparent;
-  color: #315783;
+  color: var(--blue-ink);
   text-decoration: underline;
 }
 .streak-offer-error {
@@ -3298,7 +3307,7 @@ progress::-moz-progress-bar {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 48px;
+  min-height: var(--target);
   padding: 0 2px;
   border: 0;
   border-radius: 12px;
@@ -3311,7 +3320,7 @@ progress::-moz-progress-bar {
   min-width: 44px;
 }
 .badge-button .bar-progress {
-  min-width: 48px;
+  min-width: var(--target);
 }
 .badge-medal-button:hover .badge-medal {
   transform: scale(1.06);
@@ -3326,7 +3335,7 @@ progress::-moz-progress-bar {
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
   .app-shell .app-bar .badge-medal-button,
   .app-shell .app-bar .badge-button .bar-progress {
-    width: 48px;
+    width: var(--target);
     min-height: 40px;
   }
 }
@@ -3338,7 +3347,7 @@ progress::-moz-progress-bar {
 .leaderboard-table th {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
   text-align: start;
   padding: 2px 6px 6px;
 }
@@ -3375,7 +3384,7 @@ progress::-moz-progress-bar {
 }
 .leaderboard-gap td {
   text-align: center;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
   letter-spacing: 0.3em;
 }
 .leaderboard-state {
@@ -3385,7 +3394,7 @@ progress::-moz-progress-bar {
 .leaderboard-note {
   margin: 10px 0 0;
   font-size: 0.85rem;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
 }
 /* Small phones: the summary with the streak row still fits without scrolling. */
 @media (max-width: 620px) and (max-height: 600px) {
@@ -3515,7 +3524,7 @@ progress::-moz-progress-bar {
 .basket-title {
   font-size: 0.85rem;
   font-weight: 800;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
   position: absolute;
   top: -0.7em;
   left: 50%;
@@ -3523,7 +3532,7 @@ progress::-moz-progress-bar {
   margin: 0;
   padding: 0 6px;
   border-radius: 8px;
-  background: var(--page, #fff8ec);
+  background: var(--page);
   white-space: nowrap;
   line-height: 1.3;
 }
@@ -3533,7 +3542,7 @@ progress::-moz-progress-bar {
   justify-content: center;
   align-content: flex-start;
   gap: 2px;
-  min-height: 48px;
+  min-height: var(--target);
   width: 100%;
 }
 .basket-picture {
@@ -3556,14 +3565,14 @@ progress::-moz-progress-bar {
   background: rgba(243, 194, 122, 0.25);
 }
 .basket-picture:focus-visible {
-  outline: 3px solid #356da6;
+  outline: 3px solid var(--blue);
   outline-offset: 1px;
 }
 .basket-empty {
   align-self: center;
   margin: auto;
   font-size: 0.8rem;
-  color: var(--muted, #6f625a);
+  color: var(--muted);
 }
 @media (prefers-reduced-motion: no-preference) {
   .basket-picture {
