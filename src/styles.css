@@ -3902,7 +3902,18 @@ progress::-moz-progress-bar {
   container-type: inline-size;
   --die: min(var(--die-max, 84px), calc((100cqw - 52px) / 4));
   grid-template-columns: auto auto auto;
-  justify-content: center;
+  /* Like level 1: the same space between the first die, the second die and the result group
+     (Peter); each part is exactly as wide as its dice (+ the operator). */
+  justify-content: space-evenly;
+}
+.dice-equation .equation-part {
+  inline-size: calc(16px + var(--die));
+}
+.dice-equation .equation-part:first-child {
+  inline-size: var(--die);
+}
+.dice-equation .equation-part:last-child {
+  inline-size: calc(16px + 2 * var(--die) + 4px);
 }
 .dice-equation .picture-group {
   inline-size: var(--die);
@@ -3935,4 +3946,8 @@ progress::-moz-progress-bar {
   .app-shell.compact-practice .app-bar .badge-button {
     display: none;
   }
+}
+/* Before the answer the "?" stands for the whole result group: as wide as the two dice. */
+.dice-equation .equation-part:last-child .picture-unknown {
+  inline-size: calc(2 * var(--die) + 4px);
 }

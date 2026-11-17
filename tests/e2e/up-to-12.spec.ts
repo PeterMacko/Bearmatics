@@ -83,6 +83,16 @@ for (const [width, height, touch] of DEVICES)
       return {
         // QA170-01: all four dice the same size.
         spread: Math.max(...groups.map((g) => g.width)) - Math.min(...groups.map((g) => g.width)),
+        // Peter: equal gaps die | die | result group (like level 1).
+        gaps: (() => {
+          const parts = [...document.querySelectorAll('.equation .equation-part')].map((e) => {
+            const r = [...e.querySelectorAll('.picture-group')].map((x) =>
+              x.getBoundingClientRect(),
+            );
+            return [Math.min(...r.map((x) => x.left)), Math.max(...r.map((x) => x.right))];
+          });
+          return [parts[1][0] - parts[0][1], parts[2][0] - parts[1][1]];
+        })(),
         count: groups.length,
         smallest: Math.min(...groups.map((g) => Math.min(g.width, g.height))),
         overlap,
@@ -96,6 +106,7 @@ for (const [width, height, touch] of DEVICES)
     const where = `${width}x${height}`;
     expect(m.count, where).toBe(4);
     expect(m.spread, where).toBeLessThanOrEqual(1);
+    expect(Math.abs(m.gaps[0] - m.gaps[1]), where).toBeLessThanOrEqual(4);
     // QA170-02: Next appears where Check was (no jump on reveal), except sideways phones
     // where the feedback line sits beside the dice.
     if (height > 500)
