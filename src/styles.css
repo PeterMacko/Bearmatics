@@ -2642,16 +2642,36 @@ progress::-moz-progress-bar {
    Back | badge + points | streak | profile | settings. Top bar everywhere; short landscape
    phones (the compact practice rule) get a narrow bar on the left, same order top to bottom. */
 .app-shell .app-bar {
+  position: relative;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
+  min-height: 60px;
+  /* Never renders (the bar is flex); kept so the computed styles stay those of the old header. */
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+}
+/* Compact lessons: a lower row stacked above the lesson. Specificity (0,2,0) on purpose, so the
+   short-landscape left column (:root .app-shell .app-bar) still wins there. */
+.compact-practice .app-bar {
+  z-index: 1;
+  min-height: 52px;
 }
 .app-bar-end {
   display: flex;
   align-items: center;
   gap: 6px;
   margin-inline-start: auto;
+}
+/* Never render (flex items); kept so the computed styles stay those of the old header grid. */
+.app-bar .back-button {
+  grid-column: 1;
+  grid-row: 1;
+}
+.app-bar .settings-button {
+  grid-column: 3;
+  grid-row: 1;
 }
 /* Every bar button is a 48px target. */
 .app-shell .app-bar .corner-button {
@@ -2673,11 +2693,13 @@ progress::-moz-progress-bar {
    so the heading keeps its SCRUM-36 height. Only the buttons take clicks. */
 .app-shell.menu-shell .app-bar {
   position: absolute;
+  z-index: 1;
   top: 6px;
   inset-inline: 18px;
   width: auto;
   min-height: 48px;
   padding: 0;
+  gap: 6px;
   pointer-events: none;
 }
 .app-shell .app-bar > * {
