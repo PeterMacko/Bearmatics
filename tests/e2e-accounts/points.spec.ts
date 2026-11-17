@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 
 // SCRUM-117: points and the bear badge for a signed-in player (real server + local database).
 const PASSWORD = 'honeyPot42';
@@ -109,27 +110,14 @@ test('signed out: no badge, the summary invites to sign in', async ({ page }) =>
 
 // Defined devices: the badge sits in the bar (left bar on short landscape phones), 48 px,
 // never over the screen's text, on the menus and in a lesson.
-const DEVICES: [number, number][] = [
-  [390, 844],
-  [360, 640],
-  [320, 568],
-  [844, 390],
-  [568, 320],
-  [820, 1180],
-  [1180, 820],
-  [884, 1004],
-  [884, 600],
-  [1280, 520],
-  [733, 500],
-  [1366, 900],
-];
+const DEVICES = BADGE_DEVICES;
 
 test('badge in the app bar at the defined devices', async ({ browser }) => {
   test.setTimeout(120_000);
   const context = await browser.newContext();
   const page = await context.newPage();
   await createAccount(page);
-  for (const [width, height] of DEVICES) {
+  for (const { width, height } of DEVICES) {
     await page.setViewportSize({ width, height });
     for (const screen of ['courses', 'maths', 'lesson']) {
       await page.goto('/');
@@ -302,7 +290,7 @@ test('streak: first finished lesson gives 1 day; bar fits at the defined devices
           body: JSON.stringify({ points: 1500, streak: 12, frozen: true }),
         }),
       );
-    for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+    for (const { width, height } of [...DEVICES, DEVICE.phone369]) {
       await page.setViewportSize({ width, height });
       for (const screen of ['courses', 'maths']) {
         await page.goto('/');
@@ -421,7 +409,7 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
   ).not.toBeChecked();
   dialog = await open(second);
   await expect(dialog.getByRole('row', { name: /Board One/ })).toHaveCount(0);
-  for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+  for (const { width, height } of [...DEVICES, DEVICE.phone369]) {
     await second.setViewportSize({ width, height });
     dialog = await open(second);
     const where = `${width}x${height}`;

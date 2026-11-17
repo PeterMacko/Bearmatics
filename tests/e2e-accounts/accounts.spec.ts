@@ -1,19 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
+import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
-const DEVICES = [
-  { name: 'phone', width: 390, height: 844, touch: true },
-  { name: 'phone small', width: 360, height: 640, touch: true },
-  { name: 'small phone', width: 320, height: 568, touch: true },
-  { name: 'phone landscape', width: 844, height: 390, touch: true },
-  { name: 'small landscape', width: 568, height: 320, touch: true },
-  { name: 'tablet portrait', width: 820, height: 1180, touch: true },
-  { name: 'tablet landscape', width: 1180, height: 820, touch: true },
-  { name: 'foldable', width: 884, height: 1004, touch: true },
-  { name: 'wide short', width: 1280, height: 520, touch: false },
-  { name: 'wide short small', width: 733, height: 500, touch: false },
-  { name: 'desktop', width: 1366, height: 900, touch: false },
-];
 const PASSWORD = 'honeyPot42';
 let counter = 0;
 const uniqueName = (prefix: string) =>

@@ -1,16 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
+import { COURSE_CHOICE_DEVICES } from './support/devices';
 
 // SCRUM-71: course choice and English home across devices, languages and input methods.
-const SIZES = [
-  { name: 'phone portrait', width: 390, height: 844, touch: true },
-  { name: 'small phone', width: 320, height: 568, touch: true },
-  { name: 'phone landscape', width: 844, height: 390, touch: true },
-  { name: 'tablet portrait', width: 820, height: 1180, touch: true },
-  { name: 'tablet landscape', width: 1180, height: 820, touch: true },
-  { name: 'foldable unfolded', width: 884, height: 1004, touch: true },
-  { name: 'wide short', width: 1280, height: 520, touch: false },
-  { name: 'desktop', width: 1366, height: 900, touch: false },
-];
+const SIZES = COURSE_CHOICE_DEVICES;
 const COPY = {
   en: {
     courses: 'What shall we learn today?',

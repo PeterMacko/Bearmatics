@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
+import { APP_BAR_DEVICES } from './support/devices';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
 
@@ -96,23 +97,7 @@ test('Slovak names for the bar and its buttons', async ({ page }) => {
 });
 
 // Defined devices. Short landscape phones (max-height 500, max-width 950) get the left bar.
-const DEVICES: [number, number, boolean][] = [
-  [390, 844, true],
-  [360, 640, true],
-  [320, 568, true],
-  [844, 390, true],
-  [568, 320, true],
-  [820, 1180, true],
-  [1180, 820, true],
-  [884, 1004, true],
-  [884, 838, true],
-  // Peter's unfolded foldable in Vivaldi (tab row + address bar).
-  [884, 600, true],
-  [742, 702, true],
-  [1280, 520, false],
-  [733, 500, false],
-  [1366, 900, false],
-];
+const DEVICES = APP_BAR_DEVICES;
 
 async function measure(page: Page) {
   return page.evaluate(() => {
@@ -168,7 +153,7 @@ async function measure(page: Page) {
   });
 }
 
-for (const [width, height, touch] of DEVICES)
+for (const { width, height, touch } of DEVICES)
   test(`bar placement and no overlap at ${width}x${height}`, async ({ page }, info) => {
     await page.setViewportSize({ width, height });
     if (touch)

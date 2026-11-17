@@ -79,9 +79,6 @@ export const ENGLISH_LISTEN_DEVICES: Device[] = [
   DEVICE.desktop,
 ];
 
-/** English listen-and-write (english-write.spec): the touch devices with an on-screen keyboard. */
-export const ENGLISH_WRITE_DEVICES: Device[] = ENGLISH_LISTEN_DEVICES.slice(0, 8);
-
 /** Course choice and English home (course-choice.spec), under its historical names. */
 export const COURSE_CHOICE_DEVICES: Device[] = [
   renamed(DEVICE.phone, 'phone portrait'),
