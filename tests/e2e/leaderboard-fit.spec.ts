@@ -1,5 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { setLanguage } from './support/language';
+import { nextFrames } from './support/layout';
+import { mockApi } from './support/mockApi';
 
 // SCRUM-148 QA154-02/03/05 with mocked server answers.
 const ROWS = [
@@ -28,36 +30,15 @@ const ROWS = [
   { place: 25, nickname: 'Adam', bear: 5, points: 120, streak: 0, frozen: false, me: false },
 ];
 
-async function mock(page: Page, points: number, streak: number, nickname = 'Brave Cub') {
-  let leaderboard = true;
-  await page.route('**/api/**', async (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const json = (body: unknown) =>
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-    const account = () => ({
-      kind: 'password',
-      username: 'kid',
-      nickname,
-      bear: 2,
-      email: null,
-      leaderboard,
-    });
-    if (path === '/api/me' && route.request().method() === 'PATCH') {
-      await new Promise((done) => setTimeout(done, 300));
-      leaderboard = JSON.parse(route.request().postData() ?? '{}').leaderboard ?? leaderboard;
-      return json({ account: account() });
-    }
-    if (path === '/api/me') return json({ account: account() });
-    if (path === '/api/progress') return json({ points, streak, frozen: false, today: true });
-    if (path === '/api/leaderboard') return json({ rows: ROWS, gapBefore: 10 });
-    return json({ available: false });
+const mock = (page: Page, points: number, streak: number, nickname = 'Brave Cub') =>
+  mockApi(page, {
+    nickname,
+    points,
+    streak,
+    frozen: false,
+    today: true,
+    leaderboard: { rows: ROWS, gapBefore: 10 },
   });
-}
-
-const frames = (page: Page) =>
-  page.evaluate(
-    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-  );
 
 test('QA154-03: 320x568 maths menu: Back and every bar item stay in one row', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 568 });
@@ -71,7 +52,7 @@ test('QA154-03: 320x568 maths menu: Back and every bar item stay in one row', as
     await page.goto('/');
     await page.getByRole('button', { name: 'Maths', exact: true }).click();
     await expect(page.locator('.streak-chip')).toBeVisible();
-    await frames(page);
+    await nextFrames(page);
     const m = await page.evaluate(() => {
       const items = [
         ...document.querySelectorAll('.app-bar > :not(.app-bar-end), .app-bar-end > *'),

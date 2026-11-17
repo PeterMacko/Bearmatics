@@ -1,21 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
 import { setLanguage } from './support/language';
+import { nextFrames } from './support/layout';
+import { mockApi } from './support/mockApi';
 
 // QA131-05: the frozen streak's warm-up text never pushes the bar into the page content or a
 // second row (200% text, long nickname, 4-digit points). Server answers are mocked.
-async function signedIn(page: Page, nickname: string, points: number, streak: number) {
-  await page.route('**/api/**', (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const json = (body: unknown) =>
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-    if (path === '/api/me')
-      return json({
-        account: { kind: 'password', username: 'kid', nickname, bear: 2, email: null },
-      });
-    if (path === '/api/progress') return json({ points, streak, frozen: true, today: false });
-    return json({ available: false });
-  });
-}
+const signedIn = (page: Page, nickname: string, points: number, streak: number) =>
+  mockApi(page, { nickname, points, streak, frozen: true, today: false });
 
 test('200% text on a tablet: the profile screen starts below the frozen streak', async ({
   page,
@@ -26,9 +17,7 @@ test('200% text on a tablet: the profile screen starts below the frozen streak',
   await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   await page.getByRole('button', { name: /^Your profile/ }).click();
   await expect(page.getByRole('heading', { name: 'Brave Cub' }).first()).toBeVisible();
-  await page.evaluate(
-    () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-  );
+  await nextFrames(page);
   const hit = await page.evaluate(() => {
     const bar = document.querySelector('.app-bar-end')!.getBoundingClientRect();
     return [
@@ -59,9 +48,7 @@ for (const [width, height, language] of [
       await setLanguage(page, language, { gear: 'name' });
     }
     await expect(page.locator('.streak-chip')).toBeVisible();
-    await page.evaluate(
-      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-    );
+    await nextFrames(page);
     const m = await page.evaluate(() => {
       const items = [...document.querySelectorAll('.app-bar-end > *')].map((e) =>
         e.getBoundingClientRect(),
