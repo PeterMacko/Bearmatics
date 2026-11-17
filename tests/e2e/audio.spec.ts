@@ -1,21 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
+import { solve } from './support/maths';
 
 type Envelope = { value: number; time: number }[];
 type Note = { frequency: number; start: number; stops: (number | null)[] };
 type AudioTrace = { contexts: boolean[]; notes: Note[]; envelopes: Envelope[] };
 async function trace(page: Page): Promise<AudioTrace> {
   return page.evaluate(() => (window as unknown as { audioTrace: AudioTrace }).audioTrace);
-}
-async function solve(page: Page, wrong = false) {
-  const value = await page.locator('.equation').evaluate((el) => {
-    const terms = [...el.querySelectorAll('[data-term]')];
-    const blank = terms.findIndex((term) => term.querySelector('input'));
-    const [a, b, c] = terms.map((term) => Number(term.textContent));
-    return blank === 2 ? a + b : blank === 0 ? c - b : c - a;
-  });
-  await page.getByRole('textbox').fill(String(value + Number(wrong)));
-  await page.getByRole('button', { name: 'Check answer' }).click();
 }
 
 test('native Web Audio is lazy, captures stronger bounded schedules and one gated two-second fanfare', async ({

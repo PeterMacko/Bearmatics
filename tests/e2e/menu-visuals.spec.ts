@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 import { writeFile } from 'node:fs/promises';
+import { setLanguage } from './support/language';
 
 for (const language of ['en', 'sk'])
   for (const [width, height] of [
@@ -31,9 +32,7 @@ for (const language of ['en', 'sk'])
       await page.goto('/');
       await openMathematics(page);
       if (language === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
       const list = page.locator('.level-options');
@@ -176,9 +175,7 @@ test('selected level and count survive settings, locale, orientation and all com
     await expect(page.locator('.level-option').last()).toBeInViewport({ ratio: 1 });
     expect(await page.evaluate(() => scrollY)).toBe(0);
   }
-  await page.locator('.settings-button').click();
-  await page.getByRole('button', { name: 'English' }).click();
-  await page.keyboard.press('Escape');
+  await setLanguage(page, 'English');
   await expect(page.locator('.settings-button')).toBeFocused();
   await page.locator('.start-button').click();
   await expect(page.locator('.exercise-position')).toHaveText('Exercise 1 of 20');
@@ -203,9 +200,7 @@ for (const language of ['en', 'sk'])
       await page.goto('/');
       await openMathematics(page);
       if (language === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await page.evaluate(() => {
         document.documentElement.style.fontSize = '200%';
@@ -310,9 +305,7 @@ test('Slovak phone heading does not split a word to reserve the entire gear colu
   await page.setViewportSize({ width: 320, height: 568 });
   await page.goto('/');
   await openMathematics(page);
-  await page.locator('.settings-button').click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
+  await setLanguage(page, 'Slovenčina');
   const lines = await page.locator('.selection h2').evaluate((el) => {
     const node = el.firstChild!;
     const text = node.textContent!;

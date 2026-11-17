@@ -1,46 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createAccount as createPasswordAccount, uniqueName } from '../e2e/support/account';
+import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
+import { answerFor } from '../e2e/support/maths';
+import { horizontalOverflow, nextFrames } from '../e2e/support/layout';
 
 // SCRUM-117: points and the bear badge for a signed-in player (real server + local database).
-const PASSWORD = 'honeyPot42';
-let counter = 0;
-const uniqueName = () =>
-  `pts${(Date.now() % 1e7).toString(36)}${(counter++).toString(36)}${Math.floor(Math.random() * 1e4)}`.slice(
-    0,
-    20,
-  );
-
 async function createAccount(page: Page, nickname = 'Brave Cub') {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await page.getByLabel('Username').fill(uniqueName());
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByLabel('Password again').fill(PASSWORD);
-  await page.getByLabel('Nickname').fill(nickname);
-  await page.getByRole('radio', { name: 'Panda' }).check();
-  await page.getByLabel('A parent knows I am creating this account').check();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();
-}
-
-async function answer(page: Page): Promise<number> {
-  return page.locator('.equation').evaluate((el) => {
-    const terms = [...el.querySelectorAll('[data-term]')];
-    const blank = terms.findIndex((term) => term.querySelector('input'));
-    const [a, b, c] = terms.map((term) => Number(term.textContent));
-    const op = el.querySelector('.operator')?.textContent?.trim();
-    const inverse = (x: number, y: number, add: boolean) => (add ? x - y : x + y);
-    if (op === '+' || op === '−' || op === '-') {
-      const add = op === '+';
-      if (blank === 2) return add ? a + b : a - b;
-      if (blank === 0) return inverse(c, b, add);
-      return add ? c - a : a - c;
-    }
-    const times = op === '×';
-    if (blank === 2) return times ? a * b : a / b;
-    if (blank === 0) return times ? c / b : c * b;
-    return times ? c / a : a / c;
-  });
+  await createPasswordAccount(page, uniqueName('pts'), { nickname });
 }
 
 async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
@@ -48,7 +15,7 @@ async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
   await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   for (let i = 0; i < size; i++) {
-    const value = await answer(page);
+    const value = await answerFor(page);
     if (wrongFirst && i === 0) {
       await page.getByRole('textbox').fill(String(value + 1));
       await page.getByRole('button', { name: 'Check answer', exact: true }).click();
@@ -61,7 +28,7 @@ async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
     await next.click();
   }
   if (wrongFirst) {
-    await page.getByRole('textbox').fill(String(await answer(page)));
+    await page.getByRole('textbox').fill(String(await answerFor(page)));
     await page.getByRole('button', { name: 'Check answer', exact: true }).click();
     await page.getByRole('button', { name: 'See how you did' }).click();
   }
@@ -109,27 +76,14 @@ test('signed out: no badge, the summary invites to sign in', async ({ page }) =>
 
 // Defined devices: the badge sits in the bar (left bar on short landscape phones), 48 px,
 // never over the screen's text, on the menus and in a lesson.
-const DEVICES: [number, number][] = [
-  [390, 844],
-  [360, 640],
-  [320, 568],
-  [844, 390],
-  [568, 320],
-  [820, 1180],
-  [1180, 820],
-  [884, 1004],
-  [884, 600],
-  [1280, 520],
-  [733, 500],
-  [1366, 900],
-];
+const DEVICES = BADGE_DEVICES;
 
 test('badge in the app bar at the defined devices', async ({ browser }) => {
   test.setTimeout(120_000);
   const context = await browser.newContext();
   const page = await context.newPage();
   await createAccount(page);
-  for (const [width, height] of DEVICES) {
+  for (const { width, height } of DEVICES) {
     await page.setViewportSize({ width, height });
     for (const screen of ['courses', 'maths', 'lesson']) {
       await page.goto('/');
@@ -146,9 +100,7 @@ test('badge in the app bar at the defined devices', async ({ browser }) => {
       await expect(badge(page)).toBeVisible();
       // The streak arrives with the points; let the bar clearance settle (two frames).
       await expect(page.locator('.streak-chip')).toHaveCount(1);
-      await page.evaluate(
-        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-      );
+      await nextFrames(page);
       const where = `${width}x${height} ${screen}`;
       const m = await page.evaluate(() => {
         const button = document.querySelector('.badge-button')!.getBoundingClientRect();
@@ -201,9 +153,7 @@ test('QA124-04: a long nickname plus the badge never cover the menu heading (742
     await page.getByRole('button', { name: 'Maths', exact: true }).click();
     await expect(badge(page)).toBeVisible();
     await expect(page.locator('.streak-chip')).toHaveCount(1);
-    await page.evaluate(
-      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-    );
+    await nextFrames(page);
     const hits = await page.evaluate(() => {
       const bar = [...document.querySelectorAll('.app-bar-end > *')].map((el) =>
         el.getBoundingClientRect(),
@@ -302,7 +252,7 @@ test('streak: first finished lesson gives 1 day; bar fits at the defined devices
           body: JSON.stringify({ points: 1500, streak: 12, frozen: true }),
         }),
       );
-    for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+    for (const { width, height } of [...DEVICES, DEVICE.phone369]) {
       await page.setViewportSize({ width, height });
       for (const screen of ['courses', 'maths']) {
         await page.goto('/');
@@ -421,19 +371,14 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
   ).not.toBeChecked();
   dialog = await open(second);
   await expect(dialog.getByRole('row', { name: /Board One/ })).toHaveCount(0);
-  for (const [width, height] of [...DEVICES, [369, 700] as [number, number]]) {
+  for (const { width, height } of [...DEVICES, DEVICE.phone369]) {
     await second.setViewportSize({ width, height });
     dialog = await open(second);
     const where = `${width}x${height}`;
     const box = (await dialog.boundingBox())!;
     expect(box.x, where).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, where).toBeLessThanOrEqual(width + 0.5);
-    expect(
-      await second.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      ),
-      where,
-    ).toBeLessThanOrEqual(0);
+    expect(await horizontalOverflow(second), where).toBeLessThanOrEqual(0);
     await second.keyboard.press('Escape');
   }
 });

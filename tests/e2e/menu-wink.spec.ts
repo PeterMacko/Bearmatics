@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 test('idle menu wink renders one curved eye without moving content', async ({ page }, info) => {
   test.setTimeout(75000);

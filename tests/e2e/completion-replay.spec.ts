@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
+import { solve as solveEquation } from './support/maths';
 
 type Evidence = {
   notes: number[];
@@ -44,16 +45,7 @@ for (const review of [false, true]) {
         page.evaluate(
           () => (window as unknown as { completionEvidence: Evidence }).completionEvidence,
         );
-      const solve = async (wrong = false) => {
-        const value = await page.locator('.equation').evaluate((el) => {
-          const terms = [...el.querySelectorAll('[data-term]')];
-          const blank = terms.findIndex((term) => term.querySelector('input'));
-          const [a, b, c] = terms.map((term) => Number(term.textContent));
-          return blank === 2 ? a + b : blank === 0 ? c - b : c - a;
-        });
-        await page.getByRole('textbox').fill(String(value + Number(wrong)));
-        await page.getByRole('button', { name: 'Check answer', exact: true }).click();
-      };
+      const solve = (wrong = false) => solveEquation(page, wrong);
       await page.goto('/');
       await openMathematics(page);
       await page.getByRole('radio', { name: '5 exercises', exact: true }).check();

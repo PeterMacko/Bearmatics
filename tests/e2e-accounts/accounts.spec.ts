@@ -1,51 +1,13 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createAccount, PASSWORD, uniqueName } from '../e2e/support/account';
+import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
+import { setLanguage } from '../e2e/support/language';
+import { horizontalOverflow } from '../e2e/support/layout';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
-const DEVICES = [
-  { name: 'phone', width: 390, height: 844, touch: true },
-  { name: 'phone small', width: 360, height: 640, touch: true },
-  { name: 'small phone', width: 320, height: 568, touch: true },
-  { name: 'phone landscape', width: 844, height: 390, touch: true },
-  { name: 'small landscape', width: 568, height: 320, touch: true },
-  { name: 'tablet portrait', width: 820, height: 1180, touch: true },
-  { name: 'tablet landscape', width: 1180, height: 820, touch: true },
-  { name: 'foldable', width: 884, height: 1004, touch: true },
-  { name: 'wide short', width: 1280, height: 520, touch: false },
-  { name: 'wide short small', width: 733, height: 500, touch: false },
-  { name: 'desktop', width: 1366, height: 900, touch: false },
-];
-const PASSWORD = 'honeyPot42';
-let counter = 0;
-const uniqueName = (prefix: string) =>
-  `${prefix}${(Date.now() % 1e7).toString(36)}${(counter++).toString(36)}${Math.floor(Math.random() * 1e4)}`.slice(
-    0,
-    20,
-  );
-
 async function openApp(page: Page) {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
-}
-
-async function toSlovak(page: Page) {
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
-}
-
-async function createAccount(page: Page, username: string, extra: { email?: string } = {}) {
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('heading', { name: 'Create an account' })).toBeFocused();
-  await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByLabel('Password again').fill(PASSWORD);
-  if (extra.email) await page.getByLabel('Email (optional)').fill(extra.email);
-  await page.getByLabel('Nickname').fill('Brave Cub');
-  await page.getByRole('radio', { name: 'Panda' }).check();
-  await page.getByLabel('A parent knows I am creating this account').check();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('button', { name: 'Your profile: Brave Cub' })).toBeVisible();
 }
 
 async function signIn(page: Page, username: string, password = PASSWORD) {
@@ -104,9 +66,7 @@ test.describe('signed out', () => {
         ['Create account', 'Create account'],
       ] as const) {
         if (open) await page.getByRole('button', { name: open }).click();
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
+        const overflow = await horizontalOverflow(page);
         expect(overflow, `${device.name} ${submit}`).toBe(0);
         const action = page.locator('.account-submit');
         await action.scrollIntoViewIfNeeded();
@@ -251,7 +211,7 @@ test('too many wrong passwords lock the username for a while', async ({ page }) 
 test('Slovak texts and keyboard-only sign-up', async ({ page }) => {
   const username = uniqueName('Kb');
   await openApp(page);
-  await toSlovak(page);
+  await setLanguage(page, 'Slovenčina', { gear: 'name' });
   const signInButton = page.getByRole('button', { name: 'Prihlásiť sa' });
   await signInButton.focus();
   await page.keyboard.press('Enter');
@@ -320,10 +280,7 @@ test('200% text on phones: account screens stay inside the screen (QA114-02)', a
     await openApp(page);
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
     await page.getByRole('button', { name: 'Sign in' }).click();
-    const overflow = () =>
-      page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
+    const overflow = () => horizontalOverflow(page);
     expect(await overflow(), `${device.name} sign in`).toBe(0);
     await page.getByRole('button', { name: 'Create account' }).click();
     expect(await overflow(), `${device.name} create account`).toBe(0);
@@ -345,11 +302,7 @@ test('profile at 200% text on a phone stays inside the screen', async ({ browser
   await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
   await page.getByRole('button', { name: 'Delete account' }).click();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    ),
-  ).toBe(0);
+  expect(await horizontalOverflow(page)).toBe(0);
   await context.close();
 });
 

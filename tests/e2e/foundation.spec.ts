@@ -1,53 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
-
-async function switchLanguage(page: Page, language: string, gear: string, close: string) {
-  await page.getByRole('button', { name: gear, exact: true }).click();
-  await page.getByRole('button', { name: language, exact: true }).click();
-  await page.getByRole('button', { name: close, exact: true }).click();
-}
-
-async function fillAnswer(page: Page, value: string) {
-  const input = page.getByRole('textbox');
-  if ((await input.getAttribute('readonly')) !== null) {
-    await input.focus();
-    await input.press('Delete');
-    await input.pressSequentially(value);
-  } else await input.fill(value);
-}
-
-async function answerFor(page: Page): Promise<number> {
-  return page.locator('.equation').evaluate((element) => {
-    const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
-    const blank = parts.findIndex((p) => p.querySelector('input'));
-    const values = parts.map((p) => Number(p.textContent));
-    const operation = element.querySelector('.operator')!.textContent;
-    const [a, b, c] = values;
-    if (blank === 2)
-      return operation === '+'
-        ? a + b
-        : operation === '−'
-          ? a - b
-          : operation === '×'
-            ? a * b
-            : a / b;
-    if (blank === 0)
-      return operation === '+'
-        ? c - b
-        : operation === '−'
-          ? c + b
-          : operation === '×'
-            ? c / b
-            : c * b;
-    return operation === '+'
-      ? c - a
-      : operation === '−'
-        ? a - c
-        : operation === '×'
-          ? c / a
-          : a / c;
-  });
-}
+import { openMathematics, openSmallMaths } from './support/course';
+import { switchLanguage } from './support/language';
+import { answerFor, fillAnswer } from './support/maths';
+import { expectNoHorizontalScroll } from './support/layout';
 
 // SCRUM-141: engine level 0 (count the pictures) is Small maths Level 1; Maths has levels 1-7.
 async function openCourseLevel(page: Page, level: number) {
@@ -195,9 +150,7 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
     );
     await expect(page.getByRole('button', { name: 'Všetky pomôcky zobrazené' })).toBeDisabled();
     await expect(page.getByRole('textbox')).toHaveValue('007');
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-    ).toBeTruthy();
+    await expectNoHorizontalScroll(page);
     await page.getByRole('button', { name: 'Zavrieť pomôcku' }).click();
     await fillAnswer(page, String(expected));
     await page.getByRole('button', { name: 'Skontrolovať' }).click();
@@ -343,9 +296,7 @@ test('reduced motion keeps the bear expressions but disables reaction animations
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'happy');
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'none');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
 });
 
 test('Slovak switching preserves equation, answer and progress; leave dialog traps focus', async ({
@@ -380,14 +331,10 @@ test('narrow Slovak screens have no horizontal overflow in selection or practice
   await page.goto('/');
   await openMathematics(page);
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
   await page.getByRole('radio', { name: /Úroveň 4/ }).check();
   await page.getByRole('button', { name: 'Začať počítať' }).click();
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
   await expect(page.getByRole('textbox')).toBeFocused();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('textbox').press('Enter');

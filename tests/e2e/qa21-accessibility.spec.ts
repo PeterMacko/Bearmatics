@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 import { writeFile } from 'node:fs/promises';
+import { expectNoHorizontalScroll } from './support/layout';
 
 for (const language of ['en', 'sk']) {
   test(`QA21 touch accessible instructions match available controls ${language}`, async ({
@@ -125,9 +126,7 @@ for (const language of ['en', 'sk']) {
         await button.scrollIntoViewIfNeeded();
         await expect(button).toBeInViewport();
       }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
+      await expectNoHorizontalScroll(page);
       const close = page.locator('.dialog-close');
       await close.focus();
       await close.press('Shift+Tab');

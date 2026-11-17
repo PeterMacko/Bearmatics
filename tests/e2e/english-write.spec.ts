@@ -1,18 +1,20 @@
 import { expect, test, type Page } from '@playwright/test';
+import { DEVICE, type Device } from './support/devices';
+import { setLanguage } from './support/language';
 
 // SCRUM-80: English listen-and-write. On-screen keyboard simulated two ways at the defined
 // devices: Android shrinks the page; iPhone/iPad keep the page and cover its lower part (only the
 // visual viewport shrinks). Real devices: Peter's Android checks (accepted limit).
-const DEVICES: [string, number, number, number][] = [
-  // name, width, height, share of the height left visible with the keyboard open
-  ['phone', 390, 844, 0.5],
-  ['small phone', 320, 568, 0.48],
-  ['phone 360', 360, 640, 0.5],
-  ['phone landscape', 844, 390, 0.42],
-  ['small phone landscape', 568, 320, 0.42],
-  ['tablet', 820, 1180, 0.62],
-  ['tablet landscape', 1180, 820, 0.52],
-  ['foldable unfolded', 884, 1004, 0.56],
+const DEVICES: [Device, number][] = [
+  // device, share of the height left visible with the keyboard open
+  [DEVICE.phone, 0.5],
+  [DEVICE.smallPhone, 0.48],
+  [DEVICE.phone360, 0.5],
+  [DEVICE.phoneLandscape, 0.42],
+  [DEVICE.smallPhoneLandscape, 0.42],
+  [DEVICE.tablet, 0.62],
+  [DEVICE.tabletLandscape, 0.52],
+  [DEVICE.foldable, 0.56],
 ];
 
 async function fakeVisualViewport(page: Page) {
@@ -37,9 +39,7 @@ async function fakeVisualViewport(page: Page) {
 async function startWriting(page: Page, slovak = false) {
   await page.goto('/');
   if (slovak) {
-    await page.getByRole('button', { name: 'Settings' }).click();
-    await page.getByRole('button', { name: 'Slovenčina' }).click();
-    await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
+    await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
   }
   await page.getByRole('button', { name: slovak ? 'Angličtina' : 'English', exact: true }).click();
   await page.getByRole('radio', { name: slovak ? /^Úroveň 3 / : /^Level 3 / }).click();
@@ -77,7 +77,7 @@ async function visibleParts(page: Page, visible: number) {
 }
 
 for (const mode of ['Android (page shrinks)', 'iPhone/iPad (keyboard covers)'] as const) {
-  for (const [name, width, height, keep] of DEVICES) {
+  for (const [{ name, width, height }, keep] of DEVICES) {
     for (const slovak of [false, true]) {
       test(`write: keyboard ${mode} at ${name} ${width}x${height} ${slovak ? 'SK' : 'EN'}: speaker, word, input, Check visible`, async ({
         browser,

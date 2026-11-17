@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 test('Escape and focus remain usable after the final hint advancement disables itself', async ({
   page,

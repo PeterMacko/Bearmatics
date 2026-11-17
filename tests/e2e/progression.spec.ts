@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 test('renumbered content retains its level badge palette', async ({ page }) => {
   await page.goto('/');

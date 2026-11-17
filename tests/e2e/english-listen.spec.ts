@@ -1,21 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { allWords } from '../../src/english/words';
+import { ENGLISH_LISTEN_DEVICES } from './support/devices';
 
 // SCRUM-79: English listen-and-choose on the defined devices (Peter's test scope).
-const DEVICES: [string, number, number][] = [
-  ['phone', 390, 844],
-  ['small phone', 320, 568],
-  ['phone 360', 360, 640],
-  ['phone landscape', 844, 390],
-  ['small phone landscape', 568, 320],
-  ['tablet', 820, 1180],
-  ['tablet landscape', 1180, 820],
-  ['foldable unfolded', 884, 1004],
-  ['foldable with browser bar', 884, 838],
-  ['foldable narrow with browser bar', 742, 702],
-  ['wide short', 1280, 520],
-  ['desktop', 1366, 900],
-];
+const DEVICES = ENGLISH_LISTEN_DEVICES;
 
 async function startEnglish(page: Page) {
   await page.goto('/');
@@ -24,7 +12,7 @@ async function startEnglish(page: Page) {
   await expect(page.getByRole('button', { name: 'Play the word again' })).toBeFocused();
 }
 
-for (const [name, width, height] of DEVICES) {
+for (const { name, width, height } of DEVICES) {
   test(`English exercise fits ${name} ${width}x${height}: squares, one-line words, no page scroll`, async ({
     page,
   }) => {
@@ -64,7 +52,7 @@ for (const [name, width, height] of DEVICES) {
 
 // The four longest-rendering words checked together, then every word, at each device:
 // after a refit the text must stay on one line inside its square.
-for (const [name, width, height] of DEVICES) {
+for (const { name, width, height } of DEVICES) {
   test(`English: all 111 words stay on one line at ${name} ${width}x${height}`, async ({
     browser,
   }) => {
@@ -169,7 +157,7 @@ test('English word audio files are served for every word', async ({ request }) =
 });
 
 // QA87-01: the playback-failure message must not make the page scroll on any defined device.
-for (const [name, width, height] of DEVICES) {
+for (const { name, width, height } of DEVICES) {
   test(`English: "could not play" fits ${name} ${width}x${height} without page scroll`, async ({
     page,
   }) => {

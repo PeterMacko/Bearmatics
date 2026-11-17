@@ -1,18 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
+import { openMathematics, openSmallMaths } from './support/course';
+import { APP_BAR_DEVICES } from './support/devices';
+import { solve } from './support/maths';
+import { setLanguage } from './support/language';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
-
-async function solve(page: Page) {
-  const value = await page.locator('.equation').evaluate((el) => {
-    const terms = [...el.querySelectorAll('[data-term]')];
-    const blank = terms.findIndex((term) => term.querySelector('input'));
-    const [a, b, c] = terms.map((term) => Number(term.textContent));
-    return blank === 2 ? a + b : blank === 0 ? c - b : c - a;
-  });
-  await page.getByRole('textbox').fill(String(value));
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
-}
 
 const bar = (page: Page) => page.getByRole('navigation', { name: 'Main controls' });
 
@@ -84,9 +76,7 @@ test('the bar is on every screen with the approved items, and Back works as befo
 
 test('Slovak names for the bar and its buttons', async ({ page }) => {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Settings' }).click();
-  await page.getByRole('button', { name: 'Slovenčina' }).click();
-  await page.keyboard.press('Escape');
+  await setLanguage(page, 'Slovenčina', { gear: 'name' });
   await page.getByRole('button', { name: 'Matematika', exact: true }).click();
   const nav = page.getByRole('navigation', { name: 'Hlavné ovládanie' });
   const names = await nav
@@ -96,23 +86,7 @@ test('Slovak names for the bar and its buttons', async ({ page }) => {
 });
 
 // Defined devices. Short landscape phones (max-height 500, max-width 950) get the left bar.
-const DEVICES: [number, number, boolean][] = [
-  [390, 844, true],
-  [360, 640, true],
-  [320, 568, true],
-  [844, 390, true],
-  [568, 320, true],
-  [820, 1180, true],
-  [1180, 820, true],
-  [884, 1004, true],
-  [884, 838, true],
-  // Peter's unfolded foldable in Vivaldi (tab row + address bar).
-  [884, 600, true],
-  [742, 702, true],
-  [1280, 520, false],
-  [733, 500, false],
-  [1366, 900, false],
-];
+const DEVICES = APP_BAR_DEVICES;
 
 async function measure(page: Page) {
   return page.evaluate(() => {
@@ -168,7 +142,7 @@ async function measure(page: Page) {
   });
 }
 
-for (const [width, height, touch] of DEVICES)
+for (const { width, height, touch } of DEVICES)
   test(`bar placement and no overlap at ${width}x${height}`, async ({ page }, info) => {
     await page.setViewportSize({ width, height });
     if (touch)
@@ -275,9 +249,7 @@ for (const lang of ['en', 'sk'])
     );
     await page.goto('/');
     if (lang === 'sk') {
-      await page.getByRole('button', { name: 'Settings' }).click();
-      await page.getByRole('button', { name: 'Slovenčina' }).click();
-      await page.keyboard.press('Escape');
+      await setLanguage(page, 'Slovenčina', { gear: 'name' });
     }
     for (const level of ['0', '1', '4']) {
       // SCRUM-141: the picture level (engine 0) is in Small maths.

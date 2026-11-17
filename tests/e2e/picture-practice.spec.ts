@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
+import { openMathematics, openSmallMaths } from './support/course';
 import { writeFile } from 'node:fs/promises';
+import { setLanguage } from './support/language';
+import { pageScrollWidth } from './support/layout';
 
 for (const [width, height] of [
   [320, 568],
@@ -22,9 +24,7 @@ for (const [width, height] of [
       await page.goto('/');
       await openMathematics(page);
       if (lang === 'sk') {
-        await page.locator('.settings-button').click();
-        await page.getByRole('button', { name: 'Slovenčina' }).click();
-        await page.keyboard.press('Escape');
+        await setLanguage(page, 'Slovenčina');
       }
       await expect(page.locator('.level-option')).toHaveCount(7);
       for (const card of await page.locator('.level-option').all()) {
@@ -71,9 +71,7 @@ for (const [width, height] of [
         expect(Math.abs(group.x + group.width / 2 - term.x - term.width / 2)).toBeLessThan(2);
         expect(group.y).toBeGreaterThanOrEqual(term.y + term.height);
       }
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        width,
-      );
+      expect(await pageScrollWidth(page)).toBeLessThanOrEqual(width);
       await expect(page.locator('.picture-unknown svg')).toHaveCount(0);
       await page.screenshot({ path: info.outputPath('practice.png'), fullPage: true });
       await writeFile(info.outputPath('geometry.json'), JSON.stringify(boxes, null, 2));

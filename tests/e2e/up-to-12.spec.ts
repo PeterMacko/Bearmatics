@@ -1,25 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openSmallMaths } from './course';
+import { openSmallMaths } from './support/course';
+import { ALL_DEVICES } from './support/devices';
 
 // SCRUM-164: Small maths level 3 "Up to 12" at the defined devices: four dice and the
 // number pad fit; the result dice appear only after the correct answer.
-const DEVICES: [number, number, boolean][] = [
-  [390, 844, true],
-  [360, 640, true],
-  [320, 568, true],
-  [369, 700, true],
-  [844, 390, true],
-  [568, 320, true],
-  [820, 1180, true],
-  [1180, 820, true],
-  [884, 1004, true],
-  [884, 838, true],
-  [884, 600, true],
-  [742, 702, true],
-  [1280, 520, false],
-  [733, 500, false],
-  [1366, 900, false],
-];
+const DEVICES = ALL_DEVICES;
 
 async function type(page: Page, value: number) {
   const box = page.getByRole('textbox');
@@ -30,7 +15,7 @@ async function type(page: Page, value: number) {
   await page.getByRole('button', { name: 'Check answer' }).click();
 }
 
-for (const [width, height, touch] of DEVICES)
+for (const { width, height, touch } of DEVICES)
   test(`up to 12 fits ${width}x${height}: four dice, number pad and Next on screen`, async ({
     browser,
   }) => {
