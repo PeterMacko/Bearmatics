@@ -59,7 +59,7 @@ for (const [width, height] of [
             ...dimensions,
             elements: await page
               .locator(
-                '.site-header, .bear, .selection, .level-option, .practice, .number-pad button, .answer-button, .hint-button, .summary',
+                '.app-bar, .bear, .selection, .level-option, .practice, .number-pad button, .answer-button, .hint-button, .summary',
               )
               .evaluateAll((elements) =>
                 elements.map((el) => {
@@ -139,7 +139,7 @@ for (const [width, height] of [
           });
           // Enlarged text may or may not need scrolling (the summary got shorter in SCRUM-117);
           // every button must stay reachable and full size either way.
-          for (const button of await page.locator('.summary button, .site-header button').all()) {
+          for (const button of await page.locator('.summary button, .app-bar button').all()) {
             await button.scrollIntoViewIfNeeded();
             await expect(button).toBeInViewport();
             const box = (await button.boundingBox())!;

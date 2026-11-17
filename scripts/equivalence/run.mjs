@@ -21,7 +21,7 @@ import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { PROPERTIES, settle, snapshot } from './capture.mjs';
-import { compareTrees, formatReport } from './diff.mjs';
+import { compareTrees, formatReport, parseReplace } from './diff.mjs';
 import { DEVICES, LANGUAGES, QUICK, STATES, initScript, mockApi } from './states.mjs';
 
 const { values: args } = parseArgs({
@@ -39,6 +39,7 @@ const { values: args } = parseArgs({
     work: { type: 'string', default: join(tmpdir(), 'bearmatics-equivalence') },
     workers: { type: 'string', default: String(Math.max(1, cpus().length)) },
     limit: { type: 'string', default: '40' },
+    'dom-replace': { type: 'string', multiple: true, default: [] },
     screenshots: { type: 'boolean', default: false },
     rebuild: { type: 'boolean', default: false },
     'list-states': { type: 'boolean', default: false },
@@ -58,6 +59,8 @@ const USAGE = `node scripts/equivalence/run.mjs --base <git-ref> --head <git-ref
   --work DIR                          build cache (default: $TMPDIR/bearmatics-equivalence)
   --workers N                         parallel browser contexts (default: CPU count)
   --limit N                           differences printed in the report (default 40)
+  --dom-replace 'FROM=>TO'            accept one intended markup change: replace FROM by TO in the
+                                      base HTML before comparing (repeatable; counts are reported)
   --screenshots                       also compare full-page screenshots (secondary, not failing)
   --rebuild                           rebuild refs even when a cached build exists`;
 
@@ -332,6 +335,7 @@ async function main() {
 
     const report = compareTrees(join(out, engine, 'base'), join(out, engine, 'head'), {
       limit: Number(args.limit),
+      replace: args['dom-replace'].map(parseReplace),
     });
     const text = formatReport(report);
     console.log(`\n== ${engine} ==\n${text}`);

@@ -82,7 +82,7 @@ export default function AppBar({
     };
   }, [layoutKey]);
   return (
-    <nav className="site-header app-bar" aria-label={label} inert={inert}>
+    <nav className="app-bar" aria-label={label} inert={inert}>
       {back && (
         <button
           type="button"
