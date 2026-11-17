@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
+import { openMathematics, openSmallMaths } from './support/course';
 import { writeFile } from 'node:fs/promises';
 
 for (const [width, height] of [

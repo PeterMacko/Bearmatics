@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
+import { openMathematics, openSmallMaths } from './support/course';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
 

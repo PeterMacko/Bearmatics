@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 import { writeFile } from 'node:fs/promises';
 
 async function answerFor(page: Page) {

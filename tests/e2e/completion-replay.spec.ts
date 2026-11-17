@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 type Evidence = {
   notes: number[];

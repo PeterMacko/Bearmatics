@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openSmallMaths } from './course';
+import { openSmallMaths } from './support/course';
 
 for (const [width, height] of [
   [320, 568],

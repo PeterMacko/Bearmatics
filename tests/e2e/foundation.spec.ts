@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics, openSmallMaths } from './course';
+import { openMathematics, openSmallMaths } from './support/course';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
   await page.getByRole('button', { name: gear, exact: true }).click();

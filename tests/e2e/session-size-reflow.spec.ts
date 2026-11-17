@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 type Bounds = { left: number; right: number; top: number; bottom: number };
 const nonoverlapping = (a: Bounds, b: Bounds) =>

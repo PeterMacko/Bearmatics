@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 import { writeFile } from 'node:fs/promises';
 
 for (const language of ['en', 'sk'])

@@ -1,5 +1,5 @@
 import { expect, test, type Page, type Locator } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 import { mkdir, writeFile } from 'node:fs/promises';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {

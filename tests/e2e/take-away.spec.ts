@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openSmallMaths } from './course';
+import { openSmallMaths } from './support/course';
 
 // SCRUM-156: Small maths level 2 "Take away" at the defined devices.
 const DEVICES: [number, number, boolean][] = [

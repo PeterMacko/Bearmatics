@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 type Envelope = { value: number; time: number }[];
 type Note = { frequency: number; start: number; stops: (number | null)[] };

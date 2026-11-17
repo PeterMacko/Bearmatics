@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openSmallMaths } from './course';
+import { openSmallMaths } from './support/course';
 
 test('level zero keeps main results concealed and stable through hints locale orientation and mastery review', async ({
   page,

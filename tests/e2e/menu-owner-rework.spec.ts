@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 for (const language of ['en', 'sk'])
   for (const [width, height] of [
     [754, 655],

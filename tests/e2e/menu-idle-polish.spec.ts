@@ -1,5 +1,5 @@
 import { expect, test } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 test('clock-controlled wink cadence survives selection and locale; visibility and reduced motion cancel it', async ({
   page,

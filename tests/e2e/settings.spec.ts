@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openMathematics } from './course';
+import { openMathematics } from './support/course';
 
 async function fits(page: Page, selector: string) {
   const box = (await page.locator(selector).boundingBox())!;

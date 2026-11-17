@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openSmallMaths } from './course';
+import { openSmallMaths } from './support/course';
 
 // SCRUM-164: Small maths level 3 "Up to 12" at the defined devices: four dice and the
 // number pad fit; the result dice appear only after the correct answer.
