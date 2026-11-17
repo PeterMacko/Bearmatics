@@ -107,11 +107,6 @@ fieldset {
   margin: 0 auto;
   padding: 0 48px;
 }
-.site-header {
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--line);
-}
 .language-switch {
   display: flex;
   padding: 4px;
@@ -521,10 +516,6 @@ progress::-webkit-progress-value {
   .app-shell {
     padding-inline: 20px;
   }
-  .site-header {
-    padding-block: 18px;
-    gap: 10px;
-  }
   .language-switch {
     padding: 2px;
   }
@@ -836,9 +827,6 @@ progress::-webkit-progress-value {
 .feedback-invalid {
   color: #626178;
 }
-.site-header {
-  flex-wrap: wrap;
-}
 .sound-toggle {
   display: inline-flex;
   align-items: center;
@@ -920,9 +908,6 @@ progress::-webkit-progress-value {
   }
 }
 @media (max-width: 620px) {
-  .site-header {
-    display: block;
-  }
   .sound-toggle {
     font-size: 0.72rem;
     padding: 8px;
@@ -994,9 +979,6 @@ progress::-moz-progress-bar {
 .compact-practice {
   padding-inline: max(8px, env(safe-area-inset-left)) max(8px, env(safe-area-inset-right));
   padding-bottom: max(8px, env(safe-area-inset-bottom));
-}
-.compact-practice .site-header {
-  gap: 0;
 }
 .compact-practice .workspace {
   display: block;
@@ -1278,10 +1260,6 @@ progress::-moz-progress-bar {
 .hint-dialog .audio-notice {
   text-align: left;
 }
-.compact-practice .site-header {
-  border: 0;
-  z-index: 1;
-}
 @media (orientation: portrait) {
   .compact-practice .companion {
     left: 50%;
@@ -1319,25 +1297,6 @@ progress::-moz-progress-bar {
   font-size: 24px;
 }
 
-/* A minimal navigation row, not a branded header/footer band. */
-.site-header {
-  position: relative;
-  display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
-  min-height: 60px;
-  padding: 8px 0;
-  border: 0;
-  gap: 8px;
-}
-.site-header .settings-button {
-  grid-column: 3;
-  grid-row: 1;
-}
-.site-header .back-button {
-  position: static;
-  grid-column: 1;
-  grid-row: 1;
-}
 .answer-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 48px;
@@ -1447,13 +1406,6 @@ progress::-moz-progress-bar {
     font-size: 1.8rem;
   }
 }
-.compact-practice .site-header {
-  position: relative;
-  inset: auto;
-  display: grid;
-  min-height: 52px;
-  padding: 4px 0;
-}
 .compact-practice .workspace {
   padding-top: 4px;
 }
@@ -1499,17 +1451,6 @@ progress::-moz-progress-bar {
   50% {
     transform: rotate(1.2deg);
   }
-}
-.menu-shell .site-header {
-  position: absolute;
-  top: 8px;
-  right: inherit;
-  inset-inline-end: 48px;
-  min-height: 44px;
-  padding: 0;
-  width: 44px;
-  display: block;
-  z-index: 1;
 }
 .menu-shell .workspace {
   display: grid;
@@ -1600,15 +1541,7 @@ progress::-moz-progress-bar {
   height: auto;
   overflow: visible;
 }
-@media (max-width: 850px) {
-  .menu-shell .site-header {
-    inset-inline-end: 28px;
-  }
-}
 @media (max-width: 620px) {
-  .menu-shell .site-header {
-    inset-inline-end: 20px;
-  }
   .menu-shell .menu-heading {
     padding-inline-end: 0;
   }
@@ -1624,11 +1557,6 @@ progress::-moz-progress-bar {
     align-items: center;
     padding-inline: max(56px, calc(env(safe-area-inset-right) + 56px));
     padding-block: max(8px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-bottom));
-  }
-  .menu-shell .site-header {
-    position: fixed;
-    top: max(8px, env(safe-area-inset-top));
-    inset-inline-end: max(12px, env(safe-area-inset-right));
   }
   .menu-shell .workspace {
     width: 100%;
@@ -2352,14 +2280,6 @@ progress::-moz-progress-bar {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-/* Course choice: the account button sits just left of the gear. */
-.menu-shell .site-header:has(.account-button) {
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 6px;
-  width: auto;
-}
 @media (max-width: 620px), (max-height: 500px) {
   /* Phones and short windows: icon only (the name stays in its label and tooltip). */
   .account-button {
@@ -2649,7 +2569,7 @@ progress::-moz-progress-bar {
   justify-content: space-between;
   gap: 8px;
   min-height: 60px;
-  /* Never renders (the bar is flex); kept so the computed styles stay those of the old header. */
+  /* Never renders (the bar is flex); kept from the removed header grid so computed styles match. */
   grid-template-columns: 44px minmax(0, 1fr) 44px;
 }
 /* Compact lessons: a lower row stacked above the lesson. Specificity (0,2,0) on purpose, so the
@@ -2664,7 +2584,7 @@ progress::-moz-progress-bar {
   gap: 6px;
   margin-inline-start: auto;
 }
-/* Never render (flex items); kept so the computed styles stay those of the old header grid. */
+/* Never render (flex items); kept from the removed header grid so computed styles match. */
 .app-bar .back-button {
   grid-column: 1;
   grid-row: 1;

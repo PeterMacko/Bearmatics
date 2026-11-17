@@ -155,7 +155,7 @@ test('selected level and count survive settings, locale, orientation and all com
   await page.locator('input[name=size]').last().check();
   await page.locator('.settings-button').click();
   await expect(page.locator('.workspace')).toHaveAttribute('inert', '');
-  await expect(page.locator('.site-header')).toHaveAttribute('inert', '');
+  await expect(page.locator('.app-bar')).toHaveAttribute('inert', '');
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await page.keyboard.press('Escape');
   await expect(page.locator('.settings-button')).toBeFocused();
