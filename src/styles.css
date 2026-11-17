@@ -1086,7 +1086,6 @@ progress::-moz-progress-bar {
     flex-basis: var(--practice-bear-size);
   }
   .compact-practice .practice-header {
-    padding-left: calc(var(--practice-bear-size) + 12px);
     grid-template-columns: minmax(0, 1fr);
   }
   .compact-practice .exercise-position {
@@ -1688,7 +1687,6 @@ progress::-moz-progress-bar {
 @media (min-width: 480px) and (max-height: 500px) {
   .menu-shell .menu-controls {
     display: flex;
-    align-items: end;
     gap: 12px;
   }
   .menu-shell .session-options {
@@ -1866,18 +1864,14 @@ progress::-moz-progress-bar {
     width: 52px;
     height: 52px;
   }
-}
-/* Phones: short course/English lists take only the height they need (no reserved gap).
-   Compact (short) windows use the shared menu rows so the list shrinks and scrolls like
-   the maths levels. Wider windows size the menu to its content already. */
-@media (max-width: 620px) {
+  /* Phones: short course/English lists take only the height they need (no reserved gap).
+     Compact (short) windows use the shared menu rows so the list shrinks and scrolls like
+     the maths levels. Wider windows size the menu to its content already. */
   .menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
   .menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
     grid-template-rows: auto minmax(0, max-content) auto;
     align-content: start;
   }
-}
-@media (max-width: 620px) {
   /* Phones: the bear moves down below the app bar's Back arrow. */
   .menu-shell:has(.app-bar .back-button) .workspace .companion {
     padding-top: 52px;
@@ -2839,17 +2833,23 @@ progress::-moz-progress-bar {
   .course-option {
     min-height: 52px;
     padding-block: 2px;
+    grid-template-columns: 36px minmax(0, 1fr) max-content;
   }
   .course-icon svg {
     width: 36px;
     height: 36px;
   }
-  .course-option {
-    grid-template-columns: 36px minmax(0, 1fr) max-content;
+  .course-option .course-title {
+    font-size: 1rem;
+    line-height: 1.2;
+  }
+  .course-option .level-detail {
+    font-size: 0.8rem;
+    line-height: 1.2;
   }
 }
 /* Short landscape phones: the course choice drops its intro line (Firefox's taller lines need
-   the room too), and the shortest windows use slightly smaller card text. */
+   the room too), and the shortest windows use slightly smaller card text (above). */
 @media (max-height: 420px) {
   .menu-shell .course-choice .menu-heading .intro {
     display: none;
@@ -2858,16 +2858,6 @@ progress::-moz-progress-bar {
   .menu-shell .course-choice .menu-heading h2 {
     font-size: 1.5rem;
     line-height: 1.15;
-  }
-}
-@media (max-height: 360px) {
-  .course-option .course-title {
-    font-size: 1rem;
-    line-height: 1.2;
-  }
-  .course-option .level-detail {
-    font-size: 0.8rem;
-    line-height: 1.2;
   }
 }
 
@@ -3083,18 +3073,8 @@ progress::-moz-progress-bar {
   }
 }
 @media (max-width: 360px) {
-  .app-bar .bar-progress .progress-track {
-    width: 26px;
-  }
-  .app-bar .bar-progress {
-    gap: 3px;
-  }
   .app-bar .badge-button {
-    gap: 3px;
     padding-inline: 0;
-  }
-  .app-bar .bar-progress-points {
-    font-size: 0.85rem;
   }
 }
 @media (max-width: 620px) and (max-height: 600px) {
@@ -3244,10 +3224,7 @@ progress::-moz-progress-bar {
   }
   .app-shell .app-bar .streak-chip {
     padding-inline: 0;
-    font-size: 0.85rem;
   }
-}
-@media (max-width: 420px) {
   .app-shell .app-bar .badge-medal svg {
     width: 32px;
     height: 32px;
@@ -3746,11 +3723,15 @@ progress::-moz-progress-bar {
 @media (max-width: 380px) {
   .take-away {
     grid-template-columns: 1fr;
-    gap: 14px;
+    margin-top: 10px;
+    gap: 12px;
   }
   .basket-items {
     gap: 1px;
     flex-wrap: nowrap;
+  }
+  .basket-area {
+    padding-top: 10px;
   }
 }
 /* Short upright phones: a smaller bear beside the header leaves room for the basket. */
@@ -3769,23 +3750,9 @@ progress::-moz-progress-bar {
     margin-block: 4px;
   }
 }
-@media (max-width: 380px) {
-  .take-away {
-    margin-top: 10px;
-    gap: 12px;
-  }
-  .basket-area {
-    padding-top: 10px;
-  }
-}
 @media (orientation: portrait) and (max-height: 600px) {
   .compact-practice .workspace:has(.take-away) {
     --practice-bear-size: 56px;
-  }
-}
-@media (min-width: 621px) and (max-height: 620px) {
-  .practice:has(.take-away) .equation {
-    font-size: 1.9rem;
   }
 }
 /* Wide-short windows (884x600 in Firefox, QA162-02): a little more compact. */
