@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { createAccount, PASSWORD, uniqueName } from '../e2e/support/account';
 import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
 import { setLanguage } from '../e2e/support/language';
+import { horizontalOverflow } from '../e2e/support/layout';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
 async function openApp(page: Page) {
@@ -65,9 +66,7 @@ test.describe('signed out', () => {
         ['Create account', 'Create account'],
       ] as const) {
         if (open) await page.getByRole('button', { name: open }).click();
-        const overflow = await page.evaluate(
-          () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-        );
+        const overflow = await horizontalOverflow(page);
         expect(overflow, `${device.name} ${submit}`).toBe(0);
         const action = page.locator('.account-submit');
         await action.scrollIntoViewIfNeeded();
@@ -281,10 +280,7 @@ test('200% text on phones: account screens stay inside the screen (QA114-02)', a
     await openApp(page);
     await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
     await page.getByRole('button', { name: 'Sign in' }).click();
-    const overflow = () =>
-      page.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      );
+    const overflow = () => horizontalOverflow(page);
     expect(await overflow(), `${device.name} sign in`).toBe(0);
     await page.getByRole('button', { name: 'Create account' }).click();
     expect(await overflow(), `${device.name} create account`).toBe(0);
@@ -306,11 +302,7 @@ test('profile at 200% text on a phone stays inside the screen', async ({ browser
   await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
   await page.getByRole('button', { name: 'Delete account' }).click();
-  expect(
-    await page.evaluate(
-      () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-    ),
-  ).toBe(0);
+  expect(await horizontalOverflow(page)).toBe(0);
   await context.close();
 });
 

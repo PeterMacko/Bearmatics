@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { createAccount as createPasswordAccount, uniqueName } from '../e2e/support/account';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 import { answerFor } from '../e2e/support/maths';
+import { horizontalOverflow, nextFrames } from '../e2e/support/layout';
 
 // SCRUM-117: points and the bear badge for a signed-in player (real server + local database).
 async function createAccount(page: Page, nickname = 'Brave Cub') {
@@ -99,9 +100,7 @@ test('badge in the app bar at the defined devices', async ({ browser }) => {
       await expect(badge(page)).toBeVisible();
       // The streak arrives with the points; let the bar clearance settle (two frames).
       await expect(page.locator('.streak-chip')).toHaveCount(1);
-      await page.evaluate(
-        () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-      );
+      await nextFrames(page);
       const where = `${width}x${height} ${screen}`;
       const m = await page.evaluate(() => {
         const button = document.querySelector('.badge-button')!.getBoundingClientRect();
@@ -154,9 +153,7 @@ test('QA124-04: a long nickname plus the badge never cover the menu heading (742
     await page.getByRole('button', { name: 'Maths', exact: true }).click();
     await expect(badge(page)).toBeVisible();
     await expect(page.locator('.streak-chip')).toHaveCount(1);
-    await page.evaluate(
-      () => new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done))),
-    );
+    await nextFrames(page);
     const hits = await page.evaluate(() => {
       const bar = [...document.querySelectorAll('.app-bar-end > *')].map((el) =>
         el.getBoundingClientRect(),
@@ -381,12 +378,7 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
     const box = (await dialog.boundingBox())!;
     expect(box.x, where).toBeGreaterThanOrEqual(0);
     expect(box.x + box.width, where).toBeLessThanOrEqual(width + 0.5);
-    expect(
-      await second.evaluate(
-        () => document.documentElement.scrollWidth - document.documentElement.clientWidth,
-      ),
-      where,
-    ).toBeLessThanOrEqual(0);
+    expect(await horizontalOverflow(second), where).toBeLessThanOrEqual(0);
     await second.keyboard.press('Escape');
   }
 });

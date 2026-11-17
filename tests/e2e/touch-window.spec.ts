@@ -2,6 +2,7 @@ import { expect, test } from '@playwright/test';
 import { openMathematics } from './support/course';
 import { answerFor } from './support/maths';
 import { writeFile } from 'node:fs/promises';
+import { pageScrollWidth } from './support/layout';
 
 for (const [width, height] of [
   [1024, 600],
@@ -151,9 +152,7 @@ for (const [width, height] of [
             scrollWidth: document.documentElement.scrollWidth,
             scrollHeight: document.documentElement.scrollHeight,
           }));
-          expect(
-            await page.evaluate(() => document.documentElement.scrollWidth),
-          ).toBeLessThanOrEqual(width);
+          expect(await pageScrollWidth(page)).toBeLessThanOrEqual(width);
           await page.screenshot({ path: testInfo.outputPath('summary-enlarged.png') });
         }
         await writeFile(testInfo.outputPath('layout.json'), JSON.stringify(layouts, null, 2));

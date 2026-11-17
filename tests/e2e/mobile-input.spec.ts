@@ -1,6 +1,7 @@
-import { expect, test, type Page, type Locator } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { openMathematics } from './support/course';
 import { switchLanguage } from './support/language';
+import { visibleInViewport } from './support/layout';
 import { answerFor } from './support/maths';
 import { mkdir, writeFile } from 'node:fs/promises';
 
@@ -10,18 +11,6 @@ async function enter(page: Page, value: number) {
   if ((await input.getAttribute('readonly')) !== null) await page.keyboard.press('Delete');
   else await input.fill('');
   await page.keyboard.type(String(value));
-}
-async function visibleInViewport(locator: Locator, page: Page) {
-  const box = await locator.boundingBox();
-  expect(box).not.toBeNull();
-  const viewport = await page.evaluate(() => ({
-    width: visualViewport!.width,
-    height: visualViewport!.height,
-  }));
-  expect(box!.x).toBeGreaterThanOrEqual(0);
-  expect(box!.y).toBeGreaterThanOrEqual(0);
-  expect(box!.x + box!.width).toBeLessThanOrEqual(viewport.width + 1);
-  expect(box!.y + box!.height).toBeLessThanOrEqual(viewport.height + 1);
 }
 test('native fallback and orientation changes preserve practice with localized input guidance', async ({
   page,

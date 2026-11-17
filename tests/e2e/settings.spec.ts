@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openMathematics } from './support/course';
+import { expectNoHorizontalScroll } from './support/layout';
 
 async function fits(page: Page, selector: string) {
   const box = (await page.locator(selector).boundingBox())!;
@@ -71,9 +72,7 @@ for (const language of ['en', 'sk']) {
     ]) {
       await page.setViewportSize(viewport);
       await fits(page, '.hint-dialog-header button');
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
+      await expectNoHorizontalScroll(page);
       const content = page.locator('.hint-dialog-content');
       for (const button of await content.locator('button').all()) {
         await button.scrollIntoViewIfNeeded();

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { openSmallMaths } from './support/course';
 import { setLanguage } from './support/language';
+import { pageScrollWidth } from './support/layout';
 
 for (const [width, height] of [
   [320, 568],
@@ -25,9 +26,7 @@ for (const [width, height] of [
       await input.focus();
       await page.keyboard.type('12');
       await page.evaluate(() => (document.documentElement.style.fontSize = '200%'));
-      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
-        width,
-      );
+      expect(await pageScrollWidth(page)).toBeLessThanOrEqual(width);
       for (const control of [input, page.locator('.answer-button'), page.locator('.hint-button')]) {
         await control.scrollIntoViewIfNeeded();
         await expect(control).toBeInViewport();

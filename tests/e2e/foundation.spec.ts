@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
 import { switchLanguage } from './support/language';
 import { answerFor, fillAnswer } from './support/maths';
+import { expectNoHorizontalScroll } from './support/layout';
 
 // SCRUM-141: engine level 0 (count the pictures) is Small maths Level 1; Maths has levels 1-7.
 async function openCourseLevel(page: Page, level: number) {
@@ -149,9 +150,7 @@ for (const level of [0, 1, 2, 3, 4, 5, 6, 7]) {
     );
     await expect(page.getByRole('button', { name: 'Všetky pomôcky zobrazené' })).toBeDisabled();
     await expect(page.getByRole('textbox')).toHaveValue('007');
-    expect(
-      await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-    ).toBeTruthy();
+    await expectNoHorizontalScroll(page);
     await page.getByRole('button', { name: 'Zavrieť pomôcku' }).click();
     await fillAnswer(page, String(expected));
     await page.getByRole('button', { name: 'Skontrolovať' }).click();
@@ -297,9 +296,7 @@ test('reduced motion keeps the bear expressions but disables reaction animations
   await page.getByRole('button', { name: 'Check answer' }).click();
   await expect(page.locator('.bear')).toHaveAttribute('data-mood', 'happy');
   await expect(page.locator('.bear-arm-right')).toHaveCSS('animation-name', 'none');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
 });
 
 test('Slovak switching preserves equation, answer and progress; leave dialog traps focus', async ({
@@ -334,14 +331,10 @@ test('narrow Slovak screens have no horizontal overflow in selection or practice
   await page.goto('/');
   await openMathematics(page);
   await switchLanguage(page, 'Slovenčina', 'Settings', 'Zavrieť nastavenia');
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
   await page.getByRole('radio', { name: /Úroveň 4/ }).check();
   await page.getByRole('button', { name: 'Začať počítať' }).click();
-  expect(
-    await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
-  ).toBeTruthy();
+  await expectNoHorizontalScroll(page);
   await expect(page.getByRole('textbox')).toBeFocused();
   await fillAnswer(page, String(await answerFor(page)));
   await page.getByRole('textbox').press('Enter');
