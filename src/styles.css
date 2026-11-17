@@ -3896,34 +3896,32 @@ progress::-moz-progress-bar {
   flex: 1 1 0;
   min-width: 0;
 }
-/* The result column holds two dice: twice as wide as each number's column. */
+/* All four dice the same size (QA170-01/02): sized from the equation width, at most 84 px,
+   so the result dice are as big as the number dice and Next does not jump on reveal. */
 .equation.picture-equation.dice-equation {
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+  container-type: inline-size;
+  --die: min(var(--die-max, 84px), calc((100cqw - 52px) / 4));
+  grid-template-columns: auto auto auto;
+  justify-content: center;
+}
+.dice-equation .picture-group {
+  inline-size: var(--die);
+  min-block-size: var(--die);
+  max-inline-size: none;
 }
 .dice-equation .dice-pair {
   grid-column: 2;
   grid-row: 2;
   align-self: start;
-  width: 100%;
 }
 .dice-equation .dice-pair .picture-group {
-  inline-size: auto;
-  max-inline-size: 50%;
-}
-/* Sideways phones: result dice no bigger than the number dice. */
-@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
-  .dice-equation .dice-pair .picture-group {
-    max-inline-size: 72px;
-  }
+  flex: none;
+  max-inline-size: none;
 }
 /* Wide-short windows (884x600, 1280x520): dice a little smaller so Next stays in view. */
 @media (min-width: 621px) and (max-height: 620px) {
-  .dice-equation .picture-group {
-    inline-size: 72px;
-    min-block-size: 72px;
-  }
-  .dice-equation .dice-pair .picture-group {
-    max-inline-size: 72px;
+  .dice-equation {
+    --die-max: 72px;
   }
   .practice:has(.dice-equation) h2 {
     margin-block: 4px;

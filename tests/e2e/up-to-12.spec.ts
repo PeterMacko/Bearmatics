@@ -55,6 +55,7 @@ for (const [width, height, touch] of DEVICES)
     if ((await page.getByRole('textbox').getAttribute('readonly')) !== null)
       await page.getByRole('button', { name: 'Clear answer' }).click();
     else await page.getByRole('textbox').fill('');
+    const checkBefore = (await page.locator('.answer-button').boundingBox())!;
     await type(page, a + b);
     const pair = page.getByRole('img', { name: `Result: 6 and ${a + b - 6}, ${a + b}` });
     await expect(pair).toBeVisible();
@@ -80,6 +81,8 @@ for (const [width, height, touch] of DEVICES)
       );
       const next = document.querySelector('.answer-button')!.getBoundingClientRect();
       return {
+        // QA170-01: all four dice the same size.
+        spread: Math.max(...groups.map((g) => g.width)) - Math.min(...groups.map((g) => g.width)),
         count: groups.length,
         smallest: Math.min(...groups.map((g) => Math.min(g.width, g.height))),
         overlap,
@@ -92,6 +95,14 @@ for (const [width, height, touch] of DEVICES)
     });
     const where = `${width}x${height}`;
     expect(m.count, where).toBe(4);
+    expect(m.spread, where).toBeLessThanOrEqual(1);
+    // QA170-02: Next appears where Check was (no jump on reveal), except sideways phones
+    // where the feedback line sits beside the dice.
+    if (height > 500)
+      expect(
+        Math.abs(m.nextBottom - (checkBefore.y + checkBefore.height)),
+        where,
+      ).toBeLessThanOrEqual(2);
     expect(m.overlap, where).toBe(false);
     expect(m.outside, where).toBe(0);
     // Smaller on phones (approved), but each die stays clearly countable.
