@@ -132,7 +132,7 @@ describe('session generation', () => {
   test('rejects unsupported settings and broken random sources without hanging', () => {
     expect(generate).toBeTypeOf('function');
     for (const size of [0, 1, 6, 21, NaN]) expect(() => generate(1, size)).toThrow();
-    expect(() => generate(9 as engine.Level, 10)).toThrow();
+    expect(() => generate(10 as engine.Level, 10)).toThrow();
     for (const rng of [() => -1, () => 1, () => NaN]) expect(() => generate(1, 5, rng)).toThrow();
     expect(generate(1, 20, () => 0)).toHaveLength(20);
   });

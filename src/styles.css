@@ -3884,3 +3884,35 @@ progress::-moz-progress-bar {
     margin-top: 10px;
   }
 }
+
+/* ---------- SCRUM-164: Small maths "Up to 12", result as two dice ---------- */
+.dice-pair {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+.dice-equation .dice-pair .picture-group {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* The result column holds two dice: twice as wide as each number's column. */
+.equation.picture-equation.dice-equation {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
+}
+.dice-equation .dice-pair {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  width: 100%;
+}
+.dice-equation .dice-pair .picture-group {
+  inline-size: auto;
+  max-inline-size: 50%;
+}
+/* Sideways phones: result dice no bigger than the number dice. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .dice-equation .dice-pair .picture-group {
+    max-inline-size: 72px;
+  }
+}

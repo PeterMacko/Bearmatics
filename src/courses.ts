@@ -12,6 +12,8 @@ export const SMALL_MATH_LEVELS: CourseLevel[] = [
   { value: 0, shown: 1 },
   // SCRUM-156: take away with a picture basket.
   { value: 8, shown: 2 },
+  // SCRUM-164: add two dice, results 7-12.
+  { value: 9, shown: 3 },
 ];
 export const MATH_LEVELS: CourseLevel[] = ([1, 2, 3, 4, 5, 6, 7] as const).map((value) => ({
   value,

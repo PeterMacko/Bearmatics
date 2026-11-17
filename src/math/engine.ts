@@ -1,5 +1,8 @@
-/** 0-7 as before; 8 = Small maths "Take away" (SCRUM-156): a - b with a 1-6, result only. */
-export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+/**
+ * 0-7 as before; 8 = Small maths "Take away" (SCRUM-156): a - b with a 1-6, result only;
+ * 9 = Small maths "Up to 12" (SCRUM-164): a + b with a, b 1-6 and results 7-12, result only.
+ */
+export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type Operation = '+' | '-' | '*' | '/';
 export type Blank = 0 | 1 | 2;
 export type Fact = readonly [number, number, number];
@@ -25,7 +28,7 @@ export function generateSession(
   size: number = 10,
   rng: () => number = Math.random,
 ): readonly Exercise[] {
-  if (![0, 1, 2, 3, 4, 5, 6, 7, 8].includes(level) || ![5, 10, 20].includes(size))
+  if (![0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(level) || ![5, 10, 20].includes(size))
     throw new RangeError('Unsupported session settings');
   let pool = pools.get(level);
   if (!pool) {
@@ -33,7 +36,7 @@ export function generateSession(
     const addFact = (operation: Operation, values: Fact) => {
       if (!isValidFact(level, values, operation)) return;
       const frozen = Object.freeze(values);
-      for (const blank of level === 0 || level === 3 || level === 8
+      for (const blank of level === 0 || level === 3 || level === 8 || level === 9
         ? ([2] as const)
         : level === 4
           ? ([0, 1] as const)
@@ -45,6 +48,8 @@ export function generateSession(
     };
     if (level === 8) {
       for (let a = 1; a <= 6; a++) for (let b = 0; b <= a; b++) addFact('-', [a, b, a - b]);
+    } else if (level === 9) {
+      for (let a = 1; a <= 6; a++) for (let b = 1; b <= 6; b++) addFact('+', [a, b, a + b]);
     } else if (level <= 5) {
       const max = [6, 10, 10, 20, 20, 100][level];
       for (let a = 0; a <= max; a++)
@@ -89,7 +94,7 @@ export function generateSession(
     selected.push(available.splice(index, 1)[0]);
   };
   const operations: Operation[] =
-    level <= 1
+    level <= 1 || level === 9
       ? ['+']
       : level <= 5
         ? ['+', '-']
@@ -104,7 +109,7 @@ export function generateSession(
     take((e) => e.blank === 1);
   } else {
     take((e) => e.blank === 2);
-    if (level !== 0 && level !== 3 && level !== 8) take((e) => e.blank !== 2);
+    if (level !== 0 && level !== 3 && level !== 8 && level !== 9) take((e) => e.blank !== 2);
   }
   selected.push(...available.slice(0, size - selected.length));
   const ordered = shuffle(selected);
@@ -126,7 +131,7 @@ export function solveBlank(exercise: Exercise): number {
   const { level, operation, values, blank } = exercise;
   if (
     (level === 4 && blank === 2) ||
-    ((level === 0 || level === 3 || level === 8) && blank !== 2) ||
+    ((level === 0 || level === 3 || level === 8 || level === 9) && blank !== 2) ||
     ![0, 1, 2].includes(blank) ||
     !isValidFact(level, values, operation)
   )
@@ -152,6 +157,9 @@ export function isValidFact(level: number, values: readonly number[], operation:
       ((operation === '+' && a + b === c) || (level > 1 && operation === '-' && a - b === c))
     );
   }
+  // SCRUM-164: two dice, results 7-12.
+  if (level === 9)
+    return operation === '+' && a >= 1 && a <= 6 && b >= 1 && b <= 6 && a + b === c && c >= 7;
   if (level === 8) return operation === '-' && a >= 1 && a <= 6 && b <= a && a - b === c;
   if (level === 6 || level === 7) {
     const max = level === 6 ? 5 : 10;

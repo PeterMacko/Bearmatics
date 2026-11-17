@@ -10,7 +10,7 @@ test('the app opens on the course choice with the three courses and nothing else
   expect(heading()).toHaveTextContent('What shall we learn today?');
   expect(button('Maths')).toHaveAccessibleDescription('Count, add, subtract, multiply and share');
   expect(button('Small maths')).toHaveAccessibleDescription(
-    'Count pictures, add and take away up to 6',
+    'Count pictures: add up to 12, take away up to 6',
   );
   expect(button('English')).toHaveAccessibleDescription('Listen to English words and learn them');
   expect(screen.queryByRole('radio')).toBeNull();
@@ -27,7 +27,7 @@ test('course choice is localized in Slovak', () => {
   fireEvent.click(button('Zavrieť nastavenia'));
   expect(heading()).toHaveTextContent('Čo sa dnes naučíme?');
   expect(button('Malá matematika')).toHaveAccessibleDescription(
-    'Počítaj obrázky, sčítaj a odoberaj do 6',
+    'Počítaj obrázky: sčítaj do 12, odoberaj do 6',
   );
   expect(button('Matematika')).toBeInTheDocument();
   expect(button('Angličtina')).toBeInTheDocument();
