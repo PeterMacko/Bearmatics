@@ -1,18 +1,7 @@
-import { expect, test, type Page } from '@playwright/test';
+import { expect, test } from '@playwright/test';
 import { openMathematics } from './support/course';
+import { answerFor } from './support/maths';
 import { writeFile } from 'node:fs/promises';
-
-async function answerFor(page: Page) {
-  return page.locator('.equation').evaluate((el) => {
-    const parts = [...el.querySelectorAll('[data-term]')];
-    const blank = parts.findIndex((p) => p.querySelector('input'));
-    const [a, b, c] = parts.map((p) => Number(p.textContent));
-    const op = el.querySelector('.operator')!.textContent;
-    if (blank === 2) return op === '+' ? a + b : op === '−' ? a - b : op === '×' ? a * b : a / b;
-    if (blank === 0) return op === '+' ? c - b : op === '−' ? c + b : op === '×' ? c / b : c * b;
-    return op === '+' ? c - a : op === '−' ? a - c : op === '×' ? c / a : a / c;
-  });
-}
 
 for (const [width, height] of [
   [1024, 600],

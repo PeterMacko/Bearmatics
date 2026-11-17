@@ -1,19 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
 import { APP_BAR_DEVICES } from './support/devices';
+import { solve } from './support/maths';
 
 // SCRUM-133: one app bar on every screen. Back | (badge, streak: SCRUM-117/118) | profile | settings.
-
-async function solve(page: Page) {
-  const value = await page.locator('.equation').evaluate((el) => {
-    const terms = [...el.querySelectorAll('[data-term]')];
-    const blank = terms.findIndex((term) => term.querySelector('input'));
-    const [a, b, c] = terms.map((term) => Number(term.textContent));
-    return blank === 2 ? a + b : blank === 0 ? c - b : c - a;
-  });
-  await page.getByRole('textbox').fill(String(value));
-  await page.getByRole('button', { name: 'Check answer', exact: true }).click();
-}
 
 const bar = (page: Page) => page.getByRole('navigation', { name: 'Main controls' });
 

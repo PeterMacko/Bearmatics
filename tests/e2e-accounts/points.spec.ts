@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
+import { answerFor } from '../e2e/support/maths';
 
 // SCRUM-117: points and the bear badge for a signed-in player (real server + local database).
 const PASSWORD = 'honeyPot42';
@@ -24,32 +25,12 @@ async function createAccount(page: Page, nickname = 'Brave Cub') {
   await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();
 }
 
-async function answer(page: Page): Promise<number> {
-  return page.locator('.equation').evaluate((el) => {
-    const terms = [...el.querySelectorAll('[data-term]')];
-    const blank = terms.findIndex((term) => term.querySelector('input'));
-    const [a, b, c] = terms.map((term) => Number(term.textContent));
-    const op = el.querySelector('.operator')?.textContent?.trim();
-    const inverse = (x: number, y: number, add: boolean) => (add ? x - y : x + y);
-    if (op === '+' || op === '−' || op === '-') {
-      const add = op === '+';
-      if (blank === 2) return add ? a + b : a - b;
-      if (blank === 0) return inverse(c, b, add);
-      return add ? c - a : a - c;
-    }
-    const times = op === '×';
-    if (blank === 2) return times ? a * b : a / b;
-    if (blank === 0) return times ? c / b : c * b;
-    return times ? c / a : a / c;
-  });
-}
-
 async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
   for (let i = 0; i < size; i++) {
-    const value = await answer(page);
+    const value = await answerFor(page);
     if (wrongFirst && i === 0) {
       await page.getByRole('textbox').fill(String(value + 1));
       await page.getByRole('button', { name: 'Check answer', exact: true }).click();
@@ -62,7 +43,7 @@ async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
     await next.click();
   }
   if (wrongFirst) {
-    await page.getByRole('textbox').fill(String(await answer(page)));
+    await page.getByRole('textbox').fill(String(await answerFor(page)));
     await page.getByRole('button', { name: 'Check answer', exact: true }).click();
     await page.getByRole('button', { name: 'See how you did' }).click();
   }

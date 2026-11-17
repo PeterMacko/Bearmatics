@@ -1,52 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openMathematics, openSmallMaths } from './support/course';
+import { answerFor, fillAnswer } from './support/maths';
 
 async function switchLanguage(page: Page, language: string, gear: string, close: string) {
   await page.getByRole('button', { name: gear, exact: true }).click();
   await page.getByRole('button', { name: language, exact: true }).click();
   await page.getByRole('button', { name: close, exact: true }).click();
-}
-
-async function fillAnswer(page: Page, value: string) {
-  const input = page.getByRole('textbox');
-  if ((await input.getAttribute('readonly')) !== null) {
-    await input.focus();
-    await input.press('Delete');
-    await input.pressSequentially(value);
-  } else await input.fill(value);
-}
-
-async function answerFor(page: Page): Promise<number> {
-  return page.locator('.equation').evaluate((element) => {
-    const parts = [...element.querySelectorAll<HTMLElement>('[data-term]')];
-    const blank = parts.findIndex((p) => p.querySelector('input'));
-    const values = parts.map((p) => Number(p.textContent));
-    const operation = element.querySelector('.operator')!.textContent;
-    const [a, b, c] = values;
-    if (blank === 2)
-      return operation === '+'
-        ? a + b
-        : operation === '−'
-          ? a - b
-          : operation === '×'
-            ? a * b
-            : a / b;
-    if (blank === 0)
-      return operation === '+'
-        ? c - b
-        : operation === '−'
-          ? c + b
-          : operation === '×'
-            ? c / b
-            : c * b;
-    return operation === '+'
-      ? c - a
-      : operation === '−'
-        ? a - c
-        : operation === '×'
-          ? c / a
-          : a / c;
-  });
 }
 
 // SCRUM-141: engine level 0 (count the pictures) is Small maths Level 1; Maths has levels 1-7.
