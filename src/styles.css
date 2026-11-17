@@ -1,3 +1,35 @@
+/* ---------- Breakpoints (CR-05) ----------
+   Every media query in this file, by name. Spellings that look alike are NOT equivalent;
+   keep each exact query when adding rules. JS copies live in src/breakpoints.ts.
+
+   name                    query
+   phone                   (max-width: 620px)                         also JS PHONE_QUERY
+   phone-upright           (max-width: 620px) and (min-height: 501px)
+   phone-short             (max-width: 620px) and (max-height: 500px)
+   phone-summary-short     (max-width: 620px) and (max-height: 600px)
+   phone-or-short          (max-width: 620px), (max-height: 500px)
+   wide                    (min-width: 621px)
+   wide-short              (min-width: 621px) and (max-height: 500px | 620px | 700px | 720px)
+   wide-tall-or-desktop    (min-width: 621px) and (min-height: 501px), (min-width: 951px)
+   desktop                 (min-width: 951px)
+   desktop-short           (min-width: 951px) and (max-height: 620px | 700px)
+   tablet-narrow           (max-width: 850px)
+   short-landscape (width) (max-height: 500px) and (min-width: 480px) and (max-width: 950px)
+   short-landscape (orient)(max-height: 500px) and (max-width: 950px) and (orientation: landscape)
+   short-menu              (min-width: 480px) and (max-height: 500px)
+   compact-practice (JS)   (max-width: 620px), (max-height: 500px) and (max-width: 950px)
+                           JS COMPACT_PRACTICE_QUERY; toggles .compact-practice
+   The three short-landscape spellings differ: "(width)" also matches portrait windows
+   480-500 px wide and excludes windows under 480 px wide; "(orient)" matches landscape
+   windows under 480 px wide but no portrait window; the JS query has neither limit.
+   portrait                (orientation: portrait) [and (min-height: 640px | 800px) or
+                           (max-height: 600px | 700px)]
+   short                   (max-height: 500px | 420px | 360px | 760px)
+   short-landscape-tiny    (max-height: 420px | 340px) and (orientation: landscape)
+   narrow-phone            (max-width: 420px | 380px | 360px), (max-width: 360px) and
+                           (min-height: 501px)
+   motion                  (prefers-reduced-motion: reduce | no-preference)
+   container               @container (max-width: 20em) (leaderboard table) */
 :root {
   font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
   color: #34334f;

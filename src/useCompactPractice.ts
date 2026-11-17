@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { COMPACT_PRACTICE_QUERY } from './breakpoints';
 
 // Capability is independent of viewport and the primary/most recent pointer.
 export function useTouchCapability() {
@@ -18,8 +19,7 @@ export function useTouchCapability() {
 }
 
 // Short landscape phones need the compact layout too, not just narrow screens.
-export const compactPracticeQuery =
-  '(max-width: 620px), (max-height: 500px) and (max-width: 950px)';
+export const compactPracticeQuery = COMPACT_PRACTICE_QUERY;
 export function useCompactPractice() {
   const [compact, setCompact] = useState(
     () => typeof matchMedia !== 'undefined' && matchMedia(compactPracticeQuery).matches,

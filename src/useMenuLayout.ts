@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
+import { PHONE_QUERY } from './breakpoints';
 
 /** Menu-only intrinsic feasibility check. No application/selection state lives here. */
 export function useMenuLayout(active: boolean, language: string, level: number, view = '') {
@@ -32,7 +33,7 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       const required = (visibleCards: number) =>
         Math.max(
           heading.getBoundingClientRect().height,
-          matchMedia('(max-width: 620px)').matches ? bear.getBoundingClientRect().height : 0,
+          matchMedia(PHONE_QUERY).matches ? bear.getBoundingClientRect().height : 0,
         ) +
         (controls?.getBoundingClientRect().height ?? 0) +
         Math.min(visibleCards, cards.length) * card +
