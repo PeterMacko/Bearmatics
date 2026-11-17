@@ -1,34 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createAccount, PASSWORD, uniqueName } from '../e2e/support/account';
 import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
 import { setLanguage } from '../e2e/support/language';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
-const PASSWORD = 'honeyPot42';
-let counter = 0;
-const uniqueName = (prefix: string) =>
-  `${prefix}${(Date.now() % 1e7).toString(36)}${(counter++).toString(36)}${Math.floor(Math.random() * 1e4)}`.slice(
-    0,
-    20,
-  );
-
 async function openApp(page: Page) {
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
-}
-
-async function createAccount(page: Page, username: string, extra: { email?: string } = {}) {
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('heading', { name: 'Create an account' })).toBeFocused();
-  await page.getByLabel('Username').fill(username);
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByLabel('Password again').fill(PASSWORD);
-  if (extra.email) await page.getByLabel('Email (optional)').fill(extra.email);
-  await page.getByLabel('Nickname').fill('Brave Cub');
-  await page.getByRole('radio', { name: 'Panda' }).check();
-  await page.getByLabel('A parent knows I am creating this account').check();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('button', { name: 'Your profile: Brave Cub' })).toBeVisible();
 }
 
 async function signIn(page: Page, username: string, password = PASSWORD) {

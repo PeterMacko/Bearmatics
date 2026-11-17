@@ -1,28 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
+import { createAccount as createPasswordAccount, uniqueName } from '../e2e/support/account';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 import { answerFor } from '../e2e/support/maths';
 
 // SCRUM-117: points and the bear badge for a signed-in player (real server + local database).
-const PASSWORD = 'honeyPot42';
-let counter = 0;
-const uniqueName = () =>
-  `pts${(Date.now() % 1e7).toString(36)}${(counter++).toString(36)}${Math.floor(Math.random() * 1e4)}`.slice(
-    0,
-    20,
-  );
-
 async function createAccount(page: Page, nickname = 'Brave Cub') {
   await page.goto('/');
-  await page.getByRole('button', { name: 'Sign in' }).click();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await page.getByLabel('Username').fill(uniqueName());
-  await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
-  await page.getByLabel('Password again').fill(PASSWORD);
-  await page.getByLabel('Nickname').fill(nickname);
-  await page.getByRole('radio', { name: 'Panda' }).check();
-  await page.getByLabel('A parent knows I am creating this account').check();
-  await page.getByRole('button', { name: 'Create account' }).click();
-  await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();
+  await createPasswordAccount(page, uniqueName('pts'), { nickname });
 }
 
 async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
