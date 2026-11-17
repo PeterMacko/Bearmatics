@@ -131,7 +131,7 @@ fieldset {
 }
 .language-switch button[aria-pressed='true'] {
   background: var(--paper);
-  color: var(--accent);
+  color: #315783;
   box-shadow: 0 1px 4px #43305b12;
 }
 .workspace {
@@ -318,9 +318,13 @@ fieldset {
   font-weight: 700;
   font-size: 1rem;
   line-height: 1.4;
+  /* Neutral action, then explicit semantic feedback rather than a red default. */
+  background: #356da6;
+  box-shadow: 0 4px 0 #244f7d;
 }
 .primary:active {
   transform: translateY(2px);
+  box-shadow: 0 2px 0 #244f7d;
 }
 .start-button {
   width: 100%;
@@ -333,7 +337,7 @@ fieldset {
   padding: 10px 12px;
   border: 0;
   background: none;
-  color: var(--accent);
+  color: #315783;
   font-size: 0.85rem;
   font-weight: 700;
   text-decoration: underline;
@@ -379,6 +383,7 @@ progress::-webkit-progress-bar {
 }
 progress::-webkit-progress-value {
   border-radius: 8px;
+  background: #356da6;
 }
 .practice h2 {
   font-size: clamp(1.45rem, 2.3vw, 2rem);
@@ -409,7 +414,7 @@ progress::-webkit-progress-value {
 .equation input {
   width: 1.9em;
   max-width: 100%;
-  border: 2px dashed #bc5c65;
+  border: 2px dashed #6489b3;
   text-align: center;
   padding: 0.25em 0.08em;
   border-radius: 12px;
@@ -417,20 +422,14 @@ progress::-webkit-progress-value {
   font-weight: inherit;
   letter-spacing: -0.05em;
   line-height: 1.2;
-}
-.equation input:disabled {
-  border-style: solid;
-  opacity: 1;
+  background: #e9f2ff;
+  color: #315783;
 }
 .feedback {
   min-height: 74px;
   padding: 8px 0 18px;
   font-size: 1rem;
   color: var(--muted);
-}
-.feedback-incorrect,
-.feedback-invalid {
-  color: #934522;
 }
 .summary {
   padding-block: 36px;
@@ -441,12 +440,14 @@ progress::-webkit-progress-value {
 .completion-mark {
   display: grid;
   place-items: center;
-  border: 2px solid #4b79ad;
+  border: 2px solid #237444;
   width: 64px;
   height: 64px;
   border-radius: 50%;
   font-size: 2rem;
   margin: 18px 0;
+  color: #237444;
+  background: #e5f3e9;
 }
 .completed-total {
   font-size: 1.3rem;
@@ -794,16 +795,8 @@ progress::-webkit-progress-value {
   color: #626178;
 }
 
-/* Neutral action, then explicit semantic feedback rather than a red default. */
-.primary {
-  background: #356da6;
-  box-shadow: 0 4px 0 #244f7d;
-}
 .primary:hover {
   background: #295d94;
-}
-.primary:active {
-  box-shadow: 0 2px 0 #244f7d;
 }
 .answer-button[data-state='correct'] {
   background: #237444;
@@ -819,17 +812,14 @@ progress::-webkit-progress-value {
 .answer-button[data-state='incorrect']:hover {
   background: #a4323e;
 }
-.equation input {
-  border-color: #6489b3;
-  background: #e9f2ff;
-  color: #315783;
-}
 .equation[data-feedback='incorrect'] input {
   border-color: #b63e45;
   background: #fff0ee;
   color: #a4323e;
 }
 .equation input:disabled {
+  border-style: solid;
+  opacity: 1;
   border-color: #237444;
   background: #e5f3e9;
   color: #237444;
@@ -843,11 +833,6 @@ progress::-webkit-progress-value {
 }
 .feedback-invalid {
   color: #626178;
-}
-.completion-mark {
-  color: #237444;
-  border-color: #237444;
-  background: #e5f3e9;
 }
 .site-header {
   flex-wrap: wrap;
@@ -954,13 +939,6 @@ progress::-webkit-progress-value {
   }
 }
 
-.text-button,
-.language-switch button[aria-pressed='true'] {
-  color: #315783;
-}
-progress::-webkit-progress-value {
-  background: #356da6;
-}
 progress::-moz-progress-bar {
   background: #356da6;
 }
@@ -981,6 +959,8 @@ progress::-moz-progress-bar {
   font-size: 1.2rem;
   font-weight: 700;
   touch-action: manipulation;
+  padding: 2px;
+  overflow-wrap: anywhere;
 }
 .number-pad button:hover:not(:disabled) {
   background: #deedff;
@@ -1348,10 +1328,6 @@ progress::-moz-progress-bar {
 }
 .compact-practice .equation-part {
   flex-shrink: 0;
-}
-.number-pad button {
-  padding: 2px;
-  overflow-wrap: anywhere;
 }
 .corner-button span {
   font-size: 24px;
