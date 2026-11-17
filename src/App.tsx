@@ -417,11 +417,17 @@ export default function App() {
     setWriteNote(null);
     setWrongAnswer(null);
   };
-  const requestLeave = () => {
+  // What to open after leaving a lesson (the profile button asks like Back, then opens it).
+  const afterLeave = useRef<(() => void) | null>(null);
+  const requestLeave = (then: (() => void) | null = null) => {
     if (settingsOpen || hintOpen || leaveOpen) return;
+    afterLeave.current = then;
     if (active && hasProgress(active, session ? answer : writeSession ? written : choice))
       setLeaveOpen(true);
-    else endPractice();
+    else {
+      endPractice();
+      then?.();
+    }
   };
   useEffect(() => {
     document.documentElement.lang = language;
@@ -573,7 +579,7 @@ export default function App() {
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
   const inLesson = !!active && !active.done;
   const back: BarBack | null = active
-    ? { label: t.back, onClick: active.done ? endPractice : requestLeave }
+    ? { label: t.back, onClick: active.done ? endPractice : () => requestLeave() }
     : accountScreen
       ? {
           label: t.account.back,
@@ -645,16 +651,19 @@ export default function App() {
           />
         )}
         {account && streak && <StreakChip t={t.points} streak={streak} warming={warming} />}
-        {!inLesson && (
-          <AccountButton
-            t={t.account}
-            account={account}
-            onClick={() => {
-              if (active) endPractice(); // only on the summary: nothing left to lose
-              openAccount(account ? 'profile' : 'signin');
-            }}
-          />
-        )}
+        {/* The same bar on every screen: in a lesson the profile asks first, like Back. */}
+        <AccountButton
+          t={t.account}
+          account={account}
+          onClick={() => {
+            const open = () => openAccount(account ? 'profile' : 'signin');
+            if (inLesson) requestLeave(open);
+            else {
+              if (active) endPractice(); // the summary: nothing left to lose
+              open();
+            }
+          }}
+        />
         <button
           ref={settingsRef}
           className="corner-button settings-button"
@@ -977,12 +986,17 @@ export default function App() {
       {leaveOpen && (
         <LeaveDialog
           t={t}
-          onStay={() => setLeaveOpen(false)}
+          onStay={() => {
+            afterLeave.current = null;
+            setLeaveOpen(false);
+          }}
           onLeave={() => {
             setLeaveOpen(false);
             setAnswer('');
             setChoice('');
             endPractice();
+            afterLeave.current?.();
+            afterLeave.current = null;
           }}
         />
       )}

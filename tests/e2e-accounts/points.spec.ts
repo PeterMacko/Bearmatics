@@ -136,6 +136,13 @@ test('badge in the app bar at the defined devices', async ({ browser }) => {
       if (screen !== 'courses')
         await page.getByRole('button', { name: 'Maths', exact: true }).click();
       if (screen === 'lesson') await page.getByRole('button', { name: 'Let’s count' }).click();
+      // The profile is in the bar on every screen, lessons too (Peter).
+      await expect(page.getByRole('button', { name: /^Your profile/ })).toBeVisible();
+      if (screen === 'lesson' && height <= 340) {
+        // 568x320 lesson: the left column holds only Back, profile and settings.
+        await expect(badge(page)).toBeHidden();
+        continue;
+      }
       await expect(badge(page)).toBeVisible();
       // The streak arrives with the points; let the bar clearance settle (two frames).
       await expect(page.locator('.streak-chip')).toHaveCount(1);

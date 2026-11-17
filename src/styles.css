@@ -3468,7 +3468,7 @@ progress::-moz-progress-bar {
 }
 /* Smallest landscape phones (568x320) during a running lesson: the left column has no room for
    the streak under the exercise header; it is back on the summary and the menus. */
-@media (max-height: 340px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .app-shell.compact-practice .app-bar .streak-chip {
     display: none;
   }
@@ -3597,7 +3597,7 @@ progress::-moz-progress-bar {
   }
 }
 /* Smallest landscape phones during a lesson: only the badge stays in the left column. */
-@media (max-height: 340px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .app-shell.compact-practice .app-bar .badge-button .bar-progress {
     display: none;
   }
@@ -3925,5 +3925,14 @@ progress::-moz-progress-bar {
   }
   .practice:has(.dice-equation) h2 {
     margin-block: 4px;
+  }
+}
+/* Short landscape lessons: the profile button is in the left column too (Peter: the same bar
+   everywhere). Below the bear and the exercise line there is room for medal, profile and
+   settings (<=420 px high) or only profile and settings (568x320); points + bar, the streak and
+   the medal come back on the summary and the menus. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .app-shell.compact-practice .app-bar .badge-button {
+    display: none;
   }
 }
