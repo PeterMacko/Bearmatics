@@ -3468,7 +3468,7 @@ progress::-moz-progress-bar {
 }
 /* Smallest landscape phones (568x320) during a running lesson: the left column has no room for
    the streak under the exercise header; it is back on the summary and the menus. */
-@media (max-height: 340px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .app-shell.compact-practice .app-bar .streak-chip {
     display: none;
   }
@@ -3597,7 +3597,7 @@ progress::-moz-progress-bar {
   }
 }
 /* Smallest landscape phones during a lesson: only the badge stays in the left column. */
-@media (max-height: 340px) and (orientation: landscape) {
+@media (max-height: 420px) and (orientation: landscape) {
   .app-shell.compact-practice .app-bar .badge-button .bar-progress {
     display: none;
   }
@@ -3883,4 +3883,71 @@ progress::-moz-progress-bar {
   .practice:has(.take-away) .take-away {
     margin-top: 10px;
   }
+}
+
+/* ---------- SCRUM-164: Small maths "Up to 12", result as two dice ---------- */
+.dice-pair {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  min-width: 0;
+}
+.dice-equation .dice-pair .picture-group {
+  flex: 1 1 0;
+  min-width: 0;
+}
+/* All four dice the same size (QA170-01/02): sized from the equation width, at most 84 px,
+   so the result dice are as big as the number dice and Next does not jump on reveal. */
+.equation.picture-equation.dice-equation {
+  container-type: inline-size;
+  --die: min(var(--die-max, 84px), calc((100cqw - 52px) / 4));
+  grid-template-columns: auto auto auto;
+  /* Like level 1: the same space between the first die, the second die and the result group
+     (Peter); each part is exactly as wide as its dice (+ the operator). */
+  justify-content: space-evenly;
+}
+.dice-equation .equation-part {
+  inline-size: calc(16px + var(--die));
+}
+.dice-equation .equation-part:first-child {
+  inline-size: var(--die);
+}
+.dice-equation .equation-part:last-child {
+  inline-size: calc(16px + 2 * var(--die) + 4px);
+}
+.dice-equation .picture-group {
+  inline-size: var(--die);
+  min-block-size: var(--die);
+  max-inline-size: none;
+}
+.dice-equation .dice-pair {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+}
+.dice-equation .dice-pair .picture-group {
+  flex: none;
+  max-inline-size: none;
+}
+/* Wide-short windows (884x600, 1280x520): dice a little smaller so Next stays in view. */
+@media (min-width: 621px) and (max-height: 620px) {
+  .dice-equation {
+    --die-max: 72px;
+  }
+  .practice:has(.dice-equation) h2 {
+    margin-block: 4px;
+  }
+}
+/* Short landscape lessons: the profile button is in the left column too (Peter: the same bar
+   everywhere). Below the bear and the exercise line there is room for medal, profile and
+   settings (<=420 px high) or only profile and settings (568x320); points + bar, the streak and
+   the medal come back on the summary and the menus. */
+@media (max-height: 340px) and (orientation: landscape) {
+  .app-shell.compact-practice .app-bar .badge-button {
+    display: none;
+  }
+}
+/* Before the answer the "?" stands for the whole result group: as wide as the two dice. */
+.dice-equation .equation-part:last-child .picture-unknown {
+  inline-size: calc(2 * var(--die) + 4px);
 }

@@ -1,6 +1,6 @@
 import type { FormEvent, KeyboardEvent, RefObject } from 'react';
 import type { Exercise } from './math/engine';
-import type { Copy } from './i18n';
+import { fill, type Copy } from './i18n';
 import PictureGroup, { type PictureTheme } from './PictureGroup';
 import TakeAwayBasket from './TakeAwayBasket';
 import { OPERATOR_SYMBOLS } from './operatorSymbols';
@@ -92,7 +92,7 @@ export default function PracticeView({
         noValidate
       >
         <div
-          className={`equation ${current.level === 0 ? 'picture-equation' : ''}${current.level === 8 ? 'take-away-equation' : ''}`}
+          className={`equation ${current.level === 0 || current.level === 9 ? 'picture-equation' : ''}${current.level === 9 ? ' dice-equation' : ''}${current.level === 8 ? 'take-away-equation' : ''}`}
           data-feedback={feedback}
           role="group"
           aria-label={equationDescription}
@@ -131,18 +131,38 @@ export default function PracticeView({
                   <span aria-hidden="true">{n}</span>
                 )}
               </span>
-              {current.level === 0 && (
-                <PictureGroup
-                  count={i === 2 && !solved ? null : n}
-                  theme={pictureTheme}
-                  label={
-                    i === 2 && !solved
-                      ? ''
-                      : `${t.picturePositions[i]}: ${t.pictureThemes[pictureTheme]}. ${t.pictureCount}: ${n}.${n === 0 ? ` ${t.emptyGroup}.` : ''}`
-                  }
-                  emptyLabel={t.emptyGroup}
-                  unknownLabel={t.unknown}
-                />
+              {current.level === 9 && i === 2 && solved ? (
+                // SCRUM-164: the result as two dice, a full 6 and the rest.
+                <div
+                  className="dice-pair"
+                  role="img"
+                  aria-label={fill(t.diceResult, { first: 6, second: n - 6, total: n })}
+                >
+                  {[6, n - 6].map((count, die) => (
+                    <PictureGroup
+                      key={die}
+                      count={count}
+                      theme={pictureTheme}
+                      label=""
+                      emptyLabel={t.emptyGroup}
+                      unknownLabel={t.unknown}
+                    />
+                  ))}
+                </div>
+              ) : (
+                (current.level === 0 || current.level === 9) && (
+                  <PictureGroup
+                    count={i === 2 && !solved ? null : n}
+                    theme={pictureTheme}
+                    label={
+                      i === 2 && !solved
+                        ? ''
+                        : `${t.picturePositions[i]}: ${t.pictureThemes[pictureTheme]}. ${t.pictureCount}: ${n}.${n === 0 ? ` ${t.emptyGroup}.` : ''}`
+                    }
+                    emptyLabel={t.emptyGroup}
+                    unknownLabel={t.unknown}
+                  />
+                )
               )}
             </span>
           ))}
@@ -218,7 +238,7 @@ export default function PracticeView({
               {t.check}
             </button>
           )}
-          {current.level !== 8 && (
+          {current.level !== 8 && current.level !== 9 && (
             <button
               ref={hintRef}
               type="button"

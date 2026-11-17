@@ -41,11 +41,20 @@ test('the bar is on every screen with the approved items, and Back works as befo
     .getByRole('button')
     .evaluateAll((all) => all.map((b) => b.getAttribute('aria-label')));
   expect(names).toEqual(['Back to courses', 'Sign in', 'Settings']);
-  // Lesson: no profile; Back still asks before leaving work.
+  // Lesson: the same bar (Peter: profile too); Back and the profile ask before leaving work.
   await page.getByRole('radio', { name: '5 exercises', exact: true }).check();
   await page.getByRole('button', { name: 'Let’s count' }).click();
-  await expect(nav.getByRole('button', { name: 'Sign in' })).toHaveCount(0);
-  await expect(nav.getByRole('button', { name: 'Settings' })).toBeVisible();
+  expect(
+    await nav
+      .getByRole('button')
+      .evaluateAll((all) => all.map((b) => b.getAttribute('aria-label'))),
+  ).toEqual(['Choose level', 'Sign in', 'Settings']);
+  await page.getByRole('textbox').fill('1');
+  await nav.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('dialog')).toContainText('Leave this trail?');
+  await page.getByRole('button', { name: 'Keep practising' }).click();
+  await expect(page.getByRole('textbox')).toHaveValue('1');
+  await page.getByRole('textbox').fill('');
   await page.getByRole('textbox').fill('1');
   await nav.getByRole('button', { name: 'Choose level' }).click();
   await expect(page.getByRole('dialog')).toContainText('Leave this trail?');
@@ -289,3 +298,21 @@ for (const lang of ['en', 'sk'])
       await page.locator('.back-button').click();
     }
   });
+
+test('lesson: the profile button asks before leaving work, then opens the profile', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await openMathematics(page);
+  await page.getByRole('button', { name: 'Let’s count' }).click();
+  const nav = page.getByRole('navigation', { name: 'Main controls' });
+  // No work yet: opens at once.
+  await nav.getByRole('button', { name: 'Sign in' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeFocused();
+  await nav.getByRole('button', { name: 'Back' }).click();
+  await page.getByRole('button', { name: 'Let’s count' }).click();
+  await page.getByRole('textbox').fill('1');
+  await nav.getByRole('button', { name: 'Sign in' }).click();
+  await page.getByRole('button', { name: 'Choose a new trail' }).click();
+  await expect(page.getByRole('heading', { name: 'Sign in' })).toBeFocused();
+});

@@ -13,12 +13,12 @@ test('course choice offers Small maths, Maths and English in this order', () => 
   expect(titles).toEqual(['Small maths', 'Maths', 'English']);
 });
 
-test('Small maths menu: Level 1 and Level 2 (SCRUM-156), Level 1 first, default size 10, own heading', () => {
+test('Small maths menu: Levels 1-3 (SCRUM-156, SCRUM-164), Level 1 first, default size 10, own heading', () => {
   const { container } = render(<App />);
   openSmallMaths();
   expect(heading()).toHaveTextContent('What shall we count?');
   expect(document.activeElement).toBe(heading());
-  expect(container.querySelectorAll('input[name="level"]')).toHaveLength(2);
+  expect(container.querySelectorAll('input[name="level"]')).toHaveLength(3);
   const level = screen.getByRole('radio', { name: /^Level 1 · Count the pictures/ });
   expect(level).toBeChecked();
   expect(container.querySelector('.level-number')).toHaveTextContent('1');
