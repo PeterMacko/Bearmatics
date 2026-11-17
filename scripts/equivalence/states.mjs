@@ -41,7 +41,39 @@ export async function mockApi(page, signedIn) {
     if (path === '/api/progress/lessons') return json({ lessonId: 'lesson-1' });
     if (path === '/api/progress/lessons/finish')
       return json({ points: 52, streak: 4, frozen: false, today: true, added: 12, offer: null });
-    if (path === '/api/leaderboard') return json({ rows: [], gapBefore: null });
+    if (path === '/api/leaderboard')
+      return json({
+        rows: [
+          {
+            place: 1,
+            nickname: 'Speedy Otter',
+            bear: 1,
+            points: 960,
+            streak: 12,
+            frozen: false,
+            me: false,
+          },
+          {
+            place: 2,
+            nickname: 'Quiet Fox',
+            bear: 3,
+            points: 410,
+            streak: 0,
+            frozen: true,
+            me: false,
+          },
+          {
+            place: 7,
+            nickname: ACCOUNT.nickname,
+            bear: ACCOUNT.bear,
+            points: 40,
+            streak: 3,
+            frozen: false,
+            me: true,
+          },
+        ],
+        gapBefore: 7,
+      });
     return json({ available: false });
   });
 }
@@ -69,8 +101,13 @@ export function initScript(seed) {
 
 const course = { small: 0, maths: 1, english: 2 };
 
+/** Pages of the 200% text variants (see large()). */
+const LARGE = new WeakSet();
+
 async function home(page, lang) {
   await page.goto('/');
+  // 200% text only once the document exists: an init script cannot style <html> in Chromium.
+  if (LARGE.has(page)) await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   await page.locator('.course-option').first().waitFor();
   if (lang === 'sk') {
     await page.locator('.settings-button').click();
@@ -312,3 +349,33 @@ async function signedInHome(page, lang) {
   await home(page, lang);
   await page.locator('.streak-chip').waitFor();
 }
+
+STATES['in-profile'] = {
+  signedIn: true,
+  async steps(page, lang) {
+    await signedInHome(page, lang);
+    await page.locator('.account-button').click();
+    await page.locator('.account-screen .profile-badge').waitFor();
+  },
+};
+STATES['in-leaderboard'] = {
+  signedIn: true,
+  async steps(page, lang) {
+    await signedInHome(page, lang);
+    await page.locator('.app-bar .bar-progress').click();
+    await page.locator('.leaderboard-table').waitFor();
+  },
+};
+
+/** The same state with the page text at 200% (browser text-size setting). */
+function large(state) {
+  return {
+    ...state,
+    async steps(page, lang) {
+      LARGE.add(page);
+      await state.steps(page, lang);
+    },
+  };
+}
+for (const id of ['course', 'menu-maths', 'small1-lesson', 'in-maths1-summary', 'in-profile'])
+  STATES[`${id}-200`] = large(STATES[id]);
