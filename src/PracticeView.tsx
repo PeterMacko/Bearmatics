@@ -5,6 +5,7 @@ import PictureGroup, { type PictureTheme } from './PictureGroup';
 import TakeAwayBasket from './TakeAwayBasket';
 import { OPERATOR_SYMBOLS } from './operatorSymbols';
 import type { Feedback } from './session';
+import { levelTraits } from './levelTraits';
 
 const PAD_KEYS = ['7', '8', '9', '0', '4', '5', '6', 'clear', '1', '2', '3', 'backspace'];
 
@@ -64,9 +65,10 @@ export default function PracticeView({
   onOpenHint: () => void;
   onToggleInputMode: () => void;
 }) {
+  const traits = levelTraits(current.level);
   const equationDescription = `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}`;
   return (
-    <section className="practice">
+    <section className={traits.pictureLayout ? 'practice practice--pictures' : 'practice'}>
       <div className="practice-header">
         <div className="practice-top">
           <span className="level-pill">
@@ -92,7 +94,7 @@ export default function PracticeView({
         noValidate
       >
         <div
-          className={`equation ${current.level === 0 || current.level === 9 ? 'picture-equation' : ''}${current.level === 9 ? ' dice-equation' : ''}${current.level === 8 ? 'take-away-equation' : ''}`}
+          className={`equation ${traits.pictures ? 'picture-equation' : ''}${traits.dice ? ' dice-equation' : ''}${traits.basket ? 'take-away-equation' : ''}`}
           data-feedback={feedback}
           role="group"
           aria-label={equationDescription}
@@ -131,7 +133,7 @@ export default function PracticeView({
                   <span aria-hidden="true">{n}</span>
                 )}
               </span>
-              {current.level === 9 && i === 2 && solved ? (
+              {traits.dice && i === 2 && solved ? (
                 // SCRUM-164: the result as two dice, a full 6 and the rest.
                 <div
                   className="dice-pair"
@@ -150,7 +152,7 @@ export default function PracticeView({
                   ))}
                 </div>
               ) : (
-                (current.level === 0 || current.level === 9) && (
+                traits.pictures && (
                   <PictureGroup
                     count={i === 2 && !solved ? null : n}
                     theme={pictureTheme}
@@ -167,7 +169,7 @@ export default function PracticeView({
             </span>
           ))}
         </div>
-        {current.level === 8 && (
+        {traits.basket && (
           <TakeAwayBasket
             key={presentation}
             t={t.basket}
@@ -238,7 +240,7 @@ export default function PracticeView({
               {t.check}
             </button>
           )}
-          {current.level !== 8 && current.level !== 9 && (
+          {traits.hint && (
             <button
               ref={hintRef}
               type="button"

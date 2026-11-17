@@ -1685,12 +1685,14 @@ progress::-moz-progress-bar {
   min-height: 44px;
   min-width: 44px;
 }
+/* Picture lessons (Small maths, engine levels 0, 8 and 9: practice--pictures) on phones upright:
+   the bear sits beside the header, so the pictures, basket and number pad fit without scrolling. */
 @media (orientation: portrait) {
-  .compact-practice .workspace:has(.picture-equation) .companion {
+  .compact-practice .workspace:has(.practice--pictures) .companion {
     left: 0;
     transform: none;
   }
-  .compact-practice .practice:has(.picture-equation) .practice-header {
+  .compact-practice .practice.practice--pictures .practice-header {
     padding-left: calc(var(--practice-bear-size) + 12px);
     min-height: calc(var(--practice-bear-size) * 1.077);
     align-items: center;
@@ -1718,7 +1720,7 @@ progress::-moz-progress-bar {
   .compact-practice .practice:has(.picture-equation) .number-pad button:last-child {
     font-size: clamp(16px, 1rem, 26px);
   }
-  .compact-practice .practice:has(.picture-equation) form {
+  .compact-practice .practice.practice--pictures form {
     margin-left: 94px;
     grid-template-columns: minmax(0, 1fr) 204px;
     column-gap: 8px;
@@ -3587,26 +3589,9 @@ progress::-moz-progress-bar {
     }
   }
 }
-/* Phones upright: the bear sits beside the header (as on level 1), so the basket and the
-   number pad fit without scrolling. */
-@media (orientation: portrait) {
-  .compact-practice .workspace:has(.take-away) .companion {
-    left: 0;
-    transform: none;
-  }
-  .compact-practice .practice:has(.take-away) .practice-header {
-    padding-left: calc(var(--practice-bear-size) + 12px);
-    min-height: calc(var(--practice-bear-size) * 1.077);
-    align-items: center;
-  }
-}
-/* Phones sideways: example and basket in the middle, number pad and Check on the right. */
+/* Phones sideways: example and basket in the middle, number pad and Check on the right (the form
+   grid itself is shared with level 1, see practice--pictures). */
 @media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
-  .compact-practice .practice:has(.take-away) form {
-    margin-left: 94px;
-    grid-template-columns: minmax(0, 1fr) 204px;
-    column-gap: 8px;
-  }
   .compact-practice .practice:has(.take-away) .equation {
     font-size: 1.6rem;
     padding-block: 2px;
