@@ -1,0 +1,181 @@
+/* Hint/settings dialog, edge progress, corner buttons, answer actions. Part of index.css; keep the import order. */
+.hint-backdrop {
+  padding: 12px;
+}
+.hint-dialog {
+  width: min(100%, 640px);
+  max-height: calc(100dvh - 24px);
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--paper);
+  border-radius: 16px;
+  padding: 12px;
+  box-shadow: 0 20px 80px #0003;
+  min-width: 0;
+}
+.hint-dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.hint-dialog-header h2 {
+  font-size: 1.25rem;
+  margin: 0;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.hint-dialog button {
+  min-height: var(--target);
+  padding: 8px 12px;
+  border: 1px solid #91afd2;
+  border-radius: 10px;
+  background: #deedff;
+  color: var(--blue-ink);
+  font: inherit;
+}
+.hint-dialog-content {
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  margin-block: 8px;
+}
+.hint-dialog-content .hint-panel {
+  margin: 0;
+}
+.hint-dialog-actions {
+  flex-shrink: 0;
+}
+.hint-dialog-actions button {
+  width: 100%;
+}
+
+/* Edge progress is the first app element, not a layout/header row. */
+.viewport-progress {
+  position: fixed;
+  z-index: 2;
+  inset: 0 0 auto;
+  width: 100%;
+  height: 3px;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  appearance: none;
+}
+.viewport-progress::-webkit-progress-value {
+  border-radius: 0;
+}
+.corner-button {
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--blue-ink);
+  font-size: 1.5rem;
+}
+.corner-button:hover {
+  background: var(--sky);
+}
+.back-button {
+  z-index: 1;
+  left: max(8px, env(safe-area-inset-left));
+  top: max(8px, env(safe-area-inset-top));
+}
+.hint-dialog .header-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  margin: 0;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+@media (max-width: 620px) {
+  .hint-dialog .header-controls {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+.hint-dialog .language-switch {
+  flex-wrap: wrap;
+}
+.hint-dialog .language-switch button {
+  flex: 1 1 auto;
+  min-width: var(--target);
+  overflow-wrap: anywhere;
+}
+.hint-dialog .audio-notice {
+  text-align: left;
+}
+@media (orientation: portrait) {
+  .compact-practice .companion {
+    left: 50%;
+    transform: translateX(-50%);
+    top: max(16px, env(safe-area-inset-top));
+  }
+  .compact-practice .practice-header {
+    padding: 0;
+    min-height: calc(var(--practice-bear-size) * 1.077 + 32px);
+    display: flex;
+    align-items: end;
+    justify-content: center;
+  }
+  .compact-practice .exercise-position {
+    min-width: 100px;
+    justify-content: center;
+    min-height: 24px;
+    font-size: 0.8rem;
+    text-align: center;
+  }
+}
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .workspace {
+    padding-top: max(56px, env(safe-area-inset-top));
+  }
+  .compact-practice .companion {
+    top: max(56px, env(safe-area-inset-top));
+  }
+}
+.hint-dialog-header button {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+.corner-button span {
+  font-size: 24px;
+}
+
+.answer-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 48px;
+  align-items: stretch;
+  gap: 8px;
+}
+.answer-actions .hint-button {
+  width: var(--target);
+  min-width: 44px;
+  min-height: var(--target);
+  margin: 0;
+  padding: 4px;
+  font-size: 1.4rem;
+}
+.hint-button span {
+  display: inline-grid;
+  place-items: center;
+  border: 2px solid currentColor;
+  border-radius: 50%;
+  width: 26px;
+  height: 26px;
+  font-family: Georgia, serif;
+  font-style: italic;
+}
+.hint-dialog .dialog-close {
+  min-width: var(--target);
+  min-height: var(--target);
+  flex-shrink: 0;
+  font-size: 1.6rem;
+  padding: 4px;
+}

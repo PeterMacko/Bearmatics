@@ -1,0 +1,99 @@
+/* Course choice, English home and short-window menu compaction. Part of index.css; keep the import order. */
+/* SCRUM-71: course choice, English home. */
+.menu-heading h2:focus {
+  outline: none;
+}
+.menu-heading h2:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+.course-options {
+  list-style: none;
+  margin: 0;
+}
+.course-options li {
+  min-width: 0;
+}
+.course-option {
+  width: 100%;
+  grid-template-columns: 64px minmax(0, 1fr) max-content;
+  min-height: 104px;
+  font: inherit;
+  color: inherit;
+  text-align: start;
+}
+.course-icon svg {
+  display: block;
+  width: 64px;
+  height: 64px;
+}
+.course-title {
+  font-size: 1.15rem;
+}
+.course-arrow {
+  color: var(--accent);
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+@media (max-width: 620px) {
+  .course-option {
+    min-height: 92px;
+    grid-template-columns: 52px minmax(0, 1fr) max-content;
+  }
+  .course-icon svg {
+    width: 52px;
+    height: 52px;
+  }
+  /* Phones: short course/English lists take only the height they need (no reserved gap).
+     Compact (short) windows use the shared menu rows so the list shrinks and scrolls like
+     the maths levels. Wider windows size the menu to its content already. */
+  .menu-shell .workspace:not([data-menu-compact]):has(> .course-choice),
+  .menu-shell .workspace:not([data-menu-compact]):has(> .english-home) {
+    grid-template-rows: auto minmax(0, max-content) auto;
+    align-content: start;
+  }
+  /* Phones: the bear moves down below the app bar's Back arrow. */
+  .menu-shell:has(.app-bar .back-button) .workspace .companion {
+    padding-top: 52px;
+  }
+  /* Course choice has no Back arrow: centre the bear on its three heading lines. */
+  .menu-shell .workspace:has(> .course-choice) .companion {
+    align-self: center;
+    /* Offset the empty gear-height space above the eyebrow text. */
+    margin-top: 24px;
+  }
+  /* Eyebrow sits low in its gear-height row: further from the top, close to the heading. */
+  .menu-shell .menu-heading .eyebrow {
+    display: flex;
+    align-items: flex-end;
+  }
+}
+/* Very short phone windows (e.g. 568x320): keep the SCRUM-36 list-only scrolling by tucking a
+   slightly smaller bear right under the Back arrow. */
+@media (max-width: 620px) and (max-height: 500px) {
+  .menu-shell:has(.app-bar .back-button) .workspace .companion {
+    padding-top: 46px;
+  }
+  .menu-shell:has(.app-bar .back-button) .workspace .companion .bear-scene {
+    width: 70px;
+  }
+}
+/* Short windows (set by useMenuLayout on every menu screen): compact heading leaves the
+   levels room to scroll in their own list. */
+.menu-shell .workspace[data-menu-compact] .menu-heading h2 {
+  font-size: 1.5rem;
+  line-height: 1.15;
+}
+.menu-shell .workspace[data-menu-compact] .menu-heading .intro {
+  display: none;
+}
+/* Short windows, every menu: the exercise sizes keep one row when it fits (they wrap only
+   for very large text); Start sits beside them when there is room, otherwise on the row below. */
+@media (min-width: 480px) and (max-height: 500px) {
+  .menu-shell .menu-controls {
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 4px;
+  }
+}

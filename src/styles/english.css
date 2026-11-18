@@ -1,0 +1,419 @@
+/* English listen-and-choose and listen-and-write. Part of index.css; keep the import order. */
+/* SCRUM-79: English listen-and-choose. Large speaker, 2x2 word buttons, Check. */
+.english-practice form {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+}
+.speaker-button {
+  display: grid;
+  place-items: center;
+  width: clamp(64px, 10vh, 112px);
+  height: clamp(64px, 10vh, 112px);
+  border-radius: 50%;
+  border: 3px solid #6489b3;
+  background: #e9f2ff;
+  color: var(--blue-ink);
+  cursor: pointer;
+  box-shadow: 0 4px 0 #b9cde4;
+}
+.speaker-button svg {
+  width: 64%;
+  height: 64%;
+}
+.speaker-wave {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 4;
+  stroke-linecap: round;
+  opacity: 0.35;
+}
+.speaker-button[data-playing='true'] {
+  border-color: var(--blue);
+  background: #d6e8ff;
+}
+.speaker-button[data-playing='true'] .speaker-wave {
+  animation: speaker-wave 0.9s ease-in-out infinite;
+  opacity: 1;
+}
+.speaker-button[data-playing='true'] .wave-two {
+  animation-delay: 0.15s;
+}
+.speaker-button[data-playing='true'] .wave-three {
+  animation-delay: 0.3s;
+}
+@keyframes speaker-wave {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Still indicator: waves fully drawn and a thicker ring while the word plays. */
+  .speaker-button[data-playing='true'] .speaker-wave {
+    animation: none;
+    opacity: 1;
+  }
+  .speaker-button[data-playing='true'] {
+    outline: 3px solid var(--blue);
+    outline-offset: 3px;
+  }
+}
+.speaker-button:focus-visible,
+.word-option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.word-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  /* Square buttons: the 2x2 block is limited by the space left under the speaker and Check. */
+  width: max(150px, min(100%, 440px, calc(100dvh - 500px)));
+}
+.word-option {
+  aspect-ratio: 1;
+  min-height: 0;
+  padding: 10px 12px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: var(--word-font, clamp(1rem, 4.2vw, 1.25rem));
+  font-weight: 700;
+  /* Break inside a word only if it cannot fit at all (e.g. 200% text). */
+  overflow-wrap: break-word;
+  hyphens: none;
+  cursor: pointer;
+}
+.compact-practice .word-option {
+  padding-inline: 6px;
+  font-size: var(--word-font, clamp(1rem, 2.6vw + 0.3rem, 1.2rem));
+}
+.word-option[aria-pressed='true'] {
+  border-color: var(--blue);
+  background: #e9f2ff;
+  color: var(--blue-ink);
+  box-shadow: 0 0 0 2px var(--blue);
+}
+.word-option[data-playing='true'] {
+  background: #d6e8ff;
+}
+.word-option[data-state='incorrect'] {
+  border-color: var(--accent);
+  background: #fff0ee;
+  color: #a4323e;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.word-option[data-state='correct'] {
+  border-color: var(--green);
+  background: #e5f3e9;
+  color: var(--green);
+  box-shadow: 0 0 0 2px var(--green);
+}
+.word-option:disabled {
+  cursor: default;
+  opacity: 1;
+}
+.english-practice .feedback {
+  /* Two lines reserved so wrapping feedback never moves the word squares. */
+  min-height: 2.6em;
+  padding: 0;
+  text-align: center;
+}
+.english-practice .answer-actions {
+  width: 100%;
+  max-width: 460px;
+}
+
+/* English on short landscape phones: speaker, feedback and Check on the left, words on the right. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .english-practice form {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    grid-template-rows: auto auto auto auto 1fr;
+    align-items: center;
+    justify-items: center;
+    row-gap: 8px;
+  }
+  .compact-practice .english-practice .speaker-button {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .compact-practice .english-practice .word-options {
+    grid-column: 2;
+    grid-row: 1 / 5;
+    width: min(100%, calc(100dvh - 90px));
+  }
+  .compact-practice .english-practice .feedback {
+    grid-column: 1;
+    grid-row: 3;
+  }
+  .compact-practice .english-practice .answer-actions {
+    grid-column: 1;
+    grid-row: 4;
+  }
+}
+.compact-practice .english-practice .answer-actions {
+  width: 100%;
+}
+.compact-practice .english-practice .answer-button {
+  width: 100%;
+}
+
+/* Phone portrait: the speaker sits beside the bear, above "Word 1 of 5", so the square
+   word buttons get the height under the header. */
+@media (orientation: portrait) {
+  .compact-practice .english-practice {
+    position: relative;
+  }
+  .compact-practice .english-practice .speaker-button {
+    position: absolute;
+    top: 0;
+    /* At the bear's top-right corner, just outside it (the bear is centred). */
+    left: calc(50% + var(--practice-bear-size) / 2 + 2px);
+    width: 64px;
+    height: 64px;
+  }
+  .compact-practice .english-practice .answer-actions {
+    width: var(
+      --word-block,
+      max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)))
+    );
+  }
+  .compact-practice .english-practice .answer-actions .answer-button {
+    width: 100%;
+    max-width: none;
+  }
+  .compact-practice .english-practice .word-options {
+    width: max(150px, min(100%, 340px, calc(100dvh - var(--practice-bear-size) - 222px)));
+  }
+}
+
+/* Short wide windows: one row of four squares instead of 2x2. */
+@media (min-width: 951px) and (max-height: 620px) {
+  .english-practice .word-options {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    width: min(100%, 560px, calc((100dvh - 290px) * 4));
+  }
+}
+
+/* English has no hint button: Check takes the whole row. */
+.english-practice .answer-actions {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.compact-practice .english-practice .feedback {
+  min-height: 2.6em;
+}
+
+/* SCRUM-80: English listen-and-write (level 3). */
+.write-shown {
+  min-height: 1.9rem;
+  margin: 0;
+  font-size: 1.1rem;
+  text-align: center;
+  color: var(--muted);
+}
+.write-shown strong {
+  color: var(--ink);
+  font-size: 1.6rem;
+  letter-spacing: 0.04em;
+}
+.write-input {
+  width: min(100%, 340px);
+  min-height: 56px;
+  padding: 8px 14px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--ink);
+  font: inherit;
+  font-size: 1.6rem;
+  font-weight: 700;
+  text-align: center;
+  /* Never show the platform's text-transform or autofill styling. */
+  text-transform: none;
+}
+.write-input:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-color: var(--blue);
+}
+.write-input[data-state='incorrect'] {
+  border-color: var(--accent);
+}
+.write-input[data-state='correct'] {
+  border-color: var(--green);
+  background: #e5f3e9;
+}
+.write-practice .answer-actions {
+  width: min(100%, 340px);
+}
+.compact-practice .write-practice .answer-actions {
+  width: min(100%, 340px);
+}
+
+/* On-screen keyboard open: speaker, word, input and Check fill the visible part of the screen
+   (Android shrinks the page; iPhone/iPad cover it, so we follow the visual viewport).
+   The .app-shell prefix on these rules stays: they must beat the later short-landscape
+   .compact-practice .write-practice rules of the same element. */
+.app-shell .write-practice[data-keyboard] {
+  position: fixed;
+  /* Above the page, below dialogs (.modal-backdrop is 10). */
+  z-index: 9;
+  left: 0;
+  right: 0;
+  top: var(--kb-top, 0px);
+  height: var(--kb-height, 100dvh);
+  min-height: 0;
+  margin: 0;
+  padding: 8px max(12px, env(safe-area-inset-left)) 8px max(12px, env(safe-area-inset-right));
+  display: grid;
+  align-content: center;
+  overflow: auto;
+  background: var(--paper);
+}
+.app-shell .write-practice[data-keyboard] form {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-areas:
+    'shown shown'
+    'speaker input'
+    'error error'
+    'feedback feedback'
+    'check check';
+  align-items: center;
+  gap: 6px 10px;
+  width: min(100%, 560px);
+  margin: 0 auto;
+}
+.app-shell .write-practice[data-keyboard] .speaker-button {
+  grid-area: speaker;
+  position: static;
+  width: 64px;
+  height: 64px;
+}
+.app-shell .write-practice[data-keyboard] .write-shown {
+  grid-area: shown;
+  min-height: 0;
+}
+.app-shell .write-practice[data-keyboard] .write-input {
+  grid-area: input;
+  width: 100%;
+}
+.app-shell .write-practice[data-keyboard] .feedback {
+  grid-area: feedback;
+  min-height: 0;
+}
+.app-shell .write-practice[data-keyboard] .answer-actions {
+  grid-area: check;
+  width: 100%;
+}
+.app-shell .write-practice[data-keyboard='short'] form {
+  /* One row for speaker, input and Check; the shown word and feedback on full-width rows
+     below, so they never widen a column (QA94-01). */
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas:
+    'speaker input check'
+    'shown shown shown'
+    'feedback feedback feedback'
+    'error error error';
+  width: min(100%, 760px);
+}
+.app-shell .write-practice[data-keyboard='short'] .write-shown {
+  text-align: left;
+  white-space: nowrap;
+}
+.app-shell .write-practice[data-keyboard='short'] .feedback {
+  text-align: left;
+  line-height: 1.2;
+}
+.app-shell .write-practice[data-keyboard='short'] .answer-actions {
+  width: auto;
+}
+.app-shell .write-practice[data-keyboard='short'] .answer-button {
+  /* Long labels (SK "Precvičiť náročné príklady") wrap inside the row (QA94-01b). */
+  max-width: 8.5rem;
+  padding: 4px 10px;
+  line-height: 1.15;
+  white-space: normal;
+}
+
+/* Short landscape phones (no keyboard): speaker left; word, input, feedback and Check right. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .write-practice form {
+    grid-template-columns: minmax(0, 0.6fr) minmax(0, 1.4fr);
+    grid-template-rows: auto auto auto auto;
+    row-gap: 4px;
+  }
+  .compact-practice .write-practice .speaker-button {
+    grid-column: 1;
+    grid-row: 1 / 5;
+  }
+  .compact-practice .write-practice .write-shown {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .compact-practice .write-practice .write-input {
+    grid-column: 2;
+    grid-row: 2;
+  }
+  .compact-practice .write-practice .feedback {
+    grid-column: 2;
+    grid-row: 3;
+  }
+  .compact-practice .write-practice .answer-actions {
+    grid-column: 2;
+    grid-row: 4;
+  }
+}
+
+/* QA87-01: playback failure shown in the feedback line (no extra row). */
+.english-practice .play-error {
+  color: #934522;
+}
+.english-practice .play-error .text-button {
+  /* Inline link inside the reserved two-line feedback space. */
+  min-height: 0;
+  padding: 2px 6px;
+}
+
+/* Very short visible area: when the word is shown it replaces the feedback text on screen (the
+   feedback stays in the live region for screen readers), so the layout keeps two rows. */
+/* A playback failure always stays visible (QA94-04): then the shown word gives way instead. */
+.app-shell .write-practice[data-keyboard='short'] form:has(.play-error) .write-shown {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+/* Visually hidden but still read by screen readers, in the layouts named here. (.sr-only also
+   resets padding, margin and border; these elements keep their own values.) The :has() rule above
+   stays separate so a browser without :has() does not drop this whole list. */
+.compact-practice .practice h2,
+.app-shell .write-practice[data-keyboard] .practice-header,
+.app-shell .write-practice[data-keyboard] h2,
+.app-shell
+  .write-practice[data-keyboard='short']
+  .write-shown:not(:empty)
+  ~ .feedback:not(.play-error),
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.visually-hidden {
+  white-space: nowrap;
+}
+
+/* SCRUM-80: the child's wrong answer, quoted in the feedback line. */
+.write-wrong {
+  font-weight: 700;
+}

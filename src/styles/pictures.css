@@ -1,0 +1,113 @@
+/* Picture equations (Small maths picture lessons). Part of index.css; keep the import order. */
+/* Keep numeric terms and their countable groups on the same three tracks. */
+.equation.picture-equation {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 2px;
+  font-size: 1.7rem;
+}
+.picture-equation .equation-part {
+  display: grid;
+  grid-template-columns: 16px minmax(0, 1fr);
+  gap: 4px 0;
+  align-items: center;
+  justify-items: center;
+  grid-template-rows: minmax(44px, auto) 1fr;
+}
+.picture-equation .equation-part:first-child {
+  grid-template-columns: minmax(0, 1fr);
+}
+.picture-equation [data-term] {
+  grid-column: 2;
+  grid-row: 1;
+  text-align: center;
+  width: 100%;
+}
+.picture-equation .equation-part:first-child [data-term],
+.picture-equation .equation-part:first-child .picture-group {
+  grid-column: 1;
+}
+.picture-equation .operator {
+  grid-column: 1;
+  grid-row: 1;
+}
+.picture-equation .picture-group {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  letter-spacing: normal;
+  font-weight: normal;
+}
+.equation.picture-equation input {
+  width: 100%;
+  max-width: min(100%, 2em);
+}
+.picture-equation .picture-unknown {
+  align-content: center;
+}
+.picture-equation .picture-question {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+.picture-equation .picture-cue {
+  font-size: 0.75rem;
+}
+.picture-equation input {
+  font-size: 1.7rem;
+  min-height: 44px;
+  min-width: 44px;
+}
+/* Picture lessons (Small maths, engine levels 0, 8 and 9: practice--pictures) on phones upright:
+   the bear sits beside the header, so the pictures, basket and number pad fit without scrolling. */
+@media (orientation: portrait) {
+  .compact-practice .workspace:has(.practice--pictures) .companion {
+    left: 0;
+    transform: none;
+  }
+  .compact-practice .practice.practice--pictures .practice-header {
+    padding-left: calc(var(--practice-bear-size) + 12px);
+    min-height: calc(var(--practice-bear-size) * 1.077);
+    align-items: center;
+  }
+}
+@media (min-width: 951px) and (max-height: 700px) {
+  .practice:has(.picture-equation) .practice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
+  .practice:has(.picture-equation) .practice-top,
+  .practice:has(.picture-equation) .exercise-position {
+    margin-bottom: 0;
+  }
+  .practice:has(.picture-equation) h2 {
+    margin-top: 8px;
+  }
+  .equation.picture-equation {
+    padding-block: 4px;
+  }
+}
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .practice:has(.picture-equation) .number-pad button:last-child {
+    font-size: clamp(16px, 1rem, 26px);
+  }
+  .compact-practice .practice.practice--pictures form {
+    margin-left: 94px;
+    grid-template-columns: minmax(0, 1fr) 204px;
+    column-gap: 8px;
+  }
+  .compact-practice .picture-equation {
+    font-size: 1.6rem;
+  }
+  .picture-equation .equation-part {
+    grid-template-columns: 10px minmax(0, 1fr);
+  }
+  .picture-equation .equation-part:first-child {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .picture-equation .picture-group {
+    min-block-size: 72px;
+    inline-size: 72px;
+  }
+}

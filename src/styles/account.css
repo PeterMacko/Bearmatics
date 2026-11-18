@@ -1,0 +1,313 @@
+/* Optional accounts. Part of index.css; keep the import order. */
+/* ---------- Optional accounts (SCRUM-97) ---------- */
+.account-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  max-width: 220px;
+  padding: 4px 14px 4px 6px;
+  border: 1.5px solid var(--line);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--blue-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+.account-button:hover {
+  background: var(--sky);
+}
+.account-person {
+  width: 28px;
+  height: 28px;
+  flex: none;
+}
+.account-button .bear-icon {
+  width: 32px;
+  height: 32px;
+  flex: none;
+  border-radius: 10px;
+}
+.account-button-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 620px), (max-height: 500px) {
+  /* Phones and short windows: icon only (the name stays in its label and tooltip). */
+  .account-button {
+    width: 44px;
+    padding: 0;
+    justify-content: center;
+    border-radius: 50%;
+  }
+  .account-button-text {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+}
+@media (max-width: 620px) {
+  /* Phones: the eyebrow keeps clear of the bar's profile + settings buttons on every menu. */
+  .menu-shell:has(.account-button) .menu-heading .eyebrow {
+    padding-inline-end: 104px;
+  }
+}
+
+.account-shell .workspace {
+  display: block;
+  min-height: 0;
+  padding: 8px 0 48px;
+}
+.account-shell .companion {
+  display: none;
+}
+.account-screen {
+  max-width: 520px;
+  margin: 0 auto;
+}
+.account-screen .menu-heading {
+  margin-bottom: 16px;
+}
+.account-screen h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+.account-form {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.account-screen,
+.account-form,
+.account-field,
+.account-field label {
+  min-width: 0;
+}
+.account-field {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+}
+.account-form {
+  grid-template-columns: minmax(0, 1fr);
+}
+.account-screen .menu-heading,
+.account-field label,
+.account-hint,
+.account-note,
+.account-error,
+.parent-check label {
+  overflow-wrap: anywhere;
+}
+.account-field label,
+.bear-picker legend {
+  font-weight: 700;
+}
+.account-field input {
+  width: 100%;
+  min-width: 0;
+  min-height: var(--target);
+  padding: 10px 12px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 1rem;
+}
+.account-field input:focus-visible {
+  border-color: var(--blue);
+}
+.account-field input[aria-invalid='true'] {
+  border-color: var(--accent);
+}
+.account-hint,
+.account-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+}
+.account-error {
+  margin: 0;
+  color: var(--accent);
+  font-weight: 700;
+}
+.account-error:empty {
+  display: none;
+}
+.account-submit {
+  width: 100%;
+}
+.account-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.account-actions > * {
+  flex: 1 1 180px;
+}
+.secondary-button,
+.danger-button {
+  min-height: var(--target);
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+}
+.secondary-button {
+  border: 1.5px solid var(--blue);
+  background: var(--paper);
+  color: var(--blue-ink);
+}
+.danger-button {
+  border: 1.5px solid var(--accent);
+  background: var(--paper);
+  color: var(--accent);
+}
+.danger-button:hover {
+  background: #fde8e6;
+}
+.link-button {
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--blue-ink);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.account-switch {
+  margin: 0 0 4px;
+  text-align: center;
+}
+.account-or {
+  margin: 12px 0;
+  text-align: center;
+  color: var(--muted);
+}
+.google-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  text-decoration: none;
+}
+.google-button:hover {
+  background: var(--sky);
+}
+.google-mark {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--blue);
+  color: #fff;
+  font-size: 0.95rem;
+}
+.bear-picker {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.bear-picker legend {
+  margin-bottom: 6px;
+  padding: 0;
+}
+.bear-options {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 320px;
+}
+.bear-option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border: 3px solid transparent;
+  border-radius: 18px;
+  cursor: pointer;
+}
+.bear-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.bear-option .bear-icon {
+  width: 100%;
+  height: auto;
+  border-radius: 14px;
+}
+.bear-option:has(input:checked) {
+  border-color: var(--blue);
+}
+.bear-option:has(input:focus-visible) {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}
+.parent-check {
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr);
+  align-items: center;
+  gap: 4px 8px;
+}
+.parent-check input {
+  width: 28px;
+  height: 28px;
+  margin: 8px 0;
+}
+.parent-check label {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  font-weight: 700;
+}
+.parent-check .link-button {
+  grid-column: 2;
+  justify-self: start;
+}
+.profile-badge {
+  margin: 0 0 16px;
+}
+.profile-badge .bear-icon {
+  border-radius: 20px;
+}
+.account-leave {
+  justify-items: start;
+}
+.account-leave > button:not(.link-button) {
+  min-width: 200px;
+}
+.delete-confirm {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border: 1.5px solid var(--accent);
+  border-radius: 14px;
+  background: #fff4f2;
+}
+.delete-confirm p {
+  margin: 0;
+}
+.privacy-list {
+  display: grid;
+  gap: 10px;
+  padding-inline-start: 20px;
+  line-height: 1.45;
+}
+.privacy-list a {
+  color: var(--blue-ink);
+  overflow-wrap: anywhere;
+}
