@@ -1,5 +1,6 @@
 import type { MouseEvent, PointerEvent, ReactNode } from 'react';
 import type { Copy } from '../i18n';
+import Icon from '../Icon';
 
 /**
  * The lesson's feedback line (`#answer-feedback`, a polite status). A word playback failure
@@ -26,11 +27,12 @@ export default function FeedbackLine({
         {playError.t.wordFailed}{' '}
         <button
           type="button"
-          className="text-button"
+          className="secondary"
           onPointerDown={playError.keepKeyboard}
           onMouseDown={playError.keepKeyboard}
           onClick={playError.onRetry}
         >
+          <Icon name="replay" />
           {playError.t.tryAgain}
         </button>
       </p>

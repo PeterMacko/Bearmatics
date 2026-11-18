@@ -224,14 +224,31 @@
   justify-content: space-between;
   align-items: center;
 }
-.text-button {
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 0;
-  background: none;
+.secondary {
+  /* SCRUM-172: the quieter choice next to a primary button. Transparent, so it works on every
+     screen colour; the dark border and text keep >= 3:1 and >= 4.5:1 on all of them. */
+  min-height: var(--target);
+  padding: 10px 20px;
+  border: 2px solid var(--blue-ink);
+  border-radius: 12px;
+  background: transparent;
   color: var(--blue-ink);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  line-height: 1.4;
+}
+.secondary:hover {
+  background: #3157830f;
+}
+.secondary:active {
+  transform: translateY(1px);
+}
+/* SCRUM-172: decorative icon before a button's text (src/Icon.tsx). */
+.button-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  margin-inline-end: 0.4em;
+  vertical-align: -0.25em;
 }

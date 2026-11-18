@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
 import type { Copy } from './i18n';
+import Icon from './Icon';
 import { ignoreRepeatClick } from './ignoreRepeatClick';
 
 /** Completion screen with the first-try score. */
@@ -62,15 +63,17 @@ export default function SummaryView({
           if (!ignoreRepeatClick(event)) onAgain();
         }}
       >
+        <Icon name="replay" />
         {t.again}
       </button>
       <button
-        className="text-button"
+        className="secondary"
         onClick={(event) => {
           // Same guard: the summary is shorter now, so a double tap on Finish can reach here.
           if (!ignoreRepeatClick(event)) onBack();
         }}
       >
+        <Icon name="list" />
         {t.back}
       </button>
       {footer}

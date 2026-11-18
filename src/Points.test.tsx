@@ -211,7 +211,7 @@ test('QA124-03: leaving the summary before a slow save still updates the bar', a
   render(<App />);
   await screen.findByRole('button', { name: 'No bear badge yet, 10 points' });
   await playFive();
-  fireEvent.click(screen.getByText('Choose level', { selector: '.text-button' }));
+  fireEvent.click(screen.getByText('Choose level', { selector: '.secondary' }));
   expect(
     await screen.findByRole('button', { name: 'No bear badge yet, 15 points' }, { timeout: 3000 }),
   ).toBeInTheDocument();

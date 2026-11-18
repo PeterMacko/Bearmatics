@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useRef, useState, type RefObject } from 'react';
 import BearIcon from '../account/BearIcon';
 import HintDialog from '../HintDialog';
+import Icon from '../Icon';
 import { fill, pointsText, type Copy } from '../i18n';
 import { loadLeaderboard, type LeaderboardRow } from './api';
 import StreakIcon from './StreakIcon';
@@ -66,7 +67,7 @@ export default function LeaderboardDialog({
             <p>{t.loadFailed}</p>
             <button
               type="button"
-              className="text-button"
+              className="secondary"
               onClick={() => {
                 retried.current = true;
                 box.current?.focus();
@@ -74,6 +75,7 @@ export default function LeaderboardDialog({
                 setAttempt((n) => n + 1);
               }}
             >
+              <Icon name="replay" />
               {t.retry}
             </button>
           </div>
