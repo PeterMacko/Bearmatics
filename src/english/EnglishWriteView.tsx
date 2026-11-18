@@ -1,7 +1,10 @@
 import type { RefObject } from 'react';
 import type { Copy } from '../i18n';
+import AnswerActions from '../lesson/AnswerActions';
+import FeedbackLine from '../lesson/FeedbackLine';
+import PracticeHeader from '../lesson/PracticeHeader';
 import type { Feedback } from '../session';
-import { SpeakerIcon } from './EnglishPracticeView';
+import SpeakerButton from './SpeakerButton';
 import type { KeyboardViewport } from './useKeyboardViewport';
 import type { WriteQuestion } from './write';
 
@@ -109,16 +112,7 @@ export default function EnglishWriteView({
           : undefined
       }
     >
-      <div className="practice-header">
-        <div className="practice-top">
-          <span className="level-pill">
-            {t.level} {question.level}
-          </span>
-        </div>
-        <p className="exercise-position" aria-live="polite">
-          {position}
-        </p>
-      </div>
+      <PracticeHeader t={t} level={question.level} position={position} />
       <h2 id="write-title">{reviewing ? t.writeReviewTitle : t.writeTitle}</h2>
       <form
         noValidate
@@ -129,18 +123,13 @@ export default function EnglishWriteView({
           else onCheck();
         }}
       >
-        <button
-          ref={speakerRef}
-          type="button"
-          className="speaker-button"
-          data-playing={playing}
-          aria-label={t.playWord}
-          onPointerDown={keepKeyboard}
-          onMouseDown={keepKeyboard}
-          onClick={onReplay}
-        >
-          <SpeakerIcon />
-        </button>
+        <SpeakerButton
+          t={t}
+          speakerRef={speakerRef}
+          playing={playing}
+          onReplay={onReplay}
+          keepKeyboard={keepKeyboard}
+        />
         <p className="write-shown" aria-hidden={shown ? undefined : 'true'}>
           {shown && (
             <>
@@ -174,48 +163,20 @@ export default function EnglishWriteView({
           onChange={(event) => onAnswerChange(event.target.value)}
         />
         {/* A playback failure uses the feedback line's space (QA87-01): no extra row. */}
-        {playFailed ? (
-          <p className="feedback play-error" role="alert">
-            {t.wordFailed}{' '}
-            <button
-              type="button"
-              className="text-button"
-              onPointerDown={keepKeyboard}
-              onMouseDown={keepKeyboard}
-              onClick={onRetryPlay}
-            >
-              {t.tryAgain}
-            </button>
-          </p>
-        ) : (
-          <p
-            id="answer-feedback"
-            className={`feedback feedback-${prompt ? 'invalid' : feedback}`}
-            role="status"
-            aria-live="polite"
-            aria-atomic="true"
-          >
-            {status}
-          </p>
-        )}
-        <div className="answer-actions">
-          <button
-            type="submit"
-            className="primary answer-button"
-            data-state={solved ? 'correct' : feedback === 'incorrect' ? 'incorrect' : 'neutral'}
-            onPointerDown={keepKeyboard}
-            onMouseDown={keepKeyboard}
-          >
-            {solved ? (
-              <>
-                {nextLabel}
-                <span aria-hidden="true"> →</span>
-              </>
-            ) : (
-              t.check
-            )}
-          </button>
-        </div>
+        <FeedbackLine
+          kind={prompt ? 'invalid' : feedback}
+          playError={playFailed ? { t, onRetry: onRetryPlay, keepKeyboard } : null}
+        >
+          {status}
+        </FeedbackLine>
+        <AnswerActions
+          t={t}
+          solved={solved}
+          feedback={feedback}
+          nextLabel={nextLabel}
+          singleButton
+          keepKeyboard={keepKeyboard}
+        />
       </form>
     </section>
   );
