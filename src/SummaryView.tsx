@@ -1,5 +1,6 @@
 import type { ReactNode, RefObject } from 'react';
 import type { Copy } from './i18n';
+import { ignoreRepeatClick } from './ignoreRepeatClick';
 
 /** Completion screen with the first-try score. */
 export default function SummaryView({
@@ -58,11 +59,7 @@ export default function SummaryView({
         className="primary"
         onClick={(event) => {
           // Ignore the continuation click of the Finish gesture, not a deliberate replay.
-          if (event.detail > 1) {
-            event.preventDefault();
-            return;
-          }
-          onAgain();
+          if (!ignoreRepeatClick(event)) onAgain();
         }}
       >
         {t.again}
@@ -71,11 +68,7 @@ export default function SummaryView({
         className="text-button"
         onClick={(event) => {
           // Same guard: the summary is shorter now, so a double tap on Finish can reach here.
-          if (event.detail > 1) {
-            event.preventDefault();
-            return;
-          }
-          onBack();
+          if (!ignoreRepeatClick(event)) onBack();
         }}
       >
         {t.back}
