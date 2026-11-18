@@ -1,7 +1,7 @@
 // Media queries used from JavaScript (matchMedia). The CSS spells the same breakpoints
-// itself; the table at the top of src/styles.css names every one of them.
+// itself; the table at the top of src/styles/base.css names every one of them.
 
-/** Phone width: the menus' bear sits beside the heading (styles.css `phone`). */
+/** Phone width: the menus' bear sits beside the heading (src/styles `phone`). */
 export const PHONE_QUERY = '(max-width: 620px)';
 
 /**

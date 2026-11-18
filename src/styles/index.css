@@ -1,0 +1,17 @@
+/* All app styles in cascade order: later files win ties with earlier ones, exactly as in the
+   former single src/styles.css (CR-10). Keep this order. The breakpoint table is at the top of
+   base.css. */
+@import './base.css';
+@import './shell.css';
+@import './practice.css';
+@import './compact-practice.css';
+@import './dialogs.css';
+@import './wide.css';
+@import './menu.css';
+@import './pictures.css';
+@import './courses.css';
+@import './english.css';
+@import './account.css';
+@import './app-bar.css';
+@import './progress.css';
+@import './small-maths.css';

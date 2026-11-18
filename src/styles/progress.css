@@ -1,0 +1,705 @@
+/* Points, badges, streak, summary points and leaderboard. Part of index.css; keep the import order. */
+/* ---------- SCRUM-117: points and bear badges ----------
+   Bar: the bear badge, then (no border around them) the points over a thin bar to the next
+   badge. One 48px-high button. */
+.badge-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0 4px 0 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--blue-ink);
+  font: inherit;
+}
+.badge-medal {
+  display: grid;
+  place-items: center;
+  flex: none;
+  transition: transform 0.2s ease;
+}
+.badge-medal.level-up {
+  animation: medal-level-up 0.9s ease-out;
+}
+@keyframes medal-level-up {
+  0% {
+    transform: scale(0.4) rotate(-25deg);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.35) rotate(8deg);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) rotate(0);
+  }
+}
+.bar-progress {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bar-progress .progress-track {
+  width: 52px;
+}
+.bar-progress-points {
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+.progress-track {
+  display: block;
+  width: 100%;
+  height: 7px;
+  border-radius: 999px;
+  background: #e6ddd6;
+  overflow: hidden;
+}
+.progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #e8a33d;
+  transition: width 0.18s linear;
+}
+.progress-fill.jump {
+  transition: none;
+}
+/* Short landscape phones: the bar is a narrow column on the left; points + bar under the badge. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  /* .app-shell prefix kept: it must beat .app-bar .badge-button (max-width: 360px, later). */
+  .app-shell .app-bar .badge-button {
+    flex-direction: column;
+    gap: 2px;
+    padding: 2px 0;
+    width: var(--target);
+  }
+  .app-bar .bar-progress {
+    flex-direction: column;
+    gap: 2px;
+  }
+  .app-bar .bar-progress .progress-track {
+    width: 40px;
+  }
+  .app-bar .badge-medal svg {
+    width: 34px;
+    height: 34px;
+  }
+}
+.badge-details {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  text-align: center;
+}
+.badge-details p {
+  margin: 0;
+}
+.badge-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+.badge-total {
+  font-weight: 700;
+}
+.badge-how {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.badge-meter {
+  width: 100%;
+  max-width: 320px;
+}
+.badge-meter p {
+  margin: 4px 0 0;
+  font-size: 0.95rem;
+}
+.badge-meter .progress-track {
+  height: 10px;
+}
+/* Compact: points and a new badge share one row, the progress line sits under them. */
+.summary-points {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 2px 14px;
+  margin-block: 0 10px;
+}
+.summary-points .badge-meter {
+  flex: 1 0 100%;
+  display: grid;
+  justify-items: center;
+}
+.summary-points .badge-meter .progress-track {
+  width: min(100%, 320px);
+}
+.points-added {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #b2611a;
+}
+.points-hint {
+  margin-block: 12px 0;
+  color: var(--muted);
+}
+.points-saving {
+  margin-block: 0 12px;
+  color: var(--muted);
+}
+.points-failed {
+  margin-block: 0 12px;
+}
+.points-failed p {
+  margin: 0;
+  color: #a12d2d;
+  font-weight: 700;
+}
+.new-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #7a4a00;
+  animation: new-badge-pop 0.6s ease-out;
+}
+@keyframes new-badge-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+  70% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .new-badge,
+  .badge-medal.level-up {
+    animation: none;
+  }
+  .progress-fill {
+    transition: none;
+  }
+}
+
+/* SCRUM-117 review: the summary fits small screens without scrolling (title and intro removed,
+   points block added). */
+@media (max-height: 760px) {
+  .summary .completion-mark {
+    width: 44px;
+    height: 44px;
+    font-size: 1.4rem;
+    margin: 8px 0;
+  }
+  .summary .completed-total {
+    margin: 10px 0 4px;
+  }
+  .summary .first-try {
+    margin-bottom: 12px;
+  }
+  .summary .summary-points {
+    margin-bottom: 8px;
+  }
+}
+@media (max-width: 360px) {
+  .app-bar .badge-button {
+    padding-inline: 0;
+  }
+}
+@media (max-width: 620px) and (max-height: 600px) {
+  .workspace.in-session:has(.summary) {
+    padding-top: 8px;
+    padding-bottom: 6px;
+  }
+  .workspace .summary {
+    padding-top: 0;
+  }
+}
+/* Short landscape phones: the decorative check mark gives its room to the points. */
+@media (max-height: 420px) {
+  .summary .completion-mark {
+    display: none;
+  }
+  .summary .eyebrow {
+    margin-bottom: 6px;
+  }
+}
+
+/* ---------- SCRUM-118: streak ---------- */
+.streak-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  min-height: var(--target);
+  padding-inline: 2px;
+  color: #b2611a;
+  font-weight: 800;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.streak-chip.frozen {
+  color: #2f6f9a;
+}
+.streak-warm-up {
+  margin-inline-start: 6px;
+  max-width: 190px;
+  white-space: normal;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.15;
+}
+.streak-chip.warming .streak-icon {
+  animation: streak-warm 1.2s ease-out;
+}
+@keyframes streak-warm {
+  0% {
+    transform: scale(0.5);
+    opacity: 0.3;
+  }
+  55% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+/* Phones and short windows: frozen = the ice icon only (text stays in the accessible name). */
+@media (max-width: 620px), (max-height: 500px) {
+  .streak-chip .streak-warm-up {
+    display: none;
+  }
+  .streak-chip.frozen .streak-days {
+    display: none;
+  }
+}
+@media (max-width: 420px) {
+  .streak-chip .streak-icon {
+    width: 22px;
+    height: 22px;
+  }
+}
+/* Short landscape phones: left column, icon over the number. */
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  .app-bar .streak-chip {
+    flex-direction: column;
+    min-height: 0;
+    width: var(--target);
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+}
+.streak-offer {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  text-align: center;
+}
+.streak-offer p {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+}
+.streak-offer-art {
+  display: grid;
+  place-items: center;
+  width: 104px;
+  height: 104px;
+  border-radius: 50%;
+  background: #e8f5fd;
+}
+.streak-offer-art.warm {
+  background: #fff1dc;
+}
+.streak-offer-art.warm .streak-icon {
+  animation: streak-warm 1.2s ease-out;
+}
+.streak-offer-actions {
+  display: grid;
+  gap: 6px;
+  width: 100%;
+}
+.streak-offer-actions button.primary {
+  width: 100%;
+  border: 0;
+  background: var(--blue-offer);
+  color: var(--paper);
+  font-weight: 800;
+  box-shadow: 0 3px 0 var(--blue-offer-shadow);
+}
+.streak-offer-actions button.text-button {
+  border: 0;
+  background: transparent;
+  color: var(--blue-ink);
+  text-decoration: underline;
+}
+.streak-offer-error {
+  color: #a12d2d;
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak-chip.warming .streak-icon,
+  .streak-offer-art.warm .streak-icon {
+    animation: none;
+  }
+}
+/* Smallest phones: badge, streak, profile and settings still fit next to Back in one row. */
+@media (max-width: 420px) {
+  .app-bar .app-bar-end {
+    gap: 2px;
+  }
+  .app-bar .bar-progress .progress-track {
+    width: 20px;
+  }
+  .app-bar .streak-chip {
+    padding-inline: 0;
+  }
+  .app-bar .badge-medal svg {
+    width: 32px;
+    height: 32px;
+  }
+  /* .app-shell prefix kept: the short-landscape .app-shell .app-bar .badge-button gap above has
+     the same specificity and must keep losing here. */
+  .app-shell .app-bar .badge-button,
+  .app-shell .app-bar .bar-progress {
+    gap: 2px;
+  }
+  .app-bar .bar-progress-points,
+  .app-bar .streak-chip {
+    font-size: 0.8rem;
+    letter-spacing: -0.02em;
+  }
+  .app-bar .streak-chip .streak-icon {
+    width: 20px;
+    height: 20px;
+  }
+}
+
+/* Peter's review (SCRUM-118): shadow flame until today's lesson, burning flame on the summary. */
+.streak-chip.shadow {
+  color: #8d8079;
+}
+.completion-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 18px 0;
+}
+.completion-row .completion-mark {
+  margin: 0;
+}
+.summary-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: #b2611a;
+  font-size: 1.6rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.summary-streak.ice {
+  color: #2f6f9a;
+}
+.summary-streak.shadow {
+  color: #8d8079;
+}
+.summary-streak-days.switched {
+  animation: streak-number-pop 0.5s ease-out;
+}
+@keyframes streak-number-pop {
+  0% {
+    transform: translateY(8px) scale(0.6);
+    opacity: 0;
+  }
+  60% {
+    transform: translateY(-2px) scale(1.25);
+    opacity: 1;
+  }
+  100% {
+    transform: none;
+  }
+}
+.streak-icon.flicker {
+  overflow: visible;
+}
+.streak-icon.flicker .flame-outer {
+  transform-origin: 50% 90%;
+  animation: flame-flicker 0.9s ease-in-out infinite alternate;
+}
+.streak-icon.flicker .flame-inner {
+  transform-origin: 50% 90%;
+  animation: flame-flicker-inner 0.6s ease-in-out infinite alternate;
+}
+@keyframes flame-flicker {
+  0% {
+    transform: scale(1, 1) skewX(0deg);
+  }
+  35% {
+    transform: scale(0.96, 1.06) skewX(-3deg);
+  }
+  70% {
+    transform: scale(1.03, 0.97) skewX(2deg);
+  }
+  100% {
+    transform: scale(0.98, 1.08) skewX(-1deg);
+  }
+}
+@keyframes flame-flicker-inner {
+  0% {
+    transform: scale(1, 1);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(0.85, 1.15);
+    opacity: 0.85;
+  }
+}
+@media (max-height: 760px) {
+  .summary .completion-row {
+    margin: 8px 0;
+  }
+  .summary-streak {
+    font-size: 1.3rem;
+  }
+  .summary-streak .streak-icon {
+    width: 34px;
+    height: 34px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .streak-icon.flicker .flame-outer,
+  .streak-icon.flicker .flame-inner,
+  .summary-streak-days.switched {
+    animation: none;
+  }
+}
+/* Lessons, summary and account screens on wider screens: the bar sits at the page edges like on
+   the menus (content keeps its 1180px column). Absolute to the page, so no horizontal scroll. */
+@media (min-width: 621px) and (min-height: 501px), (min-width: 951px) {
+  .app-shell:not(.menu-shell) {
+    padding-top: max(60px, calc(var(--bar-height, 0px) + 4px));
+  }
+  .app-shell:not(.menu-shell) .app-bar {
+    position: absolute;
+    top: 0;
+    left: calc(max(12px, env(safe-area-inset-left)) - 4px);
+    right: calc(max(12px, env(safe-area-inset-right)) - 4px);
+    border-bottom: 0;
+  }
+}
+/* Smallest landscape phones (568x320) during a running lesson: the left column has no room for
+   the streak under the exercise header; it is back on the summary and the menus. */
+@media (max-height: 420px) and (orientation: landscape) {
+  .compact-practice .app-bar .streak-chip {
+    display: none;
+  }
+}
+/* QA131-03: short landscape phones keep all dialog buttons in view (no art). */
+@media (max-height: 420px) {
+  .streak-offer-art {
+    display: none;
+  }
+}
+
+/* SCRUM-148: the badge area is two buttons: medal (badge details) and points + bar (leaderboard). */
+.badge-medal-button,
+.badge-button .bar-progress {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  padding: 0 2px;
+  border: 0;
+  border-radius: 12px;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+.badge-medal-button {
+  min-width: 44px;
+}
+.badge-button .bar-progress {
+  min-width: var(--target);
+}
+.badge-medal-button:hover .badge-medal {
+  transform: scale(1.06);
+}
+.badge-button .bar-progress:hover .progress-track {
+  outline: 2px solid #f3c27a;
+  outline-offset: 1px;
+}
+.badge-button:hover .badge-medal {
+  transform: none;
+}
+@media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  .app-bar .badge-medal-button,
+  .app-bar .badge-button .bar-progress {
+    width: var(--target);
+    min-height: 40px;
+  }
+}
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-variant-numeric: tabular-nums;
+}
+.leaderboard-table th {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: start;
+  padding: 2px 6px 6px;
+}
+.leaderboard-table td {
+  padding: 5px 6px;
+  border-top: 1px solid #efe6df;
+  vertical-align: middle;
+}
+.leaderboard-table .num {
+  text-align: end;
+  white-space: nowrap;
+}
+.leaderboard-table tr.me td {
+  background: #fff1dc;
+  font-weight: 800;
+}
+.leaderboard-table tr.me td:first-child {
+  border-radius: 10px 0 0 10px;
+}
+.leaderboard-table tr.me td:last-child {
+  border-radius: 0 10px 10px 0;
+}
+.leaderboard-player {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  overflow-wrap: anywhere;
+}
+.leaderboard-streak {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  white-space: nowrap;
+}
+.leaderboard-gap td {
+  text-align: center;
+  color: var(--muted);
+  letter-spacing: 0.3em;
+}
+.leaderboard-state {
+  text-align: center;
+  margin: 8px 0;
+}
+.leaderboard-note {
+  margin: 10px 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+/* Small phones: the summary with the streak row still fits without scrolling. */
+@media (max-width: 620px) and (max-height: 600px) {
+  .summary .completion-row {
+    margin: 2px 0 4px;
+  }
+  .summary .completion-mark {
+    width: 36px;
+    height: 36px;
+    font-size: 1.1rem;
+  }
+  .summary-streak {
+    font-size: 1.1rem;
+  }
+  .summary-streak .streak-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .summary .completed-total {
+    margin-top: 6px;
+  }
+}
+/* Smallest landscape phones during a lesson: only the badge stays in the left column. */
+@media (max-height: 420px) and (orientation: landscape) {
+  .compact-practice .app-bar .badge-button .bar-progress {
+    display: none;
+  }
+}
+/* Phones: lessons, summary and account screens use the same width for the bar as the menus
+   (into the page padding), so badge, streak, profile and settings fit next to Back. */
+@media (max-width: 620px) and (min-height: 501px) {
+  .app-shell:not(.menu-shell) .app-bar {
+    margin-inline: -8px;
+  }
+}
+.leaderboard-player > .bear-icon {
+  flex: none;
+}
+/* The bar would wrap or reach the course eyebrow: frozen streak = ice + number (QA131-05). */
+.bar-tight .streak-chip .streak-warm-up {
+  display: none;
+}
+/* Small phones (320 wide): the menu bar uses the page edges too, so Back, medal, points + bar,
+   streak, profile and settings stay one row (QA154-03). */
+@media (max-width: 360px) and (min-height: 501px) {
+  .menu-shell .app-bar {
+    inset-inline: 8px;
+  }
+}
+/* Narrow leaderboard (phones, large text): no bear column, tighter cells, so Points fit
+   (QA154-02); nicknames wrap but never down to one letter per line (QA154-04). */
+.leaderboard {
+  container-type: inline-size;
+}
+.leaderboard-player > span:last-child {
+  min-width: 5.5em;
+}
+@container (max-width: 20em) {
+  .leaderboard-table {
+    font-size: 0.82em;
+  }
+  .leaderboard-table th {
+    font-size: 0.58rem;
+  }
+  .leaderboard-table th,
+  .leaderboard-table td {
+    padding-inline: 2px;
+  }
+  .leaderboard-player > .bear-icon {
+    display: none;
+  }
+  .leaderboard-player > span:last-child {
+    min-width: 3em;
+  }
+  .leaderboard-streak .streak-icon {
+    width: 14px;
+    height: 14px;
+  }
+}
+.leaderboard:focus {
+  outline: none;
+}
+.leaderboard-table .th-short {
+  display: none;
+}
+@container (max-width: 20em) {
+  .leaderboard-table .th-short {
+    display: inline;
+  }
+  .leaderboard-table .th-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
