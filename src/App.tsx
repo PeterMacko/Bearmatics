@@ -38,7 +38,7 @@ import {
   type WriteQuestion,
 } from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
-import { AccountButton } from './account/AccountViews';
+import { AccountButton } from './AccountButton';
 import AccountScreens from './account/AccountScreens';
 import { useAccount, useAccountLoad } from './account/useAccount';
 import StreakChip from './progress/StreakChip';
