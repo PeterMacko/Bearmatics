@@ -57,6 +57,8 @@ export const copy = {
     start: 'Let’s count',
     trail: 'Your counting trail',
     back: 'Choose level',
+    /** SCRUM-172: the tapped bear's speech bubble. */
+    bearTap: 'Grrr!',
     missing: 'Missing number',
     positions: ['first number', 'second number', 'result'],
     operators: { '+': 'plus', '-': 'minus', '*': 'times', '/': 'divided by' },
@@ -377,6 +379,7 @@ export const copy = {
     start: 'Začať počítať',
     trail: 'Tvoja číselná cesta',
     back: 'Vybrať úroveň',
+    bearTap: 'Brum brum!',
     missing: 'Chýbajúce číslo',
     positions: ['prvé číslo', 'druhé číslo', 'výsledok'],
     operators: { '+': 'plus', '-': 'mínus', '*': 'krát', '/': 'delené' },

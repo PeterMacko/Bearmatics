@@ -579,6 +579,73 @@ progress::-webkit-progress-value {
     text-align: left;
   }
 }
+/* SCRUM-172: tapping the bear (src/useBearTap.ts). A secret, so no pointer cursor or tap flash. */
+.bear {
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.bear-hop {
+  transform-origin: 130px 250px;
+}
+.bear[data-tap-hop] .bear-hop {
+  animation: bear-tap-hop 1s ease-out 1;
+}
+@keyframes bear-tap-hop {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  30% {
+    transform: translateY(-8px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+}
+/* Speech bubble beside the head, over the content (out of flow, so nothing moves). */
+.bear-bubble {
+  position: absolute;
+  z-index: 3;
+  top: 0;
+  left: 68%;
+  padding: 0.25em 0.7em;
+  border: 2px solid var(--ink);
+  border-radius: 1em;
+  background: var(--paper);
+  color: var(--ink);
+  font-size: 0.95rem;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+  pointer-events: none;
+  animation: bear-bubble-pop 0.18s ease-out 1;
+}
+.bear-bubble::after {
+  content: '';
+  position: absolute;
+  left: 0.6em;
+  bottom: -7px;
+  width: 10px;
+  height: 10px;
+  border: solid var(--ink);
+  border-width: 0 2px 2px 0;
+  background: var(--paper);
+  transform: rotate(45deg);
+}
+@keyframes bear-bubble-pop {
+  from {
+    transform: scale(0.6);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bear-hop,
+  .bear-bubble {
+    animation: none !important;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   .bear-character,
   .bear-arm-right {

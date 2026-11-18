@@ -1,4 +1,4 @@
-export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop';
+export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl';
 
 /** Original procedural tones. Context activation is only requested by user gestures. */
 export class FeedbackAudio {
@@ -29,6 +29,7 @@ export class FeedbackAudio {
     const context = this.context;
     if (!this.enabled || !context || context.state !== 'running') return false;
     try {
+      if (outcome === 'growl') return this.growl(context);
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
@@ -103,6 +104,44 @@ export class FeedbackAudio {
       this.stop();
       return false;
     }
+  }
+
+  /**
+   * SCRUM-172: the bear's low friendly growl (~0.5 s) when it is tapped. Two voices an octave
+   * apart glide down a little while the volume pulses quickly (the rumble). It does not cut other
+   * sounds (the bear plays one growl at a time); peak level 0.36 in total.
+   */
+  private growl(context: AudioContext): boolean {
+    const anchor = context.currentTime;
+    const end = anchor + 0.52;
+    for (const [type, from, to, level] of [
+      ['sawtooth', 130, 98, 0.16],
+      ['triangle', 260, 196, 0.2],
+    ] as const) {
+      const oscillator = context.createOscillator();
+      const gain = context.createGain();
+      const note = { oscillator, gain };
+      this.active.add(note);
+      oscillator.type = type;
+      oscillator.frequency.setValueAtTime(from, anchor);
+      oscillator.frequency.linearRampToValueAtTime(to, end);
+      gain.gain.setValueAtTime(0, anchor);
+      gain.gain.linearRampToValueAtTime(level, anchor + 0.04);
+      // Rumble: 13 quick dips between full and 55 %, then a soft fade.
+      for (let i = 1; i <= 13; i++)
+        gain.gain.linearRampToValueAtTime(level * (i % 2 ? 0.55 : 1), anchor + 0.04 + i * 0.03);
+      gain.gain.linearRampToValueAtTime(0, end);
+      oscillator.connect(gain);
+      gain.connect(context.destination);
+      oscillator.onended = () => {
+        this.active.delete(note);
+        oscillator.disconnect();
+        gain.disconnect();
+      };
+      oscillator.start(anchor);
+      oscillator.stop(end + 0.01);
+    }
+    return true;
   }
 
   private stop(): void {

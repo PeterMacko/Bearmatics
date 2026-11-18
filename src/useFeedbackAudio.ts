@@ -93,6 +93,20 @@ export function useFeedbackAudio(
   const playPop = () => {
     if (desiredSound.current && readySound.current) audio.play('pop');
   };
+  /**
+   * SCRUM-172: the bear's growl when it is tapped. Follows Mute; the tap is a user gesture, so
+   * it may also allow sound that no Start has allowed yet (menus).
+   */
+  const playGrowl = () => {
+    if (!desiredSound.current) return;
+    if (readySound.current) {
+      audio.play('growl');
+      return;
+    }
+    void activateSound().then(() => {
+      if (desiredSound.current && readySound.current) audio.play('growl');
+    });
+  };
   /** Call when a new session starts so its reactions and fanfare can play. */
   const resetForNewSession = () => {
     completionConsumed.current = false;
@@ -108,5 +122,6 @@ export function useFeedbackAudio(
     resetForNewSession,
     playBadge,
     playPop,
+    playGrowl,
   };
 }
