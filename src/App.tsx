@@ -45,9 +45,9 @@ import {
   ProfileView,
   SignInView,
   SignUpView,
-  type AccountScreen,
 } from './account/AccountViews';
-import { googleAvailable, loadAccount, type Account } from './account/api';
+import type { Account } from './account/api';
+import { useAccount, useAccountLoad } from './account/useAccount';
 import {
   finishLesson,
   loadProgress,
@@ -118,26 +118,27 @@ export default function App() {
   const words = useWordPlayer();
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null = session ?? englishSession ?? writeSession;
+  // Set on every screen change: the new screen's heading takes focus (effect below).
+  const focusMenuHeading = useRef(false);
   // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
-  const [account, setAccount] = useState<Account | null>(null);
-  // False until the first /api/me answer: a lesson started before it waits for the answer.
-  const [accountKnown, setAccountKnown] = useState(false);
-  const [accountScreen, setAccountScreen] = useState<AccountScreen | null>(null);
-  const [privacyFrom, setPrivacyFrom] = useState<AccountScreen | null>(null);
-  const [accountNotice, setAccountNotice] = useState('');
-  const [googleReady, setGoogleReady] = useState(false);
+  const accountState = useAccount(() => {
+    focusMenuHeading.current = true;
+  });
+  const {
+    account,
+    setAccount,
+    accountKnown,
+    accountScreen,
+    privacyFrom,
+    accountNotice,
+    googleReady,
+    openAccount,
+  } = accountState;
   const menuRef = useMenuLayout(!active && !accountScreen, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
-  const focusMenuHeading = useRef(false);
   const navigate = (next: Course | null) => {
     focusMenuHeading.current = true;
     setCourse(next);
-  };
-  const openAccount = (next: AccountScreen | null, notice = '') => {
-    focusMenuHeading.current = true;
-    if (next === 'privacy') setPrivacyFrom(accountScreen);
-    setAccountNotice(notice);
-    setAccountScreen(next);
   };
   const practising = !!active;
   // After navigation (not on first load): the new screen starts at the top, so the bar is in
@@ -148,32 +149,7 @@ export default function App() {
     window.scrollTo(0, 0);
     menuHeadingRef.current?.focus({ preventScroll: true });
   }, [course, accountScreen, practising]);
-  useEffect(() => {
-    let live = true;
-    loadAccount()
-      .then(
-        (found) => live && setAccount(found),
-        () => {},
-      )
-      .finally(() => live && setAccountKnown(true));
-    googleAvailable().then(
-      (ready) => live && setGoogleReady(ready),
-      () => {},
-    );
-    // Result of a Google sign-in round trip: /?account=<result>. Remove it from the address.
-    const result = new URLSearchParams(window.location.search).get('account');
-    if (result) {
-      window.history.replaceState(null, '', window.location.pathname);
-      if (result === 'google-new') setAccountScreen('google-new');
-      else if (result !== 'signed-in') {
-        setAccountScreen('signin');
-        setAccountNotice(result);
-      }
-    }
-    return () => {
-      live = false;
-    };
-  }, []);
+  useAccountLoad(accountState);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
   const touch = useTouchCapability();
