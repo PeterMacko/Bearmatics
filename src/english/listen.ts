@@ -1,14 +1,15 @@
 import type { AnswerResult } from '../math/engine';
-import { WORDS, type EnglishLevel } from './words';
+import { SESSION_SIZES } from '../session';
+import { WORDS, type ListenLevel } from './words';
 
 /** One listen-and-choose question: the spoken target and four word buttons in display order. */
 export type WordQuestion = Readonly<{
-  level: EnglishLevel;
+  level: ListenLevel;
   target: string;
   options: readonly [string, string, string, string];
 }>;
 
-export const SESSION_SIZES = [5, 10, 20] as const;
+export { SESSION_SIZES };
 
 function shuffled<T>(items: readonly T[], rng: () => number): T[] {
   const out = [...items];
@@ -24,7 +25,7 @@ function shuffled<T>(items: readonly T[], rng: () => number): T[] {
  * for the level, in random order.
  */
 export function generateWordSession(
-  level: EnglishLevel,
+  level: ListenLevel,
   size: number,
   rng: () => number = Math.random,
 ): readonly WordQuestion[] {
