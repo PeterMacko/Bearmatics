@@ -1,43 +1,64 @@
 import type { RefObject } from 'react';
-import type { Level } from './math/engine';
-import type { CourseLevel } from './courses';
 import type { Copy } from './i18n';
 import MenuHeading from './MenuHeading';
+import { SESSION_SIZES } from './session';
 
-const SIZES = [5, 10, 20];
+/** One level in a menu: its value, the number the child sees, its name and optional detail. */
+export type MenuLevel<L extends number> = {
+  value: L;
+  shown: number;
+  title: string;
+  detail?: string;
+};
 
-/** Level menu of a maths course: level choice, exercise count and the start button. */
-export default function LevelMenu({
+/**
+ * Level menu of a course: level choice, exercise count and the start button.
+ * Radio names and the start button's `type` differ per course (kept for tests and the DOM).
+ */
+export default function LevelMenu<L extends number>({
   t,
-  levels,
+  className = 'selection',
   heading,
+  levels,
   level,
   size,
+  levelName = 'level',
+  sizeName = 'size',
+  startLabel,
+  startType,
   onLevelChange,
   onSizeChange,
   onStart,
   headingRef,
 }: {
   t: Copy;
-  levels: CourseLevel[];
+  className?: string;
   heading: { eyebrow: string; title: string; intro: string };
-  level: Level;
+  levels: readonly MenuLevel<L>[];
+  level: L;
   size: number;
-  onLevelChange: (level: Level) => void;
+  /** `name` of the level radios. */
+  levelName?: string;
+  /** `name` of the exercise-count radios. */
+  sizeName?: string;
+  startLabel: string;
+  /** The English start button has type="button"; the maths one has no type. */
+  startType?: 'button';
+  onLevelChange: (level: L) => void;
   onSizeChange: (size: number) => void;
   onStart: () => void;
   headingRef: RefObject<HTMLHeadingElement | null>;
 }) {
   return (
-    <section className="selection">
+    <section className={className}>
       <MenuHeading {...heading} headingRef={headingRef} />
       <fieldset className="level-options">
         <legend className="sr-only">{t.level}</legend>
-        {levels.map(({ value, shown }) => (
+        {levels.map(({ value, shown, title, detail }) => (
           <label className={`level-option level-${shown}`} key={value}>
             <input
               type="radio"
-              name="level"
+              name={levelName}
               value={value}
               checked={level === value}
               onChange={() => onLevelChange(value)}
@@ -47,9 +68,9 @@ export default function LevelMenu({
             </span>
             <span>
               <span className="level-title">
-                {t.level} {shown} · {t.levels[value]}
+                {t.level} {shown} · {title}
               </span>
-              <span className="level-detail">{t.details[value]}</span>
+              {detail !== undefined && <span className="level-detail">{detail}</span>}
             </span>
             <span className="selection-dot" aria-hidden="true" />
           </label>
@@ -58,11 +79,11 @@ export default function LevelMenu({
       <div className="menu-controls">
         <fieldset className="session-options">
           <legend>{t.count}</legend>
-          {SIZES.map((n) => (
+          {SESSION_SIZES.map((n) => (
             <label key={n}>
               <input
                 type="radio"
-                name="size"
+                name={sizeName}
                 checked={size === n}
                 onChange={() => onSizeChange(n)}
               />
@@ -72,8 +93,8 @@ export default function LevelMenu({
             </label>
           ))}
         </fieldset>
-        <button className="primary start-button" onClick={onStart}>
-          {t.start}
+        <button type={startType} className="primary start-button" onClick={onStart}>
+          {startLabel}
           <span aria-hidden="true"> →</span>
         </button>
       </div>

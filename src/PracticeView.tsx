@@ -6,6 +6,9 @@ import TakeAwayBasket from './TakeAwayBasket';
 import { OPERATOR_SYMBOLS } from './operatorSymbols';
 import type { Feedback } from './session';
 import { levelTraits } from './levelTraits';
+import AnswerActions from './lesson/AnswerActions';
+import FeedbackLine from './lesson/FeedbackLine';
+import PracticeHeader from './lesson/PracticeHeader';
 
 const PAD_KEYS = ['7', '8', '9', '0', '4', '5', '6', 'clear', '1', '2', '3', 'backspace'];
 
@@ -69,16 +72,7 @@ export default function PracticeView({
   const equationDescription = `${current.blank === 0 ? t.blank : current.values[0]} ${t.operators[current.operation]} ${current.blank === 1 ? t.blank : current.values[1]} ${t.equals} ${current.blank === 2 ? t.blank : current.values[2]}`;
   return (
     <section className={traits.pictureLayout ? 'practice practice--pictures' : 'practice'}>
-      <div className="practice-header">
-        <div className="practice-top">
-          <span className="level-pill">
-            {t.level} {level}
-          </span>
-        </div>
-        <p className="exercise-position" aria-live="polite">
-          {position}
-        </p>
-      </div>
+      <PracticeHeader t={t} level={level} position={position} />
       <h2>{reviewing ? t.reviewTitle : t.ready}</h2>
       <form
         onSubmit={onSubmit}
@@ -178,15 +172,7 @@ export default function PracticeView({
             onMove={onPop}
           />
         )}
-        <p
-          id="answer-feedback"
-          className={`feedback feedback-${feedback}`}
-          role="status"
-          aria-live="polite"
-          aria-atomic="true"
-        >
-          {feedback === 'ready' ? '' : t[feedback]}
-        </p>
+        <FeedbackLine kind={feedback}>{feedback === 'ready' ? '' : t[feedback]}</FeedbackLine>
         <span id="answer-instructions" className="sr-only">
           {t.padInstructions}
         </span>
@@ -216,30 +202,14 @@ export default function PracticeView({
             ))}
           </div>
         )}
-        <div className="answer-actions">
-          {solved ? (
-            <button
-              ref={nextRef}
-              type="button"
-              className="primary answer-button"
-              data-state="correct"
-              onClick={(event) => {
-                event.preventDefault();
-                onNext();
-              }}
-            >
-              {nextLabel}
-              <span aria-hidden="true"> →</span>
-            </button>
-          ) : (
-            <button
-              type="submit"
-              className="primary answer-button"
-              data-state={feedback === 'incorrect' ? 'incorrect' : 'neutral'}
-            >
-              {t.check}
-            </button>
-          )}
+        <AnswerActions
+          t={t}
+          solved={solved}
+          feedback={feedback}
+          nextLabel={nextLabel}
+          nextRef={nextRef}
+          onNext={onNext}
+        >
           {traits.hint && (
             <button
               ref={hintRef}
@@ -256,7 +226,7 @@ export default function PracticeView({
               <span aria-hidden="true">i</span>
             </button>
           )}
-        </div>
+        </AnswerActions>
         {!touch && (
           <div className="practice-tools">
             <button

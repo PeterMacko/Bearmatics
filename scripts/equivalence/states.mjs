@@ -307,6 +307,73 @@ export const STATES = {
       await page.locator('.write-input').waitFor();
     },
   },
+  'english1-wrong': {
+    async steps(page, lang) {
+      await home(page, lang);
+      await startLesson(page, 'english', 0);
+      const target = await page.evaluate(() => window.__played.at(-1));
+      await page
+        .locator('.word-option')
+        .filter({ hasNotText: new RegExp(`^${target}$`) })
+        .first()
+        .click();
+      await page.locator('.answer-button').click();
+      await page.locator('.feedback-incorrect').waitFor();
+    },
+  },
+  'english1-solved': {
+    async steps(page, lang) {
+      await home(page, lang);
+      await startLesson(page, 'english', 0);
+      const target = await page.evaluate(() => window.__played.at(-1));
+      await page
+        .locator('.word-option')
+        .filter({ hasText: new RegExp(`^${target}$`) })
+        .click();
+      await page.locator('.answer-button').click();
+      await page.locator('.feedback-correct').waitFor();
+    },
+  },
+  'english1-playfail': {
+    async steps(page, lang) {
+      await home(page, lang);
+      // Word playback is blocked: the feedback line becomes the play-error alert.
+      await page.evaluate(() => {
+        HTMLMediaElement.prototype.play = () => Promise.reject(new Error('blocked'));
+      });
+      await startLesson(page, 'english', 0);
+      await page.locator('.play-error').waitFor();
+    },
+  },
+  'english3-wrong': {
+    async steps(page, lang) {
+      await home(page, lang);
+      await startLesson(page, 'english', 2);
+      await page.locator('.write-input').fill('zzz');
+      await page.locator('.answer-button').click();
+      await page.locator('.write-wrong').waitFor();
+    },
+  },
+  'english3-solved': {
+    async steps(page, lang) {
+      await home(page, lang);
+      await startLesson(page, 'english', 2);
+      const target = await page.evaluate(() => window.__played.at(-1));
+      await page.locator('.write-input').fill(target);
+      await page.locator('.answer-button').click();
+      await page.locator('.answer-button[data-state="correct"]').waitFor();
+    },
+  },
+  'english3-playfail': {
+    async steps(page, lang) {
+      await home(page, lang);
+      await page.evaluate(() => {
+        HTMLMediaElement.prototype.play = () => Promise.reject(new Error('blocked'));
+      });
+      await startLesson(page, 'english', 2);
+      await page.locator('.play-error').waitFor();
+    },
+  },
   'small1-summary': {
     async steps(page, lang) {
       await home(page, lang);

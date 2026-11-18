@@ -3,11 +3,12 @@
  * Each target has three alternatives per level: level 1 easy, level 2 similar-sounding.
  * Words are shown in lower case; names are capitalised. Audio lives in public/audio/words/<file>.mp3.
  */
-export type EnglishLevel = 1 | 2;
+/** Listen-and-choose level (English course levels 1-2). */
+export type ListenLevel = 1 | 2;
 
 export type WordEntry = {
   word: string;
-  alternatives: Record<EnglishLevel, readonly [string, string, string]>;
+  alternatives: Record<ListenLevel, readonly [string, string, string]>;
 };
 
 export const WORDS: readonly WordEntry[] = [

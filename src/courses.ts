@@ -1,3 +1,5 @@
+import type { Copy } from './i18n';
+import type { MenuLevel } from './LevelMenu';
 import type { Level } from './math/engine';
 
 /** One level in a maths course menu: the engine level and the number the child sees. */
@@ -23,4 +25,14 @@ export const MATH_LEVELS: CourseLevel[] = ([1, 2, 3, 4, 5, 6, 7] as const).map((
 /** The level number shown to the child for an engine level in a course. */
 export function shownLevel(levels: CourseLevel[], level: Level) {
   return levels.find((item) => item.value === level)?.shown ?? level;
+}
+
+/** A maths course's levels for the level menu: name and detail line from the copy. */
+export function menuLevels(t: Copy, levels: CourseLevel[]): MenuLevel<Level>[] {
+  return levels.map(({ value, shown }) => ({
+    value,
+    shown,
+    title: t.levels[value],
+    detail: t.details[value],
+  }));
 }

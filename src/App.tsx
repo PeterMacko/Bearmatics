@@ -23,7 +23,7 @@ import SettingsDialog from './SettingsDialog';
 import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
 import { useMenuLayout } from './useMenuLayout';
-import { MATH_LEVELS, SMALL_MATH_LEVELS, shownLevel } from './courses';
+import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
 import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
 import { useWordPlayer } from './english/wordPlayer';
@@ -852,8 +852,9 @@ export default function App() {
           course === 'small' ? (
             <LevelMenu
               t={t}
-              levels={SMALL_MATH_LEVELS}
+              levels={menuLevels(t, SMALL_MATH_LEVELS)}
               heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
+              startLabel={t.start}
               headingRef={menuHeadingRef}
               level={smallLevel}
               size={smallSize}
@@ -864,8 +865,9 @@ export default function App() {
           ) : course === 'math' ? (
             <LevelMenu
               t={t}
-              levels={MATH_LEVELS}
+              levels={menuLevels(t, MATH_LEVELS)}
               heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
+              startLabel={t.start}
               headingRef={menuHeadingRef}
               level={level}
               size={size}
