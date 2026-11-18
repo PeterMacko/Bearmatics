@@ -1212,7 +1212,7 @@ progress::-moz-progress-bar {
 }
 
 /* Edge progress is the first app element, not a layout/header row. */
-.app-shell .viewport-progress {
+.viewport-progress {
   position: fixed;
   z-index: 2;
   inset: 0 0 auto;
@@ -2098,7 +2098,9 @@ progress::-moz-progress-bar {
 }
 
 /* On-screen keyboard open: speaker, word, input and Check fill the visible part of the screen
-   (Android shrinks the page; iPhone/iPad cover it, so we follow the visual viewport). */
+   (Android shrinks the page; iPhone/iPad cover it, so we follow the visual viewport).
+   The .app-shell prefix on these rules stays: they must beat the later short-landscape
+   .compact-practice .write-practice rules of the same element. */
 .app-shell .write-practice[data-keyboard] {
   position: fixed;
   /* Above the page, below dialogs (.modal-backdrop is 10). */
@@ -2572,7 +2574,7 @@ progress::-moz-progress-bar {
 /* ---------- SCRUM-133: one app bar on every screen ----------
    Back | badge + points | streak | profile | settings. Top bar everywhere; short landscape
    phones (the compact practice rule) get a narrow bar on the left, same order top to bottom. */
-.app-shell .app-bar {
+.app-bar {
   position: relative;
   display: flex;
   flex-wrap: wrap;
@@ -2583,8 +2585,8 @@ progress::-moz-progress-bar {
   /* Never renders (the bar is flex); kept from the removed header grid so computed styles match. */
   grid-template-columns: 44px minmax(0, 1fr) 44px;
 }
-/* Compact lessons: a lower row stacked above the lesson. Specificity (0,2,0) on purpose, so the
-   short-landscape left column (:root .app-shell .app-bar) still wins there. */
+/* Compact lessons: a lower row stacked above the lesson. Same specificity (0,2,0) as the
+   short-landscape left column (.app-shell .app-bar, later in the file), so that one still wins. */
 .compact-practice .app-bar {
   z-index: 1;
   min-height: 52px;
@@ -2605,24 +2607,24 @@ progress::-moz-progress-bar {
   grid-row: 1;
 }
 /* Every bar button is a 48px target. */
-.app-shell .app-bar .corner-button {
+.app-bar .corner-button {
   width: var(--target);
   height: var(--target);
   min-width: var(--target);
   min-height: var(--target);
 }
-.app-shell .app-bar .account-button {
+.app-bar .account-button {
   min-width: var(--target);
   min-height: var(--target);
 }
 @media (max-width: 620px), (max-height: 500px) {
-  .app-shell .app-bar .account-button {
+  .app-bar .account-button {
     width: var(--target);
   }
 }
 /* Menus: the bar floats over the top corners (same centre lines as the SCRUM-71 arrow and gear),
    so the heading keeps its SCRUM-36 height. Only the buttons take clicks. */
-.app-shell.menu-shell .app-bar {
+.menu-shell .app-bar {
   position: absolute;
   z-index: 1;
   top: 6px;
@@ -2633,11 +2635,11 @@ progress::-moz-progress-bar {
   gap: 6px;
   pointer-events: none;
 }
-.app-shell .app-bar > * {
+.app-bar > * {
   pointer-events: auto;
 }
 @media (min-width: 621px) {
-  .app-shell.menu-shell .app-bar {
+  .menu-shell .app-bar {
     position: fixed;
     /* 48px buttons whose outer edges keep 8px from the screen edge, outside the menu panel. */
     top: calc(max(8px, env(safe-area-inset-top)) - 2px);
@@ -2646,10 +2648,10 @@ progress::-moz-progress-bar {
   }
 }
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
-  :root .app-shell {
+  .app-shell {
     padding-left: calc(max(4px, env(safe-area-inset-left)) + 56px);
   }
-  :root .app-shell .app-bar {
+  .app-shell .app-bar {
     position: fixed;
     z-index: 3;
     inset: 0 auto 0 max(4px, env(safe-area-inset-left));
@@ -2661,7 +2663,7 @@ progress::-moz-progress-bar {
     padding: max(6px, env(safe-area-inset-top)) 0 max(6px, env(safe-area-inset-bottom));
     border: 0;
   }
-  :root .app-bar-end {
+  .app-bar-end {
     flex-direction: column;
     margin: auto 0 0;
   }
@@ -2682,7 +2684,7 @@ progress::-moz-progress-bar {
   .menu-shell .workspace {
     padding-top: max(58px, calc(env(safe-area-inset-top) + 52px));
   }
-  .app-shell.menu-shell .app-bar {
+  .menu-shell .app-bar {
     top: max(6px, env(safe-area-inset-top));
   }
   .menu-shell:has(.app-bar .back-button) .workspace .companion {
@@ -2701,6 +2703,7 @@ progress::-moz-progress-bar {
 .app-shell:not(.menu-shell) .app-bar {
   padding-block: 6px;
 }
+/* .app-shell prefix kept: it must beat .app-shell:not(.menu-shell) .app-bar (0,3,0) above. */
 .app-shell.compact-practice .app-bar {
   padding-block: 2px;
 }
@@ -2717,13 +2720,13 @@ progress::-moz-progress-bar {
 /* Short landscape phones, during a lesson: the bear column stays under Back (inside the bar's
    column) as before, so the exercise keeps its width and gains the old top row instead. */
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
-  :root .app-shell.compact-practice {
+  .compact-practice {
     padding-left: max(8px, env(safe-area-inset-left));
   }
-  .app-shell.compact-practice .companion {
+  .compact-practice .companion {
     top: 56px;
   }
-  .app-shell.compact-practice .practice-header {
+  .compact-practice .practice-header {
     top: 152px;
   }
 }
@@ -2866,20 +2869,21 @@ progress::-moz-progress-bar {
 }
 /* Short landscape phones: the bar is a narrow column on the left; points + bar under the badge. */
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
+  /* .app-shell prefix kept: it must beat .app-bar .badge-button (max-width: 360px, later). */
   .app-shell .app-bar .badge-button {
     flex-direction: column;
     gap: 2px;
     padding: 2px 0;
     width: var(--target);
   }
-  .app-shell .app-bar .bar-progress {
+  .app-bar .bar-progress {
     flex-direction: column;
     gap: 2px;
   }
-  .app-shell .app-bar .bar-progress .progress-track {
+  .app-bar .bar-progress .progress-track {
     width: 40px;
   }
-  .app-shell .app-bar .badge-medal svg {
+  .app-bar .badge-medal svg {
     width: 34px;
     height: 34px;
   }
@@ -3086,7 +3090,7 @@ progress::-moz-progress-bar {
 }
 /* Short landscape phones: left column, icon over the number. */
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
-  .app-shell .app-bar .streak-chip {
+  .app-bar .streak-chip {
     flex-direction: column;
     min-height: 0;
     width: var(--target);
@@ -3149,29 +3153,31 @@ progress::-moz-progress-bar {
 }
 /* Smallest phones: badge, streak, profile and settings still fit next to Back in one row. */
 @media (max-width: 420px) {
-  .app-shell .app-bar .app-bar-end {
+  .app-bar .app-bar-end {
     gap: 2px;
   }
-  .app-shell .app-bar .bar-progress .progress-track {
+  .app-bar .bar-progress .progress-track {
     width: 20px;
   }
-  .app-shell .app-bar .streak-chip {
+  .app-bar .streak-chip {
     padding-inline: 0;
   }
-  .app-shell .app-bar .badge-medal svg {
+  .app-bar .badge-medal svg {
     width: 32px;
     height: 32px;
   }
+  /* .app-shell prefix kept: the short-landscape .app-shell .app-bar .badge-button gap above has
+     the same specificity and must keep losing here. */
   .app-shell .app-bar .badge-button,
   .app-shell .app-bar .bar-progress {
     gap: 2px;
   }
-  .app-shell .app-bar .bar-progress-points,
-  .app-shell .app-bar .streak-chip {
+  .app-bar .bar-progress-points,
+  .app-bar .streak-chip {
     font-size: 0.8rem;
     letter-spacing: -0.02em;
   }
-  .app-shell .app-bar .streak-chip .streak-icon {
+  .app-bar .streak-chip .streak-icon {
     width: 20px;
     height: 20px;
   }
@@ -3292,7 +3298,7 @@ progress::-moz-progress-bar {
 /* Smallest landscape phones (568x320) during a running lesson: the left column has no room for
    the streak under the exercise header; it is back on the summary and the menus. */
 @media (max-height: 420px) and (orientation: landscape) {
-  .app-shell.compact-practice .app-bar .streak-chip {
+  .compact-practice .app-bar .streak-chip {
     display: none;
   }
 }
@@ -3335,8 +3341,8 @@ progress::-moz-progress-bar {
   transform: none;
 }
 @media (max-height: 500px) and (max-width: 950px) and (orientation: landscape) {
-  .app-shell .app-bar .badge-medal-button,
-  .app-shell .app-bar .badge-button .bar-progress {
+  .app-bar .badge-medal-button,
+  .app-bar .badge-button .bar-progress {
     width: var(--target);
     min-height: 40px;
   }
@@ -3421,7 +3427,7 @@ progress::-moz-progress-bar {
 }
 /* Smallest landscape phones during a lesson: only the badge stays in the left column. */
 @media (max-height: 420px) and (orientation: landscape) {
-  .app-shell.compact-practice .app-bar .badge-button .bar-progress {
+  .compact-practice .app-bar .badge-button .bar-progress {
     display: none;
   }
 }
@@ -3442,7 +3448,7 @@ progress::-moz-progress-bar {
 /* Small phones (320 wide): the menu bar uses the page edges too, so Back, medal, points + bar,
    streak, profile and settings stay one row (QA154-03). */
 @media (max-width: 360px) and (min-height: 501px) {
-  .app-shell.menu-shell .app-bar {
+  .menu-shell .app-bar {
     inset-inline: 8px;
   }
 }
@@ -3717,7 +3723,7 @@ progress::-moz-progress-bar {
    settings (<=420 px high) or only profile and settings (568x320); points + bar, the streak and
    the medal come back on the summary and the menus. */
 @media (max-height: 340px) and (orientation: landscape) {
-  .app-shell.compact-practice .app-bar .badge-button {
+  .compact-practice .app-bar .badge-button {
     display: none;
   }
 }
