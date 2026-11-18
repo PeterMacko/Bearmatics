@@ -38,15 +38,8 @@ import {
   type WriteQuestion,
 } from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
-import {
-  AccountButton,
-  GoogleNewView,
-  PrivacyView,
-  ProfileView,
-  SignInView,
-  SignUpView,
-} from './account/AccountViews';
-import type { Account } from './account/api';
+import { AccountButton } from './account/AccountViews';
+import AccountScreens from './account/AccountScreens';
 import { useAccount, useAccountLoad } from './account/useAccount';
 import StreakChip from './progress/StreakChip';
 import StreakOffer from './progress/StreakOffer';
@@ -658,52 +651,16 @@ export default function App() {
             lessonKind.practice()
           )
         ) : accountScreen ? (
-          (() => {
-            const common = {
-              t: t.account,
-              headingRef: menuHeadingRef,
-              onPrivacy: () => openAccount('privacy'),
-            };
-            const signedIn = (found: Account) => {
-              setAccount(found);
-              openAccount(null);
-            };
-            // Only known results become text; the address bar can never inject a message.
-            const notices: Record<string, string> = {
-              'google-unavailable': t.account.errors.googleUnavailable,
-              'google-failed': t.account.errors.googleFailed,
-              'google-cancelled': t.account.errors.googleFailed,
-              'signed-out': t.account.signedOut,
-              deleted: t.account.deleted,
-            };
-            const notice = notices[accountNotice] ?? '';
-            if (accountScreen === 'privacy')
-              return <PrivacyView t={t.account} headingRef={menuHeadingRef} />;
-            if (accountScreen === 'signup') return <SignUpView {...common} onSignedIn={signedIn} />;
-            if (accountScreen === 'google-new')
-              return <GoogleNewView {...common} onSignedIn={signedIn} />;
-            if (accountScreen === 'profile' && account)
-              return (
-                <ProfileView
-                  {...common}
-                  account={account}
-                  onAccount={setAccount}
-                  onSignedOut={(reason) => {
-                    setAccount(null);
-                    openAccount('signin', reason);
-                  }}
-                />
-              );
-            return (
-              <SignInView
-                {...common}
-                googleReady={googleReady}
-                notice={notice}
-                onCreate={() => openAccount('signup')}
-                onSignedIn={signedIn}
-              />
-            );
-          })()
+          <AccountScreens
+            t={t.account}
+            screen={accountScreen}
+            account={account}
+            notice={accountNotice}
+            googleReady={googleReady}
+            headingRef={menuHeadingRef}
+            onAccount={setAccount}
+            onOpen={openAccount}
+          />
         ) : course === 'small' ? (
           <LevelMenu
             t={t}
