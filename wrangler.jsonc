@@ -3,12 +3,13 @@
   "name": "bearmatics",
   "main": "worker/index.ts",
   "compatibility_date": "2026-11-09",
-  // Static app as before; only /api reaches the server script (SCRUM-96).
+  // Static app via the ASSETS binding. The server script runs first for every request so plain
+  // http is redirected to https (SCRUM-198); /api is answered by the script (SCRUM-96).
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application",
     "binding": "ASSETS",
-    "run_worker_first": ["/api", "/api/*"]
+    "run_worker_first": true
   },
   // Live database. Previews use their own database (previews block below), local dev a local file.
   "d1_databases": [

@@ -44,8 +44,8 @@ describe('Cloudflare configuration', () => {
     expect(JSON.stringify(live)).not.toMatch(/GOOGLE_CLIENT_SECRET"?\s*[:=]/);
   });
 
-  it('runs the server script only for /api', () => {
-    expect(live.assets?.run_worker_first).toEqual(['/api', '/api/*']);
+  it('runs the server script first for every request, so http can go to https', () => {
+    expect(live.assets?.run_worker_first).toBe(true);
     expect(live.assets?.not_found_handling).toBe('single-page-application');
   });
 });
