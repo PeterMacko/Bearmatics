@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react';
 import { flushSync } from 'react-dom';
 import { generateSession, type Level } from './math/engine';
@@ -22,6 +23,7 @@ import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
 import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
+import { nextLabel, positionText } from './lesson/lessonText';
 import { useMenuLayout } from './useMenuLayout';
 import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
@@ -69,13 +71,25 @@ import {
   createSession,
   currentExercise,
   hasProgress,
-  nextAction,
   nextHintStage,
   openHintStage,
   progressValue,
   submitAnswer,
   type Session,
 } from './session';
+
+/** The lesson on screen, whichever kind (maths, listen, write). */
+type LessonKind = {
+  session: Session<unknown>;
+  /** What the child has typed or chosen (unsent work counts for the leave question). */
+  answer: string;
+  /** Name of the top progress bar. */
+  trail: string;
+  eyebrow?: string;
+  finishedLabel?: string;
+  onAgain: () => void;
+  practice: () => ReactNode;
+};
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('en');
@@ -403,6 +417,15 @@ export default function App() {
     flushSync(() => setInputMode(padMode ? 'native' : 'pad'));
     inputRef.current?.focus();
   };
+  // Every lesson's typed or chosen answer; each start sets its own again anyway.
+  const resetAnswers = () => {
+    setAnswer('');
+    setChoice('');
+    setWritten('');
+    setWriteNote(null);
+    setWrongAnswer(null);
+  };
+  // Both ways out of a lesson (Back/summary and the leave dialog) end here.
   const endPractice = () => {
     lesson.current = null;
     closeOffer();
@@ -413,17 +436,14 @@ export default function App() {
     setSession(null);
     setEnglishSession(null);
     setWriteSession(null);
-    setWritten('');
-    setWriteNote(null);
-    setWrongAnswer(null);
+    resetAnswers();
   };
   // What to open after leaving a lesson (the profile button asks like Back, then opens it).
   const afterLeave = useRef<(() => void) | null>(null);
   const requestLeave = (then: (() => void) | null = null) => {
     if (settingsOpen || hintOpen || leaveOpen) return;
     afterLeave.current = then;
-    if (active && hasProgress(active, session ? answer : writeSession ? written : choice))
-      setLeaveOpen(true);
+    if (lessonKind && hasProgress(lessonKind.session, lessonKind.answer)) setLeaveOpen(true);
     else {
       endPractice();
       then?.();
@@ -505,25 +525,24 @@ export default function App() {
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
     beginLesson(englishSize);
+    resetForNewSession();
+    void activateSound();
+    let first: string;
     if (englishLevel === 3) {
-      resetForNewSession();
-      void activateSound();
       setWritten('');
       setWriteNote(null);
       setWrongAnswer(null);
       const created = createSession(generateWriteSession(englishSize));
       setWriteSession(created);
-      setPlaySource('speaker');
-      void words.play(created.exercises[0].target);
-      return;
+      first = created.exercises[0].target;
+    } else {
+      setChoice('');
+      const created = createSession(generateWordSession(englishLevel, englishSize));
+      setEnglishSession(created);
+      first = created.exercises[0].target;
     }
-    resetForNewSession();
-    void activateSound();
-    setChoice('');
-    const created = createSession(generateWordSession(englishLevel, englishSize));
-    setEnglishSession(created);
     setPlaySource('speaker');
-    void words.play(created.exercises[0].target);
+    void words.play(first);
   };
   const chooseWord = (word: string) => {
     if (!englishSession || englishSession.solved) return;
@@ -550,6 +569,13 @@ export default function App() {
       setWritten('');
     }
   };
+  // After Next in an English lesson: the new word plays from this tap; the summary is quiet.
+  const playFollowing = <E extends { target: string }>(following: Session<E>) => {
+    const question = currentExercise(following);
+    setPlaySource('speaker');
+    if (!following.done && question) void words.play(question.target);
+    else words.stop();
+  };
   const nextWrite = () => {
     if (!writeSession) return;
     void activateSound();
@@ -558,10 +584,7 @@ export default function App() {
     setWritten('');
     setWriteNote(null);
     setWrongAnswer(null);
-    const question = currentExercise(following);
-    setPlaySource('speaker');
-    if (!following.done && question) void words.play(question.target);
-    else words.stop();
+    playFollowing(following);
   };
   const nextWord = () => {
     if (!englishSession) return;
@@ -569,11 +592,127 @@ export default function App() {
     const following = advance(englishSession);
     setEnglishSession(following);
     setChoice('');
-    const question = currentExercise(following);
-    setPlaySource('speaker');
-    if (!following.done && question) void words.play(question.target);
-    else words.stop();
+    playFollowing(following);
   };
+
+  // The lesson on screen, whichever kind: one summary, one position text and one Next label.
+  const lessonKind: LessonKind | null = writeSession
+    ? {
+        session: writeSession,
+        answer: written,
+        trail: t.englishTrail,
+        eyebrow: t.englishTrail,
+        finishedLabel: t.writeFinished,
+        onAgain: startEnglish,
+        practice: () =>
+          writeQuestion && (
+            <EnglishWriteView
+              t={t}
+              question={writeQuestion}
+              position={positionText(t, writeSession, t.englishWord)}
+              reviewing={writeSession.reviewing}
+              solved={writeSession.solved}
+              feedback={writeSession.feedback}
+              attempts={writeSession.attempts}
+              wrongAnswer={wrongAnswer}
+              prompt={writeNote}
+              answer={written}
+              playing={!!words.playing && playSource === 'speaker'}
+              playFailed={words.failed}
+              nextLabel={nextLabel(t, writeSession, true)}
+              keyboard={keyboard}
+              speakerRef={speakerRef}
+              inputRef={writeInputRef}
+              onAnswerChange={(value) => {
+                if (writeSession.solved) return;
+                setWritten(value);
+                setWriteNote(null);
+                if (writeSession.feedback !== 'ready')
+                  setWriteSession((previous) => previous && clearFeedback(previous));
+              }}
+              onReplay={() => {
+                setPlaySource('speaker');
+                void words.play(writeQuestion.target);
+              }}
+              onRetryPlay={() => void words.retry()}
+              onCheck={checkWrite}
+              onNext={nextWrite}
+            />
+          ),
+      }
+    : englishSession
+      ? {
+          session: englishSession,
+          answer: choice,
+          trail: t.englishTrail,
+          eyebrow: t.englishTrail,
+          finishedLabel: t.englishFinished,
+          onAgain: startEnglish,
+          practice: () =>
+            englishQuestion && (
+              <EnglishPracticeView
+                t={t}
+                question={englishQuestion}
+                position={positionText(t, englishSession, t.englishWord)}
+                reviewing={englishSession.reviewing}
+                solved={englishSession.solved}
+                feedback={englishSession.feedback}
+                choice={choice}
+                playing={words.playing ? playSource : null}
+                playFailed={words.failed}
+                nextLabel={nextLabel(t, englishSession, true)}
+                speakerRef={speakerRef}
+                nextRef={nextRef}
+                onReplay={() => {
+                  setPlaySource('speaker');
+                  void words.play(englishQuestion.target);
+                }}
+                onRetryPlay={() => void words.retry()}
+                onChoose={chooseWord}
+                onCheck={checkChoice}
+                onNext={nextWord}
+              />
+            ),
+        }
+      : session
+        ? {
+            session,
+            answer,
+            trail: t.trail,
+            onAgain: start,
+            practice: () =>
+              current && (
+                <PracticeView
+                  t={t}
+                  level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
+                  current={current}
+                  pictureTheme={pictureTheme}
+                  presentation={presentation}
+                  onPop={playPop}
+                  position={positionText(t, session, t.exercise)}
+                  reviewing={session.reviewing}
+                  solved={session.solved}
+                  feedback={session.feedback}
+                  nextLabel={nextLabel(t, session)}
+                  answer={answer}
+                  padMode={padMode}
+                  touch={touch}
+                  hintOpen={hintOpen}
+                  inputRef={inputRef}
+                  nextRef={nextRef}
+                  hintRef={hintRef}
+                  onSubmit={submit}
+                  onAnswerChange={editAnswer}
+                  onAnswerKey={handleAnswerKey}
+                  onPadKey={padEdit}
+                  onNext={next}
+                  onOpenHint={openHint}
+                  onToggleInputMode={toggleInputMode}
+                />
+              ),
+          }
+        : null;
+  const modalOpen = leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen;
 
   // A lesson in progress (not its summary): the bar shows no profile, so a child cannot leave
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
@@ -624,19 +763,19 @@ export default function App() {
     <div
       className={`app-shell ${!active && !accountScreen ? 'menu-shell' : ''} ${!active && accountScreen ? 'account-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
     >
-      {active && !active.done && (
+      {lessonKind && !lessonKind.session.done && (
         <progress
           className="viewport-progress"
-          aria-label={session ? t.trail : t.englishTrail}
-          max={active.exercises.length}
-          value={progressValue(active)}
+          aria-label={lessonKind.trail}
+          max={lessonKind.session.exercises.length}
+          value={progressValue(lessonKind.session)}
         />
       )}
       <h1 className="sr-only">Bearmatics</h1>
       <AppBar
         label={t.appBar}
         back={back}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
+        inert={modalOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
         {account && points !== null && shownFrame && (
@@ -678,11 +817,7 @@ export default function App() {
           <span aria-hidden="true">⚙</span>
         </button>
       </AppBar>
-      <main
-        ref={menuRef}
-        className={`workspace ${active ? 'in-session' : ''}`}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
-      >
+      <main ref={menuRef} className={`workspace ${active ? 'in-session' : ''}`} inert={modalOpen}>
         <aside className="companion">
           <div className="bear-scene">
             <span className="scene-ring" />
@@ -695,113 +830,25 @@ export default function App() {
             <span className="scene-leaf leaf-two" />
           </div>
         </aside>
-        {writeSession ? (
-          writeSession.done ? (
+        {lessonKind ? (
+          lessonKind.session.done ? (
             <SummaryView
               t={t}
-              eyebrow={t.englishTrail}
-              finishedLabel={t.writeFinished}
-              total={writeSession.exercises.length}
-              firstTry={writeSession.firstTry}
+              eyebrow={lessonKind.eyebrow}
+              finishedLabel={lessonKind.finishedLabel}
+              total={lessonKind.session.exercises.length}
+              firstTry={lessonKind.session.firstTry}
               headingRef={summaryRef}
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}
-              onAgain={startEnglish}
+              onAgain={lessonKind.onAgain}
               onBack={endPractice}
             />
           ) : (
-            writeQuestion && (
-              <EnglishWriteView
-                t={t}
-                question={writeQuestion}
-                position={
-                  writeSession.reviewing
-                    ? `${t.review} · ${writeSession.reviewQueue.length} ${t.remaining}`
-                    : `${t.englishWord} ${writeSession.index + 1} ${t.of} ${writeSession.exercises.length}`
-                }
-                reviewing={writeSession.reviewing}
-                solved={writeSession.solved}
-                feedback={writeSession.feedback}
-                attempts={writeSession.attempts}
-                wrongAnswer={wrongAnswer}
-                prompt={writeNote}
-                answer={written}
-                playing={!!words.playing && playSource === 'speaker'}
-                playFailed={words.failed}
-                nextLabel={
-                  nextAction(writeSession) === 'next' ? t.englishNext : t[nextAction(writeSession)]
-                }
-                keyboard={keyboard}
-                speakerRef={speakerRef}
-                inputRef={writeInputRef}
-                onAnswerChange={(value) => {
-                  if (writeSession.solved) return;
-                  setWritten(value);
-                  setWriteNote(null);
-                  if (writeSession.feedback !== 'ready')
-                    setWriteSession((previous) => previous && clearFeedback(previous));
-                }}
-                onReplay={() => {
-                  setPlaySource('speaker');
-                  void words.play(writeQuestion.target);
-                }}
-                onRetryPlay={() => void words.retry()}
-                onCheck={checkWrite}
-                onNext={nextWrite}
-              />
-            )
+            lessonKind.practice()
           )
-        ) : englishSession ? (
-          englishSession.done ? (
-            <SummaryView
-              t={t}
-              eyebrow={t.englishTrail}
-              finishedLabel={t.englishFinished}
-              total={englishSession.exercises.length}
-              firstTry={englishSession.firstTry}
-              headingRef={summaryRef}
-              points={summaryPoints}
-              footer={summaryFooter}
-              streak={summaryStreak}
-              onAgain={startEnglish}
-              onBack={endPractice}
-            />
-          ) : (
-            englishQuestion && (
-              <EnglishPracticeView
-                t={t}
-                question={englishQuestion}
-                position={
-                  englishSession.reviewing
-                    ? `${t.review} · ${englishSession.reviewQueue.length} ${t.remaining}`
-                    : `${t.englishWord} ${englishSession.index + 1} ${t.of} ${englishSession.exercises.length}`
-                }
-                reviewing={englishSession.reviewing}
-                solved={englishSession.solved}
-                feedback={englishSession.feedback}
-                choice={choice}
-                playing={words.playing ? playSource : null}
-                playFailed={words.failed}
-                nextLabel={
-                  nextAction(englishSession) === 'next'
-                    ? t.englishNext
-                    : t[nextAction(englishSession)]
-                }
-                speakerRef={speakerRef}
-                nextRef={nextRef}
-                onReplay={() => {
-                  setPlaySource('speaker');
-                  void words.play(englishQuestion.target);
-                }}
-                onRetryPlay={() => void words.retry()}
-                onChoose={chooseWord}
-                onCheck={checkChoice}
-                onNext={nextWord}
-              />
-            )
-          )
-        ) : !session && accountScreen ? (
+        ) : accountScreen ? (
           (() => {
             const common = {
               t: t.account,
@@ -848,92 +895,44 @@ export default function App() {
               />
             );
           })()
-        ) : !session ? (
-          course === 'small' ? (
-            <LevelMenu
-              t={t}
-              levels={menuLevels(t, SMALL_MATH_LEVELS)}
-              heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
-              startLabel={t.start}
-              headingRef={menuHeadingRef}
-              level={smallLevel}
-              size={smallSize}
-              onLevelChange={setSmallLevel}
-              onSizeChange={setSmallSize}
-              onStart={start}
-            />
-          ) : course === 'math' ? (
-            <LevelMenu
-              t={t}
-              levels={menuLevels(t, MATH_LEVELS)}
-              heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
-              startLabel={t.start}
-              headingRef={menuHeadingRef}
-              level={level}
-              size={size}
-              onLevelChange={setLevel}
-              onSizeChange={setSize}
-              onStart={start}
-            />
-          ) : course === 'english' ? (
-            <EnglishHome
-              t={t}
-              level={englishLevel}
-              size={englishSize}
-              headingRef={menuHeadingRef}
-              onLevelChange={setEnglishLevel}
-              onSizeChange={setEnglishSize}
-              onStart={startEnglish}
-            />
-          ) : (
-            <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
-          )
-        ) : session.done ? (
-          <SummaryView
+        ) : course === 'small' ? (
+          <LevelMenu
             t={t}
-            total={session.exercises.length}
-            firstTry={session.firstTry}
-            headingRef={summaryRef}
-            points={summaryPoints}
-            footer={summaryFooter}
-            streak={summaryStreak}
-            onAgain={start}
-            onBack={endPractice}
+            levels={menuLevels(t, SMALL_MATH_LEVELS)}
+            heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
+            startLabel={t.start}
+            headingRef={menuHeadingRef}
+            level={smallLevel}
+            size={smallSize}
+            onLevelChange={setSmallLevel}
+            onSizeChange={setSmallSize}
+            onStart={start}
+          />
+        ) : course === 'math' ? (
+          <LevelMenu
+            t={t}
+            levels={menuLevels(t, MATH_LEVELS)}
+            heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
+            startLabel={t.start}
+            headingRef={menuHeadingRef}
+            level={level}
+            size={size}
+            onLevelChange={setLevel}
+            onSizeChange={setSize}
+            onStart={start}
+          />
+        ) : course === 'english' ? (
+          <EnglishHome
+            t={t}
+            level={englishLevel}
+            size={englishSize}
+            headingRef={menuHeadingRef}
+            onLevelChange={setEnglishLevel}
+            onSizeChange={setEnglishSize}
+            onStart={startEnglish}
           />
         ) : (
-          current && (
-            <PracticeView
-              t={t}
-              level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
-              current={current}
-              pictureTheme={pictureTheme}
-              presentation={presentation}
-              onPop={playPop}
-              position={
-                session.reviewing
-                  ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}`
-                  : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`
-              }
-              reviewing={session.reviewing}
-              solved={session.solved}
-              feedback={session.feedback}
-              nextLabel={t[nextAction(session)]}
-              answer={answer}
-              padMode={padMode}
-              touch={touch}
-              hintOpen={hintOpen}
-              inputRef={inputRef}
-              nextRef={nextRef}
-              hintRef={hintRef}
-              onSubmit={submit}
-              onAnswerChange={editAnswer}
-              onAnswerKey={handleAnswerKey}
-              onPadKey={padEdit}
-              onNext={next}
-              onOpenHint={openHint}
-              onToggleInputMode={toggleInputMode}
-            />
-          )
+          <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
         )}
       </main>
       {boardOpen && account && (
@@ -994,8 +993,6 @@ export default function App() {
           }}
           onLeave={() => {
             setLeaveOpen(false);
-            setAnswer('');
-            setChoice('');
             endPractice();
             afterLeave.current?.();
             afterLeave.current = null;
