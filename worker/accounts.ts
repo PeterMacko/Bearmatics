@@ -12,6 +12,9 @@ export interface AccountEnv {
 export const SESSION_COOKIE = 'bm_session';
 export const SESSION_DAYS = 30;
 const DAY = 24 * 60 * 60 * 1000;
+/** Session length: the cookie's Max-Age (seconds) and the stored expiry (milliseconds). */
+const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
+const SESSION_MS = SESSION_SECONDS * 1000;
 export const MAX_FAILURES = 5;
 export const LOCK_MINUTES = 15;
 
@@ -44,18 +47,18 @@ const now = () => Date.now();
 async function startSession(env: AccountEnv, accountId: string): Promise<string> {
   const token = randomHex(32);
   await env.DB.prepare('INSERT INTO sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)')
-    .bind(await sha256Hex(token), accountId, now() + SESSION_DAYS * DAY)
+    .bind(await sha256Hex(token), accountId, now() + SESSION_MS)
     .run();
-  return cookie(SESSION_COOKIE, token, SESSION_DAYS * 24 * 60 * 60);
+  return sessionCookie(token);
 }
 
+const sessionCookie = (token: string) => cookie(SESSION_COOKIE, token, SESSION_SECONDS);
 const endSessionCookie = () => cookie(SESSION_COOKIE, '', 0);
 
+type Session = { account: AccountRow; tokenHash: string; renew: string };
+
 /** Finds the signed-in account and restarts its 30-day window. */
-export async function currentSession(
-  request: Request,
-  env: AccountEnv,
-): Promise<{ account: AccountRow; tokenHash: string; renew: string } | null> {
+export async function currentSession(request: Request, env: AccountEnv): Promise<Session | null> {
   const token = readCookie(request, SESSION_COOKIE);
   if (!token || !validKey(token)) return null;
   const tokenHash = await sha256Hex(token);
@@ -67,14 +70,70 @@ export async function currentSession(
     .first<AccountRow>();
   if (!account) return null;
   await env.DB.prepare('UPDATE sessions SET expires_at = ? WHERE token_hash = ?')
-    .bind(now() + SESSION_DAYS * DAY, tokenHash)
+    .bind(now() + SESSION_MS, tokenHash)
     .run();
-  return { account, tokenHash, renew: cookie(SESSION_COOKIE, token, SESSION_DAYS * 24 * 60 * 60) };
+  return { account, tokenHash, renew: sessionCookie(token) };
 }
 
 const signedOut = () => json({ account: null });
+/** No valid session: the account routes also clear the cookie, the points routes keep it. */
 const unauthorized = () =>
   json({ error: 'not_signed_in' }, 401, { 'set-cookie': endSessionCookie() });
+export const notSignedIn = () => json({ error: 'not_signed_in' }, 401);
+
+/** A signed-in route's success: answered as JSON together with the renewed session cookie. */
+export class Renewed {
+  constructor(
+    readonly body: unknown,
+    readonly status = 200,
+  ) {}
+}
+
+export type SessionHandler = (
+  request: Request,
+  env: AccountEnv,
+  session: Session,
+) => Promise<Response | Renewed>;
+
+/**
+ * Runs a route that needs a signed-in player. Without a valid session it answers 401, clearing
+ * the cookie for `auth: 'clear'`; a `Renewed` success gets the renewed cookie, any other
+ * answer (errors, sign-out) goes out as the handler built it.
+ */
+export async function withSession(
+  request: Request,
+  env: AccountEnv,
+  auth: 'clear' | 'keep',
+  handler: SessionHandler,
+): Promise<Response> {
+  const session = await currentSession(request, env);
+  if (!session) return auth === 'clear' ? unauthorized() : notSignedIn();
+  const answer = await handler(request, env, session);
+  return answer instanceof Renewed
+    ? json(answer.body, answer.status, { 'set-cookie': session.renew })
+    : answer;
+}
+
+const tooManyAttempts = () => json({ error: 'too_many_attempts' }, 429);
+
+/**
+ * A password check under the attempt limit. The try is taken BEFORE checking, in one atomic
+ * statement (QA114-01); over the limit the key is not even checked, and the wrong try that
+ * reaches the limit already answers 429. `check` returns what was found, or null when wrong.
+ */
+async function limited<T extends object>(
+  env: AccountEnv,
+  keyHash: string,
+  time: number,
+  check: () => Promise<T | null>,
+  wrong: () => Response,
+): Promise<T | Response> {
+  const attempt = await takeTry(env, keyHash, time);
+  if (attempt > MAX_FAILURES) return tooManyAttempts();
+  const found = await check();
+  if (found) return found;
+  return attempt >= MAX_FAILURES ? tooManyAttempts() : wrong();
+}
 
 // ---------- Password accounts ----------
 
@@ -154,29 +213,31 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
   await env.DB.prepare('DELETE FROM login_attempts WHERE updated_at < ?')
     .bind(time - DAY)
     .run();
-  const attempt = await takeTry(env, keyHash, time);
-  if (attempt > MAX_FAILURES) return json({ error: 'too_many_attempts' }, 429);
-
-  const account = validUsername(rawUsername)
-    ? await env.DB.prepare('SELECT * FROM accounts WHERE username_key = ?')
-        .bind(rawUsername.toLowerCase())
-        .first<AccountRow>()
-    : null;
-  const ok =
-    !!account?.server_salt &&
-    !!account.verifier &&
-    sameHex(await passwordVerifier(account.server_salt, key), account.verifier);
-  if (!ok) {
-    return attempt >= MAX_FAILURES
-      ? json({ error: 'too_many_attempts' }, 429)
-      : json({ error: 'wrong_username_or_password' }, 401);
-  }
+  const account = await limited(
+    env,
+    keyHash,
+    time,
+    async () => {
+      const row = validUsername(rawUsername)
+        ? await env.DB.prepare('SELECT * FROM accounts WHERE username_key = ?')
+            .bind(rawUsername.toLowerCase())
+            .first<AccountRow>()
+        : null;
+      const ok =
+        !!row?.server_salt &&
+        !!row.verifier &&
+        sameHex(await passwordVerifier(row.server_salt, key), row.verifier);
+      return ok ? row : null;
+    },
+    () => json({ error: 'wrong_username_or_password' }, 401),
+  );
+  if (account instanceof Response) return account;
   await env.DB.batch([
     env.DB.prepare('DELETE FROM login_attempts WHERE key_hash = ?').bind(keyHash),
     env.DB.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(time),
   ]);
-  return json({ account: publicAccount(account!) }, 200, {
-    'set-cookie': await startSession(env, account!.id),
+  return json({ account: publicAccount(account) }, 200, {
+    'set-cookie': await startSession(env, account.id),
   });
 }
 
@@ -202,9 +263,7 @@ export async function signOut(request: Request, env: AccountEnv): Promise<Respon
   return json({ account: null }, 200, { 'set-cookie': endSessionCookie() });
 }
 
-export async function updateProfile(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return unauthorized();
+export const updateProfile: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   const { account } = session;
   const nickname = 'nickname' in body ? rules.nickname(body.nickname) : account.nickname;
@@ -225,28 +284,28 @@ export async function updateProfile(request: Request, env: AccountEnv): Promise<
   )
     .bind(nickname, bear, email, leaderboard, account.id)
     .run();
-  return json({ account: publicAccount({ ...account, nickname, bear, email, leaderboard }) }, 200, {
-    'set-cookie': session.renew,
+  return new Renewed({
+    account: publicAccount({ ...account, nickname, bear, email, leaderboard }),
   });
-}
+};
 
-export async function changePassword(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return unauthorized();
+export const changePassword: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   const currentKey = rules.passwordKey(body.currentKey, 'currentKey');
   const newKey = rules.passwordKey(body.newKey, 'newKey');
   const { account } = session;
-  if (!account.server_salt || !account.verifier) throw new BadRequest('invalid', 'currentKey');
+  const { server_salt: salt, verifier } = account;
+  if (!salt || !verifier) throw new BadRequest('invalid', 'currentKey');
   // Same limit as sign-in for guessing the current password with a stolen session.
   const limitKey = await sha256Hex(`password:${account.id}`);
-  const attempt = await takeTry(env, limitKey, now());
-  if (attempt > MAX_FAILURES) return json({ error: 'too_many_attempts' }, 429);
-  if (!sameHex(await passwordVerifier(account.server_salt, currentKey), account.verifier)) {
-    return attempt >= MAX_FAILURES
-      ? json({ error: 'too_many_attempts' }, 429)
-      : json({ error: 'wrong_password' }, 403);
-  }
+  const checked = await limited(
+    env,
+    limitKey,
+    now(),
+    async () => (sameHex(await passwordVerifier(salt, currentKey), verifier) ? account : null),
+    () => json({ error: 'wrong_password' }, 403),
+  );
+  if (checked instanceof Response) return checked;
   await env.DB.prepare('DELETE FROM login_attempts WHERE key_hash = ?').bind(limitKey).run();
   const serverSalt = randomHex(16);
   await env.DB.batch([
@@ -261,12 +320,10 @@ export async function changePassword(request: Request, env: AccountEnv): Promise
       session.tokenHash,
     ),
   ]);
-  return json({ ok: true }, 200, { 'set-cookie': session.renew });
-}
+  return new Renewed({ ok: true });
+};
 
-export async function deleteAccount(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return unauthorized();
+export const deleteAccount: SessionHandler = async (_request, env, session) => {
   const { account } = session;
   const limitKeys = [await sha256Hex(`password:${account.id}`)];
   if (account.username) limitKeys.push(await attemptKey(account.username));
@@ -280,7 +337,7 @@ export async function deleteAccount(request: Request, env: AccountEnv): Promise<
     ),
   ]);
   return json({ account: null }, 200, { 'set-cookie': endSessionCookie() });
-}
+};
 
 // Exported for the Google sign-in module.
 export { publicAccount, startSession, type AccountRow };

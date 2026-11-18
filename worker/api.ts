@@ -46,20 +46,35 @@ export async function health(env: Env): Promise<Response> {
 }
 
 type Handler = (request: Request, env: Env) => Promise<Response>;
-// Route table: path -> method -> handler. `write` routes need our own Origin (anti-forgery).
-const routes: Record<string, Record<string, { handler: Handler; write?: boolean }>> = {
+/**
+ * Route table: path -> method -> handler. `write` routes need our own Origin (anti-forgery).
+ * `auth` routes need a signed-in player (see withSession): 'clear' answers 401 and clears the
+ * session cookie, 'keep' answers 401 and leaves it.
+ */
+type Route =
+  | { handler: Handler; write?: boolean; auth?: undefined }
+  | { handler: accounts.SessionHandler; write?: boolean; auth: 'clear' | 'keep' };
+const routes: Record<string, Record<string, Route>> = {
   '/api/health': { GET: { handler: (_r, env) => health(env) } },
   '/api/me': {
     GET: { handler: accounts.me },
-    PATCH: { handler: accounts.updateProfile, write: true },
-    DELETE: { handler: accounts.deleteAccount, write: true },
+    PATCH: { handler: accounts.updateProfile, write: true, auth: 'clear' },
+    DELETE: { handler: accounts.deleteAccount, write: true, auth: 'clear' },
   },
-  '/api/me/password': { POST: { handler: accounts.changePassword, write: true } },
-  '/api/progress': { GET: { handler: progress.getProgress } },
-  '/api/progress/lessons': { POST: { handler: progress.startLesson, write: true } },
-  '/api/progress/lessons/finish': { POST: { handler: progress.finishLesson, write: true } },
-  '/api/progress/streak': { POST: { handler: progress.answerStreak, write: true } },
-  '/api/leaderboard': { GET: { handler: leaderboard.getLeaderboard } },
+  '/api/me/password': {
+    POST: { handler: accounts.changePassword, write: true, auth: 'clear' },
+  },
+  '/api/progress': { GET: { handler: progress.getProgress, auth: 'keep' } },
+  '/api/progress/lessons': {
+    POST: { handler: progress.startLesson, write: true, auth: 'keep' },
+  },
+  '/api/progress/lessons/finish': {
+    POST: { handler: progress.finishLesson, write: true, auth: 'keep' },
+  },
+  '/api/progress/streak': {
+    POST: { handler: progress.answerStreak, write: true, auth: 'keep' },
+  },
+  '/api/leaderboard': { GET: { handler: leaderboard.getLeaderboard, auth: 'keep' } },
   '/api/auth/signup': { POST: { handler: accounts.signUp, write: true } },
   '/api/auth/signin': { POST: { handler: accounts.signIn, write: true } },
   '/api/auth/signout': { POST: { handler: accounts.signOut, write: true } },
@@ -84,7 +99,9 @@ export async function handleApi(request: Request, env: Env): Promise<Response> {
   }
   if (entry.write && !fromOwnSite(request)) return json({ error: 'forbidden' }, 403);
   try {
-    const response = await entry.handler(request, env);
+    const response = entry.auth
+      ? await accounts.withSession(request, env, entry.auth, entry.handler)
+      : await entry.handler(request, env);
     return request.method === 'HEAD' ? withoutBody(response) : response;
   } catch (error) {
     if (error instanceof BadRequest) {

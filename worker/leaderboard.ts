@@ -2,8 +2,7 @@
 // Only nickname, bear, streak and points of other players are sent (no ids, no usernames).
 import type { Leaderboard, LeaderboardRow } from '../shared/api-types';
 import { isRudeNickname } from '../shared/rules';
-import { currentSession, type AccountEnv } from './accounts';
-import { json } from './http';
+import { Renewed, type SessionHandler } from './accounts';
 import { slovakDay, streakView } from './streak';
 
 export const TOP = 10;
@@ -52,9 +51,7 @@ export function leaderboardRows(players: Player[], meId: string | null): Leaderb
   return { rows: [...all.slice(0, TOP), ...around], gapBefore: start > TOP ? TOP : null };
 }
 
-export async function getLeaderboard(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return json({ error: 'not_signed_in' }, 401);
+export const getLeaderboard: SessionHandler = async (_request, env, session) => {
   const today = slovakDay(Date.now());
   const { results } = await env.DB.prepare(
     `SELECT a.id, a.nickname, a.bear, p.points, p.streak, p.last_day, p.offer_day
@@ -83,7 +80,5 @@ export async function getLeaderboard(request: Request, env: AccountEnv): Promise
         row.points,
       ),
     }));
-  return json(leaderboardRows(players, session.account.id), 200, {
-    'set-cookie': session.renew,
-  });
-}
+  return new Renewed(leaderboardRows(players, session.account.id));
+};

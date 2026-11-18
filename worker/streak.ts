@@ -37,6 +37,11 @@ export function daysBetween(a: string, b: string): number {
   return Math.round((utc(b) - utc(a)) / 86_400_000);
 }
 
+/** Days without a lesson between the last counted day and today (0 = played yesterday). */
+function missedDays(lastDay: string, today: string): number {
+  return daysBetween(lastDay, today) - 1;
+}
+
 /** 10 points per missed day, at most 10% of the points (rounded down), at least 1. */
 export function unlockCost(missed: number, points: number): number {
   return Math.min(COST_PER_DAY * missed, Math.max(1, Math.floor(points / 10)));
@@ -62,7 +67,7 @@ export function finishDay(
   if (!state.lastDay || state.streak < 1)
     return { state: { streak: 1, lastDay: today, offerDay: null }, offer: null };
   if (state.lastDay === today) return { state, offer: null };
-  const missed = daysBetween(state.lastDay, today) - 1;
+  const missed = missedDays(state.lastDay, today);
   if (missed <= 0)
     return { state: { streak: state.streak + 1, lastDay: today, offerDay: null }, offer: null };
   if (missed <= MAX_MISSED && points > 0)
@@ -77,7 +82,7 @@ export function finishDay(
 export function openOffer(before: StreakState, today: string, points: number): Offer | null {
   const state = settle(before, today);
   if (state.offerDay !== today || !state.lastDay) return null;
-  const missed = daysBetween(state.lastDay, today) - 1;
+  const missed = missedDays(state.lastDay, today);
   if (missed < 1 || missed > MAX_MISSED || points <= 0) return null;
   return { streak: state.streak, missed, cost: unlockCost(missed, points) };
 }
@@ -108,7 +113,7 @@ export function streakView(
   // today: a lesson already counted for the streak today (Peter: lit flame only then).
   if (!state.lastDay || state.streak < 1) return { streak: 0, frozen: false, today: false };
   if (state.lastDay === today) return { streak: state.streak, frozen: false, today: true };
-  const missed = daysBetween(state.lastDay, today) - 1;
+  const missed = missedDays(state.lastDay, today);
   if (missed <= 0) return { streak: state.streak, frozen: false, today: false };
   if (missed <= MAX_MISSED && points > 0)
     return { streak: state.streak, frozen: true, today: false };

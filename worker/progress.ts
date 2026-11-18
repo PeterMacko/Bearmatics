@@ -2,7 +2,7 @@
 // first-try answers; the server only stores one total and checks the limits:
 // a lesson must be started while signed in, it counts once, and it gives at most its size.
 import type { Offer } from '../shared/api-types';
-import { currentSession, type AccountEnv } from './accounts';
+import { notSignedIn, Renewed, type AccountEnv, type SessionHandler } from './accounts';
 import { randomHex } from './crypto';
 import { BadRequest, json, readJson } from './http';
 import {
@@ -17,8 +17,6 @@ import {
 export const LESSON_SIZES = [5, 10, 20] as const;
 const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
 const now = () => Date.now();
-
-const notSignedIn = () => json({ error: 'not_signed_in' }, 401);
 
 type Row = { points: number; state: StreakState };
 
@@ -67,35 +65,42 @@ async function writeRow(env: AccountEnv, accountId: string, read: Row, next: Row
   return result.meta.changes > 0;
 }
 
-export async function getProgress(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return notSignedIn();
-  const row = await readRow(env, session.account.id);
-  return json(progressBody(row, slovakDay(now())), 200, { 'set-cookie': session.renew });
+/**
+ * Optimistic write: `attempt` reads, computes and writes with `writeRow`, returning its result,
+ * or nothing when the row changed meanwhile; then it runs again from a fresh read (at most 5 times).
+ */
+async function retryWrite<T>(attempt: () => Promise<T | undefined>, failure: string): Promise<T> {
+  for (let tries = 0; tries < 5; tries++) {
+    const result = await attempt();
+    if (result !== undefined) return result;
+  }
+  throw new Error(failure);
 }
 
+export const getProgress: SessionHandler = async (_request, env, session) => {
+  const row = await readRow(env, session.account.id);
+  return new Renewed(progressBody(row, slovakDay(now())));
+};
+
 /** The child answers today's unlock offer: {unlock: true|false, cost} (SCRUM-118 rule 5). */
-export async function answerStreak(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return notSignedIn();
+export const answerStreak: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   if (typeof body.unlock !== 'boolean') throw new BadRequest('invalid', 'unlock');
+  const { unlock } = body;
   const accountId = session.account.id;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  return retryWrite(async () => {
     const today = slovakDay(now());
     const row = await readRow(env, accountId);
     const offer = openOffer(row.state, today, row.points);
     if (!offer) return json({ error: 'no_offer', ...progressBody(row, today) }, 409);
     // The child agreed to a price; if it changed meanwhile, show the new offer instead.
-    if (body.unlock && body.cost !== offer.cost)
+    if (unlock && body.cost !== offer.cost)
       return json({ error: 'offer_changed', offer, ...progressBody(row, today) }, 409);
-    const answer = answerOffer(row.state, today, row.points, body.unlock)!;
+    const answer = answerOffer(row.state, today, row.points, unlock)!;
     const next = { points: answer.points, state: answer.state };
-    if (await writeRow(env, accountId, row, next))
-      return json(progressBody(next, today), 200, { 'set-cookie': session.renew });
-  }
-  throw new Error('streak answer kept conflicting');
-}
+    if (await writeRow(env, accountId, row, next)) return new Renewed(progressBody(next, today));
+  }, 'streak answer kept conflicting');
+};
 
 function lessonSize(value: unknown): number {
   if (!LESSON_SIZES.includes(value as 5)) throw new BadRequest('invalid', 'size');
@@ -103,9 +108,7 @@ function lessonSize(value: unknown): number {
 }
 
 /** A lesson starts: remember its ID and size for this account (only while signed in). */
-export async function startLesson(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return notSignedIn();
+export const startLesson: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   const size = lessonSize(body.size);
   const id = randomHex(16);
@@ -120,13 +123,11 @@ export async function startLesson(request: Request, env: AccountEnv): Promise<Re
     ).bind(id, session.account.id, size, time, session.account.id),
   ]);
   if (!inserted.meta.changes) return notSignedIn();
-  return json({ lessonId: id }, 201, { 'set-cookie': session.renew });
-}
+  return new Renewed({ lessonId: id }, 201);
+};
 
 /** A lesson is finished (including its review round): add its points once. */
-export async function finishLesson(request: Request, env: AccountEnv): Promise<Response> {
-  const session = await currentSession(request, env);
-  if (!session) return notSignedIn();
+export const finishLesson: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   const id = body.lessonId;
   if (typeof id !== 'string' || !/^[0-9a-f]{32}$/.test(id)) {
@@ -178,31 +179,25 @@ export async function finishLesson(request: Request, env: AccountEnv): Promise<R
     .first();
   // SCRUM-118: a counted lesson is a played day. A repeated save of the same lesson never
   // reaches this, so it cannot add a day or make a second offer.
-  let offer: Offer | null = null;
+  let offer: Offer | null;
   let row = await readRow(env, accountId);
   const today = slovakDay(now());
   if (counted) {
-    for (let attempt = 0; ; attempt++) {
+    ({ row, offer } = await retryWrite(async () => {
       const day = finishDay(row.state, today, row.points);
-      offer = day.offer;
       const next = { points: row.points, state: day.state };
       const same =
         next.state.streak === row.state.streak &&
         next.state.lastDay === row.state.lastDay &&
         next.state.offerDay === row.state.offerDay;
-      if (same || (await writeRow(env, accountId, row, next))) {
-        row = next;
-        break;
-      }
-      if (attempt >= 4) throw new Error('streak update kept conflicting');
+      if (same || (await writeRow(env, accountId, row, next)))
+        return { row: next, offer: day.offer };
       row = await readRow(env, accountId);
-    }
+    }, 'streak update kept conflicting'));
   } else {
     // A repeated save (e.g. Try again after a lost answer) changes nothing, but still shows
     // today's open offer (QA131-04).
     offer = openOffer(row.state, today, row.points);
   }
-  return json({ ...progressBody(row, today), added: counted ? earned : 0, offer }, 200, {
-    'set-cookie': session.renew,
-  });
-}
+  return new Renewed({ ...progressBody(row, today), added: counted ? earned : 0, offer });
+};
