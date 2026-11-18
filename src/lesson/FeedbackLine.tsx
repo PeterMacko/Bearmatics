@@ -24,7 +24,7 @@ export default function FeedbackLine({
   if (playError)
     return (
       <p className="feedback play-error" role="alert">
-        {playError.t.wordFailed}{' '}
+        <span>{playError.t.wordFailed}</span>{' '}
         <button
           type="button"
           className="secondary"

@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef } from 'react';
 import { useBearTap } from './useBearTap';
 import { useMenuWink } from './useMenuWink';
 
@@ -26,6 +27,19 @@ export default function Bear({
     onTap,
   });
   const tapped = tap.tapped;
+  const bubbleRef = useRef<HTMLSpanElement>(null);
+  // The bubble never makes the page scroll sideways (long Slovak words at 200% text beside a
+  // bear near the right edge): shift it left by whatever would stick out. Measured from layout
+  // offsets, because the pop-in scale transform changes the drawn box.
+  useLayoutEffect(() => {
+    const el = bubbleRef.current;
+    if (!el) return;
+    const parent = el.offsetParent;
+    if (!parent) return;
+    const right = parent.getBoundingClientRect().left + el.offsetLeft + el.offsetWidth;
+    const over = right - (document.documentElement.clientWidth - 4);
+    if (over > 0) el.style.marginLeft = `${-Math.ceil(over)}px`;
+  }, [tapped, bubble]);
   return (
     <>
       <svg
@@ -151,7 +165,7 @@ export default function Bear({
         </g>
       </svg>
       {tapped && (
-        <span className="bear-bubble" aria-hidden="true">
+        <span ref={bubbleRef} className="bear-bubble" aria-hidden="true">
           {bubble}
         </span>
       )}

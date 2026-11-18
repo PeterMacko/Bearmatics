@@ -376,10 +376,29 @@
 .english-practice .play-error {
   color: #934522;
 }
+/* SCRUM-172: the bordered Try again (48 px) sits beside the message, which wraps into two lines
+   next to it, so the line stays about as tall as the old two-line text with its link. When both
+   do not fit side by side (200% text), the button moves below. */
+.english-practice .play-error:has(.secondary) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+}
+.english-practice .play-error > span {
+  flex: 1 1 8em;
+  max-width: max-content;
+}
 .english-practice .play-error .secondary {
-  /* Inside the reserved two-line feedback space. */
-  margin-inline-start: 6px;
+  flex: none;
   padding: 4px 12px;
+}
+/* The smallest phones: listen lessons give the failure line a little of the row gaps. */
+@media (max-height: 600px) and (orientation: portrait) {
+  .english-practice:not(.write-practice) form:has(.play-error) {
+    row-gap: 8px;
+  }
 }
 
 /* Very short visible area: when the word is shown it replaces the feedback text on screen (the

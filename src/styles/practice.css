@@ -154,6 +154,17 @@ progress::-webkit-progress-value {
   width: 100%;
   margin-top: 12px;
 }
+/* SCRUM-172: the bordered Choose a new trail is taller than the old text button; the smallest
+   landscape phone keeps the dialog without an inner scroll. */
+@media (max-height: 360px) {
+  .leave-dialog {
+    padding-block: 24px;
+  }
+}
+/* Full width already: little side padding keeps Choose a new trail on one line at 200% text. */
+.leave-dialog .secondary {
+  padding-inline: 8px;
+}
 @media (max-width: 850px) {
   .app-shell {
     padding-inline: 28px;

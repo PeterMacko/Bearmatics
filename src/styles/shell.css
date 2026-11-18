@@ -228,14 +228,16 @@
   /* SCRUM-172: the quieter choice next to a primary button. Transparent, so it works on every
      screen colour; the dark border and text keep >= 3:1 and >= 4.5:1 on all of them. */
   min-height: var(--target);
-  padding: 10px 20px;
+  /* Small vertical padding and line height: 48 px comes from min-height, and at 200% text the
+     button stays about as tall as the old text link, so screens that fitted still fit. */
+  padding: 4px 18px;
   border: 2px solid var(--blue-ink);
   border-radius: 12px;
   background: transparent;
   color: var(--blue-ink);
   font-size: 1rem;
   font-weight: 700;
-  line-height: 1.4;
+  line-height: 1.2;
 }
 .secondary:hover {
   background: #3157830f;
