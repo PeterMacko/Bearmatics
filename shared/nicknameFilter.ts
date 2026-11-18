@@ -1,5 +1,5 @@
 // SCRUM-148: a small filter of rude words for nicknames (Slovak and English). Shared by the
-// server (worker/rules.ts) and the forms (src/account/rules.ts). Never complete; it catches the
+// server and the forms through shared/rules.ts. Never complete; it catches the
 // common words, also inside longer words, with accents, repeated letters and look-alike digits
 // or symbols (0/o, 1/i or l, 3/e, 4/a, 5/s, 7/t, @/a, $/s).
 

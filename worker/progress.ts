@@ -1,6 +1,7 @@
 // SCRUM-117: points for finished lessons of signed-in players. The app counts the lesson's
 // first-try answers; the server only stores one total and checks the limits:
 // a lesson must be started while signed in, it counts once, and it gives at most its size.
+import type { Offer } from '../shared/api-types';
 import { currentSession, type AccountEnv } from './accounts';
 import { randomHex } from './crypto';
 import { BadRequest, json, readJson } from './http';
@@ -10,7 +11,6 @@ import {
   openOffer,
   slovakDay,
   streakView,
-  type Offer,
   type StreakState,
 } from './streak';
 

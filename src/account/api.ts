@@ -1,13 +1,7 @@
 // Browser side of the account API. Only JSON bodies; nothing personal ever goes in a URL.
-export type Account = {
-  kind: 'password' | 'google';
-  username: string | null;
-  nickname: string;
-  bear: number;
-  email: string | null;
-  /** SCRUM-148: shown on the leaderboard (on by default). */
-  leaderboard: boolean;
-};
+import type { Account } from '../../shared/api-types';
+
+export type { Account };
 
 export type ApiError =
   | 'offline'

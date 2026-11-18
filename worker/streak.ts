@@ -1,6 +1,7 @@
 // SCRUM-118: daily streak rules (pure functions, tested with fixed dates).
 // A day is the calendar date in Slovak time (Europe/Bratislava, summer time included), decided
 // on the server so a changed device clock does not matter.
+import type { Offer } from '../shared/api-types';
 
 export type StreakState = {
   /** Days in a row with a finished lesson (missed days are never added). */
@@ -10,8 +11,6 @@ export type StreakState = {
   /** Day an unlock offer was made and not answered yet. */
   offerDay: string | null;
 };
-
-export type Offer = { streak: number; missed: number; cost: number };
 
 /** Longest break that can still be unlocked. */
 export const MAX_MISSED = 7;

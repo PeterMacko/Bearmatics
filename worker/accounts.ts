@@ -1,6 +1,8 @@
 // Accounts and login sessions (SCRUM-97). Data kept: see migrations/0002_accounts.sql.
 import { passwordVerifier, randomHex, sameHex, sha256Hex } from './crypto';
 import { BadRequest, cookie, json, readCookie, readJson } from './http';
+import type { Account } from '../shared/api-types';
+import { validKey, validUsername } from '../shared/rules';
 import * as rules from './rules';
 
 export interface AccountEnv {
@@ -26,7 +28,7 @@ interface AccountRow {
 }
 
 /** What the browser may see about the signed-in account. */
-function publicAccount(row: AccountRow) {
+function publicAccount(row: AccountRow): Account {
   return {
     kind: row.google_sub ? 'google' : 'password',
     username: row.username,
@@ -55,7 +57,7 @@ export async function currentSession(
   env: AccountEnv,
 ): Promise<{ account: AccountRow; tokenHash: string; renew: string } | null> {
   const token = readCookie(request, SESSION_COOKIE);
-  if (!token || !/^[0-9a-f]{64}$/.test(token)) return null;
+  if (!token || !validKey(token)) return null;
   const tokenHash = await sha256Hex(token);
   const account = await env.DB.prepare(
     `SELECT a.* FROM sessions s JOIN accounts a ON a.id = s.account_id
@@ -155,7 +157,7 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
   const attempt = await takeTry(env, keyHash, time);
   if (attempt > MAX_FAILURES) return json({ error: 'too_many_attempts' }, 429);
 
-  const account = /^[A-Za-z0-9]{3,20}$/.test(rawUsername)
+  const account = validUsername(rawUsername)
     ? await env.DB.prepare('SELECT * FROM accounts WHERE username_key = ?')
         .bind(rawUsername.toLowerCase())
         .first<AccountRow>()

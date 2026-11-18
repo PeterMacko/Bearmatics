@@ -1,10 +1,6 @@
-// Form checks; the server checks the same rules again (worker/rules.ts).
-export const BEARS = [1, 2, 3, 4, 5, 6, 7, 8] as const;
-export const validUsername = (value: string) => /^[A-Za-z0-9]{3,20}$/.test(value);
+// Form checks; the rules themselves are shared with the server (shared/rules.ts).
+import { BEAR_COUNT } from '../../shared/rules';
+
+export { isRudeNickname, validEmail, validNickname, validUsername } from '../../shared/rules';
+export const BEARS = Array.from({ length: BEAR_COUNT }, (_, index) => index + 1);
 export const validPassword = (value: string) => [...value].length >= 8;
-export const validEmail = (value: string) =>
-  value.trim() === '' ||
-  (value.trim().length <= 254 && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim()));
-export { isRudeNickname } from '../../worker/nicknameFilter';
-export const validNickname = (value: string) =>
-  /^[\p{L}\p{N} ._-]{1,20}$/u.test(value.trim().replace(/\s+/g, ' '));

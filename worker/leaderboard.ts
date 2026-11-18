@@ -1,8 +1,9 @@
 // SCRUM-148: leaderboard of all players who have it on and at least 1 point.
 // Only nickname, bear, streak and points of other players are sent (no ids, no usernames).
+import type { Leaderboard, LeaderboardRow } from '../shared/api-types';
+import { isRudeNickname } from '../shared/rules';
 import { currentSession, type AccountEnv } from './accounts';
 import { json } from './http';
-import { isRudeNickname } from './nicknameFilter';
 import { slovakDay, streakView } from './streak';
 
 export const TOP = 10;
@@ -16,25 +17,12 @@ export type Player = {
   frozen: boolean;
 };
 
-export type Row = {
-  place: number;
-  nickname: string;
-  bear: number;
-  points: number;
-  streak: number;
-  frozen: boolean;
-  me: boolean;
-};
-
 /**
  * Order and rows (scope 1-2): more points first; equal points share the place; within a tie a
  * longer streak first, then nickname A-Z. Top 10; if I am lower: a gap, the player before me,
  * me and the player after me.
  */
-export function leaderboardRows(
-  players: Player[],
-  meId: string | null,
-): { rows: Row[]; gapBefore: number | null } {
+export function leaderboardRows(players: Player[], meId: string | null): Leaderboard {
   const sorted = [...players].sort(
     (a, b) =>
       b.points - a.points ||
@@ -43,7 +31,7 @@ export function leaderboardRows(
       a.nickname.localeCompare(b.nickname),
   );
   let place = 0;
-  const all: Row[] = sorted.map((player, index) => {
+  const all: LeaderboardRow[] = sorted.map((player, index) => {
     if (index === 0 || player.points !== sorted[index - 1].points) place = index + 1;
     return {
       place,

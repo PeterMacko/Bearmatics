@@ -4,6 +4,7 @@
 import { publicAccount, startSession, type AccountEnv, type AccountRow } from './accounts';
 import { randomHex, sha256Hex } from './crypto';
 import { cookie, json, readCookie, readJson } from './http';
+import { validKey } from '../shared/rules';
 import * as rules from './rules';
 
 export interface GoogleEnv extends AccountEnv {
@@ -147,7 +148,7 @@ export async function googleComplete(request: Request, env: GoogleEnv): Promise<
   const bear = rules.bear(body.bear);
   rules.parentConfirmed(body.parentConfirmed);
   const token = readCookie(request, PENDING_COOKIE);
-  const tokenHash = token && /^[0-9a-f]{64}$/.test(token) ? await sha256Hex(token) : '';
+  const tokenHash = token && validKey(token) ? await sha256Hex(token) : '';
   const pending = tokenHash
     ? await env.DB.prepare(
         'SELECT google_sub FROM google_pending WHERE token_hash = ? AND expires_at > ?',
