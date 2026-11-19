@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccountError } from '../account/api';
 import HintDialog from '../HintDialog';
+import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import { fill, pointsText, type Copy } from '../i18n';
 import { answerStreak, type Offer, type Progress } from './api';
 import { badgeFor } from './badges';
@@ -51,11 +52,7 @@ export default function StreakOffer({
   }, [step, error]);
   const deliberate =
     (action: () => void) => (event: { detail: number; preventDefault: () => void }) => {
-      if (event.detail > 1 || performance.now() - stepAt.current < 600) {
-        event.preventDefault();
-        return;
-      }
-      action();
+      if (!ignoreRepeatClick(event, performance.now() - stepAt.current < 600)) action();
     };
   // Closing uncovers the summary: a quick second tap must not land on Play again behind the
   // dialog (QA131-06), so clicks are swallowed for a moment after closing.

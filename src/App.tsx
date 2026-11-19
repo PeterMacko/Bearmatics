@@ -5,6 +5,7 @@ import {
   useState,
   type FormEvent,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react';
 import { flushSync } from 'react-dom';
 import { generateSession, type Level } from './math/engine';
@@ -22,6 +23,7 @@ import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
 import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
+import { nextLabel, positionText } from './lesson/lessonText';
 import { useMenuLayout } from './useMenuLayout';
 import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
@@ -36,31 +38,17 @@ import {
   type WriteQuestion,
 } from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
-import {
-  AccountButton,
-  GoogleNewView,
-  PrivacyView,
-  ProfileView,
-  SignInView,
-  SignUpView,
-  type AccountScreen,
-} from './account/AccountViews';
-import { googleAvailable, loadAccount, type Account } from './account/api';
-import {
-  finishLesson,
-  loadProgress,
-  startLesson,
-  type Offer,
-  type Progress,
-  type Streak,
-} from './progress/api';
+import { AccountButton } from './AccountButton';
+import AccountScreens from './account/AccountScreens';
+import { useAccount, useAccountLoad } from './account/useAccount';
 import StreakChip from './progress/StreakChip';
 import StreakOffer from './progress/StreakOffer';
 import LeaderboardDialog from './progress/LeaderboardDialog';
 import SummaryStreak from './progress/SummaryStreak';
 import BadgeButton from './progress/BadgeButton';
-import SummaryPoints, { SignInHint, type LessonSave } from './progress/SummaryPoints';
-import { pointsFrames, staticFrame, usePointsAnimation } from './progress/animation';
+import SummaryPoints, { SignInHint } from './progress/SummaryPoints';
+import { staticFrame } from './progress/animation';
+import { useLessonPoints } from './progress/useLessonPoints';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -69,13 +57,25 @@ import {
   createSession,
   currentExercise,
   hasProgress,
-  nextAction,
   nextHintStage,
   openHintStage,
   progressValue,
   submitAnswer,
   type Session,
 } from './session';
+
+/** The lesson on screen, whichever kind (maths, listen, write). */
+type LessonKind = {
+  session: Session<unknown>;
+  /** What the child has typed or chosen (unsent work counts for the leave question). */
+  answer: string;
+  /** Name of the top progress bar. */
+  trail: string;
+  eyebrow?: string;
+  finishedLabel?: string;
+  onAgain: () => void;
+  practice: () => ReactNode;
+};
 
 export default function App() {
   const [language, setLanguage] = useState<Language>('en');
@@ -104,26 +104,27 @@ export default function App() {
   const words = useWordPlayer();
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null = session ?? englishSession ?? writeSession;
+  // Set on every screen change: the new screen's heading takes focus (effect below).
+  const focusMenuHeading = useRef(false);
   // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
-  const [account, setAccount] = useState<Account | null>(null);
-  // False until the first /api/me answer: a lesson started before it waits for the answer.
-  const [accountKnown, setAccountKnown] = useState(false);
-  const [accountScreen, setAccountScreen] = useState<AccountScreen | null>(null);
-  const [privacyFrom, setPrivacyFrom] = useState<AccountScreen | null>(null);
-  const [accountNotice, setAccountNotice] = useState('');
-  const [googleReady, setGoogleReady] = useState(false);
+  const accountState = useAccount(() => {
+    focusMenuHeading.current = true;
+  });
+  const {
+    account,
+    setAccount,
+    accountKnown,
+    accountScreen,
+    privacyFrom,
+    accountNotice,
+    googleReady,
+    openAccount,
+  } = accountState;
   const menuRef = useMenuLayout(!active && !accountScreen, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
-  const focusMenuHeading = useRef(false);
   const navigate = (next: Course | null) => {
     focusMenuHeading.current = true;
     setCourse(next);
-  };
-  const openAccount = (next: AccountScreen | null, notice = '') => {
-    focusMenuHeading.current = true;
-    if (next === 'privacy') setPrivacyFrom(accountScreen);
-    setAccountNotice(notice);
-    setAccountScreen(next);
   };
   const practising = !!active;
   // After navigation (not on first load): the new screen starts at the top, so the bar is in
@@ -134,32 +135,7 @@ export default function App() {
     window.scrollTo(0, 0);
     menuHeadingRef.current?.focus({ preventScroll: true });
   }, [course, accountScreen, practising]);
-  useEffect(() => {
-    let live = true;
-    loadAccount()
-      .then(
-        (found) => live && setAccount(found),
-        () => {},
-      )
-      .finally(() => live && setAccountKnown(true));
-    googleAvailable().then(
-      (ready) => live && setGoogleReady(ready),
-      () => {},
-    );
-    // Result of a Google sign-in round trip: /?account=<result>. Remove it from the address.
-    const result = new URLSearchParams(window.location.search).get('account');
-    if (result) {
-      window.history.replaceState(null, '', window.location.pathname);
-      if (result === 'google-new') setAccountScreen('google-new');
-      else if (result !== 'signed-in') {
-        setAccountScreen('signin');
-        setAccountNotice(result);
-      }
-    }
-    return () => {
-      live = false;
-    };
-  }, []);
+  useAccountLoad(accountState);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
   const touch = useTouchCapability();
@@ -208,184 +184,27 @@ export default function App() {
     playBadge,
     playPop,
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
-  // Points (SCRUM-117): signed-in players only; null while unknown or signed out.
-  const [points, setPoints] = useState<number | null>(null);
-  // Streak (SCRUM-118): shown next to the badge; null while unknown or signed out.
-  const [streak, setStreak] = useState<Streak | null>(null);
-  const [offer, setOffer] = useState<{ offer: Offer; points: number } | null>(null);
-  const [offerOpen, setOfferOpen] = useState(false);
-  const [warming, setWarming] = useState(false);
   // SCRUM-148: the leaderboard window (from the points + bar button).
   const [boardOpen, setBoardOpen] = useState(false);
   const boardTrigger = useRef<HTMLButtonElement | null>(null);
-  // The streak number shown when the lesson started (the summary switches from it).
-  const streakAtStart = useRef<number | null>(null);
-  const showProgress = (progress: Progress) => {
-    setPoints(progress.points);
-    setStreak({ streak: progress.streak, frozen: progress.frozen, today: progress.today });
-  };
-  const accountId = account ? `${account.kind}:${account.username ?? account.nickname}` : null;
-  useEffect(() => {
-    if (!accountId) {
-      setPoints(null);
-      setStreak(null);
-      return;
-    }
-    let live = true;
-    loadProgress().then(
-      (found) => live && showProgress(found),
-      () => {},
-    );
-    return () => {
-      live = false;
-    };
-  }, [accountId]);
-  // The running lesson. Its server ID is requested at Start when the player is signed in; a
-  // lesson started before the account has loaded asks for it as soon as the account is known.
-  type Lesson = {
-    size: number;
-    id: Promise<string | null>;
-    saved: boolean;
-    /** The account turned out to be signed out: nothing to save. */
-    signedOut: boolean;
-    /** A finish request was sent and its answer was lost, so "already counted" is expected. */
-    retried: boolean;
-    earned: number;
-  };
-  const lesson = useRef<Lesson | null>(null);
-  const waitingStart = useRef<((id: string | null) => void) | null>(null);
-  const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
-  const beginLesson = (lessonSize: number) => {
-    streakAtStart.current = streak ? streak.streak : null;
-    setLessonSave(null);
-    closeOffer();
-    waitingStart.current = null;
-    const fresh: Lesson = {
-      size: lessonSize,
-      id: Promise.resolve(null),
-      saved: false,
-      signedOut: false,
-      retried: false,
-      earned: 0,
-    };
-    if (account) fresh.id = startLesson(lessonSize).catch(() => null);
-    else if (!accountKnown)
-      fresh.id = new Promise((resolve) => {
-        waitingStart.current = resolve;
-      });
-    else fresh.signedOut = true;
-    lesson.current = fresh;
-  };
-  useEffect(() => {
-    const resolve = waitingStart.current;
-    const current = lesson.current;
-    if (!accountKnown || !resolve || !current) return;
-    waitingStart.current = null;
-    if (account) startLesson(current.size).then(resolve, () => resolve(null));
-    else {
-      current.signedOut = true;
-      resolve(null);
-    }
-  }, [accountKnown, account]);
-  const saveLesson = async (firstTry: number) => {
-    const current = lesson.current;
-    if (!current || current.signedOut) return;
-    current.earned = Math.min(firstTry, current.size);
-    setLessonSave({ state: 'saving' });
-    let sent = false;
-    try {
-      let id = await current.id;
-      if (current.signedOut) {
-        if (lesson.current === current) setLessonSave(null);
-        return;
-      }
-      if (!id) {
-        id = await startLesson(current.size);
-        current.id = Promise.resolve(id);
-      }
-      sent = true;
-      const result = await finishLesson(id, current.size, current.earned);
-      // The bar always gets the saved total, also when the child has already left the summary.
-      showProgress(result);
-      if (lesson.current !== current) return;
-      // The unlock offer comes after the summary scene (after the points animation).
-      if (result.offer) setOffer({ offer: result.offer, points: result.points });
-      // A retry after a lost answer finds the lesson already counted: show what it gave.
-      const added = result.added === 0 && current.retried ? current.earned : result.added;
-      setLessonSave({ state: 'saved', added, before: result.points - added, after: result.points });
-    } catch {
-      if (sent) current.retried = true;
-      if (lesson.current === current) setLessonSave({ state: 'failed' });
-    }
-  };
   const finishedFirstTry = active?.done ? active.firstTry : null;
-  useEffect(() => {
-    // Once per finished lesson (including its review round); leaving early saves nothing.
-    const current = lesson.current;
-    if (finishedFirstTry === null || !current || current.saved) return;
-    current.saved = true;
-    summaryShownAt.current = Date.now();
-    void saveLesson(finishedFirstTry);
-    // oxlint-disable-next-line react-hooks/exhaustive-deps -- runs when a lesson finishes
-  }, [finishedFirstTry]);
-  // Summary animation: the points fill the bar (top bar and summary) once per saved lesson.
-  const summaryShownAt = useRef(0);
-  const chimeTimer = useRef(0);
-  const [newBadge, setNewBadge] = useState(0);
-  const animationRun =
-    lessonSave?.state === 'saved' && lessonSave.added > 0
-      ? {
-          key: `${lessonSave.before}:${lessonSave.after}:${summaryShownAt.current}`,
-          before: lessonSave.before,
-          after: lessonSave.after,
-          delay: 700,
-        }
-      : null;
-  const animated = usePointsAnimation(animationRun, (badge) => {
-    setNewBadge(badge);
-    // The chime never cuts the completion fanfare (about 2 s after the summary appears).
-    window.clearTimeout(chimeTimer.current);
-    const wait = summaryShownAt.current + 2200 - Date.now();
-    if (wait > 0) chimeTimer.current = window.setTimeout(playBadge, wait);
-    else playBadge();
-  });
-  useEffect(() => {
-    if (lessonSave?.state !== 'saved') {
-      setNewBadge(0);
-      window.clearTimeout(chimeTimer.current);
-    }
-  }, [lessonSave]);
-  useEffect(() => () => window.clearTimeout(chimeTimer.current), []);
-  // SCRUM-118: open the unlock offer once the points have filled the bar.
-  useEffect(() => {
-    if (!offer || lessonSave?.state !== 'saved') return;
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    const fill = pointsFrames(lessonSave.before, lessonSave.after).reduce(
-      (sum, f) => sum + f.hold,
-      0,
-    );
-    const wait = reduce ? 900 : (lessonSave.added > 0 ? 700 + fill : 0) + 900;
-    const timer = window.setTimeout(() => setOfferOpen(true), wait);
-    return () => window.clearTimeout(timer);
-  }, [offer, lessonSave]);
-  const closeOffer = () => {
-    setOfferOpen(false);
-    setOffer(null);
-  };
-  useEffect(() => {
-    if (!warming) return;
-    const timer = window.setTimeout(() => setWarming(false), 1600);
-    return () => window.clearTimeout(timer);
-  }, [warming]);
-  // Before the first animation frame the bar still shows the old total (no flash of the new one).
-  // After the lesson's animation the total can change again (streak unlock pays points):
-  // then the bar shows the new total.
-  const animating = animationRun !== null && points === animationRun.after;
-  const shownFrame = animating
-    ? (animated ?? staticFrame(animationRun.before))
-    : points === null
-      ? null
-      : staticFrame(points);
+  const {
+    points,
+    streak,
+    showProgress,
+    streakAtStart,
+    offer,
+    offerOpen,
+    closeOffer,
+    warming,
+    setWarming,
+    lessonSave,
+    beginLesson,
+    saveLesson,
+    endLesson,
+    newBadge,
+    shownFrame,
+  } = useLessonPoints({ account, accountKnown, finishedFirstTry, playBadge });
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
     const input = inputRef.current;
@@ -403,27 +222,30 @@ export default function App() {
     flushSync(() => setInputMode(padMode ? 'native' : 'pad'));
     inputRef.current?.focus();
   };
+  // Every lesson's typed or chosen answer; each start sets its own again anyway.
+  const resetAnswers = () => {
+    setAnswer('');
+    setChoice('');
+    setWritten('');
+    setWriteNote(null);
+    setWrongAnswer(null);
+  };
+  // Both ways out of a lesson (Back/summary and the leave dialog) end here.
   const endPractice = () => {
-    lesson.current = null;
-    closeOffer();
-    waitingStart.current = null;
-    setLessonSave(null);
+    endLesson();
     focusMenuHeading.current = true;
     words.stop();
     setSession(null);
     setEnglishSession(null);
     setWriteSession(null);
-    setWritten('');
-    setWriteNote(null);
-    setWrongAnswer(null);
+    resetAnswers();
   };
   // What to open after leaving a lesson (the profile button asks like Back, then opens it).
   const afterLeave = useRef<(() => void) | null>(null);
   const requestLeave = (then: (() => void) | null = null) => {
     if (settingsOpen || hintOpen || leaveOpen) return;
     afterLeave.current = then;
-    if (active && hasProgress(active, session ? answer : writeSession ? written : choice))
-      setLeaveOpen(true);
+    if (lessonKind && hasProgress(lessonKind.session, lessonKind.answer)) setLeaveOpen(true);
     else {
       endPractice();
       then?.();
@@ -505,25 +327,24 @@ export default function App() {
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
     beginLesson(englishSize);
+    resetForNewSession();
+    void activateSound();
+    let first: string;
     if (englishLevel === 3) {
-      resetForNewSession();
-      void activateSound();
       setWritten('');
       setWriteNote(null);
       setWrongAnswer(null);
       const created = createSession(generateWriteSession(englishSize));
       setWriteSession(created);
-      setPlaySource('speaker');
-      void words.play(created.exercises[0].target);
-      return;
+      first = created.exercises[0].target;
+    } else {
+      setChoice('');
+      const created = createSession(generateWordSession(englishLevel, englishSize));
+      setEnglishSession(created);
+      first = created.exercises[0].target;
     }
-    resetForNewSession();
-    void activateSound();
-    setChoice('');
-    const created = createSession(generateWordSession(englishLevel, englishSize));
-    setEnglishSession(created);
     setPlaySource('speaker');
-    void words.play(created.exercises[0].target);
+    void words.play(first);
   };
   const chooseWord = (word: string) => {
     if (!englishSession || englishSession.solved) return;
@@ -550,6 +371,13 @@ export default function App() {
       setWritten('');
     }
   };
+  // After Next in an English lesson: the new word plays from this tap; the summary is quiet.
+  const playFollowing = <E extends { target: string }>(following: Session<E>) => {
+    const question = currentExercise(following);
+    setPlaySource('speaker');
+    if (!following.done && question) void words.play(question.target);
+    else words.stop();
+  };
   const nextWrite = () => {
     if (!writeSession) return;
     void activateSound();
@@ -558,10 +386,7 @@ export default function App() {
     setWritten('');
     setWriteNote(null);
     setWrongAnswer(null);
-    const question = currentExercise(following);
-    setPlaySource('speaker');
-    if (!following.done && question) void words.play(question.target);
-    else words.stop();
+    playFollowing(following);
   };
   const nextWord = () => {
     if (!englishSession) return;
@@ -569,11 +394,127 @@ export default function App() {
     const following = advance(englishSession);
     setEnglishSession(following);
     setChoice('');
-    const question = currentExercise(following);
-    setPlaySource('speaker');
-    if (!following.done && question) void words.play(question.target);
-    else words.stop();
+    playFollowing(following);
   };
+
+  // The lesson on screen, whichever kind: one summary, one position text and one Next label.
+  const lessonKind: LessonKind | null = writeSession
+    ? {
+        session: writeSession,
+        answer: written,
+        trail: t.englishTrail,
+        eyebrow: t.englishTrail,
+        finishedLabel: t.writeFinished,
+        onAgain: startEnglish,
+        practice: () =>
+          writeQuestion && (
+            <EnglishWriteView
+              t={t}
+              question={writeQuestion}
+              position={positionText(t, writeSession, t.englishWord)}
+              reviewing={writeSession.reviewing}
+              solved={writeSession.solved}
+              feedback={writeSession.feedback}
+              attempts={writeSession.attempts}
+              wrongAnswer={wrongAnswer}
+              prompt={writeNote}
+              answer={written}
+              playing={!!words.playing && playSource === 'speaker'}
+              playFailed={words.failed}
+              nextLabel={nextLabel(t, writeSession, true)}
+              keyboard={keyboard}
+              speakerRef={speakerRef}
+              inputRef={writeInputRef}
+              onAnswerChange={(value) => {
+                if (writeSession.solved) return;
+                setWritten(value);
+                setWriteNote(null);
+                if (writeSession.feedback !== 'ready')
+                  setWriteSession((previous) => previous && clearFeedback(previous));
+              }}
+              onReplay={() => {
+                setPlaySource('speaker');
+                void words.play(writeQuestion.target);
+              }}
+              onRetryPlay={() => void words.retry()}
+              onCheck={checkWrite}
+              onNext={nextWrite}
+            />
+          ),
+      }
+    : englishSession
+      ? {
+          session: englishSession,
+          answer: choice,
+          trail: t.englishTrail,
+          eyebrow: t.englishTrail,
+          finishedLabel: t.englishFinished,
+          onAgain: startEnglish,
+          practice: () =>
+            englishQuestion && (
+              <EnglishPracticeView
+                t={t}
+                question={englishQuestion}
+                position={positionText(t, englishSession, t.englishWord)}
+                reviewing={englishSession.reviewing}
+                solved={englishSession.solved}
+                feedback={englishSession.feedback}
+                choice={choice}
+                playing={words.playing ? playSource : null}
+                playFailed={words.failed}
+                nextLabel={nextLabel(t, englishSession, true)}
+                speakerRef={speakerRef}
+                nextRef={nextRef}
+                onReplay={() => {
+                  setPlaySource('speaker');
+                  void words.play(englishQuestion.target);
+                }}
+                onRetryPlay={() => void words.retry()}
+                onChoose={chooseWord}
+                onCheck={checkChoice}
+                onNext={nextWord}
+              />
+            ),
+        }
+      : session
+        ? {
+            session,
+            answer,
+            trail: t.trail,
+            onAgain: start,
+            practice: () =>
+              current && (
+                <PracticeView
+                  t={t}
+                  level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
+                  current={current}
+                  pictureTheme={pictureTheme}
+                  presentation={presentation}
+                  onPop={playPop}
+                  position={positionText(t, session, t.exercise)}
+                  reviewing={session.reviewing}
+                  solved={session.solved}
+                  feedback={session.feedback}
+                  nextLabel={nextLabel(t, session)}
+                  answer={answer}
+                  padMode={padMode}
+                  touch={touch}
+                  hintOpen={hintOpen}
+                  inputRef={inputRef}
+                  nextRef={nextRef}
+                  hintRef={hintRef}
+                  onSubmit={submit}
+                  onAnswerChange={editAnswer}
+                  onAnswerKey={handleAnswerKey}
+                  onPadKey={padEdit}
+                  onNext={next}
+                  onOpenHint={openHint}
+                  onToggleInputMode={toggleInputMode}
+                />
+              ),
+          }
+        : null;
+  const modalOpen = leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen;
 
   // A lesson in progress (not its summary): the bar shows no profile, so a child cannot leave
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
@@ -624,19 +565,19 @@ export default function App() {
     <div
       className={`app-shell ${!active && !accountScreen ? 'menu-shell' : ''} ${!active && accountScreen ? 'account-shell' : ''} ${compact && active && !active.done ? 'compact-practice' : ''}`}
     >
-      {active && !active.done && (
+      {lessonKind && !lessonKind.session.done && (
         <progress
           className="viewport-progress"
-          aria-label={session ? t.trail : t.englishTrail}
-          max={active.exercises.length}
-          value={progressValue(active)}
+          aria-label={lessonKind.trail}
+          max={lessonKind.session.exercises.length}
+          value={progressValue(lessonKind.session)}
         />
       )}
       <h1 className="sr-only">Bearmatics</h1>
       <AppBar
         label={t.appBar}
         back={back}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
+        inert={modalOpen}
         layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
         {account && points !== null && shownFrame && (
@@ -678,11 +619,7 @@ export default function App() {
           <span aria-hidden="true">⚙</span>
         </button>
       </AppBar>
-      <main
-        ref={menuRef}
-        className={`workspace ${active ? 'in-session' : ''}`}
-        inert={leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen}
-      >
+      <main ref={menuRef} className={`workspace ${active ? 'in-session' : ''}`} inert={modalOpen}>
         <aside className="companion">
           <div className="bear-scene">
             <span className="scene-ring" />
@@ -695,245 +632,73 @@ export default function App() {
             <span className="scene-leaf leaf-two" />
           </div>
         </aside>
-        {writeSession ? (
-          writeSession.done ? (
+        {lessonKind ? (
+          lessonKind.session.done ? (
             <SummaryView
               t={t}
-              eyebrow={t.englishTrail}
-              finishedLabel={t.writeFinished}
-              total={writeSession.exercises.length}
-              firstTry={writeSession.firstTry}
+              eyebrow={lessonKind.eyebrow}
+              finishedLabel={lessonKind.finishedLabel}
+              total={lessonKind.session.exercises.length}
+              firstTry={lessonKind.session.firstTry}
               headingRef={summaryRef}
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}
-              onAgain={startEnglish}
+              onAgain={lessonKind.onAgain}
               onBack={endPractice}
             />
           ) : (
-            writeQuestion && (
-              <EnglishWriteView
-                t={t}
-                question={writeQuestion}
-                position={
-                  writeSession.reviewing
-                    ? `${t.review} · ${writeSession.reviewQueue.length} ${t.remaining}`
-                    : `${t.englishWord} ${writeSession.index + 1} ${t.of} ${writeSession.exercises.length}`
-                }
-                reviewing={writeSession.reviewing}
-                solved={writeSession.solved}
-                feedback={writeSession.feedback}
-                attempts={writeSession.attempts}
-                wrongAnswer={wrongAnswer}
-                prompt={writeNote}
-                answer={written}
-                playing={!!words.playing && playSource === 'speaker'}
-                playFailed={words.failed}
-                nextLabel={
-                  nextAction(writeSession) === 'next' ? t.englishNext : t[nextAction(writeSession)]
-                }
-                keyboard={keyboard}
-                speakerRef={speakerRef}
-                inputRef={writeInputRef}
-                onAnswerChange={(value) => {
-                  if (writeSession.solved) return;
-                  setWritten(value);
-                  setWriteNote(null);
-                  if (writeSession.feedback !== 'ready')
-                    setWriteSession((previous) => previous && clearFeedback(previous));
-                }}
-                onReplay={() => {
-                  setPlaySource('speaker');
-                  void words.play(writeQuestion.target);
-                }}
-                onRetryPlay={() => void words.retry()}
-                onCheck={checkWrite}
-                onNext={nextWrite}
-              />
-            )
+            lessonKind.practice()
           )
-        ) : englishSession ? (
-          englishSession.done ? (
-            <SummaryView
-              t={t}
-              eyebrow={t.englishTrail}
-              finishedLabel={t.englishFinished}
-              total={englishSession.exercises.length}
-              firstTry={englishSession.firstTry}
-              headingRef={summaryRef}
-              points={summaryPoints}
-              footer={summaryFooter}
-              streak={summaryStreak}
-              onAgain={startEnglish}
-              onBack={endPractice}
-            />
-          ) : (
-            englishQuestion && (
-              <EnglishPracticeView
-                t={t}
-                question={englishQuestion}
-                position={
-                  englishSession.reviewing
-                    ? `${t.review} · ${englishSession.reviewQueue.length} ${t.remaining}`
-                    : `${t.englishWord} ${englishSession.index + 1} ${t.of} ${englishSession.exercises.length}`
-                }
-                reviewing={englishSession.reviewing}
-                solved={englishSession.solved}
-                feedback={englishSession.feedback}
-                choice={choice}
-                playing={words.playing ? playSource : null}
-                playFailed={words.failed}
-                nextLabel={
-                  nextAction(englishSession) === 'next'
-                    ? t.englishNext
-                    : t[nextAction(englishSession)]
-                }
-                speakerRef={speakerRef}
-                nextRef={nextRef}
-                onReplay={() => {
-                  setPlaySource('speaker');
-                  void words.play(englishQuestion.target);
-                }}
-                onRetryPlay={() => void words.retry()}
-                onChoose={chooseWord}
-                onCheck={checkChoice}
-                onNext={nextWord}
-              />
-            )
-          )
-        ) : !session && accountScreen ? (
-          (() => {
-            const common = {
-              t: t.account,
-              headingRef: menuHeadingRef,
-              onPrivacy: () => openAccount('privacy'),
-            };
-            const signedIn = (found: Account) => {
-              setAccount(found);
-              openAccount(null);
-            };
-            // Only known results become text; the address bar can never inject a message.
-            const notices: Record<string, string> = {
-              'google-unavailable': t.account.errors.googleUnavailable,
-              'google-failed': t.account.errors.googleFailed,
-              'google-cancelled': t.account.errors.googleFailed,
-              'signed-out': t.account.signedOut,
-              deleted: t.account.deleted,
-            };
-            const notice = notices[accountNotice] ?? '';
-            if (accountScreen === 'privacy')
-              return <PrivacyView t={t.account} headingRef={menuHeadingRef} />;
-            if (accountScreen === 'signup') return <SignUpView {...common} onSignedIn={signedIn} />;
-            if (accountScreen === 'google-new')
-              return <GoogleNewView {...common} onSignedIn={signedIn} />;
-            if (accountScreen === 'profile' && account)
-              return (
-                <ProfileView
-                  {...common}
-                  account={account}
-                  onAccount={setAccount}
-                  onSignedOut={(reason) => {
-                    setAccount(null);
-                    openAccount('signin', reason);
-                  }}
-                />
-              );
-            return (
-              <SignInView
-                {...common}
-                googleReady={googleReady}
-                notice={notice}
-                onCreate={() => openAccount('signup')}
-                onSignedIn={signedIn}
-              />
-            );
-          })()
-        ) : !session ? (
-          course === 'small' ? (
-            <LevelMenu
-              t={t}
-              levels={menuLevels(t, SMALL_MATH_LEVELS)}
-              heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
-              startLabel={t.start}
-              headingRef={menuHeadingRef}
-              level={smallLevel}
-              size={smallSize}
-              onLevelChange={setSmallLevel}
-              onSizeChange={setSmallSize}
-              onStart={start}
-            />
-          ) : course === 'math' ? (
-            <LevelMenu
-              t={t}
-              levels={menuLevels(t, MATH_LEVELS)}
-              heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
-              startLabel={t.start}
-              headingRef={menuHeadingRef}
-              level={level}
-              size={size}
-              onLevelChange={setLevel}
-              onSizeChange={setSize}
-              onStart={start}
-            />
-          ) : course === 'english' ? (
-            <EnglishHome
-              t={t}
-              level={englishLevel}
-              size={englishSize}
-              headingRef={menuHeadingRef}
-              onLevelChange={setEnglishLevel}
-              onSizeChange={setEnglishSize}
-              onStart={startEnglish}
-            />
-          ) : (
-            <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
-          )
-        ) : session.done ? (
-          <SummaryView
+        ) : accountScreen ? (
+          <AccountScreens
+            t={t.account}
+            screen={accountScreen}
+            account={account}
+            notice={accountNotice}
+            googleReady={googleReady}
+            headingRef={menuHeadingRef}
+            onAccount={setAccount}
+            onOpen={openAccount}
+          />
+        ) : course === 'small' ? (
+          <LevelMenu
             t={t}
-            total={session.exercises.length}
-            firstTry={session.firstTry}
-            headingRef={summaryRef}
-            points={summaryPoints}
-            footer={summaryFooter}
-            streak={summaryStreak}
-            onAgain={start}
-            onBack={endPractice}
+            levels={menuLevels(t, SMALL_MATH_LEVELS)}
+            heading={{ eyebrow: t.smallTrail, title: t.smallChoose, intro: t.smallIntro }}
+            startLabel={t.start}
+            headingRef={menuHeadingRef}
+            level={smallLevel}
+            size={smallSize}
+            onLevelChange={setSmallLevel}
+            onSizeChange={setSmallSize}
+            onStart={start}
+          />
+        ) : course === 'math' ? (
+          <LevelMenu
+            t={t}
+            levels={menuLevels(t, MATH_LEVELS)}
+            heading={{ eyebrow: t.trail, title: t.choose, intro: t.intro }}
+            startLabel={t.start}
+            headingRef={menuHeadingRef}
+            level={level}
+            size={size}
+            onLevelChange={setLevel}
+            onSizeChange={setSize}
+            onStart={start}
+          />
+        ) : course === 'english' ? (
+          <EnglishHome
+            t={t}
+            level={englishLevel}
+            size={englishSize}
+            headingRef={menuHeadingRef}
+            onLevelChange={setEnglishLevel}
+            onSizeChange={setEnglishSize}
+            onStart={startEnglish}
           />
         ) : (
-          current && (
-            <PracticeView
-              t={t}
-              level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
-              current={current}
-              pictureTheme={pictureTheme}
-              presentation={presentation}
-              onPop={playPop}
-              position={
-                session.reviewing
-                  ? `${t.review} · ${session.reviewQueue.length} ${t.remaining}`
-                  : `${t.exercise} ${session.index + 1} ${t.of} ${session.exercises.length}`
-              }
-              reviewing={session.reviewing}
-              solved={session.solved}
-              feedback={session.feedback}
-              nextLabel={t[nextAction(session)]}
-              answer={answer}
-              padMode={padMode}
-              touch={touch}
-              hintOpen={hintOpen}
-              inputRef={inputRef}
-              nextRef={nextRef}
-              hintRef={hintRef}
-              onSubmit={submit}
-              onAnswerChange={editAnswer}
-              onAnswerKey={handleAnswerKey}
-              onPadKey={padEdit}
-              onNext={next}
-              onOpenHint={openHint}
-              onToggleInputMode={toggleInputMode}
-            />
-          )
+          <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
         )}
       </main>
       {boardOpen && account && (
@@ -994,8 +759,6 @@ export default function App() {
           }}
           onLeave={() => {
             setLeaveOpen(false);
-            setAnswer('');
-            setChoice('');
             endPractice();
             afterLeave.current?.();
             afterLeave.current = null;

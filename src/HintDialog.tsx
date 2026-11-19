@@ -1,4 +1,5 @@
-import { useEffect, useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useModalFocus } from './useModalFocus';
 
 export default function HintDialog({
   title,
@@ -32,13 +33,7 @@ export default function HintDialog({
       dialog.querySelector<HTMLButtonElement>('.dialog-close')?.focus({ preventScroll: true });
     }
   }, [nextDisabled]);
-  useEffect(() => {
-    const trigger = triggerRef.current;
-    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
-    return () => {
-      if (trigger?.isConnected) trigger.focus({ preventScroll: true });
-    };
-  }, [triggerRef]);
+  const onKeyDown = useModalFocus(dialogRef, { onEscape: onClose, restoreTo: triggerRef });
   return (
     <div className="modal-backdrop hint-backdrop">
       <div
@@ -48,33 +43,7 @@ export default function HintDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault();
-            onClose();
-          }
-          if (event.key === 'Tab') {
-            const controls = dialogRef.current?.querySelectorAll<HTMLElement>(
-              'button:not(:disabled), [tabindex="0"]',
-            );
-            if (!controls?.length) return;
-            const first = controls[0],
-              last = controls[controls.length - 1];
-            const active = document.activeElement as HTMLElement | null;
-            if (!active || ![...controls].includes(active)) {
-              // Focus sits on a non-tabbable element (e.g. the leaderboard box after Try
-              // again): the browser would leave the dialog (QA154-07).
-              event.preventDefault();
-              (event.shiftKey ? last : first).focus();
-            } else if (event.shiftKey && document.activeElement === first) {
-              event.preventDefault();
-              last.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-              event.preventDefault();
-              first.focus();
-            }
-          }
-        }}
+        onKeyDown={onKeyDown}
       >
         <div className="hint-dialog-header">
           <h2 id={titleId}>{title}</h2>

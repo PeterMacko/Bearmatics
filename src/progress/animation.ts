@@ -50,7 +50,8 @@ export function pointsFrames(before: number, after: number): PointsFrame[] {
   return frames;
 }
 
-const reducedMotion = () =>
+/** The player asked for reduced motion (false outside a browser). */
+export const reducedMotion = () =>
   typeof window !== 'undefined' &&
   typeof window.matchMedia === 'function' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;

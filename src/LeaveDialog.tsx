@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
+import { useRef } from 'react';
 import type { Copy } from './i18n';
+import { useModalFocus } from './useModalFocus';
 
 /** Modal asking whether to leave an unfinished session. */
 export default function LeaveDialog({
@@ -13,13 +14,7 @@ export default function LeaveDialog({
 }) {
   const dialogRef = useRef<HTMLDivElement>(null);
   // Focus the first button on open; return focus to the opener on close.
-  useEffect(() => {
-    const previousFocus = document.activeElement as HTMLElement | null;
-    dialogRef.current?.querySelector<HTMLButtonElement>('button')?.focus();
-    return () => {
-      if (previousFocus?.isConnected) previousFocus.focus();
-    };
-  }, []);
+  const onKeyDown = useModalFocus(dialogRef, { onEscape: onStay, restoreTo: 'opener' });
   return (
     <div className="modal-backdrop">
       <div
@@ -29,25 +24,7 @@ export default function LeaveDialog({
         aria-modal="true"
         aria-labelledby="leave-title"
         aria-describedby="leave-description"
-        onKeyDown={(event) => {
-          if (event.key === 'Escape') {
-            event.preventDefault();
-            onStay();
-          }
-          if (event.key === 'Tab') {
-            const buttons = dialogRef.current?.querySelectorAll<HTMLButtonElement>('button');
-            if (!buttons?.length) return;
-            const first = buttons[0],
-              last = buttons[buttons.length - 1];
-            if (event.shiftKey && document.activeElement === first) {
-              event.preventDefault();
-              last.focus();
-            } else if (!event.shiftKey && document.activeElement === last) {
-              event.preventDefault();
-              first.focus();
-            }
-          }
-        }}
+        onKeyDown={onKeyDown}
       >
         <h2 id="leave-title">{t.leaveTitle}</h2>
         <p id="leave-description">{t.leaveText}</p>
