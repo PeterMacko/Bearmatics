@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
 import { useBearTap } from './useBearTap';
 import { useMenuWink } from './useMenuWink';
 
@@ -28,6 +28,22 @@ export default function Bear({
   });
   const tapped = tap.tapped;
   const bubbleRef = useRef<HTMLSpanElement>(null);
+  // QA178-04: the room between the bubble's left edge (68% of the bear's box) and the window's
+  // right edge, measured on the tap BEFORE the bubble exists, so the bubble wraps to fit from its
+  // first layout. A bubble that stuck out even for one layout made mobile browsers zoom out,
+  // which reset the page scroll (Slovak at 200% text on a small phone).
+  const [room, setRoom] = useState<number | undefined>(undefined);
+  const onClick = (event: MouseEvent<SVGSVGElement>) => {
+    let host = event.currentTarget.parentElement;
+    while (host && host !== document.body && getComputedStyle(host).position === 'static')
+      host = host.parentElement;
+    if (host && document.documentElement.clientWidth > 0) {
+      const box = host.getBoundingClientRect();
+      const free = document.documentElement.clientWidth - 4 - (box.left + box.width * 0.68);
+      setRoom(Math.max(0, Math.floor(free)));
+    }
+    tap.handlers.onClick();
+  };
   // The bubble never makes the page scroll sideways (long Slovak words at 200% text beside a
   // bear near the right edge): shift it left by whatever would stick out. Measured from layout
   // offsets, because the pop-in scale transform changes the drawn box.
@@ -53,6 +69,7 @@ export default function Bear({
         aria-hidden="true"
         focusable="false"
         {...tap.handlers}
+        onClick={onClick}
       >
         <ellipse className="bear-shadow" cx="130" cy="262" rx="82" ry="10" fill="#efdcbf" />
         <g className="bear-hop">
@@ -165,7 +182,12 @@ export default function Bear({
         </g>
       </svg>
       {tapped && (
-        <span ref={bubbleRef} className="bear-bubble" aria-hidden="true">
+        <span
+          ref={bubbleRef}
+          className="bear-bubble"
+          aria-hidden="true"
+          style={room === undefined ? undefined : { maxWidth: room }}
+        >
           {bubble}
         </span>
       )}

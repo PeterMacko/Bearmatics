@@ -170,6 +170,12 @@
   .compact-practice .english-practice {
     position: relative;
   }
+  /* QA178-01: the positioned lesson would paint its header over the (absolute) bear, so taps
+     never reached it. Above the lesson, the bear takes taps only on its own box; the header's
+     layout does not change. The open-keyboard layout (z-index 9) still covers it. */
+  .compact-practice .workspace:has(.english-practice) .companion {
+    z-index: 1;
+  }
   .compact-practice .english-practice .speaker-button {
     position: absolute;
     top: 0;
@@ -389,6 +395,35 @@
 .english-practice .play-error > span {
   flex: 1 1 8em;
   max-width: max-content;
+  /* Two lines beside the button stay within the reserved two-line space (2.6em) at 200% text. */
+  line-height: 1.25;
+}
+/* QA178-02: where the message no longer fits beside Try again (small phones, landscape phones and
+   tablets at large text; never at 100% text on the defined devices, whose answer area is at
+   least 19em wide), only the button is shown. The message stays in the alert for screen
+   readers, so it is announced exactly as before. Slovak needs more room than English. */
+.english-practice form {
+  container: english-answer / inline-size;
+}
+@container english-answer (max-width: 15.5em) {
+  .english-practice .play-error > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@container english-answer (max-width: 17.5em) {
+  .english-practice .play-error:lang(sk) > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 .english-practice .play-error .secondary {
   flex: none;
