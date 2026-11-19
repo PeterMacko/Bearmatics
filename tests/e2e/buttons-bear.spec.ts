@@ -89,6 +89,8 @@ async function finishLesson(page: Page) {
  */
 async function expectButton(button: Locator, icon: string, secondary: boolean) {
   await expect(button).toBeVisible();
+  // Not hovered (the pointer may rest where the previous screen's button was).
+  await button.page().mouse.move(0, 0);
   const m = await button.evaluate((b) => {
     const style = getComputedStyle(b);
     const first = b.firstElementChild;
@@ -144,6 +146,10 @@ async function expectButton(button: Locator, icon: string, secondary: boolean) {
     });
 }
 
+/** A summary button (the app bar's Back has the same name as Choose level). */
+const summaryButton = (page: Page, name: string) =>
+  page.locator('.summary').getByRole('button', { name, exact: true });
+
 const pageScroll = (page: Page) =>
   page.evaluate(() => ({
     y: document.documentElement.scrollHeight - document.documentElement.clientHeight,
@@ -191,6 +197,7 @@ for (const device of ALL_DEVICES) {
       await expect(page.locator('.bear-bubble')).toHaveText(c.bubble);
       expect((await pageScroll(page)).x).toBe(0);
       await expect(page.locator('.bear-bubble')).toHaveCount(0, { timeout: 3000 });
+      await page.locator('.session-options input').first().check();
       await page.locator('.start-button').click();
       // Lesson: the tap keeps focus and the typed answer.
       await type(page, '7');
@@ -215,8 +222,8 @@ for (const device of ALL_DEVICES) {
       await dialog.getByRole('button', { name: c.stay, exact: true }).click();
       // Summary (signed out): both buttons, and the page does not scroll.
       await finishLesson(page);
-      await expectButton(page.getByRole('button', { name: c.again, exact: true }), 'replay', false);
-      await expectButton(page.getByRole('button', { name: c.back, exact: true }), 'list', true);
+      await expectButton(summaryButton(page, c.again), 'replay', false);
+      await expectButton(summaryButton(page, c.back), 'list', true);
       await nextFrames(page);
       if (!SUMMARY_SCROLLED_BEFORE.includes(device))
         expect(await pageScroll(page)).toEqual({ x: 0, y: 0 });
@@ -262,7 +269,7 @@ for (const device of ALL_DEVICES) {
       await page.keyboard.press('Escape');
       await expect(offer).toHaveCount(0);
       // Signed-in summary: still no page scroll.
-      await expectButton(page.getByRole('button', { name: c.back, exact: true }), 'list', true);
+      await expectButton(summaryButton(page, c.back), 'list', true);
       await nextFrames(page);
       if (!SUMMARY_SCROLLED_BEFORE.includes(device))
         expect(await pageScroll(page)).toEqual({ x: 0, y: 0 });
@@ -307,20 +314,19 @@ test('reduced motion: the tapped bear does not hop', async ({ page }) => {
 
 test('the tapped bear hops about 8 px and comes back within about 1 s', async ({ page }) => {
   await page.goto('/');
-  const top = () => page.locator('.bear-hop').evaluate((g) => g.getBoundingClientRect().top);
-  const rest = await top();
+  // The hop's own offset in the bear's drawing units (the menu sway moves the whole bear, so
+  // screen positions would mix both).
+  const lift = () =>
+    page.locator('.bear-hop').evaluate((g) => 0 - new DOMMatrix(getComputedStyle(g).transform).m42);
+  expect(await lift()).toBe(0);
   await page.locator('svg.bear').click();
-  let highest = rest;
+  let highest = 0;
   for (let i = 0; i < 20; i++) {
-    highest = Math.min(highest, await top());
+    highest = Math.max(highest, await lift());
     await page.waitForTimeout(25);
   }
-  // 8 px in the bear's own units, scaled with the drawing.
-  const scale = await page
-    .locator('svg.bear')
-    .evaluate((svg) => svg.getBoundingClientRect().width / 260);
-  expect(rest - highest).toBeGreaterThan(4 * scale);
-  expect(rest - highest).toBeLessThanOrEqual(8 * scale + 1);
+  expect(highest).toBeGreaterThan(4);
+  expect(highest).toBeLessThanOrEqual(8.01);
   await page.waitForTimeout(1100);
-  expect(Math.abs((await top()) - rest)).toBeLessThan(0.5);
+  expect(await lift()).toBe(0);
 });
