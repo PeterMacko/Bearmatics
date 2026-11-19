@@ -9,12 +9,12 @@ compatibility_date = "2026-11-09"
 [vars]
 GOOGLE_CLIENT_ID = "182275285165-b98ddo557hgpj0m19gbi1kvcftsspfdh.apps.googleusercontent.com"
 
-# Static app as before; only /api reaches the server script (SCRUM-96).
+# Static app via ASSETS; the server script runs first for every request (SCRUM-96, SCRUM-198).
 [assets]
 directory = "./dist"
 not_found_handling = "single-page-application"
 binding = "ASSETS"
-run_worker_first = ["/api", "/api/*"]
+run_worker_first = true  # every request, so http is redirected to https (SCRUM-198)
 
 # Live database. Previews use their own database, local dev a local file.
 [[d1_databases]]

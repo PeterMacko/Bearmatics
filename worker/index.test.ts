@@ -90,3 +90,51 @@ describe('server /api', () => {
     expect(await response.text()).toBe('app');
   });
 });
+
+describe('https only (SCRUM-198)', () => {
+  const assets = () => ({ fetch: vi.fn(async () => new Response('app')) }) as unknown as Fetcher;
+
+  it('redirects plain http to the same https address, for pages and /api', async () => {
+    const env = { DB: migrated, ASSETS: assets() };
+    for (const path of ['/', '/settings?lang=sk', '/api/health', '/api/session']) {
+      const response = await worker.fetch(
+        new Request(`http://bearmatics.mr-petermacko.workers.dev${path}`),
+        env,
+      );
+      expect(response.status).toBe(301);
+      expect(response.headers.get('location')).toBe(
+        `https://bearmatics.mr-petermacko.workers.dev${path}`,
+      );
+      expect(await response.text()).toBe('');
+    }
+    expect(env.ASSETS.fetch).not.toHaveBeenCalled();
+  });
+
+  it('never runs the API over plain http, whatever the method', async () => {
+    const response = await worker.fetch(
+      new Request('http://bearmatics.test/api/account/sign-in', { method: 'POST', body: '{}' }),
+      { DB: migrated },
+    );
+    expect(response.status).toBe(308);
+    expect(response.headers.get('location')).toBe('https://bearmatics.test/api/account/sign-in');
+  });
+
+  it('tells browsers to stay on https', async () => {
+    const page = await call('/', { DB: migrated, ASSETS: assets() });
+    expect(await page.text()).toBe('app');
+    expect(page.headers.get('strict-transport-security')).toBe('max-age=31536000');
+    const api = await call('/api/health', { DB: migrated });
+    expect(api.status).toBe(200);
+    expect(api.headers.get('strict-transport-security')).toBe('max-age=31536000');
+  });
+
+  it('keeps plain http on this computer for local development and tests', async () => {
+    for (const host of ['localhost:8787', '127.0.0.1:4173', '[::1]:8787']) {
+      const response = await worker.fetch(new Request(`http://${host}/api/health`), {
+        DB: migrated,
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get('strict-transport-security')).toBeNull();
+    }
+  });
+});
