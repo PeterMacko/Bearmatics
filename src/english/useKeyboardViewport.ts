@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { hasTouch } from '../touch';
 
 /**
  * SCRUM-80: on-screen keyboard awareness for the write screen.
@@ -43,10 +44,6 @@ function measure() {
   };
 }
 
-const isTouch = () =>
-  (navigator.maxTouchPoints ?? 0) > 0 ||
-  (typeof matchMedia === 'function' && matchMedia('(any-pointer: coarse)').matches);
-
 if (typeof window !== 'undefined') {
   measure();
   window.visualViewport?.addEventListener('resize', measure);
@@ -59,7 +56,7 @@ export function useKeyboardViewport(
 ): KeyboardViewport {
   const [state, setState] = useState<KeyboardViewport>(CLOSED);
   useEffect(() => {
-    if (!enabled || typeof window === 'undefined' || !isTouch()) return;
+    if (!enabled || typeof window === 'undefined' || !hasTouch()) return;
     let frame = 0;
     const update = () => {
       cancelAnimationFrame(frame);

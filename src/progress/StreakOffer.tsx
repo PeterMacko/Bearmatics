@@ -10,6 +10,22 @@ import StreakIcon from './StreakIcon';
 
 type Step = 'offer' | 'confirm' | 'busy' | 'warmed' | 'restarted';
 
+/** What a refused streak answer may carry: the new offer and/or the player's progress. */
+type StreakErrorBody = Partial<Progress> & { offer?: Offer };
+
+/** The error answer of a failed streak request, when the server sent one. */
+function streakErrorBody(failure: unknown): StreakErrorBody | null {
+  return failure instanceof AccountError &&
+    typeof failure.data === 'object' &&
+    failure.data !== null
+    ? failure.data
+    : null;
+}
+
+/** A refused answer that carries the progress (points with the streak) to show. */
+const carriesProgress = (data: StreakErrorBody | null): data is Progress & StreakErrorBody =>
+  typeof data?.points === 'number';
+
 /**
  * Unlock offer after the summary (SCRUM-118 rules 4-5): offer -> Unlock -> confirmation (points
  * after paying, badge change) -> Yes pays and the streak continues; No thanks starts again at 1.
@@ -80,10 +96,7 @@ export default function StreakOffer({
       setStep(unlock ? 'warmed' : 'restarted');
       if (unlock) onWarm();
     } catch (failure) {
-      const data =
-        failure instanceof AccountError
-          ? (failure.data as Partial<Progress & { offer: Offer }>)
-          : null;
+      const data = streakErrorBody(failure);
       if (failure instanceof AccountError && failure.code === 'offer_changed' && data?.offer) {
         // The price changed (another lesson finished meanwhile): show the new offer.
         setOffer(data.offer);
@@ -92,7 +105,7 @@ export default function StreakOffer({
         return;
       }
       if (failure instanceof AccountError && failure.code === 'no_offer') {
-        if (data && typeof data.points === 'number') onAnswered(data as Progress);
+        if (carriesProgress(data)) onAnswered(data);
         onClose();
         return;
       }

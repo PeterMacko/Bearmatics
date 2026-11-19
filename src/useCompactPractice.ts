@@ -1,16 +1,14 @@
 import { useEffect, useState } from 'react';
 import { COMPACT_PRACTICE_QUERY } from './breakpoints';
+import { ANY_COARSE_POINTER, hasTouch } from './touch';
 
 // Capability is independent of viewport and the primary/most recent pointer.
 export function useTouchCapability() {
-  const detect = () =>
-    (typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0) ||
-    (typeof matchMedia !== 'undefined' && matchMedia('(any-pointer: coarse)').matches);
-  const [touch, setTouch] = useState(detect);
+  const [touch, setTouch] = useState(hasTouch);
   useEffect(() => {
     if (typeof matchMedia === 'undefined') return;
-    const media = matchMedia('(any-pointer: coarse)');
-    const update = () => setTouch(detect());
+    const media = matchMedia(ANY_COARSE_POINTER);
+    const update = () => setTouch(hasTouch());
     update();
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);

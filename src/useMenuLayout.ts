@@ -71,7 +71,9 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       if (!disposed && !frame) frame = requestAnimationFrame(measure);
     };
     const focus = (event: FocusEvent) =>
-      reveal((event.target as HTMLElement).closest('.level-option'));
+      reveal(
+        event.target instanceof Element ? event.target.closest<HTMLElement>('.level-option') : null,
+      );
     measure();
     const observer = new ResizeObserver(schedule);
     [heading, controls, bear, ...cards].forEach((element) => element && observer.observe(element));

@@ -1,4 +1,5 @@
 import type { AnswerResult } from '../math/engine';
+import { shuffled } from '../random';
 import { SESSION_SIZES } from '../session';
 import { WORDS, type ListenLevel } from './words';
 
@@ -10,15 +11,6 @@ export type WordQuestion = Readonly<{
 }>;
 
 export { SESSION_SIZES };
-
-function shuffled<T>(items: readonly T[], rng: () => number): T[] {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.min(i, Math.floor(rng() * (i + 1)));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
-}
 
 /**
  * A session of distinct target words (no repeats), each with its three approved alternatives
@@ -36,10 +28,7 @@ export function generateWordSession(
     .map((entry) => ({
       level,
       target: entry.word,
-      options: shuffled(
-        [entry.word, ...entry.alternatives[level]],
-        rng,
-      ) as unknown as WordQuestion['options'],
+      options: shuffled([entry.word, ...entry.alternatives[level]], rng),
     }));
 }
 
