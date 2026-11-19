@@ -1,0 +1,2692 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`every /api route in every session state > DELETE delete account: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > DELETE delete account: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > DELETE delete account: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > DELETE delete account: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > DELETE delete account: valid 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google available: expired 1`] = `
+{
+  "body": "{"available":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google available: malformed token 1`] = `
+{
+  "body": "{"available":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google available: signed out 1`] = `
+{
+  "body": "{"available":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google available: unknown token 1`] = `
+{
+  "body": "{"available":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google available: valid 1`] = `
+{
+  "body": "{"available":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET google callback: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [
+    "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google callback: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [
+    "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google callback: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [
+    "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google callback: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [
+    "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google callback: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [
+    "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google start: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google start: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google start: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google start: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET google start: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "location": "https://bearmatics.test/?account=google-unavailable",
+  },
+  "setCookie": [],
+  "status": 303,
+}
+`;
+
+exports[`every /api route in every session state > GET health: expired 1`] = `
+{
+  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET health: malformed token 1`] = `
+{
+  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET health: signed out 1`] = `
+{
+  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET health: unknown token 1`] = `
+{
+  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET health: valid 1`] = `
+{
+  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET leaderboard: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET leaderboard: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET leaderboard: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET leaderboard: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET leaderboard: valid 1`] = `
+{
+  "body": "{"rows":[{"place":1,"nickname":"Little Bear","bear":2,"points":90,"streak":5,"frozen":false,"me":false},{"place":2,"nickname":"Little Bear","bear":2,"points":3,"streak":1,"frozen":false,"me":false}],"gapBefore":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET me: expired 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET me: malformed token 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET me: signed out 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET me: unknown token 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET me: valid 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route6x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > GET progress: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET progress: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET progress: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET progress: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > GET progress: valid 1`] = `
+{
+  "body": "{"points":0,"streak":0,"frozen":false,"today":false}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD health HEAD: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD health HEAD: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD health HEAD: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD health HEAD: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD health HEAD: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD leaderboard HEAD: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD leaderboard HEAD: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD leaderboard HEAD: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD leaderboard HEAD: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD leaderboard HEAD: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD me HEAD: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD me HEAD: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD me HEAD: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD me HEAD: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD me HEAD: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > HEAD progress HEAD: expired 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD progress HEAD: malformed token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD progress HEAD: signed out 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD progress HEAD: unknown token 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > HEAD progress HEAD: valid 1`] = `
+{
+  "body": "",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > PATCH update profile: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > PATCH update profile: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > PATCH update profile: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > PATCH update profile: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > PATCH update profile: valid 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route10x","nickname":"New Name","bear":4,"email":"p@example.com","leaderboard":false}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST answer streak (unlock): expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST answer streak (unlock): malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST answer streak (unlock): signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST answer streak (unlock): unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST answer streak (unlock): valid 1`] = `
+{
+  "body": "{"points":90,"streak":5,"frozen":false,"today":true}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST change password: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST change password: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST change password: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST change password: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST change password: valid 1`] = `
+{
+  "body": "{"ok":true}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST finish lesson: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST finish lesson: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST finish lesson: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST finish lesson: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST finish lesson: valid 1`] = `
+{
+  "body": "{"points":3,"streak":1,"frozen":false,"today":true,"added":3,"offer":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST google complete: expired 1`] = `
+{
+  "body": "{"error":"google_expired"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 410,
+}
+`;
+
+exports[`every /api route in every session state > POST google complete: malformed token 1`] = `
+{
+  "body": "{"error":"google_expired"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 410,
+}
+`;
+
+exports[`every /api route in every session state > POST google complete: signed out 1`] = `
+{
+  "body": "{"error":"google_expired"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 410,
+}
+`;
+
+exports[`every /api route in every session state > POST google complete: unknown token 1`] = `
+{
+  "body": "{"error":"google_expired"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 410,
+}
+`;
+
+exports[`every /api route in every session state > POST google complete: valid 1`] = `
+{
+  "body": "{"error":"google_expired"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 410,
+}
+`;
+
+exports[`every /api route in every session state > POST sign in: expired 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route38x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign in: malformed token 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route40x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign in: signed out 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route36x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign in: unknown token 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route39x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign in: valid 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"route42x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign out: expired 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign out: malformed token 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign out: signed out 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign out: unknown token 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign out: valid 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`every /api route in every session state > POST sign up: expired 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"signup31x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`every /api route in every session state > POST sign up: malformed token 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"signup33x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`every /api route in every session state > POST sign up: signed out 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"signup29x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`every /api route in every session state > POST sign up: unknown token 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"signup32x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`every /api route in every session state > POST sign up: valid 1`] = `
+{
+  "body": "{"account":{"kind":"password","username":"signup35x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`every /api route in every session state > POST start lesson: expired 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST start lesson: malformed token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST start lesson: signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST start lesson: unknown token 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`every /api route in every session state > POST start lesson: valid 1`] = `
+{
+  "body": "{"lessonId":"<hex32>"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+  ],
+  "status": 201,
+}
+`;
+
+exports[`other answers of signed-in routes > Google configured: start, callback without state cookie, complete without pending 1`] = `
+[
+  {
+    "body": "{"available":true}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 200,
+  },
+  {
+    "body": "",
+    "headers": {
+      "cache-control": "no-store",
+      "location": "https://accounts.google.com/o/oauth2/v2/auth?client_id=id-1&redirect_uri=https%3A%2F%2Fbearmatics.test%2Fapi%2Fauth%2Fgoogle%2Fcallback&response_type=code&scope=openid&state=<hex32>&code_challenge=<challenge>&code_challenge_method=S256&prompt=select_account",
+    },
+    "setCookie": [
+      "bm_google_state=<hex32.hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=600",
+    ],
+    "status": 302,
+  },
+  {
+    "body": "",
+    "headers": {
+      "cache-control": "no-store",
+      "location": "https://bearmatics.test/?account=google-failed",
+    },
+    "setCookie": [
+      "bm_google_state=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+    ],
+    "status": 303,
+  },
+  {
+    "body": "{"error":"google_expired"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 410,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > account deleted while starting or finishing a lesson (other device) 1`] = `
+[
+  {
+    "body": "{"error":"not_signed_in"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"not_signed_in"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > finish: unknown lesson, size mismatch, repeated save, frozen-streak offer 1`] = `
+[
+  {
+    "body": "{"error":"unknown_lesson"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 404,
+  },
+  {
+    "body": "{"error":"invalid","field":"size"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 400,
+  },
+  {
+    "body": "{"error":"invalid","field":"points"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 400,
+  },
+  {
+    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"added":4,"offer":null}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+  {
+    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"added":0,"offer":null}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+  {
+    "body": "{"points":8,"streak":1,"frozen":true,"today":false,"added":4,"offer":{"streak":1,"missed":2,"cost":1}}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+  {
+    "body": "{"points":8,"streak":1,"frozen":true,"today":false}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > password change attempt limit with a valid session 1`] = `
+[
+  {
+    "body": "{"error":"wrong_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 403,
+  },
+  {
+    "body": "{"error":"wrong_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 403,
+  },
+  {
+    "body": "{"error":"wrong_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 403,
+  },
+  {
+    "body": "{"error":"wrong_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 403,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > password change for a Google-less password account after success keeps this session 1`] = `
+[
+  {
+    "body": "{"ok":true}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+  {
+    "body": "{"account":{"kind":"password","username":"route75x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > sign-in attempt limit: 5 wrong tries, then even the right key is locked 1`] = `
+[
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+  {
+    "body": "{"error":"too_many_attempts"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 429,
+  },
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+  {
+    "body": "{"error":"wrong_username_or_password"}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 401,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > streak: no offer, changed price, answer No 1`] = `
+[
+  {
+    "body": "{"error":"no_offer","points":0,"streak":0,"frozen":false,"today":false}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 409,
+  },
+  {
+    "body": "{"error":"offer_changed","offer":{"streak":4,"missed":2,"cost":10},"points":100,"streak":4,"frozen":true,"today":false}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [],
+    "status": 409,
+  },
+  {
+    "body": "{"points":100,"streak":1,"frozen":false,"today":true}",
+    "headers": {
+      "cache-control": "no-store",
+      "content-type": "application/json; charset=utf-8",
+      "x-content-type-options": "nosniff",
+    },
+    "setCookie": [
+      "bm_session=<hex64>; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=2592000",
+    ],
+    "status": 200,
+  },
+]
+`;
+
+exports[`other answers of signed-in routes > unknown route, unknown method 1`] = `
+{
+  "body": "{"error":"not_found"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 404,
+}
+`;
+
+exports[`other answers of signed-in routes > unknown route, unknown method 2`] = `
+{
+  "body": "{"error":"method_not_allowed"}",
+  "headers": {
+    "allow": "GET, PATCH, DELETE, HEAD",
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 405,
+}
+`;
+
+exports[`other answers of signed-in routes > unknown route, unknown method 3`] = `
+{
+  "body": "{"error":"method_not_allowed"}",
+  "headers": {
+    "allow": "GET, HEAD",
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 405,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`write routes with a bad body, per session state > DELETE delete account: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"nickname"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > PATCH update profile: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"unlock"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST answer streak (unlock): invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"currentKey"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST change password: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"lessonId"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST finish lesson: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"invalid","field":"nickname"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"nickname"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST google complete: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"invalid","field":"key"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"key"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign in: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign out: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"account":null}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [
+    "bm_session=; Path=/api; HttpOnly; Secure; SameSite=Lax; Max-Age=0",
+  ],
+  "status": 200,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"invalid","field":"username"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"username"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST sign up: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: foreign origin, signed out 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: foreign origin, valid 1`] = `
+{
+  "body": "{"error":"forbidden"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 403,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: invalid JSON fields, signed out 1`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: invalid JSON fields, signed out 2`] = `
+{
+  "body": "{"error":"not_signed_in"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 401,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: invalid JSON fields, valid 1`] = `
+{
+  "body": "{"error":"invalid","field":"size"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;
+
+exports[`write routes with a bad body, per session state > POST start lesson: invalid JSON fields, valid 2`] = `
+{
+  "body": "{"error":"json_required"}",
+  "headers": {
+    "cache-control": "no-store",
+    "content-type": "application/json; charset=utf-8",
+    "x-content-type-options": "nosniff",
+  },
+  "setCookie": [],
+  "status": 400,
+}
+`;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isRudeNickname } from './nicknameFilter';
+import { isRudeNickname } from '../shared/nicknameFilter';
 
 describe('nickname filter (SCRUM-148)', () => {
   it('blocks the listed words in English and Slovak, also hidden and disguised', () => {

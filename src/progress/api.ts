@@ -1,10 +1,12 @@
 // Browser side of the points and streak API (SCRUM-117/118). Only for signed-in players.
+import type { Leaderboard, Offer } from '../../shared/api-types';
 import { call } from '../account/api';
+
+export type { LeaderboardRow, Offer } from '../../shared/api-types';
 
 /** today: a lesson already counted for the streak today (lit flame). */
 export type Streak = { streak: number; frozen: boolean; today: boolean };
 export type Progress = { points: number } & Streak;
-export type Offer = { streak: number; missed: number; cost: number };
 
 export const loadProgress = () => call<Progress>('/api/progress');
 export const startLesson = (size: number) =>
@@ -20,14 +22,4 @@ export const answerStreak = (unlock: boolean, cost: number) =>
   call<Progress>('/api/progress/streak', 'POST', { unlock, cost });
 
 /** SCRUM-148: leaderboard rows (only nickname, bear, streak and points of other players). */
-export type LeaderboardRow = {
-  place: number;
-  nickname: string;
-  bear: number;
-  points: number;
-  streak: number;
-  frozen: boolean;
-  me: boolean;
-};
-export const loadLeaderboard = () =>
-  call<{ rows: LeaderboardRow[]; gapBefore: number | null }>('/api/leaderboard');
+export const loadLeaderboard = () => call<Leaderboard>('/api/leaderboard');
