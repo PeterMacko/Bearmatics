@@ -90,6 +90,9 @@
     gap: 6px;
     padding: max(6px, env(safe-area-inset-top)) 0 max(6px, env(safe-area-inset-bottom));
     border: 0;
+    /* SCRUM-172: the lesson bear sits half under this column; only the buttons take taps (as in
+       the menus), so a tap on the visible bear reaches it. */
+    pointer-events: none;
   }
   .app-bar-end {
     flex-direction: column;

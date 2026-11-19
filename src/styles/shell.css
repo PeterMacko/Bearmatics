@@ -224,14 +224,51 @@
   justify-content: space-between;
   align-items: center;
 }
-.text-button {
-  min-height: 44px;
-  padding: 10px 12px;
-  border: 0;
-  background: none;
+.secondary {
+  /* SCRUM-172: the quieter choice next to a primary button. Transparent, so it works on every
+     screen colour; the dark border and text keep >= 3:1 and >= 4.5:1 on all of them. */
+  min-height: var(--target);
+  /* Small vertical padding and line height: 48 px comes from min-height, and at 200% text the
+     button stays about as tall as the old text link, so screens that fitted still fit. */
+  padding: 4px 18px;
+  border: 2px solid var(--blue-ink);
+  border-radius: 12px;
+  background: transparent;
   color: var(--blue-ink);
-  font-size: 0.85rem;
+  font-size: 1rem;
   font-weight: 700;
-  text-decoration: underline;
-  text-underline-offset: 4px;
+  line-height: 1.2;
+}
+.secondary:hover {
+  background: #3157830f;
+}
+.secondary:active {
+  transform: translateY(1px);
+}
+/* SCRUM-172: decorative icon before a button's text (src/Icon.tsx). */
+.button-icon {
+  display: inline-block;
+  flex: none;
+  width: 1.2em;
+  height: 1.2em;
+  margin-inline-end: 0.4em;
+  vertical-align: -0.25em;
+}
+/* QA178-05: the icon stays before the text on its first line when the text wraps (200% text in
+   Slovak put it on a line of its own). Two grid columns (icon | text, the text wraps in its own
+   column), both centred in the button like before; the icon is centred on the first text line.
+   Block buttons stay full-width blocks. */
+button:has(> .button-icon) {
+  display: inline-grid;
+  grid-template-columns: auto auto;
+  align-items: start;
+  align-content: center;
+  justify-content: center;
+}
+.summary > button:has(> .button-icon),
+.leave-dialog button:has(> .button-icon) {
+  display: grid;
+}
+button > .button-icon {
+  margin-block: calc((1lh - 1.2em) / 2);
 }

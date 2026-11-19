@@ -37,6 +37,19 @@
   color: var(--blue-ink);
   font: inherit;
 }
+/* SCRUM-172: secondary buttons in dialogs (leaderboard Try again, streak offer No thanks and Back)
+   keep the shared transparent, 2 px dark-border look; the rule above is more specific. */
+.hint-dialog button.secondary {
+  padding: 4px 18px;
+  border: 2px solid var(--blue-ink);
+  background: transparent;
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.hint-dialog button.secondary:hover {
+  background: #3157830f;
+}
 .hint-dialog-content {
   overflow: auto;
   min-height: 0;

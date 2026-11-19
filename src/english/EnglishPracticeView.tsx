@@ -52,7 +52,7 @@ export default function EnglishPracticeView({
   onNext: () => void;
 }) {
   const speaking = playing === 'speaker';
-  const gridRef = useWordGrid(question);
+  const gridRef = useWordGrid(question, playFailed);
   return (
     <section className="practice english-practice">
       <PracticeHeader t={t} level={question.level} position={position} />

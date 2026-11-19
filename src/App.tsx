@@ -183,6 +183,7 @@ export default function App() {
     resetForNewSession,
     playBadge,
     playPop,
+    playGrowl,
   } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
   // SCRUM-148: the leaderboard window (from the points + bar button).
   const [boardOpen, setBoardOpen] = useState(false);
@@ -627,6 +628,13 @@ export default function App() {
               idleWink={!active}
               key={`${active?.done}:${active?.feedback}:${active?.attempts}`}
               mood={bearMood(active)}
+              reacting={
+                !!active &&
+                !active.done &&
+                (active.feedback === 'correct' || active.feedback === 'incorrect')
+              }
+              bubble={t.bearTap}
+              onTap={playGrowl}
             />
             <span className="scene-leaf leaf-one" />
             <span className="scene-leaf leaf-two" />

@@ -338,11 +338,8 @@
   font-weight: 800;
   box-shadow: 0 3px 0 var(--blue-offer-shadow);
 }
-.streak-offer-actions button.text-button {
-  border: 0;
-  background: transparent;
-  color: var(--blue-ink);
-  text-decoration: underline;
+.streak-offer-actions button.secondary {
+  width: 100%;
 }
 .streak-offer-error {
   color: #a12d2d;

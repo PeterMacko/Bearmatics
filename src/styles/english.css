@@ -170,6 +170,23 @@
   .compact-practice .english-practice {
     position: relative;
   }
+  /* QA178-01: the positioned lesson would paint its header over the (absolute) bear, so taps
+     never reached it. Above the lesson, the bear takes taps only on its own box; the header's
+     layout does not change. The open-keyboard layout (z-index 9) still covers it. */
+  .compact-practice .workspace:has(.english-practice) .companion {
+    z-index: 1;
+  }
+  /* The speaker sits at the bear's top-right corner: the tap bubble goes to the left of the head
+     instead, so it never covers the speaker. */
+  .compact-practice .workspace:has(.english-practice) .bear-bubble {
+    left: auto;
+    right: 68%;
+    max-width: var(--bubble-room-left, none);
+  }
+  .compact-practice .workspace:has(.english-practice) .bear-bubble::after {
+    left: auto;
+    right: 0.6em;
+  }
   .compact-practice .english-practice .speaker-button {
     position: absolute;
     top: 0;
@@ -376,10 +393,58 @@
 .english-practice .play-error {
   color: #934522;
 }
-.english-practice .play-error .text-button {
-  /* Inline link inside the reserved two-line feedback space. */
-  min-height: 0;
-  padding: 2px 6px;
+/* SCRUM-172: the bordered Try again (48 px) sits beside the message, which wraps into two lines
+   next to it, so the line stays about as tall as the old two-line text with its link. When both
+   do not fit side by side (200% text), the button moves below. */
+.english-practice .play-error:has(.secondary) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 4px 8px;
+}
+.english-practice .play-error > span {
+  flex: 1 1 8em;
+  max-width: max-content;
+  /* Two lines beside the button stay within the reserved two-line space (2.6em) at 200% text. */
+  line-height: 1.25;
+}
+/* QA178-02: where the message no longer fits beside Try again (small phones, landscape phones and
+   tablets at large text; never at 100% text on the defined devices, whose answer area is at
+   least 19em wide), only the button is shown. The message stays in the alert for screen
+   readers, so it is announced exactly as before. Slovak needs more room than English. */
+.english-practice form {
+  container: english-answer / inline-size;
+}
+@container english-answer (max-width: 15.5em) {
+  .english-practice .play-error > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+@container english-answer (max-width: 17.5em) {
+  .english-practice .play-error:lang(sk) > span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}
+.english-practice .play-error .secondary {
+  flex: none;
+  padding: 4px 12px;
+}
+/* The smallest phones: listen lessons give the failure line a little of the row gaps. */
+@media (max-height: 600px) and (orientation: portrait) {
+  .english-practice:not(.write-practice) form:has(.play-error) {
+    row-gap: 8px;
+  }
 }
 
 /* Very short visible area: when the word is shown it replaces the feedback text on screen (the

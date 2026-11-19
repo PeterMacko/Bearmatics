@@ -1,4 +1,5 @@
 import { fill, pointsText, type Copy } from '../i18n';
+import Icon from '../Icon';
 import type { PointsFrame } from './animation';
 import BadgeIcon from './BadgeIcon';
 import { BadgeMeter } from './BadgeButton';
@@ -36,7 +37,8 @@ export default function SummaryPoints({
     return (
       <div className="points-failed" role="alert">
         <p>{t.failed}</p>
-        <button type="button" className="text-button" onClick={onRetry}>
+        <button type="button" className="secondary" onClick={onRetry}>
+          <Icon name="replay" />
           {t.retry}
         </button>
       </div>

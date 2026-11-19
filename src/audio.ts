@@ -1,4 +1,17 @@
-export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop';
+export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl';
+
+/** Minimal part of HTMLAudioElement the growl needs (injectable for tests). */
+export type GrowlAudio = {
+  src: string;
+  preload: string;
+  currentTime: number;
+  play(): Promise<void> | void;
+  pause(): void;
+};
+
+export function growlUrl(): string {
+  return `${import.meta.env.BASE_URL}audio/bear-growl.mp3`;
+}
 
 /** Original procedural tones. Context activation is only requested by user gestures. */
 export class FeedbackAudio {
@@ -6,12 +19,17 @@ export class FeedbackAudio {
   private enabled = false;
   private revision = 0;
   private active = new Set<{ oscillator: OscillatorNode; gain: GainNode }>();
-  constructor(private readonly factory: () => AudioContext = () => new window.AudioContext()) {}
+  private growlElement: GrowlAudio | null = null;
+  constructor(
+    private readonly factory: () => AudioContext = () => new window.AudioContext(),
+    private readonly growlFactory: () => GrowlAudio = () => new Audio(),
+  ) {}
 
   async setEnabled(value: boolean): Promise<boolean> {
     const revision = ++this.revision;
     this.enabled = false;
     this.stop();
+    this.stopGrowl();
     if (!value) return false;
     try {
       const context = this.context ?? (this.context = this.factory());
@@ -29,6 +47,7 @@ export class FeedbackAudio {
     const context = this.context;
     if (!this.enabled || !context || context.state !== 'running') return false;
     try {
+      if (outcome === 'growl') return this.growl();
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
@@ -105,6 +124,32 @@ export class FeedbackAudio {
     }
   }
 
+  /**
+   * SCRUM-172: the bear's growl when it is tapped: a recorded roar (Peter's pick, ~0.9 s,
+   * public/audio/bear-growl.mp3). One shared element, restarted on every tap; it does not cut
+   * other sounds (the bear plays one growl at a time). Mute and dispose pause it.
+   */
+  private growl(): boolean {
+    const element = this.growlElement ?? (this.growlElement = this.growlFactory());
+    if (!element.src) {
+      element.preload = 'auto';
+      element.src = growlUrl();
+    }
+    element.currentTime = 0;
+    void Promise.resolve(element.play()).catch(() => {
+      /* Blocked or missing file: the bubble and hop still show. */
+    });
+    return true;
+  }
+
+  private stopGrowl(): void {
+    try {
+      this.growlElement?.pause();
+    } catch {
+      /* Nothing playing. */
+    }
+  }
+
   private stop(): void {
     for (const { oscillator, gain } of this.active) {
       try {
@@ -126,6 +171,7 @@ export class FeedbackAudio {
     ++this.revision;
     this.enabled = false;
     this.stop();
+    this.stopGrowl();
     const context = this.context;
     this.context = null;
     if (context) void context.close().catch(() => {});

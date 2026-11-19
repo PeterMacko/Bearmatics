@@ -4,9 +4,11 @@ import { useLayoutEffect, useRef } from 'react';
  * Sizes the square word buttons to the space the screen really has: start at the largest size,
  * then shrink by however much the page overflows (one row of 4 shrinks 4x slower in height).
  * The word font follows the square so the longest word stays on one line.
- * CSS keeps a size for the first paint and for environments without layout.
+ * CSS keeps a size for the first paint and for environments without layout. `refit` changes when
+ * something below the grid changes height without resizing the screen (the playback failure line
+ * with its Try again button, SCRUM-172).
  */
-export default function useWordGrid(key: unknown) {
+export default function useWordGrid(key: unknown, refit?: unknown) {
   const grid = useRef<HTMLDivElement>(null);
   useLayoutEffect(() => {
     const el = grid.current;
@@ -90,6 +92,6 @@ export default function useWordGrid(key: unknown) {
       observer?.disconnect();
       window.removeEventListener('resize', schedule);
     };
-  }, [key]);
+  }, [key, refit]);
   return grid;
 }

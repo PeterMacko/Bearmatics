@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AccountError } from '../account/api';
 import HintDialog from '../HintDialog';
+import Icon from '../Icon';
 import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import { fill, pointsText, type Copy } from '../i18n';
 import { answerStreak, type Offer, type Progress } from './api';
@@ -128,13 +129,15 @@ export default function StreakOffer({
                   className="primary"
                   onClick={deliberate(() => setStep('confirm'))}
                 >
+                  <Icon name="unlock" />
                   {t.unlock}
                 </button>
                 <button
                   type="button"
-                  className="text-button"
+                  className="secondary"
                   onClick={deliberate(() => void answer(false))}
                 >
+                  <Icon name="cross" />
                   {t.noThanks}
                 </button>
               </div>
@@ -160,13 +163,15 @@ export default function StreakOffer({
                 className="primary"
                 onClick={deliberate(() => void answer(true))}
               >
+                <Icon name="tick" />
                 {t.yes}
               </button>
               <button
                 type="button"
-                className="text-button"
+                className="secondary"
                 onClick={deliberate(() => setStep('offer'))}
               >
+                <Icon name="back" />
                 {t.back}
               </button>
             </div>

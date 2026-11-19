@@ -1,5 +1,6 @@
 import { useRef } from 'react';
 import type { Copy } from './i18n';
+import Icon from './Icon';
 import { useModalFocus } from './useModalFocus';
 
 /** Modal asking whether to leave an unfinished session. */
@@ -29,9 +30,11 @@ export default function LeaveDialog({
         <h2 id="leave-title">{t.leaveTitle}</h2>
         <p id="leave-description">{t.leaveText}</p>
         <button className="primary" onClick={onStay}>
+          <Icon name="play" />
           {t.stay}
         </button>
-        <button className="text-button" onClick={onLeave}>
+        <button className="secondary" onClick={onLeave}>
+          <Icon name="door" />
           {t.leave}
         </button>
       </div>
