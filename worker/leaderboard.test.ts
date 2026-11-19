@@ -1,8 +1,9 @@
 // SCRUM-148 rows and order with fixed data (AC 2) and the API (AC 3-5).
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SESSION_COOKIE } from './accounts';
-import { handleApi, type Env } from './api';
+import { type Env } from './api';
 import { leaderboardRows, type Player } from './leaderboard';
+import { apiCaller, read } from './testApi';
 import { freshDb } from './testDb';
 
 const p = (id: string, points: number, streak = 0, nickname = id): Player => ({
@@ -84,7 +85,6 @@ describe('rows and order (fixed data)', () => {
 });
 
 describe('API', () => {
-  const ORIGIN = 'https://bearmatics.test';
   let db: Awaited<ReturnType<typeof freshDb>>;
   let env: Env;
   beforeAll(async () => {
@@ -92,23 +92,7 @@ describe('API', () => {
     env = { DB: db.DB };
   }, 60_000);
   afterAll(() => db?.dispose());
-  // oxlint-disable-next-line typescript/no-explicit-any -- test responses are checked by value
-  const read = (r: Response): Promise<any> => r.json();
-  const api = (path: string, init: { method?: string; body?: unknown; cookie?: string } = {}) => {
-    const headers = new Headers();
-    if (init.body !== undefined) headers.set('content-type', 'application/json');
-    if (init.cookie) headers.set('cookie', init.cookie);
-    const method = init.method ?? (init.body !== undefined ? 'POST' : 'GET');
-    if (method !== 'GET') headers.set('origin', ORIGIN);
-    return handleApi(
-      new Request(`${ORIGIN}${path}`, {
-        method,
-        headers,
-        body: init.body === undefined ? undefined : JSON.stringify(init.body),
-      }),
-      env,
-    );
-  };
+  const api = apiCaller(() => env);
   let n = 0;
   async function player(nickname: string, points: number) {
     n++;

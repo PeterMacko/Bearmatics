@@ -4,6 +4,7 @@ import * as math from './math/engine';
 import { FeedbackAudio } from './audio';
 import App from './App';
 import { openSmallMaths } from './testing/openMathematics';
+import { click } from './testing/ui';
 
 // SCRUM-156: Small maths level 2 "Take away" with the picture basket.
 type Ex = math.Exercise;
@@ -12,7 +13,6 @@ const ex = (a: number, b: number): Ex =>
 
 afterEach(() => vi.restoreAllMocks());
 
-const click = (name: string | RegExp) => fireEvent.click(screen.getByRole('button', { name }));
 const basket = () => screen.getByRole('group', { name: 'Basket' });
 const takenOut = () => screen.getByRole('group', { name: 'Taken out' });
 const inBasket = () => within(basket()).queryAllByRole('button');

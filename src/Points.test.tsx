@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import * as math from './math/engine';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
+import { fakeServer, reply } from './testing/fakeServer';
+import { playFive } from './testing/lesson';
+import { tap } from './testing/ui';
 
 // SCRUM-117: points for finished lessons of signed-in players, badge in the bar and summary.
 
-type Call = { path: string; method: string; body: unknown };
 const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
 
 function server(
@@ -18,85 +19,44 @@ function server(
     finishDelay?: number;
   } = {},
 ) {
-  const calls: Call[] = [];
   let total = start;
   let failures = options.failFinish ?? 0;
   let lost = options.loseAnswer ?? 0;
   const counted = new Set<string>();
-  const reply = (body: unknown, status = 200) =>
-    Promise.resolve(
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-  vi.stubGlobal(
-    'fetch',
-    vi.fn((path: string, init: RequestInit = {}) => {
-      const method = init.method ?? 'GET';
-      const body = init.body ? JSON.parse(String(init.body)) : undefined;
-      calls.push({ path, method, body });
-      if (path === '/api/me')
-        return new Promise((done) =>
-          setTimeout(() => done(reply({ account: ACCOUNT })), options.meDelay ?? 0),
-        );
-      if (path === '/api/auth/google') return reply({ available: false });
-      if (path === '/api/progress') return reply({ points: total });
-      if (path === '/api/progress/lessons') return reply({ lessonId: 'a'.repeat(32) }, 201);
-      if (path === '/api/progress/lessons/finish') {
-        if (failures > 0) {
-          failures--;
-          return Promise.reject(new TypeError('offline'));
-        }
-        const { points: earned, lessonId } = body as { points: number; lessonId: string };
-        const added = counted.has(lessonId) ? 0 : earned;
-        counted.add(lessonId);
-        total += added;
-        if (lost > 0) {
-          lost--;
-          return Promise.reject(new TypeError('answer lost'));
-        }
-        const answer = reply({ points: total, added });
-        return options.finishDelay
-          ? new Promise((done) => setTimeout(() => done(answer), options.finishDelay))
-          : answer;
+  return fakeServer(({ path, body }) => {
+    if (path === '/api/me')
+      return new Promise((done) =>
+        setTimeout(() => done(reply({ account: ACCOUNT })), options.meDelay ?? 0),
+      );
+    if (path === '/api/auth/google') return reply({ available: false });
+    if (path === '/api/progress') return reply({ points: total });
+    if (path === '/api/progress/lessons') return reply({ lessonId: 'a'.repeat(32) }, 201);
+    if (path === '/api/progress/lessons/finish') {
+      if (failures > 0) {
+        failures--;
+        return Promise.reject(new TypeError('offline'));
       }
-      return reply({ error: 'not_found' }, 404);
-    }),
-  );
-  return calls;
+      const { points: earned, lessonId } = body as { points: number; lessonId: string };
+      const added = counted.has(lessonId) ? 0 : earned;
+      counted.add(lessonId);
+      total += added;
+      if (lost > 0) {
+        lost--;
+        return Promise.reject(new TypeError('answer lost'));
+      }
+      const answer = reply({ points: total, added });
+      return options.finishDelay
+        ? new Promise((done) => setTimeout(() => done(answer), options.finishDelay))
+        : answer;
+    }
+    return reply({ error: 'not_found' }, 404);
+  });
 }
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
-
-const click = (name: string) =>
-  fireEvent.click(screen.getByRole('button', { name }), { detail: 1 });
-
-async function playFive(wrongAt = -1) {
-  vi.spyOn(math, 'generateSession').mockReturnValue(
-    Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }),
-  );
-  openMathematics();
-  fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
-  click('Let’s count');
-  for (let i = 0; i < 5; i++) {
-    if (i === wrongAt) {
-      fireEvent.change(screen.getByRole('textbox'), { target: { value: '9' } });
-      click('Check answer');
-    }
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
-    click('Check answer');
-    click(i < 4 ? 'Next exercise' : wrongAt >= 0 ? 'Review tricky ones' : 'See how you did');
-  }
-  if (wrongAt >= 0) {
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
-    click('Check answer');
-    click('See how you did');
-  }
-}
 
 test('signed out: no points calls, the summary only invites to sign in', async () => {
   const calls: string[] = [];
@@ -146,8 +106,8 @@ test('leaving a lesson early saves nothing', async () => {
   render(<App />);
   await screen.findByRole('button', { name: 'No bear badge yet, 10 points' });
   openMathematics();
-  click('Let’s count');
-  click('Choose level');
+  tap('Let’s count');
+  tap('Choose level');
   await act(async () => {});
   expect(calls.filter((c) => c.path === '/api/progress/lessons/finish')).toEqual([]);
 });
@@ -158,7 +118,7 @@ test('a failed save says so and Try again saves the same lesson', async () => {
   await screen.findByRole('button', { name: 'No bear badge yet, 0 points' });
   await playFive();
   expect(await screen.findByText('Points could not be saved.')).toBeInTheDocument();
-  click('Try again');
+  tap('Try again');
   expect(await screen.findByText('+5 points')).toBeInTheDocument();
   const ids = calls
     .filter((c) => c.path === '/api/progress/lessons/finish')
@@ -199,7 +159,7 @@ test('QA124-02: Try again after a lost answer shows what the lesson gave', async
   await screen.findByRole('button', { name: 'No bear badge yet, 10 points' });
   await playFive(1);
   expect(await screen.findByText('Points could not be saved.')).toBeInTheDocument();
-  click('Try again');
+  tap('Try again');
   expect(await screen.findByText('+4 points')).toBeInTheDocument();
   expect(
     await screen.findByRole('button', { name: 'No bear badge yet, 14 points' }),

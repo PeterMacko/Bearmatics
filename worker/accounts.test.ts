@@ -2,9 +2,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { LOCK_MINUTES, MAX_FAILURES, SESSION_COOKIE } from './accounts';
 import { handleApi, type Env } from './api';
+import { apiCaller, ORIGIN, read } from './testApi';
 import { freshDb } from './testDb';
 
-const ORIGIN = 'https://bearmatics.test';
 let db: Awaited<ReturnType<typeof freshDb>>;
 let env: Env;
 
@@ -14,29 +14,9 @@ beforeAll(async () => {
 }, 60_000);
 afterAll(() => db?.dispose());
 
-// oxlint-disable-next-line typescript/no-explicit-any -- test responses are checked by value
-const read = (response: Response): Promise<any> => response.json();
-
 const key = (n: number) => n.toString(16).padStart(2, '0').repeat(32);
 
-function api(
-  path: string,
-  init: { method?: string; body?: unknown; cookie?: string; origin?: string | null } = {},
-) {
-  const headers = new Headers();
-  if (init.body !== undefined) headers.set('content-type', 'application/json');
-  if (init.cookie) headers.set('cookie', init.cookie);
-  const method = init.method ?? (init.body !== undefined ? 'POST' : 'GET');
-  if (method !== 'GET' && init.origin !== null) headers.set('origin', init.origin ?? ORIGIN);
-  return handleApi(
-    new Request(`${ORIGIN}${path}`, {
-      method,
-      headers,
-      body: init.body === undefined ? undefined : JSON.stringify(init.body),
-    }),
-    env,
-  );
-}
+const api = apiCaller(() => env);
 
 function sessionCookie(response: Response): string {
   const header = response.headers.get('set-cookie') ?? '';

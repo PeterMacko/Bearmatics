@@ -2,9 +2,9 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { handleApi, type Env } from './api';
 import { googleCallback } from './google';
+import { ORIGIN, read } from './testApi';
 import { freshDb } from './testDb';
 
-const ORIGIN = 'https://bearmatics.test';
 const CLIENT = 'client-123.apps.googleusercontent.com';
 let db: Awaited<ReturnType<typeof freshDb>>;
 let env: Env;
@@ -15,8 +15,6 @@ beforeAll(async () => {
 }, 60_000);
 afterAll(() => db?.dispose());
 
-// oxlint-disable-next-line typescript/no-explicit-any -- test responses are checked by value
-const read = (response: Response): Promise<any> => response.json();
 const b64 = (value: object) => btoa(JSON.stringify(value)).replace(/=+$/, '');
 const idToken = (claims: object) =>
   `${b64({ alg: 'RS256' })}.${b64({ iss: 'https://accounts.google.com', aud: CLIENT, exp: Date.now() / 1000 + 600, ...claims })}.sig`;

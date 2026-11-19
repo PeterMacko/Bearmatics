@@ -1,12 +1,9 @@
 import { expect, test } from 'vitest';
+import { seeded } from '../testing/seeded';
 import { checkAnswer, generateSession, isValidFact, solveBlank, type Exercise } from './engine';
 
 // SCRUM-156: Small maths level 2 "Take away" = engine level 8: a - b = c, a 1-6, b 0..a,
 // only the result missing; at most one zero example; size 20 repeats like level 0.
-const seeded = (seed: number) => {
-  let state = seed + 1;
-  return () => (state = (state * 1664525 + 1013904223) >>> 0) / 2 ** 32;
-};
 const key = (e: Exercise) => e.values.join(',');
 const hasZero = (e: Exercise) => e.values.includes(0);
 
@@ -14,7 +11,7 @@ test('the pool is exactly the 27 take-away facts with the first number 1-6', () 
   const seen = new Set<string>();
   for (let seed = 0; seed < 60; seed++)
     for (const size of [5, 10, 20])
-      for (const e of generateSession(8, size, seeded(seed))) {
+      for (const e of generateSession(8, size, seeded(seed + 1))) {
         expect(e.operation).toBe('-');
         expect(e.blank).toBe(2);
         expect(e.values[0]).toBeGreaterThanOrEqual(1);
@@ -31,7 +28,7 @@ test('the pool is exactly the 27 take-away facts with the first number 1-6', () 
 test('at most one zero example; 5 and 10 unique; 20 has 4 non-adjacent repeats of non-zero facts', () => {
   for (let seed = 0; seed < 60; seed++)
     for (const size of [5, 10, 20]) {
-      const session = generateSession(8, size, seeded(seed));
+      const session = generateSession(8, size, seeded(seed + 1));
       expect(session).toHaveLength(size);
       expect(Object.isFrozen(session)).toBe(true);
       expect(session.filter(hasZero).length).toBeLessThanOrEqual(1);
@@ -65,8 +62,8 @@ test('validator, solver and checker keep the take-away rules', () => {
 });
 
 test('existing levels are unchanged', () => {
-  const before = generateSession(0, 10, seeded(3)).map(key);
-  expect(before).toEqual(generateSession(0, 10, seeded(3)).map(key));
+  const before = generateSession(0, 10, seeded(4)).map(key);
+  expect(before).toEqual(generateSession(0, 10, seeded(4)).map(key));
   for (const level of [0, 1, 2, 3, 4, 5, 6, 7] as const)
-    expect(generateSession(level, 10, seeded(1)).every((e) => e.level === level)).toBe(true);
+    expect(generateSession(level, 10, seeded(2)).every((e) => e.level === level)).toBe(true);
 });

@@ -1,12 +1,12 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
-import * as math from './math/engine';
 import App from './App';
-import { openMathematics } from './testing/openMathematics';
+import { fakeServer, reply } from './testing/fakeServer';
+import { playFive } from './testing/lesson';
+import { tap } from './testing/ui';
 
 // SCRUM-118: streak in the bar and the unlock offer after the summary.
 
-type Call = { path: string; method: string; body: unknown };
 const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
 
 function server(state: {
@@ -17,83 +17,51 @@ function server(state: {
   offer?: { streak: number; missed: number; cost: number } | null;
   changedCost?: number;
 }) {
-  const calls: Call[] = [];
-  const reply = (body: unknown, status = 200) =>
-    Promise.resolve(
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
   let changed = state.changedCost;
-  vi.stubGlobal(
-    'fetch',
-    vi.fn((path: string, init: RequestInit = {}) => {
-      const method = init.method ?? 'GET';
-      const body = init.body ? JSON.parse(String(init.body)) : undefined;
-      calls.push({ path, method, body });
-      const view = () => ({
-        points: state.points,
-        streak: state.streak,
-        frozen: state.frozen,
-        today: !!state.today,
-      });
-      if (path === '/api/me') return reply({ account: ACCOUNT });
-      if (path === '/api/auth/google') return reply({ available: false });
-      if (path === '/api/progress') return reply(view());
-      if (path === '/api/progress/lessons') return reply({ lessonId: 'a'.repeat(32) }, 201);
-      if (path === '/api/progress/lessons/finish') {
-        const added = (body as { points: number }).points;
-        state.points += added;
-        if (!state.frozen && !state.today) {
-          state.streak += 1;
-          state.today = true;
-        }
-        return reply({ ...view(), added, offer: state.offer ?? null });
-      }
-      if (path === '/api/progress/streak') {
-        const { unlock, cost } = body as { unlock: boolean; cost: number };
-        if (changed !== undefined && unlock) {
-          const offer = { ...state.offer!, cost: changed };
-          state.offer = offer;
-          changed = undefined;
-          return reply({ error: 'offer_changed', offer, ...view() }, 409);
-        }
-        if (unlock) {
-          state.points -= cost;
-          state.streak += 1;
-        } else state.streak = 1;
-        state.frozen = false;
+  return fakeServer(({ path, body }) => {
+    const view = () => ({
+      points: state.points,
+      streak: state.streak,
+      frozen: state.frozen,
+      today: !!state.today,
+    });
+    if (path === '/api/me') return reply({ account: ACCOUNT });
+    if (path === '/api/auth/google') return reply({ available: false });
+    if (path === '/api/progress') return reply(view());
+    if (path === '/api/progress/lessons') return reply({ lessonId: 'a'.repeat(32) }, 201);
+    if (path === '/api/progress/lessons/finish') {
+      const added = (body as { points: number }).points;
+      state.points += added;
+      if (!state.frozen && !state.today) {
+        state.streak += 1;
         state.today = true;
-        return reply(view());
       }
-      return reply({ error: 'not_found' }, 404);
-    }),
-  );
-  return calls;
+      return reply({ ...view(), added, offer: state.offer ?? null });
+    }
+    if (path === '/api/progress/streak') {
+      const { unlock, cost } = body as { unlock: boolean; cost: number };
+      if (changed !== undefined && unlock) {
+        const offer = { ...state.offer!, cost: changed };
+        state.offer = offer;
+        changed = undefined;
+        return reply({ error: 'offer_changed', offer, ...view() }, 409);
+      }
+      if (unlock) {
+        state.points -= cost;
+        state.streak += 1;
+      } else state.streak = 1;
+      state.frozen = false;
+      state.today = true;
+      return reply(view());
+    }
+    return reply({ error: 'not_found' }, 404);
+  });
 }
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.restoreAllMocks();
 });
-
-const click = (name: string) =>
-  fireEvent.click(screen.getByRole('button', { name }), { detail: 1 });
-
-async function playFive() {
-  vi.spyOn(math, 'generateSession').mockReturnValue(
-    Array(5).fill({ level: 1, operation: '+', values: [1, 2, 3], blank: 2 }),
-  );
-  openMathematics();
-  fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
-  click('Let’s count');
-  for (let i = 0; i < 5; i++) {
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
-    click('Check answer');
-    click(i < 4 ? 'Next exercise' : 'See how you did');
-  }
-}
 
 // Buttons in the offer ignore taps in the first 600 ms after a step change (QA131-01).
 const settle = () =>
@@ -232,11 +200,11 @@ test('Decide later closes without an answer; a changed price shows the new offer
   expect(calls.filter((c) => c.path === '/api/progress/streak')).toEqual([]);
   // Next lesson the same day: the offer comes back (taps right after closing are ignored).
   await settle();
-  click('Play again');
+  tap('Play again');
   for (let i = 0; i < 5; i++) {
     fireEvent.change(screen.getByRole('textbox'), { target: { value: '3' } });
-    click('Check answer');
-    click(i < 4 ? 'Next exercise' : 'See how you did');
+    tap('Check answer');
+    tap(i < 4 ? 'Next exercise' : 'See how you did');
   }
   dialog = await offerDialog();
   await press(dialog, 'Unlock');

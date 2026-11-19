@@ -3,6 +3,7 @@ import { afterEach, expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
 import { openSmallMaths } from './testing/openMathematics';
+import { click } from './testing/ui';
 
 // SCRUM-164: Small maths level 3 "Up to 12": result as two dice, hidden until correct.
 const ex = (a: number, b: number): math.Exercise =>
@@ -15,7 +16,6 @@ const ex = (a: number, b: number): math.Exercise =>
 
 afterEach(() => vi.restoreAllMocks());
 
-const click = (name: string | RegExp) => fireEvent.click(screen.getByRole('button', { name }));
 const answer = (value: string) => {
   fireEvent.change(screen.getByRole('textbox'), { target: { value } });
   click('Check answer');

@@ -3,6 +3,7 @@ import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
 import { openSmallMaths } from './testing/openMathematics';
+import { click } from './testing/ui';
 
 const facts: math.Exercise[] = [
   [0, 0, 0],
@@ -11,7 +12,6 @@ const facts: math.Exercise[] = [
   [3, 3, 6],
   [1, 2, 3],
 ].map((values) => ({ level: 0, operation: '+', values: values as unknown as math.Fact, blank: 2 }));
-const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 const enter = (value: string) =>
   fireEvent.change(screen.getByRole('textbox'), { target: { value } });
 

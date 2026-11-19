@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { seeded } from '../testing/seeded';
 import { WORDS } from './words';
 import {
   acceptedSpellings,
@@ -10,14 +11,6 @@ import {
 } from './write';
 
 const q = (target: string): WriteQuestion => ({ level: 3, target });
-
-function seeded(seed: number) {
-  let state = seed >>> 0;
-  return () => {
-    state = (state * 1664525 + 1013904223) >>> 0;
-    return state / 2 ** 32;
-  };
-}
 
 describe('English listen-and-write checking (every word)', () => {
   for (const { word } of WORDS) {
