@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState, type MouseEvent } from 'react';
+import { useLayoutEffect, useRef, useState, type CSSProperties, type MouseEvent } from 'react';
 import { useBearTap } from './useBearTap';
 import { useMenuWink } from './useMenuWink';
 
@@ -28,33 +28,37 @@ export default function Bear({
   });
   const tapped = tap.tapped;
   const bubbleRef = useRef<HTMLSpanElement>(null);
-  // QA178-04: the room between the bubble's left edge (68% of the bear's box) and the window's
-  // right edge, measured on the tap BEFORE the bubble exists, so the bubble wraps to fit from its
-  // first layout. A bubble that stuck out even for one layout made mobile browsers zoom out,
-  // which reset the page scroll (Slovak at 200% text on a small phone).
-  const [room, setRoom] = useState<number | undefined>(undefined);
+  // QA178-04: the room beside the head for the bubble (from 68% of the bear's box to the window's
+  // right edge, or, when the bubble sits on the left, from the window's left edge to 32%),
+  // measured on the tap BEFORE the bubble exists, so the bubble wraps to fit from its first
+  // layout. A bubble that stuck out even for one layout made mobile browsers zoom out, which reset
+  // the page scroll (Slovak at 200% text on a small phone).
+  const [room, setRoom] = useState<{ right: number; left: number } | undefined>(undefined);
   const onClick = (event: MouseEvent<SVGSVGElement>) => {
     let host = event.currentTarget.parentElement;
     while (host && host !== document.body && getComputedStyle(host).position === 'static')
       host = host.parentElement;
-    if (host && document.documentElement.clientWidth > 0) {
+    const width = document.documentElement.clientWidth;
+    if (host && width > 0) {
       const box = host.getBoundingClientRect();
-      const free = document.documentElement.clientWidth - 4 - (box.left + box.width * 0.68);
-      setRoom(Math.max(0, Math.floor(free)));
+      setRoom({
+        right: Math.max(0, Math.floor(width - 4 - (box.left + box.width * 0.68))),
+        left: Math.max(0, Math.floor(box.left + box.width * 0.32 - 4)),
+      });
     }
     tap.handlers.onClick();
   };
-  // The bubble never makes the page scroll sideways (long Slovak words at 200% text beside a
-  // bear near the right edge): shift it left by whatever would stick out. Measured from layout
-  // offsets, because the pop-in scale transform changes the drawn box.
+  // Fallback for a bubble wider than the room (a single very long word): shift it back inside the
+  // window. Measured from layout offsets, because the pop-in scale transform changes the drawn box.
   useLayoutEffect(() => {
     const el = bubbleRef.current;
     if (!el) return;
     const parent = el.offsetParent;
     if (!parent) return;
-    const right = parent.getBoundingClientRect().left + el.offsetLeft + el.offsetWidth;
-    const over = right - (document.documentElement.clientWidth - 4);
+    const left = parent.getBoundingClientRect().left + el.offsetLeft;
+    const over = left + el.offsetWidth - (document.documentElement.clientWidth - 4);
     if (over > 0) el.style.marginLeft = `${-Math.ceil(over)}px`;
+    else if (left < 4) el.style.marginLeft = `${Math.ceil(4 - left)}px`;
   }, [tapped, bubble]);
   return (
     <>
@@ -186,7 +190,14 @@ export default function Bear({
           ref={bubbleRef}
           className="bear-bubble"
           aria-hidden="true"
-          style={room === undefined ? undefined : { maxWidth: room }}
+          style={
+            room === undefined
+              ? undefined
+              : ({
+                  '--bubble-room-right': `${room.right}px`,
+                  '--bubble-room-left': `${room.left}px`,
+                } as CSSProperties)
+          }
         >
           {bubble}
         </span>

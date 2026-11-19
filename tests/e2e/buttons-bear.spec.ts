@@ -353,6 +353,24 @@ async function bearCovered(page: Page) {
   });
 }
 
+/** What the tap bubble covers (eyes, mouth, speaker) or where it leaves the window. */
+const bubbleCovers = (page: Page) =>
+  page.evaluate(() => {
+    const bubble = document.querySelector('.bear-bubble')!.getBoundingClientRect();
+    const found: string[] = [];
+    if (bubble.left < 0 || bubble.right > document.documentElement.clientWidth)
+      found.push(`outside the window ${Math.round(bubble.left)}-${Math.round(bubble.right)}`);
+    for (const selector of ['.bear-tap-eyes', '.bear-tap-mouth', '.speaker-button']) {
+      const el = document.querySelector(selector);
+      if (!el) continue;
+      const r = el.getBoundingClientRect();
+      const w = Math.min(r.right, bubble.right) - Math.max(r.left, bubble.left);
+      const h = Math.min(r.bottom, bubble.bottom) - Math.max(r.top, bubble.top);
+      if (w > 0 && h > 0) found.push(`${selector} ${Math.round(w)}x${Math.round(h)}`);
+    }
+    return found;
+  });
+
 /** The bear's visible centre (inside the window). */
 async function bearCentre(page: Page) {
   return page.evaluate(() => {
@@ -387,6 +405,13 @@ for (const device of ALL_DEVICES) {
         expect(grid.covered, `${lesson}: points over the bear taken by another element`).toEqual(
           [],
         );
+        // A tap shows the bubble beside the head: inside the window, never over the eyes, the
+        // mouth or the English speaker button.
+        const at0 = await bearCentre(page);
+        await page.mouse.click(at0.x, at0.y);
+        await expect(page.locator('.bear-bubble')).toHaveText(COPY.en.bubble);
+        expect(await bubbleCovers(page), `${lesson}: bubble covers`).toEqual([]);
+        await expect(page.locator('.bear-bubble')).toHaveCount(0, { timeout: 3000 });
         if (lesson !== 'write') continue;
         // English write: the tap shows the bubble and keeps the typing focus and the text.
         const input = page.getByRole('textbox');
@@ -470,16 +495,7 @@ test.describe('bear bubble on a mobile viewport', () => {
       expect(seen).toEqual([before]);
       await page.touchscreen.tap(at.x, at.y);
       await expect(page.locator('.bear-bubble')).toBeVisible();
-      const overlap = await page.evaluate(() => {
-        const bubble = document.querySelector('.bear-bubble')!.getBoundingClientRect();
-        return ['.bear-tap-eyes', '.bear-tap-mouth'].map((selector) => {
-          const r = document.querySelector(selector)!.getBoundingClientRect();
-          const w = Math.min(r.right, bubble.right) - Math.max(r.left, bubble.left);
-          const h = Math.min(r.bottom, bubble.bottom) - Math.max(r.top, bubble.top);
-          return w > 0 && h > 0 ? `${selector} ${Math.round(w)}x${Math.round(h)}` : null;
-        });
-      });
-      expect(overlap).toEqual([null, null]);
+      expect(await bubbleCovers(page)).toEqual([]);
     });
   }
 });

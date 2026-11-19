@@ -646,6 +646,7 @@ progress::-webkit-progress-value {
   /* One line where there is room; where there is not (200% text on a small phone) the words wrap
      within the room measured on the tap (src/Bear.tsx), beside the face rather than over it. */
   width: max-content;
+  max-width: var(--bubble-room-right, none);
   overflow-wrap: normal;
   pointer-events: none;
   animation: bear-bubble-pop 0.18s ease-out 1;

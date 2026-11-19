@@ -176,6 +176,17 @@
   .compact-practice .workspace:has(.english-practice) .companion {
     z-index: 1;
   }
+  /* The speaker sits at the bear's top-right corner: the tap bubble goes to the left of the head
+     instead, so it never covers the speaker. */
+  .compact-practice .workspace:has(.english-practice) .bear-bubble {
+    left: auto;
+    right: 68%;
+    max-width: var(--bubble-room-left, none);
+  }
+  .compact-practice .workspace:has(.english-practice) .bear-bubble::after {
+    left: auto;
+    right: 0.6em;
+  }
   .compact-practice .english-practice .speaker-button {
     position: absolute;
     top: 0;
