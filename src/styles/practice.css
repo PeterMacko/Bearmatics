@@ -165,6 +165,20 @@ progress::-webkit-progress-value {
 .leave-dialog .secondary {
   padding-inline: 8px;
 }
+/* QA178-05: large text on a phone (the window under 15em wide: never at 100% text on the defined
+   devices). Less side padding, so the icon and the first word fit on one line (Slovak
+   "Pokračovať" at 200% text on a small phone). */
+.modal-backdrop {
+  container: modal / inline-size;
+}
+@container modal (max-width: 15em) {
+  .leave-dialog {
+    padding-inline: 14px;
+  }
+  .leave-dialog .primary {
+    padding-inline: 8px;
+  }
+}
 @media (max-width: 850px) {
   .app-shell {
     padding-inline: 28px;

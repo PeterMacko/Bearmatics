@@ -20,6 +20,7 @@ const COPY = {
     stay: 'Keep practising',
     leave: 'Choose a new trail',
     tryAgain: 'Try again',
+    wordFailed: 'The word could not play.',
     unlock: 'Unlock',
     noThanks: 'No thanks',
     yes: 'Yes',
@@ -36,6 +37,7 @@ const COPY = {
     stay: 'Pokračovať v počítaní',
     leave: 'Vybrať novú cestu',
     tryAgain: 'Skúsiť znova',
+    wordFailed: 'Slovo sa nepodarilo prehrať.',
     unlock: 'Odomknúť',
     noThanks: 'Nie, ďakujem',
     yes: 'Áno',
@@ -301,8 +303,249 @@ for (const device of ALL_DEVICES) {
         'replay',
         true,
       );
+      // 100% text: the message stays visible beside or above the button (QA178-02).
+      await expect(page.getByRole('alert')).toContainText(c.wordFailed);
+      expect(await messageShown(page)).toBe(true);
       await nextFrames(page);
       expect(await pageScroll(page)).toEqual({ x: 0, y: 0 });
+    });
+  }
+}
+
+/** 200% text, set after the document exists (an init script is a no-op in Chromium). */
+const bigText = (page: Page) =>
+  page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+
+/** The failure message is drawn (not only kept for screen readers). */
+const messageShown = (page: Page) =>
+  page.locator('.play-error > span').evaluate((el) => {
+    const box = el.getBoundingClientRect();
+    return box.width > 2 && box.height > 2;
+  });
+
+async function startEnglish(page: Page, lang: Lang, write: boolean) {
+  await page.getByRole('button', { name: COPY[lang].english, exact: true }).click();
+  if (write) await page.getByRole('radio', { name: /^(Level|Úroveň) 3 / }).click();
+  await page.locator('.start-button').click();
+  await expect(page.locator(write ? '.write-input' : '.word-option').first()).toBeVisible();
+}
+
+/**
+ * QA178-01: every point of the bear's visible box (12x12 grid, clipped to the window) is the
+ * bear itself, so a tap anywhere on it reaches it (the English lesson header covered it).
+ */
+async function bearCovered(page: Page) {
+  return page.evaluate(() => {
+    const bear = document.querySelector('svg.bear')!.getBoundingClientRect();
+    const covered: string[] = [];
+    let points = 0;
+    for (let i = 1; i < 12; i++)
+      for (let j = 1; j < 12; j++) {
+        const x = bear.left + (bear.width * i) / 12;
+        const y = bear.top + (bear.height * j) / 12;
+        if (x < 0 || y < 0 || x > innerWidth - 1 || y > innerHeight - 1) continue;
+        points++;
+        const hit = document.elementFromPoint(x, y);
+        if (!hit?.closest('svg.bear'))
+          covered.push(hit ? `${hit.tagName}.${hit.className}` : 'none');
+      }
+    return { points, covered: [...new Set(covered)], coveredCount: covered.length };
+  });
+}
+
+/** The bear's visible centre (inside the window). */
+async function bearCentre(page: Page) {
+  return page.evaluate(() => {
+    const r = document.querySelector('svg.bear')!.getBoundingClientRect();
+    const top = Math.max(r.top, 0);
+    const bottom = Math.min(r.bottom, innerHeight);
+    return { x: r.left + r.width / 2, y: (top + bottom) / 2 };
+  });
+}
+
+const LESSON_TEXT: [string, boolean][] = [
+  ['100%', false],
+  ['200%', true],
+];
+for (const device of ALL_DEVICES) {
+  for (const [textSize, big] of LESSON_TEXT) {
+    // 200% text on the phones only (the sizes the Tester measured).
+    if (big && ![DEVICE.phone, DEVICE.smallPhone, DEVICE.phone369].includes(device)) continue;
+    test(`${device.name} ${device.width}x${device.height} ${textSize}: the bear can be tapped in maths, listen and write lessons`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      for (const lesson of ['maths', 'listen', 'write'] as const) {
+        await open(page, device, 'en');
+        if (big) await bigText(page);
+        if (lesson === 'maths') await startMaths(page, 'en');
+        else await startEnglish(page, 'en', lesson === 'write');
+        await nextFrames(page);
+        await expect(page.locator('svg.bear')).toBeVisible();
+        const grid = await bearCovered(page);
+        expect(grid.points, `${lesson}: bear inside the window`).toBeGreaterThan(20);
+        expect(grid.covered, `${lesson}: points over the bear taken by another element`).toEqual(
+          [],
+        );
+        if (lesson !== 'write') continue;
+        // English write: the tap shows the bubble and keeps the typing focus and the text.
+        const input = page.getByRole('textbox');
+        await input.fill('ab');
+        await input.focus();
+        const at = await bearCentre(page);
+        await page.mouse.click(at.x, at.y);
+        await expect(page.locator('.bear-bubble')).toHaveText(COPY.en.bubble);
+        await expect(input).toBeFocused();
+        await expect(input).toHaveValue('ab');
+      }
+    });
+  }
+}
+
+// QA178-02: at 200% text on small phones the 'could not play' line shows only Try again (the
+// message stays in the alert for screen readers), Try again is on screen without the child
+// scrolling, and the write lesson does not scroll (it did not before SCRUM-172).
+for (const device of [DEVICE.smallPhone, DEVICE.phone360, DEVICE.phone369]) {
+  for (const lang of ['en', 'sk'] as const) {
+    test(`${device.name} ${device.width}x${device.height} 200% ${lang}: word failure shows Try again on screen`, async ({
+      page,
+    }) => {
+      const c = COPY[lang];
+      for (const write of [false, true]) {
+        await page.route('**/audio/words/*.mp3', (route) => route.abort());
+        await open(page, device, lang);
+        await bigText(page);
+        await startEnglish(page, lang, write);
+        const alert = page.getByRole('alert');
+        await expect(alert).toBeVisible();
+        await expect(alert).toContainText(c.wordFailed);
+        const retry = alert.getByRole('button', { name: c.tryAgain, exact: true });
+        await nextFrames(page);
+        await expect(retry).toBeInViewport({ ratio: 1 });
+        expect(await messageShown(page)).toBe(false);
+        if (write) expect((await pageScroll(page)).y).toBe(0);
+      }
+    });
+  }
+}
+
+// QA178-04: tapping the bear never moves the page (a bubble wider than the room left of the
+// window edge made Chromium's mobile viewport zoom out, which reset the scroll), and the bubble
+// never covers the bear's eyes or mouth.
+test.describe('bear bubble on a mobile viewport', () => {
+  test.skip(({ browserName }) => browserName !== 'chromium', 'isMobile is Chromium only');
+  test.use({ isMobile: true, hasTouch: true, viewport: { width: 320, height: 568 } });
+  for (const lang of ['en', 'sk'] as const) {
+    test(`320x568 200% ${lang}: tapping the bear in a lesson keeps the scroll; bubble beside the face`, async ({
+      page,
+    }) => {
+      await page.goto('/');
+      await bigText(page);
+      if (lang === 'sk') {
+        await page.locator('.settings-button').tap();
+        await page.getByRole('button', { name: 'Slovenčina' }).tap();
+        await page.keyboard.press('Escape');
+      }
+      await startMaths(page, lang);
+      await page.evaluate(() => window.scrollTo(0, 24));
+      await nextFrames(page);
+      const before = await page.evaluate(() => scrollY);
+      expect(before).toBeGreaterThan(0);
+      const at = await bearCentre(page);
+      await page.touchscreen.tap(at.x, at.y);
+      await expect(page.locator('.bear-bubble')).toHaveText(COPY[lang].bubble);
+      const seen = await page.evaluate(
+        () =>
+          new Promise<number[]>((done) => {
+            const start = performance.now();
+            const ys = new Set<number>();
+            const tick = () => {
+              ys.add(Math.round(scrollY));
+              if (performance.now() - start > 1600) done([...ys]);
+              else requestAnimationFrame(tick);
+            };
+            requestAnimationFrame(tick);
+          }),
+      );
+      expect(seen).toEqual([before]);
+      await page.touchscreen.tap(at.x, at.y);
+      await expect(page.locator('.bear-bubble')).toBeVisible();
+      const overlap = await page.evaluate(() => {
+        const bubble = document.querySelector('.bear-bubble')!.getBoundingClientRect();
+        return ['.bear-tap-eyes', '.bear-tap-mouth'].map((selector) => {
+          const r = document.querySelector(selector)!.getBoundingClientRect();
+          const w = Math.min(r.right, bubble.right) - Math.max(r.left, bubble.left);
+          const h = Math.min(r.bottom, bubble.bottom) - Math.max(r.top, bubble.top);
+          return w > 0 && h > 0 ? `${selector} ${Math.round(w)}x${Math.round(h)}` : null;
+        });
+      });
+      expect(overlap).toEqual([null, null]);
+    });
+  }
+});
+
+/**
+ * QA178-05: every button icon sits before the text on its first line (it wrapped onto a line of
+ * its own at 200% text in Slovak).
+ */
+async function expectIconsInline(page: Page) {
+  const misplaced = await page.evaluate(() =>
+    Array.from(document.querySelectorAll('button'))
+      .filter((b) => b.querySelector(':scope > .button-icon') && b.getClientRects().length)
+      .map((b) => {
+        const icon = b.querySelector(':scope > .button-icon')!.getBoundingClientRect();
+        const texts = Array.from(b.childNodes).filter(
+          (n) => n.nodeType === Node.TEXT_NODE && n.textContent!.trim(),
+        );
+        const range = document.createRange();
+        range.setStart(texts[0], 0);
+        range.setEnd(texts[texts.length - 1], texts[texts.length - 1].textContent!.length);
+        const line = Array.from(range.getClientRects()).find((r) => r.width > 0)!;
+        const middle = icon.top + icon.height / 2;
+        const inline = middle >= line.top && middle <= line.bottom && icon.right <= line.left + 1;
+        return inline
+          ? null
+          : `${b.textContent}: icon ${Math.round(icon.left)},${Math.round(icon.top)} first line ${Math.round(line.left)},${Math.round(line.top)}-${Math.round(line.bottom)}`;
+      })
+      .filter(Boolean),
+  );
+  expect(misplaced).toEqual([]);
+}
+
+for (const device of [DEVICE.smallPhone, DEVICE.phone]) {
+  for (const lang of ['en', 'sk'] as const) {
+    test(`${device.name} ${device.width}x${device.height} 200% ${lang}: icons stay on the first line of their button`, async ({
+      page,
+    }) => {
+      test.setTimeout(90_000);
+      const c = COPY[lang];
+      await signedIn(page);
+      await open(page, device, lang);
+      await bigText(page);
+      await expect(page.locator('.badge-button')).toBeVisible();
+      await startMaths(page, lang);
+      await type(page, '7');
+      await page.locator('.app-bar button').first().click();
+      await expect(page.getByRole('dialog')).toBeVisible();
+      await expectIconsInline(page);
+      await page.getByRole('dialog').getByRole('button', { name: c.stay, exact: true }).click();
+      await finishLesson(page);
+      const offer = page.getByRole('dialog', { name: c.offer });
+      await expect(offer).toBeVisible({ timeout: 8000 });
+      await expectIconsInline(page);
+      await page.waitForTimeout(700);
+      await offer.getByRole('button', { name: c.unlock, exact: true }).click();
+      await expect(offer.getByRole('button', { name: c.yes, exact: true })).toBeVisible();
+      await expectIconsInline(page);
+      await page.keyboard.press('Escape');
+      await expect(offer).toHaveCount(0);
+      await expectIconsInline(page);
+      await page.waitForTimeout(700);
+      await page.getByRole('button', { name: c.board }).click();
+      await expect(
+        page.getByRole('dialog').getByRole('button', { name: c.tryAgain }),
+      ).toBeVisible();
+      await expectIconsInline(page);
     });
   }
 }
