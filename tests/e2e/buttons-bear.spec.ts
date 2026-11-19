@@ -67,9 +67,15 @@ async function type(page: Page, value: string) {
   } else await input.fill(value);
 }
 
+/** 5 exercises, tapped on its visible pill (Firefox reports the 1 px radio as covered by it). */
+async function pickFive(page: Page) {
+  await page.locator('.session-options label').first().click();
+  await expect(page.locator('.session-options input').first()).toBeChecked();
+}
+
 async function startMaths(page: Page, lang: Lang) {
   await page.getByRole('button', { name: COPY[lang].maths, exact: true }).click();
-  await page.locator('.session-options input').first().check();
+  await pickFive(page);
   await page.locator('.start-button').click();
   await expect(page.locator('.equation')).toBeVisible();
 }
@@ -197,7 +203,7 @@ for (const device of ALL_DEVICES) {
       await expect(page.locator('.bear-bubble')).toHaveText(c.bubble);
       expect((await pageScroll(page)).x).toBe(0);
       await expect(page.locator('.bear-bubble')).toHaveCount(0, { timeout: 3000 });
-      await page.locator('.session-options input').first().check();
+      await pickFive(page);
       await page.locator('.start-button').click();
       // Lesson: the tap keeps focus and the typed answer.
       await type(page, '7');
