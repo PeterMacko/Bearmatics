@@ -1,5 +1,7 @@
 import { useLayoutEffect, useRef } from 'react';
 import { PHONE_QUERY } from './breakpoints';
+import { LAYOUT } from './layoutSelectors';
+import { watchResize } from './watchResize';
 
 /** Menu-only intrinsic feasibility check. No application/selection state lives here. */
 export function useMenuLayout(active: boolean, language: string, level: number, view = '') {
@@ -7,13 +9,11 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
   useLayoutEffect(() => {
     const menu = ref.current;
     if (!active || !menu || typeof ResizeObserver === 'undefined') return;
-    const list = menu.querySelector<HTMLElement>('.level-options')!;
-    const heading = menu.querySelector<HTMLElement>('.menu-heading')!;
-    const controls = menu.querySelector<HTMLElement>('.menu-controls');
-    const bear = menu.querySelector<HTMLElement>('.companion')!;
-    const cards = [...list.querySelectorAll<HTMLElement>('.level-option')];
-    let frame = 0;
-    let disposed = false;
+    const list = menu.querySelector<HTMLElement>(LAYOUT.levelList)!;
+    const heading = menu.querySelector<HTMLElement>(LAYOUT.heading)!;
+    const controls = menu.querySelector<HTMLElement>(LAYOUT.controls);
+    const bear = menu.querySelector<HTMLElement>(LAYOUT.bear)!;
+    const cards = [...list.querySelectorAll<HTMLElement>(LAYOUT.levelCard)];
     const reveal = (card: HTMLElement | null) => {
       if (!card || menu.dataset.menuMode === 'flow') return;
       const bounds = list.getBoundingClientRect(),
@@ -22,7 +22,6 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       else if (box.bottom > bounds.bottom - 8) list.scrollTop += box.bottom - bounds.bottom + 8;
     };
     const measure = () => {
-      frame = 0;
       // Always measure the SAME constrained geometry. Temporarily probing it in
       // this synchronous task prevents scrollbar-width/fallback hysteresis. RO
       // sees only the final sizes, never the intermediate probe (no RO writes).
@@ -62,32 +61,26 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
         if (!fits(1)) menu.dataset.menuMode = 'flow';
       }
       reveal(
-        list.querySelector<HTMLElement>(':focus')?.closest('.level-option') ??
-          list.querySelector<HTMLInputElement>('input:checked')?.closest('.level-option') ??
+        list.querySelector<HTMLElement>(':focus')?.closest(LAYOUT.levelCard) ??
+          list.querySelector<HTMLInputElement>('input:checked')?.closest(LAYOUT.levelCard) ??
           null,
       );
     };
-    const schedule = () => {
-      if (!disposed && !frame) frame = requestAnimationFrame(measure);
-    };
     const focus = (event: FocusEvent) =>
       reveal(
-        event.target instanceof Element ? event.target.closest<HTMLElement>('.level-option') : null,
+        event.target instanceof Element
+          ? event.target.closest<HTMLElement>(LAYOUT.levelCard)
+          : null,
       );
     measure();
-    const observer = new ResizeObserver(schedule);
-    [heading, controls, bear, ...cards].forEach((element) => element && observer.observe(element));
-    window.addEventListener('resize', schedule);
-    window.visualViewport?.addEventListener('resize', schedule);
-    document.fonts?.addEventListener('loadingdone', schedule);
+    const stopWatching = watchResize(measure, [heading, controls, bear, ...cards], {
+      frame: 'next',
+      visualViewport: true,
+      fonts: true,
+    });
     list.addEventListener('focusin', focus);
     return () => {
-      disposed = true;
-      cancelAnimationFrame(frame);
-      observer.disconnect();
-      window.removeEventListener('resize', schedule);
-      window.visualViewport?.removeEventListener('resize', schedule);
-      document.fonts?.removeEventListener('loadingdone', schedule);
+      stopWatching();
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
       delete menu.dataset.menuCompact;

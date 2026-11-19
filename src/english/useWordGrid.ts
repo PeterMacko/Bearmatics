@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef } from 'react';
+import { LAYOUT } from '../layoutSelectors';
+import { watchResize } from '../watchResize';
 
 /**
  * Sizes the square word buttons to the space the screen really has: start at the largest size,
@@ -19,7 +21,7 @@ export default function useWordGrid(key: unknown, refit?: unknown) {
       const gap = parseFloat(style.columnGap) || 10;
       const rem = parseFloat(getComputedStyle(document.documentElement).fontSize) || 16;
       // Phones (compact layout) up to 340 px; tablets and desktops may use up to 440 px.
-      const compact = el.closest('.compact-practice') !== null;
+      const compact = el.closest(LAYOUT.compactPractice) !== null;
       const max = cols === 4 ? 560 : compact ? 340 : 440;
       const min = cols === 4 ? 4 * 6.5 * rem + 3 * gap : 2 * 6.5 * rem + gap;
       el.style.width = `${max}px`;
@@ -56,7 +58,7 @@ export default function useWordGrid(key: unknown, refit?: unknown) {
       // enlarged text still grows (very long words may then wrap at 200% text).
       let font = Math.max(rem, Math.min(1.75 * rem, square / 6));
       el.style.setProperty('--word-font', `${font}px`);
-      const buttons = Array.from(el.querySelectorAll<HTMLElement>('.word-option'));
+      const buttons = Array.from(el.querySelectorAll<HTMLElement>(LAYOUT.wordButton));
       if (buttons.length) {
         const button = getComputedStyle(buttons[0]);
         const inner =
@@ -76,22 +78,9 @@ export default function useWordGrid(key: unknown, refit?: unknown) {
         }
       }
     };
-    let frame = 0;
-    const schedule = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(fit);
-    };
     fit();
     // Refit when anything around the grid changes size (bear, header, fonts, rotation).
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(schedule);
-    const section = el.closest('section');
-    if (observer && section?.parentElement) observer.observe(section.parentElement);
-    window.addEventListener('resize', schedule);
-    return () => {
-      cancelAnimationFrame(frame);
-      observer?.disconnect();
-      window.removeEventListener('resize', schedule);
-    };
+    return watchResize(fit, [el.closest('section')?.parentElement], { frame: 'last' });
   }, [key, refit]);
   return grid;
 }
