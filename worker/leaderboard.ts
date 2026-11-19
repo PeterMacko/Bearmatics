@@ -5,7 +5,7 @@ import { isRudeNickname } from '../shared/rules';
 import { Renewed, type SessionHandler } from './accounts';
 import { slovakDay, streakView } from './streak';
 
-export const TOP = 10;
+const TOP = 10;
 
 export type Player = {
   id: string;

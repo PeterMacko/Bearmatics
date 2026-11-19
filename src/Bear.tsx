@@ -3,7 +3,7 @@ import { useBearTap } from './useBearTap';
 import { useMenuWink } from './useMenuWink';
 
 /** Original SVG artwork and expressions created for Bearmatics. */
-export type BearMood = 'neutral' | 'happy' | 'sad';
+type BearMood = 'neutral' | 'happy' | 'sad';
 export default function Bear({
   mood = 'neutral',
   idleWink = false,

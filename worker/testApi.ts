@@ -6,7 +6,7 @@ export const ORIGIN = 'https://bearmatics.test';
 // oxlint-disable-next-line typescript/no-explicit-any -- test responses are checked by value
 export const read = (response: Response): Promise<any> => response.json();
 
-export type ApiInit = { method?: string; body?: unknown; cookie?: string; origin?: string | null };
+type ApiInit = { method?: string; body?: unknown; cookie?: string; origin?: string | null };
 
 /**
  * An `api(path, init)` caller for the environment `env()` returns at call time (tests set it in

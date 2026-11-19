@@ -3,7 +3,7 @@ import type { MenuLevel } from './LevelMenu';
 import type { Level } from './math/engine';
 
 /** One level in a maths course menu: the engine level and the number the child sees. */
-export type CourseLevel = { value: Level; shown: number };
+type CourseLevel = { value: Level; shown: number };
 
 /**
  * SCRUM-141: maths is split into two courses. Small maths shows the old level 0 (count the

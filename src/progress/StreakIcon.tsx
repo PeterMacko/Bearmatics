@@ -2,7 +2,7 @@
  * Original streak icons, decorative (SCRUM-118): flame (a lesson done today), shadow flame
  * (not yet today, or no streak), ice cube (frozen streak). `flicker` makes the flame burn.
  */
-export type StreakLook = 'flame' | 'shadow' | 'ice';
+type StreakLook = 'flame' | 'shadow' | 'ice';
 
 export default function StreakIcon({
   look,

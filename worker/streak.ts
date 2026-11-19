@@ -13,8 +13,8 @@ export type StreakState = {
 };
 
 /** Longest break that can still be unlocked. */
-export const MAX_MISSED = 7;
-export const COST_PER_DAY = 10;
+const MAX_MISSED = 7;
+const COST_PER_DAY = 10;
 
 const DAY_FORMAT = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Europe/Bratislava',

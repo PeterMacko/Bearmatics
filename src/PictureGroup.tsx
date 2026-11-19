@@ -9,7 +9,7 @@ export const PICTURE_THEMES: readonly PictureTheme[] = Object.freeze([
   'boats',
   'aircraft',
 ]);
-export interface PictureGroupProps {
+interface PictureGroupProps {
   /** Known counts are integers 0..6; null conceals the entire quantity. */
   count: number | null;
   theme: PictureTheme;

@@ -14,7 +14,7 @@ import {
   type StreakState,
 } from './streak';
 
-export const LESSON_SIZES = [5, 10, 20] as const;
+const LESSON_SIZES = [5, 10, 20] as const;
 const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
 const now = () => Date.now();
 

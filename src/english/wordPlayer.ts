@@ -12,7 +12,7 @@ export type AudioLike = {
   removeEventListener(type: 'ended' | 'error' | 'pause', listener: () => void): void;
 };
 
-export function wordUrl(word: string): string {
+function wordUrl(word: string): string {
   return `${import.meta.env.BASE_URL}audio/words/${audioFile(word)}.mp3`;
 }
 

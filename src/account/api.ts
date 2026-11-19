@@ -3,7 +3,7 @@ import type { Account } from '../../shared/api-types';
 
 export type { Account };
 
-export type ApiError =
+type ApiError =
   | 'offline'
   | 'invalid'
   | 'username_taken'

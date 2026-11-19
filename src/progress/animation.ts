@@ -21,7 +21,7 @@ export function staticFrame(points: number): PointsFrame {
   return { points, badge, share: (points - from) / (nextAt - from), hold: 0 };
 }
 
-export const LEVEL_PAUSE_MS = 1400;
+const LEVEL_PAUSE_MS = 1400;
 
 /**
  * Frames for the summary animation (SCRUM-117, Peter): the bar fills point by point from the old

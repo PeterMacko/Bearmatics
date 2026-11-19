@@ -77,7 +77,7 @@ export default function BadgeButton({
 }
 
 /** The bar to the next badge. It jumps (no transition) when it starts again from zero. */
-export function ProgressTrack({ frame }: { frame: PointsFrame }) {
+function ProgressTrack({ frame }: { frame: PointsFrame }) {
   return (
     <span className="progress-track" aria-hidden="true">
       <span
@@ -88,7 +88,7 @@ export function ProgressTrack({ frame }: { frame: PointsFrame }) {
   );
 }
 
-export function BadgeDetails({ t, points }: { t: Copy['points']; points: number }) {
+function BadgeDetails({ t, points }: { t: Copy['points']; points: number }) {
   const progress = badgeFor(points);
   return (
     <div className="badge-details">
