@@ -1,100 +1,122 @@
 import { expect, test, vi } from 'vitest';
-import { FeedbackAudio } from './audio';
+import { FeedbackAudio, growlUrl } from './audio';
 
-// SCRUM-172: the bear's growl is synthesized (no file), about half a second, low, bounded, does
-// not cut other sounds, and stays silent while sound is off.
+// SCRUM-172 (Peter's choice, version 5): the bear's growl is a recorded roar
+// (public/audio/bear-growl.mp3, about 0.9 s), played when the bear is tapped. It follows Mute,
+// does not cut other sounds and restarts from the beginning on the next tap.
 
-function fixture() {
-  const oscillators: {
-    type: string;
-    frequencies: number[];
-    start: ReturnType<typeof vi.fn>;
-    stop: ReturnType<typeof vi.fn>;
-  }[] = [];
-  const gains: { value: number; time: number }[][] = [];
-  const context = {
+function context() {
+  const ctx = {
     state: 'suspended',
     currentTime: 0,
     destination: {},
     resume: vi.fn(async () => {
-      context.state = 'running';
+      ctx.state = 'running';
     }),
     close: vi.fn(async () => {}),
-    createGain: vi.fn(() => {
-      const events: { value: number; time: number }[] = [];
-      gains.push(events);
-      const record = (value: number, time: number) => events.push({ value, time });
-      return {
-        gain: {
-          setValueAtTime: record,
-          linearRampToValueAtTime: record,
-          exponentialRampToValueAtTime: record,
-        },
-        connect: vi.fn(),
-        disconnect: vi.fn(),
-      };
-    }),
-    createOscillator: vi.fn(() => {
-      const frequencies: number[] = [];
-      const record = (value: number) => frequencies.push(value);
-      const node = {
-        type: '',
-        frequencies,
-        frequency: {
-          setValueAtTime: record,
-          linearRampToValueAtTime: record,
-          exponentialRampToValueAtTime: record,
-        },
-        connect: vi.fn(),
-        disconnect: vi.fn(),
-        start: vi.fn(),
-        stop: vi.fn(),
-        onended: null,
-      };
-      oscillators.push(node);
-      return node;
-    }),
+    createGain: vi.fn(() => ({
+      gain: {
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    })),
+    createOscillator: vi.fn(() => ({
+      type: '',
+      frequency: {
+        setValueAtTime: vi.fn(),
+        linearRampToValueAtTime: vi.fn(),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      onended: null,
+    })),
   };
-  return { context, oscillators, gains, factory: () => context as unknown as AudioContext };
+  return ctx;
 }
 
-test('growl: low, ~0.5 s, bounded, and silent while sound is off', async () => {
+function fixture() {
+  const ctx = context();
+  const element = {
+    src: '',
+    preload: '',
+    currentTime: 0.4,
+    play: vi.fn(async () => {}),
+    pause: vi.fn(),
+  };
+  const growlFactory = vi.fn(() => element);
+  const player = new FeedbackAudio(() => ctx as unknown as AudioContext, growlFactory);
+  return { ctx, element, growlFactory, player };
+}
+
+test('growl plays the recorded roar file from the start', async () => {
   const f = fixture();
-  const player = new FeedbackAudio(f.factory);
-  expect(player.play('growl')).toBe(false);
-  expect(f.oscillators).toHaveLength(0);
-  await player.setEnabled(true);
-  expect(player.play('growl')).toBe(true);
-  expect(f.oscillators.length).toBeGreaterThan(0);
-  for (const o of f.oscillators) {
-    expect(Math.max(...o.frequencies)).toBeLessThanOrEqual(300);
-    expect(Math.min(...o.frequencies)).toBeGreaterThanOrEqual(60);
-    const end = o.stop.mock.calls[0][0] as number;
-    expect(end).toBeGreaterThanOrEqual(0.4);
-    expect(end).toBeLessThanOrEqual(0.6);
-  }
-  // Sum of the voices' peak levels leaves headroom below full scale.
-  const peaks = f.gains.map((events) => Math.max(...events.map((e) => e.value)));
-  expect(peaks.reduce((a, b) => a + b, 0)).toBeLessThanOrEqual(0.6);
-  // Every voice ends silent.
-  for (const events of f.gains) expect(events.at(-1)!.value).toBe(0);
-  // Mute: nothing more plays.
-  await player.setEnabled(false);
-  const count = f.oscillators.length;
-  expect(player.play('growl')).toBe(false);
-  expect(f.oscillators).toHaveLength(count);
+  await f.player.setEnabled(true);
+  expect(f.player.play('growl')).toBe(true);
+  expect(f.element.src).toBe(growlUrl());
+  expect(growlUrl()).toMatch(/audio\/bear-growl\.mp3$/);
+  expect(f.element.currentTime).toBe(0);
+  expect(f.element.play).toHaveBeenCalledTimes(1);
+  // No synthesized voices any more.
+  expect(f.ctx.createOscillator).not.toHaveBeenCalled();
+  // The next tap reuses the same element and starts again from 0.
+  f.element.currentTime = 0.5;
+  f.player.play('growl');
+  expect(f.growlFactory).toHaveBeenCalledTimes(1);
+  expect(f.element.currentTime).toBe(0);
+  expect(f.element.play).toHaveBeenCalledTimes(2);
+});
+
+test('growl is silent while sound is off, and Mute stops a running roar', async () => {
+  const f = fixture();
+  expect(f.player.play('growl')).toBe(false);
+  expect(f.growlFactory).not.toHaveBeenCalled();
+  await f.player.setEnabled(true);
+  f.player.play('growl');
+  await f.player.setEnabled(false);
+  expect(f.element.pause).toHaveBeenCalled();
+  expect(f.player.play('growl')).toBe(false);
+  expect(f.element.play).toHaveBeenCalledTimes(1);
+});
+
+test('a blocked or failed roar never throws', async () => {
+  const f = fixture();
+  f.element.play.mockImplementation(async () => {
+    throw new Error('NotAllowedError');
+  });
+  await f.player.setEnabled(true);
+  expect(() => f.player.play('growl')).not.toThrow();
+  await Promise.resolve();
 });
 
 test('growl does not cut a running sound', async () => {
   const f = fixture();
-  const player = new FeedbackAudio(f.factory);
-  await player.setEnabled(true);
-  player.play('complete');
-  const fanfare = [...f.oscillators];
-  player.play('growl');
-  // The fanfare's notes were only stopped at their own scheduled end (one call each, with a time).
+  await f.player.setEnabled(true);
+  f.player.play('complete');
+  const fanfare = f.ctx.createOscillator.mock.results.map((r) => r.value);
+  f.player.play('growl');
   for (const o of fanfare) {
     expect(o.stop).toHaveBeenCalledTimes(1);
     expect(o.stop.mock.calls[0]).toHaveLength(1);
   }
+});
+
+test('dispose stops the roar', async () => {
+  const f = fixture();
+  await f.player.setEnabled(true);
+  f.player.play('growl');
+  f.player.dispose();
+  expect(f.element.pause).toHaveBeenCalled();
+});
+
+test('the roar file ships with the app', async () => {
+  const { existsSync, statSync } = await import('node:fs');
+  const file = 'public/audio/bear-growl.mp3';
+  expect(existsSync(file)).toBe(true);
+  expect(statSync(file).size).toBeLessThan(20_000);
 });
