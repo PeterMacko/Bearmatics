@@ -10,7 +10,6 @@
 import { createServer } from 'node:http';
 import { existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { extname, join, resolve } from 'node:path';
-import process from 'node:process';
 import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 import { settle } from './equivalence/capture.mjs';
