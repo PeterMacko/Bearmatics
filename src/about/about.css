@@ -79,10 +79,10 @@
   margin: 0 auto;
   padding: 0 20px 32px;
 }
-/* Jumps (“Full details”) and keyboard focus land below the fixed bar (its height is measured
-   into --about-bar), in Chromium and Firefox alike. */
+/* Jumps (“Full details”) and keyboard focus land below the fixed bar: the page's
+   scroll-padding-top is the measured bar height (AboutPage), plus this small gap. */
 .about-main :is([id], a) {
-  scroll-margin-top: calc(var(--about-bar, 4.5rem) + 12px);
+  scroll-margin-top: 12px;
 }
 /* Headings and captions wrap only between words (QA224-01); long words never break inside. */
 .about-main :is(h1, h2, h3, figcaption) {

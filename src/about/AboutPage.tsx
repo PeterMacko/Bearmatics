@@ -13,22 +13,25 @@ const LANGUAGES: { value: Language; name: string; short: string }[] = [
 
 /**
  * The fixed top bar: logo + Bearmatics (opens the app in the page's language) and the language
- * switch. Its height (it grows with large text) goes to `--about-bar`, so in-page jumps and
- * keyboard focus land below it (`scroll-padding-top` in about.css).
+ * switch. Its height (it grows with large text) becomes the page's `scroll-padding-top`, so in-page
+ * jumps and keyboard focus land below it (plus `scroll-margin-top` in about.css).
  */
 function AboutBar({ language, label }: { language: Language; label: string }) {
   const bar = useRef<HTMLElement>(null);
   useEffect(() => {
     const element = bar.current!;
     const root = document.documentElement;
-    const update = () => root.style.setProperty('--about-bar', `${element.offsetHeight}px`);
+    const update = () => {
+      // Focus scrolling (Tab, Shift+Tab) and jumps keep clear of the bar in both engines.
+      root.style.scrollPaddingTop = `${element.offsetHeight}px`;
+    };
     update();
     if (typeof ResizeObserver === 'undefined') return;
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => {
       observer.disconnect();
-      root.style.removeProperty('--about-bar');
+      root.style.removeProperty('scroll-padding-top');
     };
   }, []);
   return (
