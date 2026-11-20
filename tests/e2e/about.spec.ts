@@ -114,6 +114,19 @@ async function expectBarStaysAfterScroll(page: Page) {
   ).toBe(true);
 }
 
+/**
+ * The focused link is not hidden under the fixed bar. Tall screenshot links may be scrolled only
+ * partly into view (Firefox shows the bottom part when moving backwards): a clear strip of it, with
+ * its focus ring, must show below the bar.
+ */
+async function expectClearOfBar(page: Page) {
+  const bar = (await page.getByRole('banner').boundingBox())!;
+  const box = (await page.locator(':focus').boundingBox())!;
+  const barBottom = bar.y + bar.height;
+  if (box.height < 200) expect(box.y).toBeGreaterThanOrEqual(barBottom - 1);
+  else expect(box.y + box.height).toBeGreaterThanOrEqual(barBottom + 100);
+}
+
 /** Headings and captions wrap only between words (QA224-01): no word is split over two lines. */
 async function expectNoWordBreaks(page: Page) {
   const broken = await page.locator('main :is(h1, h2, h3, figcaption)').evaluateAll((elements) =>
@@ -394,11 +407,7 @@ for (const lang of LANGS)
       expect(ring.style).not.toBe('none');
       expect(ring.width).toBeGreaterThanOrEqual(2);
       await expect(focused).toBeInViewport();
-      if (i >= 3) {
-        const bar = (await page.getByRole('banner').boundingBox())!;
-        const box = (await focused.boundingBox())!;
-        expect(box.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
-      }
+      if (i >= 3) await expectClearOfBar(page);
     }
     expect(reached, browserName).toEqual(links);
     // From the end of the page, Shift+Tab walks back up into the bar; every link on the way
@@ -407,10 +416,7 @@ for (const lang of LANGS)
       await page.keyboard.press('Shift+Tab');
       const focused = page.locator(':focus');
       await expect(focused).toHaveAttribute('href', links[i]!);
-      if (i >= 3) {
-        const bar = (await page.getByRole('banner').boundingBox())!;
-        expect((await focused.boundingBox())!.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
-      }
+      if (i >= 3) await expectClearOfBar(page);
     }
     await expect(page.locator(':focus')).toHaveAttribute('href', '/about/en');
     await expect(page.locator(':focus')).toBeInViewport();
