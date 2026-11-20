@@ -15,6 +15,8 @@ export const copy = {
     soundUnavailable: 'Sound unavailable',
     settings: 'Settings',
     closeSettings: 'Close settings',
+    /** SCRUM-218: Settings link to the About page. */
+    aboutApp: 'About Bearmatics',
     padInstructions:
       'Use the number pad or hardware digits, Backspace to erase, Delete to clear, and Enter to check.',
     useNative: 'Use device keyboard',
@@ -337,6 +339,7 @@ export const copy = {
     soundUnavailable: 'Zvuk nedostupný',
     settings: 'Nastavenia',
     closeSettings: 'Zavrieť nastavenia',
+    aboutApp: 'O aplikácii',
     padInstructions:
       'Použi číselnú klávesnicu alebo číslice na klávesnici. Backspace vymaže číslicu, Delete celú odpoveď a Enter ju skontroluje.',
     useNative: 'Použiť klávesnicu zariadenia',

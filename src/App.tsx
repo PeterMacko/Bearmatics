@@ -741,6 +741,16 @@ export default function App() {
           triggerRef={settingsRef}
           onLanguageChange={setLanguage}
           onToggleSound={toggleSound}
+          onAbout={(event) => {
+            // SCRUM-218: the About page replaces the app; work in a lesson is asked about first.
+            if (!inLesson || !lessonKind || !hasProgress(lessonKind.session, lessonKind.answer))
+              return;
+            event.preventDefault();
+            const href = event.currentTarget.href;
+            setSettingsOpen(false);
+            afterLeave.current = () => window.location.assign(href);
+            setLeaveOpen(true);
+          }}
           onClose={() => setSettingsOpen(false)}
         />
       )}

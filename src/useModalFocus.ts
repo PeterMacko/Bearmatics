@@ -32,7 +32,7 @@ export function useModalFocus(
     }
     if (event.key === 'Tab') {
       const controls = ref.current?.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), [tabindex="0"]',
+        'button:not(:disabled), a[href], [tabindex="0"]',
       );
       if (!controls?.length) return;
       const first = controls[0],

@@ -1,0 +1,141 @@
+/* About page (SCRUM-218). Loaded only with the page (its own chunk), never by the app. */
+.about-page {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 20px 32px;
+  color: var(--ink);
+  line-height: 1.6;
+  overflow-wrap: break-word;
+}
+.about-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 16px 0;
+}
+.about-brand {
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--accent);
+  margin-right: auto;
+}
+.about-languages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  padding: 4px;
+  background: #efe9e5;
+  border-radius: 12px;
+}
+.about-languages a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  min-width: var(--target);
+  padding: 0 14px;
+  border-radius: 8px;
+  color: #5d536b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+.about-languages a[aria-current='page'] {
+  background: var(--paper);
+  color: var(--blue-ink);
+  box-shadow: 0 1px 4px #43305b12;
+}
+.about-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  padding: 0 18px;
+  border-radius: 12px;
+  background: var(--blue);
+  box-shadow: 0 3px 0 var(--blue-shadow);
+  color: #fff;
+  font-weight: 700;
+  text-decoration: none;
+  text-align: center;
+}
+.about-page a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.about-main h1 {
+  margin: 8px 0 12px;
+  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  text-wrap: balance;
+}
+.about-main h2 {
+  margin: 36px 0 8px;
+  font-size: clamp(1.45rem, 4.5vw, 1.9rem);
+  letter-spacing: -0.02em;
+}
+.about-main h3 {
+  margin: 24px 0 6px;
+  font-size: 1.2rem;
+}
+.about-intro {
+  font-size: 1.1rem;
+}
+.about-main p {
+  margin: 0 0 8px;
+}
+.about-main ul {
+  margin: 8px 0;
+  padding-left: 1.3em;
+}
+.about-main li {
+  margin: 4px 0;
+}
+.about-courses > li {
+  margin: 10px 0;
+}
+.about-main a:not(.about-open) {
+  color: var(--blue-ink);
+}
+.about-shots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin: 20px 0 8px;
+}
+.about-shot {
+  margin: 0;
+  width: min(100%, 13rem);
+}
+.about-shot img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  box-shadow: 0 6px 18px #43305b1f;
+  background: var(--page);
+}
+.about-shot figcaption {
+  margin-top: 6px;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+.about-footer {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+@media (max-width: 620px) {
+  .about-page {
+    padding: 0 16px 24px;
+  }
+  .about-shot {
+    width: min(100%, calc(50% - 8px));
+  }
+  .about-shots:has(> :only-child) .about-shot {
+    width: min(100%, 13rem);
+  }
+}

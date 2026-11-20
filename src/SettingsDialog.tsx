@@ -1,8 +1,9 @@
-import type { RefObject } from 'react';
+import type { MouseEvent, RefObject } from 'react';
+import { aboutHref } from './about/aboutRoute';
 import HintDialog from './HintDialog';
 import type { Copy, Language } from './i18n';
 
-/** Settings dialog: sound toggle, language switch and audio notice. */
+/** Settings dialog: sound toggle, language switch, audio notice and the About page link. */
 export default function SettingsDialog({
   t,
   language,
@@ -13,6 +14,7 @@ export default function SettingsDialog({
   triggerRef,
   onLanguageChange,
   onToggleSound,
+  onAbout,
   onClose,
 }: {
   t: Copy;
@@ -24,6 +26,8 @@ export default function SettingsDialog({
   triggerRef: RefObject<HTMLButtonElement | null>;
   onLanguageChange: (language: Language) => void;
   onToggleSound: () => void;
+  /** Before the About link navigates (a running lesson asks first). */
+  onAbout?: (event: MouseEvent<HTMLAnchorElement>) => void;
   onClose: () => void;
 }) {
   return (
@@ -73,6 +77,10 @@ export default function SettingsDialog({
           {t.audioUnavailable}
         </span>
       )}
+      {/* SCRUM-218: a plain link (same tab) to the About page in the app's language. */}
+      <a className="about-link" href={aboutHref(language)} onClick={onAbout}>
+        {t.aboutApp}
+      </a>
     </HintDialog>
   );
 }

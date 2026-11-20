@@ -192,3 +192,27 @@
   font-size: 1.6rem;
   padding: 4px;
 }
+/* SCRUM-218: Settings link to the About page, in the dialog's secondary-button look. */
+.hint-dialog .about-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  margin-top: 16px;
+  padding: 4px 18px;
+  border: 2px solid var(--blue-ink);
+  border-radius: 10px;
+  color: var(--blue-ink);
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  overflow-wrap: anywhere;
+}
+.hint-dialog .about-link:hover {
+  background: #3157830f;
+}
+.hint-dialog .about-link:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
