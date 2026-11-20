@@ -81,7 +81,7 @@ export default function PracticeView({
             event.key === 'Enter' &&
             event.repeat &&
             (event.target === inputRef.current ||
-              (event.target as HTMLElement).classList.contains('answer-button'))
+              (event.target instanceof Element && event.target.classList.contains('answer-button')))
           )
             event.preventDefault();
         }}

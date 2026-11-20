@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import App from './App';
+import { fakeServer, reply } from './testing/fakeServer';
 
 // SCRUM-148: two bar buttons, the leaderboard window and the profile switch.
 
@@ -24,49 +25,34 @@ const row = (place: number, nickname: string, points: number, extra = {}) => ({
 });
 
 function server(options: { failBoard?: number; account?: typeof ACCOUNT } = {}) {
-  const calls: { path: string; method: string; body: unknown }[] = [];
   let fails = options.failBoard ?? 0;
   let account = { ...(options.account ?? ACCOUNT) };
-  const reply = (body: unknown, status = 200) =>
-    Promise.resolve(
-      new Response(JSON.stringify(body), {
-        status,
-        headers: { 'content-type': 'application/json' },
-      }),
-    );
-  vi.stubGlobal(
-    'fetch',
-    vi.fn((path: string, init: RequestInit = {}) => {
-      const method = init.method ?? 'GET';
-      const body = init.body ? JSON.parse(String(init.body)) : undefined;
-      calls.push({ path, method, body });
-      if (path === '/api/me' && method === 'PATCH') {
-        account = { ...account, ...(body as object) };
-        return reply({ account });
+  return fakeServer(({ path, method, body }) => {
+    if (path === '/api/me' && method === 'PATCH') {
+      account = { ...account, ...(body as object) };
+      return reply({ account });
+    }
+    if (path === '/api/me') return reply({ account });
+    if (path === '/api/auth/google') return reply({ available: false });
+    if (path === '/api/progress')
+      return reply({ points: 112, streak: 4, frozen: false, today: true });
+    if (path === '/api/leaderboard') {
+      if (fails > 0) {
+        fails--;
+        return Promise.reject(new TypeError('offline'));
       }
-      if (path === '/api/me') return reply({ account });
-      if (path === '/api/auth/google') return reply({ available: false });
-      if (path === '/api/progress')
-        return reply({ points: 112, streak: 4, frozen: false, today: true });
-      if (path === '/api/leaderboard') {
-        if (fails > 0) {
-          fails--;
-          return Promise.reject(new TypeError('offline'));
-        }
-        return reply({
-          rows: [
-            ...Array.from({ length: 10 }, (_, i) => row(i + 1, `P${i + 1}`, 500 - i * 10)),
-            row(13, 'Before', 120),
-            row(14, 'Mia', 112, { me: true, frozen: true }),
-            row(15, 'After', 100),
-          ],
-          gapBefore: 10,
-        });
-      }
-      return reply({ error: 'not_found' }, 404);
-    }),
-  );
-  return calls;
+      return reply({
+        rows: [
+          ...Array.from({ length: 10 }, (_, i) => row(i + 1, `P${i + 1}`, 500 - i * 10)),
+          row(13, 'Before', 120),
+          row(14, 'Mia', 112, { me: true, frozen: true }),
+          row(15, 'After', 100),
+        ],
+        gapBefore: 10,
+      });
+    }
+    return reply({ error: 'not_found' }, 404);
+  });
 }
 
 afterEach(() => {

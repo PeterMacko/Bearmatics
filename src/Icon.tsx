@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
  * Original button icons (SCRUM-172), drawn in the button's text colour. Decorative only: the
  * button's text stays its accessible name, so every icon is hidden from assistive technology.
  */
-export type IconName = 'replay' | 'list' | 'play' | 'door' | 'unlock' | 'cross' | 'tick' | 'back';
+type IconName = 'replay' | 'list' | 'play' | 'door' | 'unlock' | 'cross' | 'tick' | 'back';
 
 const SHAPES: Record<IconName, ReactNode> = {
   // Circular arrow: Play again and every Try again.

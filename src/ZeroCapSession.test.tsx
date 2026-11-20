@@ -3,8 +3,8 @@ import { expect, test, vi } from 'vitest';
 import * as math from './math/engine';
 import App from './App';
 import { openSmallMaths } from './testing/openMathematics';
+import { click } from './testing/ui';
 
-const click = (name: string) => fireEvent.click(screen.getByRole('button', { name }));
 const enter = (value: string) =>
   fireEvent.change(screen.getByRole('textbox'), { target: { value } });
 

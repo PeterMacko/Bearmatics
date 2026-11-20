@@ -11,7 +11,7 @@ export function badgeThreshold(n: number): number {
   return Number((600n * (top - bottom) + bottom - 1n) / bottom);
 }
 
-export type BadgeProgress = {
+type BadgeProgress = {
   points: number;
   /** 0 = no badge yet. */
   badge: number;

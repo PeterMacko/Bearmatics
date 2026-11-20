@@ -1,23 +1,14 @@
 // Integration test: real Worker runtime (workerd) + real local D1 (SQLite) through Wrangler.
 // Requires a built app in dist/ (npm run build) because the Worker also serves static assets.
-import { execFileSync } from 'node:child_process';
 import { existsSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { unstable_startWorker } from 'wrangler';
+import { migrate, root } from './testDb';
 
-const root = join(import.meta.dirname, '..');
 const persist = mkdtempSync(join(tmpdir(), 'bearmatics-d1-'));
 let worker: Awaited<ReturnType<typeof unstable_startWorker>>;
-
-function migrate(): string {
-  return execFileSync(
-    'npx',
-    ['wrangler', 'd1', 'migrations', 'apply', 'DB', '--local', '--persist-to', persist],
-    { cwd: root, encoding: 'utf8', env: { ...process.env, CI: '1' } },
-  );
-}
 
 async function get(path: string, init?: RequestInit) {
   return worker.fetch(`http://localhost${path}`, init as never);
@@ -45,8 +36,8 @@ describe('server with a local database', () => {
   });
 
   it('applies migrations to an empty database, and re-running is safe', async () => {
-    expect(migrate()).toContain('0001_foundation.sql');
-    expect(migrate()).toMatch(/No migrations to apply/i);
+    expect(migrate(persist)).toContain('0001_foundation.sql');
+    expect(migrate(persist)).toMatch(/No migrations to apply/i);
     const response = await get('/api/health');
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ status: 'ok', database: 'ok', schema: '5' });

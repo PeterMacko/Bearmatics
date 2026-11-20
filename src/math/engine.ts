@@ -4,7 +4,7 @@
  */
 export type Level = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
 export type Operation = '+' | '-' | '*' | '/';
-export type Blank = 0 | 1 | 2;
+type Blank = 0 | 1 | 2;
 export type Fact = readonly [number, number, number];
 export type Exercise = Readonly<{ level: Level; operation: Operation; values: Fact; blank: Blank }>;
 

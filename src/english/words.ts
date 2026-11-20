@@ -6,7 +6,7 @@
 /** Listen-and-choose level (English course levels 1-2). */
 export type ListenLevel = 1 | 2;
 
-export type WordEntry = {
+type WordEntry = {
   word: string;
   alternatives: Record<ListenLevel, readonly [string, string, string]>;
 };

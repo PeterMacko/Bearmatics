@@ -1,7 +1,7 @@
 import type { Level } from './math/engine';
 
 /** What a practice screen shows for an engine level (Small maths levels differ from the rest). */
-export type LevelTraits = {
+type LevelTraits = {
   /** Picture groups beside the numbers (Small maths level 1 and the dice level). */
   pictures: boolean;
   /** The take-away basket under the equation (engine level 8). */

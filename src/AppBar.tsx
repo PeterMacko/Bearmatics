@@ -1,4 +1,6 @@
 import { useLayoutEffect, useRef, type ReactNode } from 'react';
+import { LAYOUT } from './layoutSelectors';
+import { watchResize } from './watchResize';
 
 export type BarBack = { label: string; onClick: () => void };
 
@@ -49,12 +51,12 @@ export default function AppBar({
       };
       const items = [...end.children].map((child) => child.getBoundingClientRect());
       const wraps = items.some((item) => item.top > items[0].bottom - 4);
-      if (end.querySelector('.streak-warm-up') && (wraps || overlaps('.menu-shell .eyebrow')))
+      if (end.querySelector(LAYOUT.streakWarmUp) && (wraps || overlaps(LAYOUT.menuEyebrow)))
         root.classList.add('bar-tight');
       // Wider screens: the bar is absolute, so the page keeps room for its real height (it
       // grows at 200% text, QA131-05 A).
       root.style.setProperty('--bar-height', `${Math.ceil(end.getBoundingClientRect().bottom)}px`);
-      const heading = document.querySelector('.menu-shell .menu-heading');
+      const heading = document.querySelector(LAYOUT.menuHeading);
       let clear = 0;
       let drop = 0;
       if (heading) {
@@ -73,13 +75,7 @@ export default function AppBar({
       root.style.setProperty('--bar-drop', `${drop}px`);
     };
     update();
-    window.addEventListener('resize', update);
-    const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(update);
-    observer?.observe(end);
-    return () => {
-      window.removeEventListener('resize', update);
-      observer?.disconnect();
-    };
+    return watchResize(update, [end]);
   }, [layoutKey]);
   return (
     <nav className="app-bar" aria-label={label} inert={inert}>

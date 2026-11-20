@@ -1,8 +1,7 @@
 import { solveBlank, type Exercise, type Fact, type Operation } from './engine';
 import type { Language } from '../i18n';
 
-export type HintStage = 1 | 2 | 3;
-export type CountingModel = {
+type CountingModel = {
   kind: 'parts' | 'groups';
   labels: readonly [string, string, string];
   values: readonly (number | null)[];

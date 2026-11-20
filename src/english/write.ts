@@ -1,4 +1,5 @@
 import type { AnswerResult } from '../math/engine';
+import { shuffled } from '../random';
 import { SESSION_SIZES } from './listen';
 import { WORDS } from './words';
 
@@ -33,15 +34,6 @@ export function checkWritten(question: WriteQuestion, answer: string): AnswerRes
   return acceptedSpellings(question.target).includes(normalizeWritten(answer))
     ? 'correct'
     : 'incorrect';
-}
-
-function shuffled<T>(items: readonly T[], rng: () => number): T[] {
-  const out = [...items];
-  for (let i = out.length - 1; i > 0; i--) {
-    const j = Math.min(i, Math.floor(rng() * (i + 1)));
-    [out[i], out[j]] = [out[j], out[i]];
-  }
-  return out;
 }
 
 /** 5/10/20 distinct words from the same 21-word list as levels 1-2. */

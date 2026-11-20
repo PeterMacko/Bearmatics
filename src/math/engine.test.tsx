@@ -1,4 +1,5 @@
 import { describe, expect, test } from 'vitest';
+import { seeded } from '../testing/seeded';
 import * as engine from './engine';
 
 const valid = engine.isValidFact;
@@ -73,12 +74,6 @@ describe('answer validation', () => {
 
 describe('session generation', () => {
   const generate = engine.generateSession;
-  function seeded(seed: number) {
-    return () => {
-      seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-      return seed / 4294967296;
-    };
-  }
   test.each([0, 1, 2, 3, 4, 5, 6, 7] as const)(
     'generates unique valid mixed sessions for level %i',
     (level) => {

@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
 
 /** How long the bubble and the happy face stay after a tap (the hop takes 1 s of it). */
-export const BEAR_TAP_MS = 1500;
+const BEAR_TAP_MS = 1500;
 /** The summary's cheer (and a lesson's think) animation: taps wait until it has run. */
-export const BEAR_REACTION_MS = 700;
+const BEAR_REACTION_MS = 700;
 
 /**
  * SCRUM-172 easter egg: tapping the bear. Pointer only and secret (the bear stays aria-hidden and

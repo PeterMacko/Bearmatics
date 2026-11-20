@@ -1,7 +1,7 @@
-export type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl';
+type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl';
 
 /** Minimal part of HTMLAudioElement the growl needs (injectable for tests). */
-export type GrowlAudio = {
+type GrowlAudio = {
   src: string;
   preload: string;
   currentTime: number;

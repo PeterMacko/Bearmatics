@@ -10,7 +10,7 @@ export interface AccountEnv {
 }
 
 export const SESSION_COOKIE = 'bm_session';
-export const SESSION_DAYS = 30;
+const SESSION_DAYS = 30;
 const DAY = 24 * 60 * 60 * 1000;
 /** Session length: the cookie's Max-Age (seconds) and the stored expiry (milliseconds). */
 const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
@@ -58,7 +58,7 @@ const endSessionCookie = () => cookie(SESSION_COOKIE, '', 0);
 type Session = { account: AccountRow; tokenHash: string; renew: string };
 
 /** Finds the signed-in account and restarts its 30-day window. */
-export async function currentSession(request: Request, env: AccountEnv): Promise<Session | null> {
+async function currentSession(request: Request, env: AccountEnv): Promise<Session | null> {
   const token = readCookie(request, SESSION_COOKIE);
   if (!token || !validKey(token)) return null;
   const tokenHash = await sha256Hex(token);

@@ -48,13 +48,20 @@ export function clearFeedback<E>(session: Session<E>): Session<E> {
 
 /**
  * Checks an answer. Invalid input only sets feedback; a real attempt counts, and a first-try
- * point needs an original exercise solved on the first attempt without hints.
+ * point needs an original exercise solved on the first attempt without hints. Maths sessions use
+ * the maths checker; other sessions pass their own.
  */
-export function submitAnswer<E = Exercise>(
+export function submitAnswer(session: Session<Exercise>, answer: string): Session<Exercise>;
+export function submitAnswer<E>(
   session: Session<E>,
   answer: string,
-  check: (exercise: E, answer: string) => AnswerResult = checkAnswer as never,
-): Session<E> {
+  check: (exercise: E, answer: string) => AnswerResult,
+): Session<E>;
+export function submitAnswer(
+  session: Session<Exercise>,
+  answer: string,
+  check = checkAnswer,
+): Session<Exercise> {
   if (session.solved || session.done) return session;
   const result = check(currentExercise(session)!, answer);
   if (result === 'invalid-input') return { ...session, feedback: 'invalid' };

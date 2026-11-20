@@ -5,9 +5,9 @@ import * as math from './math/engine';
 import { FeedbackAudio } from './audio';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
+import { click } from './testing/ui';
 
 const button = (name: string) => screen.getByRole('button', { name });
-const click = (name: string) => fireEvent.click(button(name));
 const settings = () => click('Settings');
 const close = () => click('Close settings');
 const flush = () =>

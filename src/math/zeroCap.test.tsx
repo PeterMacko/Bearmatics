@@ -1,9 +1,6 @@
 import { expect, test } from 'vitest';
+import { seeded } from '../testing/seeded';
 import { generateSession, isValidFact, solveBlank, type Exercise } from './engine';
-
-function seeded(seed: number) {
-  return () => (seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0) / 2 ** 32;
-}
 
 test('constant random sources remain bounded and invalid sources throw', () => {
   for (const level of [0, 1, 2, 3, 4, 5, 6, 7] as const)
