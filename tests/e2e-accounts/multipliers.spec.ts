@@ -11,6 +11,24 @@ const badge = (page: Page) =>
   page.getByRole('navigation', { name: /Main controls|Hlavné ovládanie/ }).getByRole('button', {
     name: /badge|odznak/,
   });
+/**
+ * Keeps this spec's players (up to 26 points each) off the leaderboard: every accounts spec shares
+ * one local database, and the leaderboard spec expects its own 5-point player in the top ten.
+ */
+async function hideFromLeaderboard(page: Page) {
+  const status = await page.evaluate(
+    async () =>
+      (
+        await fetch('/api/me', {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ leaderboard: false }),
+        })
+      ).status,
+  );
+  expect(status).toBe(200);
+}
 const level = (page: Page, n: number) => page.locator(`.level-option.level-${n}`);
 const radio = (page: Page, n: number) => level(page, n).getByRole('radio');
 
@@ -39,6 +57,7 @@ test('English: 1/2 after two plays, the calculation on the summary, the top-leve
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await createAccount(page, uniqueName('mul'));
+  await hideFromLeaderboard(page);
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   // First plays: no sign except the top level's star.
   await expect(level(page, 1).locator('.next-play')).toHaveCount(0);
@@ -86,6 +105,7 @@ test('Slovak: star, calculation with a decimal comma, then 1/2 after two plays',
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
   await createAccount(page, uniqueName('mul'));
+  await hideFromLeaderboard(page);
   await page.getByRole('button', { name: 'Settings' }).click();
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
@@ -116,6 +136,7 @@ test('another account on the same device keeps its own counts', async ({ page })
   await page.setViewportSize({ width: 1366, height: 900 });
   await page.goto('/');
   await createAccount(page, uniqueName('mul'));
+  await hideFromLeaderboard(page);
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   await playLevel(page, 1);
   await backToLevels(page);
@@ -128,6 +149,7 @@ test('another account on the same device keeps its own counts', async ({ page })
   await expect(page.getByText('You are signed out.')).toBeVisible();
   await page.goto('/');
   await createAccount(page, uniqueName('mul'), { nickname: 'Little Cub' });
+  await hideFromLeaderboard(page);
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   await expect(level(page, 1).locator('.next-play')).toHaveCount(0);
   await expect(level(page, 7).locator('.next-play')).toHaveText('★');
@@ -137,6 +159,7 @@ test('the summary calculation needs no page scroll on phones (EN and SK)', async
   const username = uniqueName('mul');
   await page.goto('/');
   await createAccount(page, username);
+  await hideFromLeaderboard(page);
   const sizes = [
     [390, 844],
     [360, 640],
