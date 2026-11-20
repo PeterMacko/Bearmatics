@@ -202,3 +202,130 @@ test('the summary calculation needs no page scroll on phones (EN and SK)', async
     await page.getByRole('button', { name: 'Close settings' }).click();
   }
 });
+
+test('at 200% text the sign leaves the level number readable (phones, 3 courses, EN and SK)', async ({
+  page,
+}) => {
+  // QA204-02: the badge keeps its px size while text grows; the sign must not cover the digit.
+  const username = uniqueName('mul');
+  await page.goto('/');
+  await createAccount(page, username);
+  await hideFromLeaderboard(page);
+  // Plays saved today on this device: 1/2 and 1/4 signs in every course, star on the top level.
+  await page.evaluate((user) => {
+    const day = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Bratislava',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const counts = {
+      'small:1': 2,
+      'small:2': 4,
+      'math:1': 2,
+      'math:2': 4,
+      'english:1': 4,
+      'english:2': 2,
+    };
+    localStorage.setItem(
+      'bearmatics-plays',
+      JSON.stringify({ [`password:${user}`]: { day, counts } }),
+    );
+  }, username);
+  await page.reload();
+  await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+  const courses = [
+    ['Small maths', 'Malá matematika', 3],
+    ['Maths', 'Matematika', 7],
+    ['English', 'Angličtina', 3],
+  ] as const;
+  for (const language of ['EN', 'SK'] as const) {
+    if (language === 'SK') {
+      await page.getByRole('button', { name: 'Settings' }).click();
+      await page.getByRole('button', { name: 'Slovenčina' }).click();
+      await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
+    }
+    for (const [width, height] of [
+      [390, 844],
+      [320, 568],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      for (const [en, sk, top] of courses) {
+        const where = `${language} ${width}x${height} ${en}`;
+        await page.getByRole('button', { name: language === 'EN' ? en : sk, exact: true }).click();
+        await expect(page.locator('.level-options')).toBeVisible();
+        await expect(page.locator('.next-play')).toHaveCount(3);
+        await expect(level(page, top).locator('.next-play')).toHaveText('★');
+        const measure = () =>
+          page.evaluate(() => {
+            const area = (r: { width: number; height: number }) =>
+              Math.max(0, r.width) * Math.max(0, r.height);
+            const cut = (a: DOMRect, b: DOMRect) =>
+              area({
+                width: Math.min(a.right, b.right) - Math.max(a.left, b.left),
+                height: Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top),
+              });
+            const signs = [...document.querySelectorAll<HTMLElement>('.next-play')].map((sign) => {
+              const badge = sign.parentElement!;
+              const range = document.createRange();
+              range.selectNodeContents(badge.firstChild!); // the digit's text node
+              const digit = range.getBoundingClientRect();
+              const box = sign.getBoundingClientRect();
+              const option = badge.closest('.level-option')!.getBoundingClientRect();
+              const title = document.createRange();
+              title.selectNodeContents(
+                badge.closest('.level-option')!.querySelector('.level-title')!,
+              );
+              const onTitle = [...title.getClientRects()].some((r) => cut(r, box) > 0);
+              return {
+                covered: cut(digit, box) / area(digit),
+                inside:
+                  box.left >= option.left - 0.5 &&
+                  box.right <= option.right + 0.5 &&
+                  box.top >= option.top - 0.5 &&
+                  box.bottom <= option.bottom + 0.5,
+                onTitle,
+              };
+            });
+            const root = document.documentElement;
+            const list = document.querySelector('.level-options')!;
+            return {
+              signs,
+              page: root.scrollHeight - root.clientHeight,
+              side: root.scrollWidth - root.clientWidth,
+              list: list.scrollHeight - list.clientHeight,
+            };
+          });
+        const shown = await measure();
+        for (const sign of shown.signs) {
+          expect(sign.covered, `${where}: share of the digit under the sign`).toBeLessThanOrEqual(
+            0.2,
+          );
+          expect(sign.inside, `${where}: sign inside its option`).toBe(true);
+          expect(sign.onTitle, `${where}: sign over the title`).toBe(false);
+        }
+        // The signs are decoration out of flow: page and level-list scroll as without them.
+        await page.evaluate(() => {
+          const off = document.createElement('style');
+          off.id = 'no-signs';
+          off.textContent = '.next-play{display:none !important}';
+          document.head.append(off);
+        });
+        const hidden = await measure();
+        await page.evaluate(() => document.getElementById('no-signs')!.remove());
+        expect({ page: shown.page, side: shown.side, list: shown.list }, where).toEqual({
+          page: hidden.page,
+          side: 0,
+          list: hidden.list,
+        });
+        await page
+          .getByRole('navigation', { name: /Main controls|Hlavné ovládanie/ })
+          .getByRole('button', { name: /^(Back to courses|Späť na kurzy)$/ })
+          .click();
+        await expect(
+          page.getByRole('button', { name: language === 'EN' ? en : sk, exact: true }),
+        ).toBeVisible();
+      }
+    }
+  }
+});
