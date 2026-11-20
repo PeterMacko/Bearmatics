@@ -32,8 +32,17 @@ function AboutBar({ language, label, play }: { language: Language; label: string
       const target = event.target;
       if (!(target instanceof HTMLElement) || element.contains(target)) return;
       if (!target.matches(':focus-visible')) return;
-      if (target.getBoundingClientRect().top < element.getBoundingClientRect().bottom)
-        target.scrollIntoView({ block: 'nearest' });
+      // Firefox leaves a partly visible focus target where it is (under the bar or at the bottom
+      // edge, QA224-04); a link taller than the space below the bar (a screenshot on a short
+      // screen, QA224-05) can never fit, so its top goes just below the bar.
+      const gap = 12;
+      const box = target.getBoundingClientRect();
+      const top = element.getBoundingClientRect().bottom + gap;
+      const bottom = window.innerHeight - gap;
+      let delta = 0;
+      if (box.height > bottom - top || box.top < top - gap) delta = box.top - top;
+      else if (box.bottom > bottom + gap) delta = box.bottom - bottom;
+      if (delta) window.scrollBy({ top: delta, behavior: 'instant' });
     };
     document.addEventListener('focusin', onFocus);
     if (typeof ResizeObserver === 'undefined')

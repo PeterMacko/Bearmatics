@@ -224,6 +224,37 @@
   .about-play {
     padding: 0 12px;
   }
+  /* Phones: a little tighter so logo, word, switch and play fit one row from 360 px. */
+  .about-home {
+    gap: 6px;
+    font-size: 1.05rem;
+  }
+  .about-home img {
+    width: 32px;
+    height: 32px;
+  }
+}
+/* The narrowest phones (320 px): the logo alone carries the home link (its word stays the
+   accessible name), so the play button keeps its place. 19em = 304 px of bar. */
+@container (max-width: 19em) {
+  .about-languages a {
+    min-width: 44px;
+    padding: 0 6px;
+  }
+  .about-home {
+    justify-content: center;
+    min-width: 44px;
+    padding: 0;
+  }
+  .about-home-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 /* Only with very large text on a phone (200% at 320-390 px): the logo alone, its word stays the
    link's accessible name. 13em = 208 px at normal text, so it never applies there. */

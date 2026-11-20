@@ -118,7 +118,13 @@ async function expectBarStaysAfterScroll(page: Page) {
 async function expectClearOfBar(page: Page) {
   const bar = (await page.getByRole('banner').boundingBox())!;
   const box = (await page.locator(':focus').boundingBox())!;
-  expect(box.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+  const barBottom = bar.y + bar.height;
+  const height = page.viewportSize()!.height;
+  expect(box.y).toBeGreaterThanOrEqual(barBottom - 1);
+  // QA224-04: a link that fits below the bar is fully visible (Firefox left it at the bottom
+  // edge); QA224-05: a taller one (a screenshot on a short screen) starts right below the bar.
+  if (box.height <= height - barBottom) expect(box.y + box.height).toBeLessThanOrEqual(height + 1);
+  else expect(box.y).toBeLessThanOrEqual(barBottom + 16);
 }
 
 /** Headings and captions wrap only between words (QA224-01): no word is split over two lines. */
@@ -376,17 +382,19 @@ for (const lang of LANGS)
     const links = await page
       .locator('a[href]')
       .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
-    // Bearmatics, Slovenčina, English (bar), the 7 full-size screenshots, What we store, e-mail.
+    // Bearmatics, Slovenčina, English, play (bar), the 7 full-size screenshots, What we store,
+    // e-mail.
     const shots = ['course', 'small-maths', 'take-away', 'english', 'summary', 'app-bar'];
     expect(links).toEqual([
       `/?lang=${lang}`,
       '/about/sk',
       '/about/en',
+      `/?lang=${lang}`,
       ...[...shots, 'leaderboard'].map((shot) => `/about/${lang}/${shot}.webp`),
       '#about-store',
-      links[11],
+      links[12],
     ]);
-    expect(links[11]).toMatch(/^mailto:/);
+    expect(links[12]).toMatch(/^mailto:/);
     const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {
@@ -401,7 +409,7 @@ for (const lang of LANGS)
       expect(ring.style).not.toBe('none');
       expect(ring.width).toBeGreaterThanOrEqual(2);
       await expect(focused).toBeInViewport();
-      if (i >= 3) await expectClearOfBar(page);
+      if (i >= 4) await expectClearOfBar(page);
     }
     expect(reached, browserName).toEqual(links);
     // From the end of the page, Shift+Tab walks back up into the bar; every link on the way
@@ -410,7 +418,7 @@ for (const lang of LANGS)
       await page.keyboard.press('Shift+Tab');
       const focused = page.locator(':focus');
       await expect(focused).toHaveAttribute('href', links[i]!);
-      if (i >= 3) await expectClearOfBar(page);
+      if (i >= 4) await expectClearOfBar(page);
     }
     await expect(page.locator(':focus')).toHaveAttribute('href', '/about/en');
     await expect(page.locator(':focus')).toBeInViewport();
@@ -463,3 +471,41 @@ test('the app start does not load the About page code or screenshots', async ({ 
   await page.getByRole('heading', { level: 1 }).waitFor();
   expect(requests.some((path) => /\/assets\/AboutPage-.*\.js$/.test(path))).toBe(true);
 });
+
+// QA224-04/05: keyboard focus on the tall screenshot links stays fully usable on short screens
+// and with 200% text, both directions.
+for (const [width, height, zoom] of [
+  [390, 844, 1],
+  [320, 568, 1],
+  [844, 390, 1],
+  [390, 844, 2],
+] as const) {
+  test(`screenshot links keep clear of the bar and the window edge ${width}x${height}${zoom === 2 ? ' 200%' : ''}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/about/en');
+    if (zoom === 2) await page.addStyleTag({ content: 'html { font-size: 200%; }' });
+    await page.getByRole('heading', { level: 1 }).waitFor();
+    const shots = page.locator('a.about-shot-link');
+    await page.locator('a[href^="/about/sk"]').first().focus();
+    await page.keyboard.press('Tab'); // English
+    await page.keyboard.press('Tab'); // play
+    for (let i = 0; i < 7; i++) {
+      await page.keyboard.press('Tab');
+      await expect(page.locator(':focus')).toHaveClass(/about-shot-link/);
+      await expect
+        .poll(() => page.evaluate(() => document.activeElement!.getBoundingClientRect().top))
+        .toBeGreaterThan(0);
+      await expectClearOfBar(page);
+    }
+    for (let i = 5; i >= 0; i--) {
+      await page.keyboard.press('Shift+Tab');
+      await expect(page.locator(':focus')).toHaveAttribute(
+        'href',
+        (await shots.nth(i).getAttribute('href'))!,
+      );
+      await expectClearOfBar(page);
+    }
+  });
+}
