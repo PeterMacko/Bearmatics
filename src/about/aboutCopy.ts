@@ -29,6 +29,7 @@ export const aboutCopy = {
     intro:
       'Bearmatics is a free learning app for children aged 6–9, in Slovak and English. A friendly bear guides your child through short lessons in maths and English. It runs in a web browser on phones, tablets, foldable phones and computers – nothing to install, no ads.',
     languages: 'Language / Jazyk',
+    play: "Let's play",
     opensFull: '(full size, opens in a new tab)',
     coursesTitle: 'Courses',
     smallLead: 'with pictures for the youngest',
@@ -105,6 +106,7 @@ export const aboutCopy = {
     intro:
       'Bearmatics je bezplatná aplikácia na učenie pre deti od 6 do 9 rokov, v slovenčine a angličtine. Priateľský medveď sprevádza dieťa krátkymi lekciami matematiky a angličtiny. Funguje vo webovom prehliadači na mobile, tablete, skladacom telefóne aj počítači – bez inštalácie a bez reklám.',
     languages: 'Language / Jazyk',
+    play: 'Poď hrať',
     opensFull: '(plná veľkosť, otvorí sa na novej karte)',
     coursesTitle: 'Kurzy',
     smallLead: 's obrázkami pre najmenších',

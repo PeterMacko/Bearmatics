@@ -226,3 +226,22 @@ test('the About link opens straight away when nothing would be lost', () => {
   expect(fireEvent.click(screen.getByRole('link', { name: 'About Bearmatics' }))).toBe(true);
   expect(screen.queryByRole('dialog', { name: 'Leave this trail?' })).not.toBeInTheDocument();
 });
+
+test.each([
+  ['en', "Let's play", '/?lang=en'],
+  ['sk', 'Poď hrať', '/?lang=sk'],
+] as const)(
+  'the bar has a blue "%s" play button into the game in the page language',
+  (language, name, href) => {
+    render(<AboutPage language={language} />);
+    const bar = screen.getByRole('banner');
+    const play = within(bar).getByRole('link', { name });
+    expect(play).toHaveAttribute('href', href);
+    expect(play).toHaveClass('about-play');
+    // After the language switch, so it reads last in the bar.
+    const links = within(bar).getAllByRole('link');
+    expect(links.at(-1)).toBe(play);
+    // The short arrow is decoration; the words stay the name.
+    expect(within(play).getByText('»')).toHaveAttribute('aria-hidden', 'true');
+  },
+);

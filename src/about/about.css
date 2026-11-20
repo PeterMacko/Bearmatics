@@ -43,6 +43,7 @@
 .about-languages {
   display: flex;
   flex: none;
+  margin-left: auto;
   gap: 2px;
   padding: 4px;
   background: #efe9e5;
@@ -69,6 +70,33 @@
 }
 .about-lang-short {
   display: none;
+}
+/* The way into the game (Peter): the app's blue primary button, after the language switch. */
+.about-play {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--target);
+  min-width: var(--target);
+  padding: 0 16px;
+  border-radius: 12px;
+  background: var(--blue);
+  box-shadow: 0 3px 0 var(--blue-shadow);
+  color: var(--paper);
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.about-play:active {
+  transform: translateY(2px);
+  box-shadow: 0 1px 0 var(--blue-shadow);
+}
+.about-play-short {
+  display: none;
+  font-size: 1.4rem;
+  line-height: 1;
 }
 .about-page a:focus-visible {
   outline: 3px solid var(--focus);
@@ -180,6 +208,21 @@
   }
   .about-languages a {
     padding: 0 10px;
+  }
+  .about-play-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .about-play-short {
+    display: inline;
+  }
+  .about-play {
+    padding: 0 12px;
   }
 }
 /* Only with very large text on a phone (200% at 320-390 px): the logo alone, its word stays the

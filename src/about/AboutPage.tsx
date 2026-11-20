@@ -16,7 +16,7 @@ const LANGUAGES: { value: Language; name: string; short: string }[] = [
  * switch. Its height (it grows with large text) becomes the page's `scroll-padding-top`, so in-page
  * jumps and keyboard focus land below it (plus `scroll-margin-top` in about.css).
  */
-function AboutBar({ language, label }: { language: Language; label: string }) {
+function AboutBar({ language, label, play }: { language: Language; label: string; play: string }) {
   const bar = useRef<HTMLElement>(null);
   useEffect(() => {
     const element = bar.current!;
@@ -70,6 +70,14 @@ function AboutBar({ language, label }: { language: Language; label: string }) {
             </a>
           ))}
         </nav>
+        {/* Peter: a clear way into the game. Words where there is room, » on small screens;
+            the accessible name is always the words. */}
+        <a className="about-play" href={appHref(language)}>
+          <span className="about-play-name">{play}</span>
+          <span className="about-play-short" aria-hidden="true">
+            »
+          </span>
+        </a>
       </div>
     </header>
   );
@@ -147,7 +155,7 @@ export default function AboutPage({ language }: { language: Language }) {
   );
   return (
     <div className="about-page">
-      <AboutBar language={language} label={a.languages} />
+      <AboutBar language={language} label={a.languages} play={a.play} />
       <main className="about-main">
         <h1>{a.title}</h1>
         <p className="about-intro">{a.intro}</p>
