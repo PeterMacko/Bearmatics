@@ -59,8 +59,10 @@ test('English: 1/2 after two plays, the calculation on the summary, the top-leve
   await createAccount(page, uniqueName('mul'));
   await hideFromLeaderboard(page);
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
-  // First plays: no sign except the top level's star.
+  // First plays: no sign except the star on Maths levels 4-7.
   await expect(level(page, 1).locator('.next-play')).toHaveCount(0);
+  await expect(level(page, 3).locator('.next-play')).toHaveCount(0);
+  await expect(level(page, 4).locator('.next-play')).toHaveText('★');
   await expect(level(page, 7).locator('.next-play')).toHaveText('★');
   await expect(radio(page, 7)).toHaveAccessibleName(
     /Level 7 .*Next play: one and a half times the points$/,
@@ -235,9 +237,9 @@ test('at 200% text the sign leaves the level number readable (phones, 3 courses,
   await page.reload();
   await page.addStyleTag({ content: 'html{font-size:200% !important}' });
   const courses = [
-    ['Small maths', 'Malá matematika', 3],
-    ['Maths', 'Matematika', 7],
-    ['English', 'Angličtina', 3],
+    ['Small maths', 'Malá matematika', 3, 3],
+    ['Maths', 'Matematika', 7, 6], // 1/2, 1/4 and the stars on levels 4-7
+    ['English', 'Angličtina', 3, 3],
   ] as const;
   for (const language of ['EN', 'SK'] as const) {
     if (language === 'SK') {
@@ -250,11 +252,11 @@ test('at 200% text the sign leaves the level number readable (phones, 3 courses,
       [320, 568],
     ] as const) {
       await page.setViewportSize({ width, height });
-      for (const [en, sk, top] of courses) {
+      for (const [en, sk, top, signCount] of courses) {
         const where = `${language} ${width}x${height} ${en}`;
         await page.getByRole('button', { name: language === 'EN' ? en : sk, exact: true }).click();
         await expect(page.locator('.level-options')).toBeVisible();
-        await expect(page.locator('.next-play')).toHaveCount(3);
+        await expect(page.locator('.next-play')).toHaveCount(signCount);
         await expect(level(page, top).locator('.next-play')).toHaveText('★');
         const measure = () =>
           page.evaluate(() => {

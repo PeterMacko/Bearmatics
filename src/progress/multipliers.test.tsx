@@ -40,7 +40,7 @@ describe('multiplier rows (SCRUM-202)', () => {
   it('the initial table: easy levels 1, 1, 1/2, 1/2, then 1/4 for every later play', () => {
     const easy = [
       ['small', [1, 2]],
-      ['math', [1, 2, 3, 4, 5, 6]],
+      ['math', [1, 2, 3]],
       ['english', [1, 2]],
     ] as const;
     for (const [course, levels] of easy)
@@ -50,9 +50,12 @@ describe('multiplier rows (SCRUM-202)', () => {
           `${course} ${level}`,
         ).toEqual([1, 1, 0.5, 0.5, 0.25, 0.25, 0.25]);
   });
-  it('the initial table: top levels x1.5 for the first play, then x1, never lower', () => {
+  it('the initial table: Maths 4-7 and the other top levels x1.5 first, then x1, never lower', () => {
     for (const [course, level] of [
       ['small', 3],
+      ['math', 4],
+      ['math', 5],
+      ['math', 6],
       ['math', 7],
       ['english', 3],
     ] as const)

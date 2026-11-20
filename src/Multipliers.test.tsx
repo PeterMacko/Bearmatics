@@ -45,7 +45,7 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 
-test('the level menu shows the next play: star on the top level, 1/2 and 1/4, nothing at x1', async () => {
+test('the level menu shows the next play: star on Maths 4-7, 1/2 and 1/4, nothing at x1', async () => {
   played({ 'math:1': 2, 'math:2': 4, 'math:3': 1 });
   server();
   render(<App />);
@@ -54,8 +54,9 @@ test('the level menu shows the next play: star on the top level, 1/2 and 1/4, no
   const level = (n: number) => screen.getByRole('radio', { name: new RegExp(`^Level ${n} `) });
   expect(level(1)).toHaveAccessibleName(/Next play: half points$/);
   expect(level(2)).toHaveAccessibleName(/Next play: a quarter of the points$/);
-  expect(level(7)).toHaveAccessibleName(/Next play: one and a half times the points$/);
-  for (const n of [3, 4, 5, 6]) expect(level(n)).not.toHaveAccessibleName(/Next play/);
+  for (const n of [4, 5, 6, 7])
+    expect(level(n)).toHaveAccessibleName(/Next play: one and a half times the points$/);
+  expect(level(3)).not.toHaveAccessibleName(/Next play/);
   const signs = [...document.querySelectorAll('.next-play')].map((s) => [
     s.closest('label')!.className,
     s.textContent,
@@ -63,6 +64,9 @@ test('the level menu shows the next play: star on the top level, 1/2 and 1/4, no
   expect(signs).toEqual([
     ['level-option level-1', '1/2'],
     ['level-option level-2', '1/4'],
+    ['level-option level-4', '★'],
+    ['level-option level-5', '★'],
+    ['level-option level-6', '★'],
     ['level-option level-7', '★'],
   ]);
   toSlovak();

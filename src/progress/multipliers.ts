@@ -1,6 +1,7 @@
 // SCRUM-202: daily points multipliers per level. Playing the same easy level again and again
-// on one day gives fewer points; the first play of the day of each course's top level gives
-// more. The rows below are the whole configuration (code only, no settings screen).
+// on one day gives fewer points; the first play of the day of the harder levels (Maths 4-7,
+// level 3 of Small maths and English) gives more. The rows below are the whole configuration
+// (code only, no settings screen).
 
 /** The courses as the app names them (CourseChoice). */
 export type PointsCourse = 'small' | 'math' | 'english';
@@ -23,22 +24,25 @@ const repeated = (course: PointsCourse, from: number, to: number): MultiplierRow
   { course, levels: [from, to], plays: [5, null], multiplier: 0.25 },
 ];
 
-/** The top level of a course: its first play of the day gives one and a half times the points. */
-const top = (course: PointsCourse, level: number): MultiplierRow => ({
+/** Harder levels: the first play of the day gives one and a half times the points, then x1. */
+const bonus = (course: PointsCourse, from: number, to: number): MultiplierRow => ({
   course,
-  levels: [level, level],
+  levels: [from, to],
   plays: [1, 1],
   multiplier: 1.5,
 });
 
-/** The initial table (Jira SCRUM-202). Anything without a row is x1. */
+/**
+ * The table (Jira SCRUM-202; Peter's revision: Maths levels 4-7 all get the first-play bonus
+ * and are never reduced). Anything without a row is x1.
+ */
 export const MULTIPLIER_ROWS: readonly MultiplierRow[] = [
   ...repeated('small', 1, 2),
-  ...repeated('math', 1, 6),
+  ...repeated('math', 1, 3),
   ...repeated('english', 1, 2),
-  top('small', 3),
-  top('math', 7),
-  top('english', 3),
+  bonus('small', 3, 3),
+  bonus('math', 4, 7),
+  bonus('english', 3, 3),
 ];
 
 /**

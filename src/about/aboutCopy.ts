@@ -59,7 +59,7 @@ export const aboutCopy = {
     signIn: [
       'Everything works without an account.',
       'Sign in with Google or a username and password to collect points: 1 point for each exercise right on the first try in a finished lesson.',
-      'The same level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The top level of each course gives 1.5 times the points for its first play of the day. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
+      'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
       'Points grow your bear badge. Play every day to build a streak; missed days freeze it and points can unlock it.',
       'A leaderboard shows nickname, bear, streak and points of players; you can hide yourself in the profile.',
       'The profile is only a nickname and a bear icon. The account can be deleted any time.',
@@ -137,7 +137,7 @@ export const aboutCopy = {
     signIn: [
       'Všetko funguje aj bez účtu.',
       'Prihlásenie cez Google alebo menom a heslom zbiera body: 1 bod za každý príklad správne na prvý pokus v dokončenej lekcii.',
-      'Tá istá úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Najvyššia úroveň každého kurzu dáva pri prvej hre dňa 1,5-násobok bodov. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
+      'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
       'Body zväčšujú medvedí odznak. Hraj každý deň a buduj sériu; vynechané dni ju zmrazia a body ju môžu odomknúť.',
       'Rebríček ukazuje prezývku, medveďa, sériu a body hráčov; v profile sa môžeš skryť.',
       'Profil je len prezývka a ikona medveďa. Účet sa dá kedykoľvek zmazať.',
