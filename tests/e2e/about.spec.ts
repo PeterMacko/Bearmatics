@@ -15,8 +15,8 @@ const COPY = {
       'H2 Your data',
       'H3 What we store',
     ],
-    open: 'Open Bearmatics',
     settingsItem: 'About Bearmatics',
+    appSettings: 'Settings',
   },
   sk: {
     title: 'O aplikácii Bearmatics',
@@ -28,8 +28,8 @@ const COPY = {
       'H2 Vaše údaje',
       'H3 Čo ukladáme',
     ],
-    open: 'Otvoriť Bearmatics',
     settingsItem: 'O aplikácii',
+    appSettings: 'Nastavenia',
   },
 } as const;
 type Lang = keyof typeof COPY;
@@ -48,6 +48,71 @@ const headings = (page: Page) =>
   page
     .locator('h1, h2, h3, h4, h5, h6')
     .evaluateAll((list) => list.map((h) => `${h.tagName} ${h.textContent}`));
+
+/**
+ * The fixed top bar (Peter's design round 2): logo + Bearmatics on the left, the language switch on
+ * the right, one row inside the window, every link a comfortable target; EN/SK on small bars.
+ */
+async function expectBar(page: Page, short?: boolean) {
+  const bar = page.getByRole('banner');
+  const home = bar.getByRole('link', { name: 'Bearmatics', exact: true });
+  const nav = bar.getByRole('navigation', { name: 'Language / Jazyk' });
+  const width = page.viewportSize()!.width;
+  const homeBox = (await home.boundingBox())!;
+  const navBox = (await nav.boundingBox())!;
+  expect(homeBox.x).toBeGreaterThanOrEqual(0);
+  expect(homeBox.x + homeBox.width).toBeLessThanOrEqual(navBox.x);
+  expect(navBox.x + navBox.width).toBeLessThanOrEqual(width + 1);
+  // One row: both halves share the same middle line.
+  expect(
+    Math.abs(homeBox.y + homeBox.height / 2 - (navBox.y + navBox.height / 2)),
+  ).toBeLessThanOrEqual(4);
+  for (const link of await bar.getByRole('link').all()) {
+    const box = (await link.boundingBox())!;
+    expect(box.height).toBeGreaterThanOrEqual(44);
+    expect(box.width).toBeGreaterThanOrEqual(44);
+  }
+  // The logo is the favicon, decorative next to its word.
+  await expect(home.locator('img')).toHaveAttribute('src', '/favicon.svg');
+  await expect(home.locator('img')).toHaveAttribute('alt', '');
+  // Visible labels: full names, or EN / SK on small bars; the accessible names stay full.
+  const visible = await nav.getByRole('link').evaluateAll((links) =>
+    links.map((link) =>
+      // The text a sighted user sees: spans wider than the 1 px visually hidden ones.
+      [...link.querySelectorAll('span')]
+        .filter((span) => span.getBoundingClientRect().width > 2)
+        .map((span) => span.textContent)
+        .join(''),
+    ),
+  );
+  if (short !== undefined)
+    expect(visible).toEqual(short ? ['SK', 'EN'] : ['Slovenčina', 'English']);
+  await expect(nav.getByRole('link', { name: 'Slovenčina', exact: true })).toHaveAttribute(
+    'lang',
+    'sk',
+  );
+  await expect(nav.getByRole('link', { name: 'English', exact: true })).toHaveAttribute(
+    'lang',
+    'en',
+  );
+}
+
+/** Scrolls to the end: the bar stays at the top of the window and nothing slides under it. */
+async function expectBarStaysAfterScroll(page: Page) {
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(300);
+  const box = (await page.getByRole('banner').boundingBox())!;
+  expect(Math.abs(box.y)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('banner').getByRole('link').first()).toBeInViewport();
+  // The topmost element under the bar's middle is the bar itself.
+  expect(
+    await page.evaluate(() => {
+      const bar = document.querySelector('header')!.getBoundingClientRect();
+      const hit = document.elementFromPoint(bar.left + bar.width / 2, bar.top + bar.height / 2);
+      return !!hit?.closest('header');
+    }),
+  ).toBe(true);
+}
 
 /** Scrolls every screenshot into view (they load lazily) and waits until each has loaded. */
 async function expectImagesLoaded(page: Page, lang: Lang) {
@@ -73,14 +138,18 @@ for (const device of ALL_DEVICES)
       await expectAboutPage(page, lang, `/about/${lang}`);
       expect(await headings(page)).toEqual(COPY[lang].headings);
       await expectNoHorizontalScroll(page);
-      // Every link is a comfortable target, except the e-mail link inside the privacy text.
-      for (const link of await page.locator('header a, footer a').all()) {
-        const box = (await link.boundingBox())!;
-        expect(box.height).toBeGreaterThanOrEqual(44);
-        expect(box.x + box.width).toBeLessThanOrEqual(device.width + 1);
-      }
+      // EN / SK on phones (bars narrower than 24em), full names from the landscape phone up.
+      await expectBar(page, device.width < 420);
+      // The page title starts below the bar, not under it.
+      const barBottom = (await page.getByRole('banner').boundingBox())!;
+      const title = (await page.getByRole('heading', { level: 1 }).boundingBox())!;
+      expect(title.y).toBeGreaterThanOrEqual(barBottom.y + barBottom.height);
+      // No other way back to the app than the bar (the old "Open Bearmatics" links are gone).
+      await expect(page.getByRole('contentinfo')).toHaveCount(0);
+      await expect(page.getByRole('link', { name: /open bearmatics|otvoriť/i })).toHaveCount(0);
       await expectImagesLoaded(page, lang);
       await expectNoHorizontalScroll(page);
+      await expectBarStaysAfterScroll(page);
       await page.reload();
       await expectAboutPage(page, lang, `/about/${lang}`);
     });
@@ -118,7 +187,7 @@ for (const locale of ['en-US', 'de-DE'])
 test('the language switch changes the address and the page, and Back returns', async ({ page }) => {
   await page.goto('/about/en');
   const switcher = page.getByRole('navigation', { name: 'Language / Jazyk' });
-  await expect(switcher.getByRole('link', { name: 'English' })).toHaveAttribute(
+  await expect(switcher.getByRole('link', { name: 'English', exact: true })).toHaveAttribute(
     'aria-current',
     'page',
   );
@@ -135,7 +204,7 @@ test('the language switch changes the address and the page, and Back returns', a
 });
 
 for (const lang of LANGS)
-  test(`Settings opens the About page in the app language and "Open Bearmatics" returns to the start ${lang}`, async ({
+  test(`Settings opens the About page in the app language and the bar's Bearmatics opens the app in that language ${lang}`, async ({
     page,
   }) => {
     await page.goto('/');
@@ -144,16 +213,59 @@ for (const lang of LANGS)
     if (lang === 'sk') await page.getByRole('button', { name: 'Slovenčina' }).click();
     await page.getByRole('link', { name: COPY[lang].settingsItem }).click();
     await expectAboutPage(page, lang, `/about/${lang}`);
-    await page.getByRole('link', { name: COPY[lang].open }).first().click();
-    await expect(page).toHaveURL('/');
+    const home = page.getByRole('banner').getByRole('link', { name: 'Bearmatics', exact: true });
+    await expect(home).toHaveAttribute('href', `/?lang=${lang}`);
+    await home.click();
+    // The app opens in the page's language and the parameter leaves the address.
     await expect(page.locator('.course-option')).toHaveCount(3);
+    await expect(page).toHaveURL('/');
+    await expect(page.locator('html')).toHaveAttribute('lang', lang);
+    await expect(page.getByRole('button', { name: COPY[lang].appSettings })).toBeVisible();
     await expect(page.locator('.app-bar')).toBeVisible();
-    // The footer link goes to the same start.
-    await page.goto(`/about/${lang}`);
-    await page.getByRole('link', { name: COPY[lang].open }).last().click();
-    await expect(page).toHaveURL('/');
-    await expect(page.locator('.course-option')).toHaveCount(3);
+    // ... and the app's own Settings About link still follows the app language.
+    await page.locator('.settings-button').click();
+    await expect(page.getByRole('link', { name: COPY[lang].settingsItem })).toHaveAttribute(
+      'href',
+      `/about/${lang}`,
+    );
+    // replaceState, not a new entry: Back returns to the About page.
+    await page.goBack();
+    await expectAboutPage(page, lang, `/about/${lang}`);
   });
+
+for (const other of LANGS)
+  test(`the About page in ${other} opens the app in ${other}, also after switching the page language`, async ({
+    page,
+  }) => {
+    const first = other === 'sk' ? 'en' : 'sk';
+    await page.goto(`/about/${first}`);
+    await page
+      .getByRole('navigation', { name: 'Language / Jazyk' })
+      .getByRole('link', { name: other === 'sk' ? 'Slovenčina' : 'English', exact: true })
+      .click();
+    await expectAboutPage(page, other, `/about/${other}`);
+    await page.getByRole('link', { name: 'Bearmatics', exact: true }).click();
+    await expect(page.locator('.course-option')).toHaveCount(3);
+    await expect(page).toHaveURL('/');
+    await expect(page.locator('html')).toHaveAttribute('lang', other);
+  });
+
+test('the app start without a language, or with an unknown one, stays English as before', async ({
+  page,
+}) => {
+  await page.goto('/');
+  await page.locator('.course-option').first().waitFor();
+  await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+  await expect(page.getByRole('button', { name: 'Settings' })).toBeVisible();
+  for (const query of ['?lang=de', '?lang=SK', '?lang=']) {
+    await page.goto(`/${query}`);
+    await page.locator('.course-option').first().waitFor();
+    await expect(page.locator('html')).toHaveAttribute('lang', 'en');
+    // Ignored values are left alone in the address.
+    expect(new URL(page.url()).search).toBe(query === '?lang=' ? '?lang=' : query);
+  }
+  // A Slovak browser does not change the start either (only the About page follows it).
+});
 
 test('the About link in a lesson with work asks first; leaving opens the page', async ({
   page,
@@ -189,6 +301,8 @@ for (const lang of LANGS)
       // After the document exists (an init script cannot style <html> in Chromium).
       await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
       await expectNoHorizontalScroll(page);
+      // Phones and the small landscape phone show EN / SK; the bar stays one row in the window.
+      await expectBar(page, true);
       for (const link of await page.locator('a').all()) {
         const box = (await link.boundingBox())!;
         expect(box.x).toBeGreaterThanOrEqual(0);
@@ -198,34 +312,61 @@ for (const lang of LANGS)
         const box = (await image.boundingBox())!;
         expect(box.x + box.width).toBeLessThanOrEqual(size.width + 1);
       }
+      await expectBarStaysAfterScroll(page);
+      await expectNoHorizontalScroll(page);
     });
 
 for (const lang of LANGS)
-  test(`every link is reachable with the keyboard in page order ${lang}`, async ({
+  test(`every link is reachable with the keyboard in page order, with visible focus ${lang}`, async ({
     page,
     browserName,
   }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
     await page.goto(`/about/${lang}`);
     await page.getByRole('heading', { level: 1 }).waitFor();
     const links = await page
       .locator('a[href]')
-      .evaluateAll((list) => list.map((a) => `${a.textContent}|${a.getAttribute('href')}`));
-    // Slovenčina, English, Open (header), What we store, e-mail, Open (footer).
-    expect(links).toHaveLength(6);
-    const reached: string[] = [];
+      .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
+    // Bearmatics, Slovenčina, English (bar), What we store, e-mail.
+    expect(links).toEqual([`/?lang=${lang}`, '/about/sk', '/about/en', '#about-store', links[4]]);
+    expect(links[4]).toMatch(/^mailto:/);
+    const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {
       await page.keyboard.press('Tab');
-      reached.push(
-        await page.evaluate(
-          () =>
-            `${document.activeElement?.textContent}|${document.activeElement?.getAttribute('href')}`,
-        ),
-      );
+      const focused = page.locator(':focus');
+      reached.push(await focused.getAttribute('href'));
+      // Visible focus ring, and the focused link is not hidden under the fixed bar.
+      const ring = await focused.evaluate((a) => {
+        const style = getComputedStyle(a);
+        return { style: style.outlineStyle, width: parseFloat(style.outlineWidth) };
+      });
+      expect(ring.style).not.toBe('none');
+      expect(ring.width).toBeGreaterThanOrEqual(2);
+      await expect(focused).toBeInViewport();
+      if (i >= 3) {
+        const bar = (await page.getByRole('banner').boundingBox())!;
+        const box = (await focused.boundingBox())!;
+        expect(box.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+      }
     }
     expect(reached, browserName).toEqual(links);
-    // Enter follows the focused link (the language switch).
+    // From the end of the page, Shift+Tab walks back up into the bar.
+    await page.keyboard.press('Shift+Tab');
+    await page.keyboard.press('Shift+Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('href', '/about/en');
+    await expect(page.locator(':focus')).toBeInViewport();
+    // "Full details" jumps to the list, which lands below the bar.
     await page.goto(`/about/${lang}`);
+    await page.locator('a[href="#about-store"]').click();
+    await expect(page).toHaveURL(new RegExp(`/about/${lang}#about-store$`));
+    await expect
+      .poll(async () => (await page.locator('#about-store').boundingBox())!.y)
+      .toBeGreaterThanOrEqual((await page.getByRole('banner').boundingBox())!.height);
+    await expect(page.locator('#about-store')).toBeInViewport();
+    // Enter follows the focused link (the second bar link: Slovenčina).
+    await page.goto(`/about/${lang}`);
+    await page.keyboard.press('Tab');
     await page.keyboard.press('Tab');
     await page.keyboard.press('Enter');
     await expectAboutPage(page, 'sk', '/about/sk');
