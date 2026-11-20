@@ -26,10 +26,22 @@ function AboutBar({ language, label }: { language: Language; label: string }) {
       root.style.scrollPaddingTop = `${element.offsetHeight}px`;
     };
     update();
-    if (typeof ResizeObserver === 'undefined') return;
+    // Firefox leaves a partly visible link where it is when Tab/Shift+Tab reaches it, even with
+    // most of it under the bar: bring a keyboard-focused link fully below the bar.
+    const onFocus = (event: FocusEvent) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement) || element.contains(target)) return;
+      if (!target.matches(':focus-visible')) return;
+      if (target.getBoundingClientRect().top < element.getBoundingClientRect().bottom)
+        target.scrollIntoView({ block: 'nearest' });
+    };
+    document.addEventListener('focusin', onFocus);
+    if (typeof ResizeObserver === 'undefined')
+      return () => document.removeEventListener('focusin', onFocus);
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => {
+      document.removeEventListener('focusin', onFocus);
       observer.disconnect();
       root.style.removeProperty('scroll-padding-top');
     };
