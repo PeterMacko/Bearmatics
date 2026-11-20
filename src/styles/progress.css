@@ -710,11 +710,14 @@
   font-size: calc(7.2px + 0.7rem);
   line-height: 1.2;
 }
-/* Short landscape phones: a slightly narrower badge meter lets the calculation line keep the
-   plain line's place beside it instead of pushing the meter onto a row of its own. */
+/* Short landscape phones: a slightly smaller line and gap let the calculation keep the plain
+   line's place beside the badge meter instead of pushing the meter onto a row of its own. */
 @media (max-height: 420px) {
-  .summary-points:has(.points-multiplied) .badge-meter {
-    max-width: 290px;
+  .summary-points:has(.points-multiplied) {
+    column-gap: 8px;
+  }
+  .points-multiplied {
+    font-size: 1rem;
   }
 }
 /* The level menu's sign for the next play (star x1.5, 1/2, 1/4), pinned to the bottom edge

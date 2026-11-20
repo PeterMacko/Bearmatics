@@ -400,12 +400,11 @@ test('the calculation line adds no page scroll where summaries already scroll (E
           const plain = document.createElement('p');
           plain.className = 'points-added';
           plain.textContent = document.documentElement.lang === 'sk' ? '+8 bodov' : '+8 points';
-          line.style.display = 'none';
-          line.after(plain);
+          // (swapped out of the DOM, so no rule for the calculation applies to the summary)
+          line.replaceWith(plain);
           await new Promise(requestAnimationFrame);
           const withPlain = scroll();
-          plain.remove();
-          line.style.display = '';
+          plain.replaceWith(line);
           return {
             withCalc,
             withPlain,
