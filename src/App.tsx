@@ -206,6 +206,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     endLesson,
     newBadge,
     shownFrame,
+    nextMultiplier,
   } = useLessonPoints({ account, accountKnown, finishedFirstTry, playBadge });
   const inputRef = useRef<HTMLInputElement>(null);
   useLayoutEffect(() => {
@@ -301,7 +302,12 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     resetForNewSession();
     void activateSound();
     setAnswer('');
-    beginLesson(course === 'small' ? smallSize : size);
+    beginLesson(
+      course === 'small' ? smallSize : size,
+      course === 'small'
+        ? { course: 'small', level: shownLevel(SMALL_MATH_LEVELS, smallLevel) }
+        : { course: 'math', level: shownLevel(MATH_LEVELS, level) },
+    );
     setSession(
       createSession(
         course === 'small' ? generateSession(smallLevel, smallSize) : generateSession(level, size),
@@ -328,7 +334,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
-    beginLesson(englishSize);
+    beginLesson(englishSize, { course: 'english', level: englishLevel });
     resetForNewSession();
     void activateSound();
     let first: string;
@@ -679,6 +685,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={smallLevel}
             size={smallSize}
+            nextMultiplier={(shown) => nextMultiplier({ course: 'small', level: shown })}
             onLevelChange={setSmallLevel}
             onSizeChange={setSmallSize}
             onStart={start}
@@ -692,6 +699,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={level}
             size={size}
+            nextMultiplier={(shown) => nextMultiplier({ course: 'math', level: shown })}
             onLevelChange={setLevel}
             onSizeChange={setSize}
             onStart={start}
@@ -702,6 +710,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             level={englishLevel}
             size={englishSize}
             headingRef={menuHeadingRef}
+            nextMultiplier={(shown) => nextMultiplier({ course: 'english', level: shown })}
             onLevelChange={setEnglishLevel}
             onSizeChange={setEnglishSize}
             onStart={startEnglish}

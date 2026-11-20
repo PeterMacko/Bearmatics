@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import type { Copy } from './i18n';
 import MenuHeading from './MenuHeading';
+import { multiplierName, type Multiplier } from './progress/multipliers';
 import { SESSION_SIZES } from './session';
 
 /** One level in a menu: its value, the number the child sees, its name and optional detail. */
@@ -30,6 +31,7 @@ export default function LevelMenu<L extends number>({
   onSizeChange,
   onStart,
   headingRef,
+  nextMultiplier,
 }: {
   t: Copy;
   className?: string;
@@ -48,33 +50,48 @@ export default function LevelMenu<L extends number>({
   onSizeChange: (size: number) => void;
   onStart: () => void;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /**
+   * SCRUM-202: the multiplier the next play of a level (as shown) gets, signed in only. A small
+   * sign shows it (star x1.5, 1/2, 1/4; nothing at x1) with a screen-reader text.
+   */
+  nextMultiplier?: (shown: number) => Multiplier | null;
 }) {
   return (
     <section className={className}>
       <MenuHeading {...heading} headingRef={headingRef} />
       <fieldset className="level-options">
         <legend className="sr-only">{t.level}</legend>
-        {levels.map(({ value, shown, title, detail }) => (
-          <label className={`level-option level-${shown}`} key={value}>
-            <input
-              type="radio"
-              name={levelName}
-              value={value}
-              checked={level === value}
-              onChange={() => onLevelChange(value)}
-            />
-            <span className="level-number" aria-hidden="true">
-              {shown}
-            </span>
-            <span>
-              <span className="level-title">
-                {t.level} {shown} · {title}
+        {levels.map(({ value, shown, title, detail }) => {
+          const next = nextMultiplier?.(shown);
+          const sign = next && next !== 1 ? multiplierName(next) : null;
+          return (
+            <label className={`level-option level-${shown}`} key={value}>
+              <input
+                type="radio"
+                name={levelName}
+                value={value}
+                checked={level === value}
+                onChange={() => onLevelChange(value)}
+              />
+              <span className="level-number" aria-hidden="true">
+                {shown}
+                {sign && (
+                  <span className={`next-play next-play-${sign}`} data-next-play={next}>
+                    {t.points.nextPlaySign[sign]}
+                  </span>
+                )}
               </span>
-              {detail !== undefined && <span className="level-detail">{detail}</span>}
-            </span>
-            <span className="selection-dot" aria-hidden="true" />
-          </label>
-        ))}
+              <span>
+                <span className="level-title">
+                  {t.level} {shown} · {title}
+                </span>
+                {detail !== undefined && <span className="level-detail">{detail}</span>}
+                {sign && <span className="sr-only">{t.points.nextPlay[sign]}</span>}
+              </span>
+              <span className="selection-dot" aria-hidden="true" />
+            </label>
+          );
+        })}
       </fieldset>
       <div className="menu-controls">
         <fieldset className="session-options">

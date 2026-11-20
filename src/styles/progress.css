@@ -700,3 +700,36 @@
     white-space: nowrap;
   }
 }
+
+/* SCRUM-202: the calculation line on the summary ("9 × 1/2 = 5 points"), a bit smaller than
+   the plain "+9 points" so it stays on one line beside a new badge on small phones. */
+.points-multiplied {
+  font-size: 1.15rem;
+  white-space: nowrap;
+}
+/* The level menu's sign for the next play (star x1.5, 1/2, 1/4), pinned to the bottom edge
+   of the level number: out of flow, so the menu's layout and fit stay exactly as before. */
+.level-number {
+  position: relative;
+}
+.next-play {
+  position: absolute;
+  left: 50%;
+  bottom: -9px;
+  transform: translateX(-50%);
+  min-width: 20px;
+  padding: 0 4px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  line-height: 15px;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  border: 1.5px solid var(--paper);
+  background: #6f5b55;
+  color: #fff;
+}
+.next-play-bonus {
+  background: #b2611a;
+  color: #fff;
+}

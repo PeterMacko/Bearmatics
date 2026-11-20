@@ -70,3 +70,10 @@ export function multipliedPoints(firstTry: number, multiplier: Multiplier): numb
   const quarters = Math.round(multiplier * 4);
   return Math.ceil((firstTry * quarters) / 4);
 }
+
+/** Names of the multipliers other than x1, for copy keys and CSS classes. */
+export type MultiplierName = 'half' | 'quarter' | 'bonus';
+
+export function multiplierName(multiplier: Exclude<Multiplier, 1>): MultiplierName {
+  return multiplier === 0.5 ? 'half' : multiplier === 0.25 ? 'quarter' : 'bonus';
+}

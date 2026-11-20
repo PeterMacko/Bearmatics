@@ -48,6 +48,7 @@ beforeEach(() => {
   vi.stubGlobal('matchMedia', () => ({ matches: true }));
 });
 afterEach(() => {
+  localStorage.clear();
   vi.clearAllMocks();
   vi.unstubAllGlobals();
   vi.useRealTimers();
@@ -83,7 +84,14 @@ describe('useLessonPoints', () => {
     expect(result.current.lessonSave).toEqual({ state: 'saving' });
     await waitFor(() => expect(result.current.lessonSave?.state).toBe('saved'));
     expect(api.finishLesson).toHaveBeenCalledWith('lesson-1', 5, 5);
-    expect(result.current.lessonSave).toEqual({ state: 'saved', added: 7, before: 40, after: 47 });
+    expect(result.current.lessonSave).toEqual({
+      state: 'saved',
+      added: 7,
+      before: 40,
+      after: 47,
+      firstTry: 5,
+      multiplier: 1,
+    });
     expect(result.current.points).toBe(47);
     rerender({ account: KID, accountKnown: true, finishedFirstTry: 9 });
     expect(api.finishLesson).toHaveBeenCalledTimes(1);
@@ -159,7 +167,14 @@ describe('useLessonPoints', () => {
     rerender({ account: KID, accountKnown: true, finishedFirstTry: 6 });
     await waitFor(() => expect(result.current.lessonSave).toEqual({ state: 'failed' }));
     await act(() => result.current.saveLesson(6));
-    expect(result.current.lessonSave).toEqual({ state: 'saved', added: 6, before: 40, after: 46 });
+    expect(result.current.lessonSave).toEqual({
+      state: 'saved',
+      added: 6,
+      before: 40,
+      after: 46,
+      firstTry: 6,
+      multiplier: 1,
+    });
   });
 
   it('after leaving, a late answer still updates the bar but not the summary', async () => {
@@ -212,5 +227,157 @@ describe('useLessonPoints', () => {
     expect(result.current.warming).toBe(true);
     act(() => vi.advanceTimersByTime(1));
     expect(result.current.warming).toBe(false);
+  });
+});
+
+describe('daily multipliers (SCRUM-202)', () => {
+  type Place = { course: 'small' | 'math' | 'english'; level: number };
+  const DAY = '2026-11-20';
+  const withDay = (points: number, added: number, day = DAY): Finished => ({
+    ...finished(points, added),
+    day,
+  });
+  /** Plays one lesson of `place` to the summary; returns the points sent to the server. */
+  async function play(
+    hook: ReturnType<typeof setup>,
+    place: Place,
+    firstTry: number,
+    account: Account | null = KID,
+  ) {
+    const calls = api.finishLesson.mock.calls.length;
+    act(() => hook.result.current.beginLesson(10, place));
+    hook.rerender({ account, accountKnown: true, finishedFirstTry: firstTry });
+    await waitFor(() => expect(hook.result.current.lessonSave?.state).not.toBe('saving'));
+    hook.rerender({ account, accountKnown: true, finishedFirstTry: null });
+    act(() => hook.result.current.endLesson());
+    return api.finishLesson.mock.calls.length > calls
+      ? api.finishLesson.mock.calls.at(-1)![2]
+      : null;
+  }
+  const start = async (account: Account | null = KID) => {
+    api.loadProgress.mockResolvedValue({ ...progress(40), day: DAY });
+    api.finishLesson.mockImplementation(async (_id, _size, points) => withDay(40 + points, points));
+    const hook = setup({ account, accountKnown: true, finishedFirstTry: null });
+    if (account) await waitFor(() => expect(hook.result.current.points).toBe(40));
+    return hook;
+  };
+  const math2: Place = { course: 'math', level: 2 };
+
+  it('plays 1-2 full points, 3-4 half, 5 and later a quarter (rounded up)', async () => {
+    const hook = await start();
+    const sent = [];
+    for (let n = 0; n < 6; n++) sent.push(await play(hook, math2, 9));
+    expect(sent).toEqual([9, 9, 5, 5, 3, 3]);
+    expect(await play(hook, { course: 'math', level: 3 }, 9)).toBe(9);
+    expect(await play(hook, { course: 'small', level: 2 }, 9)).toBe(9);
+  });
+
+  it('the summary gets the first-try count and the multiplier', async () => {
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    act(() => hook.result.current.beginLesson(10, math2));
+    hook.rerender({ account: KID, accountKnown: true, finishedFirstTry: 9 });
+    await waitFor(() => expect(hook.result.current.lessonSave?.state).toBe('saved'));
+    expect(hook.result.current.lessonSave).toMatchObject({
+      added: 5,
+      firstTry: 9,
+      multiplier: 0.5,
+    });
+  });
+
+  it('top level: first play x1.5, every later play x1; a 0-point first play uses the bonus', async () => {
+    const hook = await start();
+    expect(hook.result.current.nextMultiplier({ course: 'math', level: 7 })).toBe(1.5);
+    expect(await play(hook, { course: 'math', level: 7 }, 9)).toBe(14);
+    expect(hook.result.current.nextMultiplier({ course: 'math', level: 7 })).toBe(1);
+    for (let n = 0; n < 5; n++) expect(await play(hook, { course: 'math', level: 7 }, 9)).toBe(9);
+    expect(await play(hook, { course: 'english', level: 3 }, 0)).toBe(0);
+    expect(await play(hook, { course: 'english', level: 3 }, 10)).toBe(10);
+    expect(await play(hook, { course: 'small', level: 3 }, 20 / 2)).toBe(15);
+  });
+
+  it('the menu sign follows the next play; signed out: no sign and no counts', async () => {
+    const hook = await start();
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+    await play(hook, math2, 4);
+    await play(hook, math2, 4);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.5);
+    await play(hook, math2, 4);
+    await play(hook, math2, 4);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.25);
+    hook.rerender({ account: null, accountKnown: true, finishedFirstTry: null });
+    expect(hook.result.current.nextMultiplier(math2)).toBeNull();
+    expect(await play(hook, math2, 4, null)).toBeNull();
+  });
+
+  it('a failed save is not a play; a retried save counts once and keeps its multiplier', async () => {
+    const hook = await start();
+    await play(hook, math2, 9);
+    api.finishLesson.mockRejectedValueOnce(new Error('offline'));
+    expect(await play(hook, math2, 9)).toBe(9); // failed: not counted
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+    // Second play: the first answer is lost, the retry finds it counted.
+    api.finishLesson.mockRejectedValueOnce(new Error('lost'));
+    act(() => hook.result.current.beginLesson(10, math2));
+    hook.rerender({ account: KID, accountKnown: true, finishedFirstTry: 9 });
+    await waitFor(() => expect(hook.result.current.lessonSave).toEqual({ state: 'failed' }));
+    api.finishLesson.mockResolvedValueOnce(withDay(58, 0));
+    await act(() => hook.result.current.saveLesson(9));
+    await act(() => hook.result.current.saveLesson(9));
+    expect(api.finishLesson.mock.calls.slice(-3).map((c) => c[2])).toEqual([9, 9, 9]);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.5); // two plays, not three
+  });
+
+  it('a lesson left before its summary does not count', async () => {
+    const hook = await start();
+    for (let n = 0; n < 2; n++) {
+      act(() => hook.result.current.beginLesson(10, math2));
+      act(() => hook.result.current.endLesson());
+    }
+    expect(api.finishLesson).not.toHaveBeenCalled();
+    expect(await play(hook, math2, 9)).toBe(9);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+  });
+
+  it('counts per account: two children on one tablet', async () => {
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    const SIS: Account = { ...KID, username: 'sis', nickname: 'Sis' };
+    hook.rerender({ account: SIS, accountKnown: true, finishedFirstTry: null });
+    await waitFor(() => expect(hook.result.current.points).toBe(40));
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+    expect(await play(hook, math2, 9, SIS)).toBe(9);
+    hook.rerender({ account: KID, accountKnown: true, finishedFirstTry: null });
+    await waitFor(() => expect(hook.result.current.nextMultiplier(math2)).toBe(0.5));
+  });
+
+  it("starts again at Slovak midnight (the server's day)", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-20T22:30:00Z')); // 23:30 in Bratislava
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.5);
+    vi.setSystemTime(new Date('2026-11-20T23:00:00Z')); // midnight in Bratislava
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+    api.finishLesson.mockImplementation(async (_id, _size, points) =>
+      withDay(40 + points, points, '2026-11-21'),
+    );
+    expect(await play(hook, math2, 9)).toBe(9);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(1);
+  });
+
+  it("uses the server's day over a wrong device clock", async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-18T10:00:00Z')); // device two days behind
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    expect(JSON.parse(localStorage.getItem('bearmatics-plays')!)).toEqual({
+      'password:kid': { day: DAY, counts: { 'math:2': 2 } },
+    });
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.5);
   });
 });

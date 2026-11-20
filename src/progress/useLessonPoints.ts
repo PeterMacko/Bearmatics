@@ -9,7 +9,12 @@ import {
   type Streak,
 } from './api';
 import { pointsFrames, reducedMotion, staticFrame, usePointsAnimation } from './animation';
+import { multipliedPoints, multiplierFor, type Multiplier, type PointsCourse } from './multipliers';
+import { addPlay, dayShift, playDay, playsAccountKey, playsToday } from './playCounts';
 import type { LessonSave } from './SummaryPoints';
+
+/** Where a lesson is played: course and level as shown in its menu (SCRUM-202). */
+export type LessonPlace = { course: PointsCourse; level: number };
 
 // The running lesson. Its server ID is requested at Start when the player is signed in; a
 // lesson started before the account has loaded asks for it as soon as the account is known.
@@ -22,6 +27,13 @@ type Lesson = {
   /** A finish request was sent and its answer was lost, so "already counted" is expected. */
   retried: boolean;
   earned: number;
+  place: LessonPlace | null;
+  /** SCRUM-202: fixed when the lesson finishes (from today's plays before it); null before. */
+  multiplier: Multiplier | null;
+  /** First-try answers (capped at the size) the multiplier applies to. */
+  firstTry: number;
+  /** This lesson was counted as today's play (once, also when a save is retried). */
+  counted: boolean;
 };
 
 /**
@@ -50,7 +62,12 @@ export function useLessonPoints({
   const [warming, setWarming] = useState(false);
   // The streak number shown when the lesson started (the summary switches from it).
   const streakAtStart = useRef<number | null>(null);
+  // SCRUM-202: the server's Slovak day as a shift from the device's own Slovak date.
+  const dayShiftRef = useRef(0);
+  // Bumped when a play is counted, so the level menus show the next play's sign again.
+  const [, setPlaysCounted] = useState(0);
   const showProgress = (progress: Progress) => {
+    if (progress.day) dayShiftRef.current = dayShift(Date.now(), progress.day);
     setPoints(progress.points);
     setStreak({ streak: progress.streak, frozen: progress.frozen, today: progress.today });
   };
@@ -73,7 +90,7 @@ export function useLessonPoints({
   const lesson = useRef<Lesson | null>(null);
   const waitingStart = useRef<((id: string | null) => void) | null>(null);
   const [lessonSave, setLessonSave] = useState<LessonSave | null>(null);
-  const beginLesson = (lessonSize: number) => {
+  const beginLesson = (lessonSize: number, place: LessonPlace | null = null) => {
     streakAtStart.current = streak ? streak.streak : null;
     setLessonSave(null);
     closeOffer();
@@ -85,6 +102,10 @@ export function useLessonPoints({
       signedOut: false,
       retried: false,
       earned: 0,
+      place,
+      multiplier: null,
+      firstTry: 0,
+      counted: false,
     };
     if (account) fresh.id = startLesson(lessonSize).catch(() => null);
     else if (!accountKnown)
@@ -108,7 +129,25 @@ export function useLessonPoints({
   const saveLesson = async (firstTry: number) => {
     const current = lesson.current;
     if (!current || current.signedOut) return;
-    current.earned = Math.min(firstTry, current.size);
+    const playsKey = account ? playsAccountKey(account) : null;
+    if (current.multiplier === null) {
+      // Fixed now, from the plays saved before this one; a retried save keeps it.
+      current.firstTry = Math.min(firstTry, current.size);
+      current.multiplier =
+        current.place && playsKey
+          ? multiplierFor(
+              current.place.course,
+              current.place.level,
+              playsToday(
+                playsKey,
+                playDay(Date.now(), dayShiftRef.current),
+                current.place.course,
+                current.place.level,
+              ) + 1,
+            )
+          : 1;
+      current.earned = multipliedPoints(current.firstTry, current.multiplier);
+    }
     setLessonSave({ state: 'saving' });
     let sent = false;
     try {
@@ -125,12 +164,30 @@ export function useLessonPoints({
       const result = await finishLesson(id, current.size, current.earned);
       // The bar always gets the saved total, also when the child has already left the summary.
       showProgress(result);
+      // Saved: today's play of this level (a failed save is not a play; counted once).
+      if (!current.counted && current.place && playsKey) {
+        current.counted = true;
+        addPlay(
+          playsKey,
+          playDay(Date.now(), dayShiftRef.current),
+          current.place.course,
+          current.place.level,
+        );
+        setPlaysCounted((n) => n + 1);
+      }
       if (lesson.current !== current) return;
       // The unlock offer comes after the summary scene (after the points animation).
       if (result.offer) setOffer({ offer: result.offer, points: result.points });
       // A retry after a lost answer finds the lesson already counted: show what it gave.
       const added = result.added === 0 && current.retried ? current.earned : result.added;
-      setLessonSave({ state: 'saved', added, before: result.points - added, after: result.points });
+      setLessonSave({
+        state: 'saved',
+        added,
+        before: result.points - added,
+        after: result.points,
+        firstTry: current.firstTry,
+        multiplier: current.multiplier ?? 1,
+      });
     } catch {
       if (sent) current.retried = true;
       if (lesson.current === current) setLessonSave({ state: 'failed' });
@@ -196,6 +253,17 @@ export function useLessonPoints({
     waitingStart.current = null;
     setLessonSave(null);
   };
+  /** SCRUM-202: the multiplier the next play of a level gets; null when signed out. */
+  const nextMultiplier = (place: LessonPlace): Multiplier | null => {
+    if (!account) return null;
+    const plays = playsToday(
+      playsAccountKey(account),
+      playDay(Date.now(), dayShiftRef.current),
+      place.course,
+      place.level,
+    );
+    return multiplierFor(place.course, place.level, plays + 1);
+  };
   useEffect(() => {
     if (!warming) return;
     const timer = window.setTimeout(() => setWarming(false), 1600);
@@ -226,5 +294,6 @@ export function useLessonPoints({
     endLesson,
     newBadge,
     shownFrame,
+    nextMultiplier,
   };
 }

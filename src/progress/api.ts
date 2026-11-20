@@ -6,7 +6,8 @@ export type { LeaderboardRow, Offer } from '../../shared/api-types';
 
 /** today: a lesson already counted for the streak today (lit flame). */
 export type Streak = { streak: number; frozen: boolean; today: boolean };
-export type Progress = { points: number } & Streak;
+/** day: the server's Slovak day 'YYYY-MM-DD' (SCRUM-202; missing from older servers). */
+export type Progress = { points: number; day?: string } & Streak;
 
 export const loadProgress = () => call<Progress>('/api/progress');
 export const startLesson = (size: number) =>

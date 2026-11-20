@@ -1,6 +1,7 @@
 import type { RefObject } from 'react';
 import type { Copy } from './i18n';
 import LevelMenu from './LevelMenu';
+import type { Multiplier } from './progress/multipliers';
 
 /** English course level: 1-2 listen and choose (english/words.ts ListenLevel), 3 listen and write. */
 export type EnglishLevel = 1 | 2 | 3;
@@ -15,6 +16,7 @@ export default function EnglishHome({
   level,
   size,
   headingRef,
+  nextMultiplier,
   onLevelChange,
   onSizeChange,
   onStart,
@@ -23,6 +25,8 @@ export default function EnglishHome({
   level: EnglishLevel;
   size: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /** SCRUM-202: the next play's multiplier per level (signed in only). */
+  nextMultiplier?: (shown: number) => Multiplier | null;
   onLevelChange: (level: EnglishLevel) => void;
   onSizeChange: (size: number) => void;
   onStart: () => void;
@@ -43,6 +47,7 @@ export default function EnglishHome({
       onSizeChange={onSizeChange}
       onStart={onStart}
       headingRef={headingRef}
+      nextMultiplier={nextMultiplier}
     />
   );
 }
