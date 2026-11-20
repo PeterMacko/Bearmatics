@@ -30,6 +30,11 @@ type Lesson = {
   place: LessonPlace | null;
   /** SCRUM-202: fixed when the lesson finishes (from today's plays before it); null before. */
   multiplier: Multiplier | null;
+  /**
+   * The Slovak day the multiplier was looked up for, fixed with it. The play is counted under
+   * this same day, even when the save answer moves the server's day on (QA204-01).
+   */
+  day: string | null;
   /** First-try answers (capped at the size) the multiplier applies to. */
   firstTry: number;
   /** This lesson was counted as today's play (once, also when a save is retried). */
@@ -104,6 +109,7 @@ export function useLessonPoints({
       earned: 0,
       place,
       multiplier: null,
+      day: null,
       firstTry: 0,
       counted: false,
     };
@@ -131,19 +137,17 @@ export function useLessonPoints({
     if (!current || current.signedOut) return;
     const playsKey = account ? playsAccountKey(account) : null;
     if (current.multiplier === null) {
-      // Fixed now, from the plays saved before this one; a retried save keeps it.
+      // Fixed now, from the plays saved before this one; a retried save keeps it, and the play
+      // is later counted under this same day.
+      const day = playDay(Date.now(), dayShiftRef.current);
+      current.day = day;
       current.firstTry = Math.min(firstTry, current.size);
       current.multiplier =
         current.place && playsKey
           ? multiplierFor(
               current.place.course,
               current.place.level,
-              playsToday(
-                playsKey,
-                playDay(Date.now(), dayShiftRef.current),
-                current.place.course,
-                current.place.level,
-              ) + 1,
+              playsToday(playsKey, day, current.place.course, current.place.level) + 1,
             )
           : 1;
       current.earned = multipliedPoints(current.firstTry, current.multiplier);
@@ -165,14 +169,10 @@ export function useLessonPoints({
       // The bar always gets the saved total, also when the child has already left the summary.
       showProgress(result);
       // Saved: today's play of this level (a failed save is not a play; counted once).
-      if (!current.counted && current.place && playsKey) {
+      // Counted under the day its multiplier came from (not the day this answer reports).
+      if (!current.counted && current.place && playsKey && current.day) {
         current.counted = true;
-        addPlay(
-          playsKey,
-          playDay(Date.now(), dayShiftRef.current),
-          current.place.course,
-          current.place.level,
-        );
+        addPlay(playsKey, current.day, current.place.course, current.place.level);
         setPlaysCounted((n) => n + 1);
       }
       if (lesson.current !== current) return;

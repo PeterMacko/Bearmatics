@@ -369,6 +369,39 @@ describe('daily multipliers (SCRUM-202)', () => {
     expect(hook.result.current.nextMultiplier(math2)).toBe(1);
   });
 
+  it('device/server day skew at midnight: the multiplier and the count use ONE day', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-20T22:30:00Z')); // 23:30 in Bratislava, server agrees
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    // The device already says 00:00:10 (21 Nov) while the server still answers 20 Nov.
+    vi.setSystemTime(new Date('2026-11-20T23:00:10Z'));
+    expect(await play(hook, math2, 9)).toBe(9); // the new day's first play: x1 ...
+    // ... and it is counted under that same new day, not as the old day's third play.
+    expect(JSON.parse(localStorage.getItem('bearmatics-plays')!)).toEqual({
+      'password:kid': { day: '2026-11-21', counts: { 'math:2': 1 } },
+    });
+  });
+
+  it('device behind the server at midnight: the play counts under the day of its multiplier', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-11-20T22:30:00Z'));
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    // The device still says 23:59:50 (20 Nov); the server's answer already says 21 Nov.
+    vi.setSystemTime(new Date('2026-11-20T22:59:50Z'));
+    api.finishLesson.mockImplementation(async (_id, _size, points) =>
+      withDay(40 + points, points, '2026-11-21'),
+    );
+    expect(await play(hook, math2, 9)).toBe(5); // the old day's third play: x1/2 ...
+    // ... counted as that day's third play, not as the new day's first.
+    expect(JSON.parse(localStorage.getItem('bearmatics-plays')!)).toEqual({
+      'password:kid': { day: DAY, counts: { 'math:2': 3 } },
+    });
+  });
+
   it("uses the server's day over a wrong device clock", async () => {
     vi.useFakeTimers({ toFake: ['Date'] });
     vi.setSystemTime(new Date('2026-11-18T10:00:00Z')); // device two days behind
