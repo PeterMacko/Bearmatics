@@ -48,4 +48,16 @@ describe('Cloudflare configuration', () => {
     expect(live.assets?.run_worker_first).toBe(true);
     expect(live.assets?.not_found_handling).toBe('single-page-application');
   });
+
+  it('samples 20% of requests for tracing and keeps the logs as they were (SCRUM-234)', () => {
+    for (const file of ['wrangler.jsonc', 'wrangler.toml']) {
+      const c = read(file);
+      expect(c.observability?.traces).toEqual({ enabled: true, head_sampling_rate: 0.2 });
+      expect(c.observability?.logs).toEqual({
+        enabled: true,
+        invocation_logs: true,
+        persist: true,
+      });
+    }
+  });
 });
