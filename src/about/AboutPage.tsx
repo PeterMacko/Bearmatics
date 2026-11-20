@@ -80,8 +80,14 @@ function AboutBar({ language, label }: { language: Language; label: string }) {
  * about.css), then focus moves to it so keyboard and screen reader users continue there.
  */
 function focusTarget(event: MouseEvent<HTMLAnchorElement>) {
-  const target = document.getElementById(event.currentTarget.hash.slice(1));
-  setTimeout(() => target?.focus({ preventScroll: true }));
+  const { hash } = event.currentTarget;
+  const target = document.getElementById(hash.slice(1));
+  if (!target) return;
+  const focus = () => target.focus({ preventScroll: true });
+  // After the browser's own jump (hashchange): focusing earlier, Firefox's jump resets where Tab
+  // continues from. Already at that address there is no hashchange.
+  if (location.hash === hash) setTimeout(focus);
+  else window.addEventListener('hashchange', focus, { once: true });
 }
 
 /** One phone screenshot; only loaded when it scrolls near (the app never loads these). */
