@@ -123,21 +123,43 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(page).not.toContain(word);
   });
 
-  it('links to both languages and to the app start', () => {
+  it('has a top bar with the logo + Bearmatics (app in this language) and the language switch', () => {
     render(<AboutPage language={language} />);
-    const switcher = screen.getByRole('navigation', { name: 'Language / Jazyk' });
+    const bar = screen.getByRole('banner');
+    // The bar comes before the page title; the old "Open Bearmatics" links are gone.
+    expect(bar.compareDocumentPosition(screen.getByRole('heading', { level: 1 }))).toBe(
+      Node.DOCUMENT_POSITION_FOLLOWING,
+    );
+    expect(screen.queryByRole('contentinfo')).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole('link', { name: /open bearmatics|otvoriť/i }),
+    ).not.toBeInTheDocument();
+    const home = within(bar).getByRole('link', { name: 'Bearmatics' });
+    expect(home).toHaveAttribute('href', `/?lang=${language}`);
+    const logo = home.querySelector('img')!;
+    expect(logo).toHaveAttribute('src', '/favicon.svg');
+    expect(logo).toHaveAttribute('alt', '');
+    expect(screen.getAllByRole('link', { name: 'Bearmatics' })).toHaveLength(1);
+    const switcher = within(bar).getByRole('navigation', { name: 'Language / Jazyk' });
     const links = within(switcher).getAllByRole('link');
-    expect(links.map((link) => [link.textContent, link.getAttribute('href')])).toEqual([
-      ['Slovenčina', '/about/sk'],
-      ['English', '/about/en'],
+    // Full accessible names (EN/SK is only the short visible text on small screens).
+    expect(
+      links.map((link) => [
+        link.getAttribute('lang'),
+        link.querySelector('.about-lang-name')!.textContent,
+        link.querySelector('[aria-hidden="true"]')!.textContent,
+        link.getAttribute('href'),
+      ]),
+    ).toEqual([
+      ['sk', 'Slovenčina', 'SK', '/about/sk'],
+      ['en', 'English', 'EN', '/about/en'],
     ]);
+    expect(within(switcher).getByRole('link', { name: 'Slovenčina' })).toBe(links[0]);
+    expect(within(switcher).getByRole('link', { name: 'English' })).toBe(links[1]);
     expect(links.find((link) => link.getAttribute('aria-current') === 'page')).toHaveAttribute(
       'href',
       `/about/${language}`,
     );
-    const open = screen.getAllByRole('link', { name: a.open });
-    expect(open.length).toBeGreaterThan(0);
-    for (const link of open) expect(link).toHaveAttribute('href', '/');
   });
 });
 

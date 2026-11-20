@@ -1,15 +1,64 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { copy, type Language } from '../i18n';
 import { MATH_LEVELS, SMALL_MATH_LEVELS } from '../courses';
 import { PrivacyList } from '../account/PrivacyList';
 import { aboutCopy, SHOT_SIZE, type Shot } from './aboutCopy';
-import { aboutHref } from './aboutRoute';
+import { aboutHref, appHref } from './aboutRoute';
 import './about.css';
 
-const LANGUAGES: { value: Language; name: string }[] = [
-  { value: 'sk', name: 'Slovenčina' },
-  { value: 'en', name: 'English' },
+const LANGUAGES: { value: Language; name: string; short: string }[] = [
+  { value: 'sk', name: 'Slovenčina', short: 'SK' },
+  { value: 'en', name: 'English', short: 'EN' },
 ];
+
+/**
+ * The fixed top bar: logo + Bearmatics (opens the app in the page's language) and the language
+ * switch. Its height (it grows with large text) goes to `--about-bar`, so in-page jumps and
+ * keyboard focus land below it (`scroll-padding-top` in about.css).
+ */
+function AboutBar({ language, label }: { language: Language; label: string }) {
+  const bar = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const element = bar.current!;
+    const root = document.documentElement;
+    const update = () => root.style.setProperty('--about-bar', `${element.offsetHeight}px`);
+    update();
+    if (typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(update);
+    observer.observe(element);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--about-bar');
+    };
+  }, []);
+  return (
+    <header className="about-bar" ref={bar}>
+      <div className="about-bar-inner">
+        <a className="about-home" href={appHref(language)}>
+          <img src="/favicon.svg" alt="" width={32} height={32} />
+          <span className="about-home-name">Bearmatics</span>
+        </a>
+        <nav className="about-languages" aria-label={label}>
+          {LANGUAGES.map(({ value, name, short }) => (
+            <a
+              key={value}
+              href={aboutHref(value)}
+              lang={value}
+              hrefLang={value}
+              aria-current={value === language ? 'page' : undefined}
+            >
+              {/* Full name where there is room, EN/SK on small screens; the name stays full. */}
+              <span className="about-lang-name">{name}</span>
+              <span className="about-lang-short" aria-hidden="true">
+                {short}
+              </span>
+            </a>
+          ))}
+        </nav>
+      </div>
+    </header>
+  );
+}
 
 /** One phone screenshot; only loaded when it scrolls near (the app never loads these). */
 function Screenshot({ language, shot }: { language: Language; shot: Shot }) {
@@ -41,8 +90,8 @@ function Shots({ language, shots }: { language: Language; shots: Shot[] }) {
 
 /**
  * About page for parents (SCRUM-218): what the app does today, with screenshots, in Slovak and
- * English. Its own page at /about[/sk|/en]: no app bar, no sounds. Language switch and "Open
- * Bearmatics" are ordinary links, so they work like any web page (new tab, back, refresh).
+ * English. Its own page at /about[/sk|/en]: no app bar, no sounds. The Bearmatics link and the language
+ * switch are ordinary links, so they work like any web page (new tab, back, refresh).
  */
 export default function AboutPage({ language }: { language: Language }) {
   const a = aboutCopy[language];
@@ -58,25 +107,7 @@ export default function AboutPage({ language }: { language: Language }) {
   );
   return (
     <div className="about-page">
-      <header className="about-header">
-        <span className="about-brand">Bearmatics</span>
-        <nav className="about-languages" aria-label={a.languages}>
-          {LANGUAGES.map(({ value, name }) => (
-            <a
-              key={value}
-              href={aboutHref(value)}
-              lang={value}
-              hrefLang={value}
-              aria-current={value === language ? 'page' : undefined}
-            >
-              {name}
-            </a>
-          ))}
-        </nav>
-        <a className="about-open" href="/">
-          {a.open}
-        </a>
-      </header>
+      <AboutBar language={language} label={a.languages} />
       <main className="about-main">
         <h1>{a.title}</h1>
         <p className="about-intro">{a.intro}</p>
@@ -150,11 +181,6 @@ export default function AboutPage({ language }: { language: Language }) {
           <PrivacyList lines={t.account.privacy.slice(1)} />
         </section>
       </main>
-      <footer className="about-footer">
-        <a className="about-open" href="/">
-          {a.open}
-        </a>
-      </footer>
     </div>
   );
 }

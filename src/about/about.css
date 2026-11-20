@@ -1,28 +1,52 @@
 /* About page (SCRUM-218). Loaded only with the page (its own chunk), never by the app. */
 .about-page {
-  max-width: 46rem;
-  margin: 0 auto;
-  padding: 0 20px 32px;
   color: var(--ink);
   line-height: 1.6;
   overflow-wrap: break-word;
 }
-.about-header {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 12px 16px;
-  padding: 16px 0;
+/* Jumps (“Full details”) and keyboard focus land below the fixed bar. */
+html:has(.about-page) {
+  scroll-padding-top: calc(var(--about-bar, 4rem) + 12px);
 }
-.about-brand {
-  font-weight: 700;
-  font-size: 1.25rem;
+.about-bar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--page);
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 2px 10px #43305b14;
+}
+.about-bar-inner {
+  container-type: inline-size;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 8px 20px;
+}
+.about-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--target);
+  padding: 0 8px 0 0;
+  border-radius: 12px;
   color: var(--accent);
-  margin-right: auto;
+  font-weight: 700;
+  font-size: 1.2rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.about-home img {
+  flex: none;
+  width: 36px;
+  height: 36px;
 }
 .about-languages {
   display: flex;
-  flex-wrap: wrap;
+  flex: none;
   gap: 2px;
   padding: 4px;
   background: #efe9e5;
@@ -39,6 +63,7 @@
   color: #5d536b;
   font-size: 0.9rem;
   font-weight: 700;
+  white-space: nowrap;
   text-decoration: none;
 }
 .about-languages a[aria-current='page'] {
@@ -46,26 +71,20 @@
   color: var(--blue-ink);
   box-shadow: 0 1px 4px #43305b12;
 }
-.about-open {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: var(--target);
-  padding: 0 18px;
-  border-radius: 12px;
-  background: var(--blue);
-  box-shadow: 0 3px 0 var(--blue-shadow);
-  color: #fff;
-  font-weight: 700;
-  text-decoration: none;
-  text-align: center;
+.about-lang-short {
+  display: none;
 }
 .about-page a:focus-visible {
   outline: 3px solid var(--focus);
   outline-offset: 3px;
 }
+.about-main {
+  max-width: 46rem;
+  margin: 0 auto;
+  padding: 0 20px 32px;
+}
 .about-main h1 {
-  margin: 8px 0 12px;
+  margin: 24px 0 12px;
   font-size: clamp(1.9rem, 6vw, 2.6rem);
   line-height: 1.15;
   letter-spacing: -0.03em;
@@ -96,7 +115,7 @@
 .about-courses > li {
   margin: 10px 0;
 }
-.about-main a:not(.about-open) {
+.about-main a {
   color: var(--blue-ink);
 }
 .about-shots {
@@ -123,13 +142,11 @@
   font-size: 0.9rem;
   color: var(--muted);
 }
-.about-footer {
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-}
 @media (max-width: 620px) {
-  .about-page {
+  .about-bar-inner {
+    padding: 8px 16px;
+  }
+  .about-main {
     padding: 0 16px 24px;
   }
   .about-shot {
@@ -137,5 +154,37 @@
   }
   .about-shots:has(> :only-child) .about-shot {
     width: min(100%, 13rem);
+  }
+}
+/* Small bars (in em, so 200% text counts as small too): EN / SK instead of the full names,
+   which stay the accessible names. 24em = 384 px at normal text: every phone, not tablets. */
+@container (max-width: 24em) {
+  .about-lang-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+  .about-lang-short {
+    display: inline;
+  }
+  .about-languages a {
+    padding: 0 10px;
+  }
+}
+/* Only with very large text on a phone (200% at 320-390 px): the logo alone, its word stays the
+   link's accessible name. 13em = 208 px at normal text, so it never applies there. */
+@container (max-width: 13em) {
+  .about-home-name {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }

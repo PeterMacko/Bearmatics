@@ -23,5 +23,8 @@ export function aboutRoute(pathname: string, languages: readonly string[]): Abou
   return { language: browserLanguage(languages), explicit: false };
 }
 
+/** The app start in one language (the About page's Bearmatics link); see `takeStartLanguage`. */
+export const appHref = (language: Language) => `/?lang=${language}`;
+
 /** The About page address in one language (Settings link, language switch). */
 export const aboutHref = (language: Language) => `/about/${language}`;
