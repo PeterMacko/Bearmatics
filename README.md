@@ -148,7 +148,7 @@ No hosted GitHub Actions CI workflow is included in this initial app publication
 
 ## Hosting and data
 
-Hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. The MVP is live at https://bearmatics.mr-petermacko.workers.dev (release verification in #13).
+Hosting: **Cloudflare Workers with Static Assets**, connected to this GitHub repository by Peter. The MVP is live at https://bearmatics.pro22.workers.dev (release verification in #13); branch previews are at `https://<branch>-bearmatics.pro22.workers.dev`. The workers.dev account name changed from the old account name to `pro22` on 2026-11-20 (SCRUM-226); the old addresses no longer work.
 
 Server and database (SCRUM-96, foundation only): a small Worker script (`worker/index.ts`) runs first for every request (`assets.run_worker_first: true`): plain http gets a redirect to https (301, or 308 for writes; localhost stays on http) and https answers carry `Strict-Transport-Security` (SCRUM-198); `/api` and `/api/*` are answered by the script and every other address is handed to static assets unchanged. `GET /api/health` reports whether the server and database are reachable and the schema version (no data); unknown `/api` addresses return a JSON 404. The database is Cloudflare D1 (SQLite): the live app uses `bearmatics`, all branch previews share `bearmatics-preview` (`previews.d1_databases`), and local development uses a local SQLite file under `.wrangler/`. Schema changes are numbered SQL files in `migrations/`, applied with Wrangler; applying is safe to repeat. Never put personal data in `/api` URLs or logs (invocation logs record URLs); the server logs no request bodies.
 
