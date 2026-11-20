@@ -25,7 +25,9 @@ const hide = (text: string) =>
     .replace(/[0-9a-f]{32}\.[0-9a-f]{64}/g, '<hex32.hex64>')
     .replace(/[0-9a-f]{64}/g, '<hex64>')
     .replace(/[0-9a-f]{32}/g, '<hex32>')
-    .replace(/code_challenge=[^&]+/g, 'code_challenge=<challenge>');
+    .replace(/code_challenge=[^&]+/g, 'code_challenge=<challenge>')
+    // SCRUM-202: progress answers carry today's Slovak day.
+    .replace(/"day":"\d{4}-\d{2}-\d{2}"/g, '"day":"<day>"');
 
 type Init = { method?: string; body?: unknown; cookie?: string; origin?: string | null };
 
@@ -320,7 +322,7 @@ describe('other answers of signed-in routes', () => {
     const answers = [await finish('cd'.repeat(16))];
     const lesson = await start();
     answers.push(await finish(lesson, 5));
-    answers.push(await finish(lesson, 10, 11));
+    answers.push(await finish(lesson, 10, 16)); // SCRUM-202: at most ceil(1.5 x 10) = 15
     answers.push(await finish(lesson));
     answers.push(await finish(lesson));
     // Next lesson after a 3-day break: an unlock offer.

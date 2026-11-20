@@ -2,12 +2,21 @@ import { fill, pointsText, type Copy } from '../i18n';
 import Icon from '../Icon';
 import type { PointsFrame } from './animation';
 import BadgeIcon from './BadgeIcon';
+import { multiplierName, type Multiplier } from './multipliers';
 import { BadgeMeter } from './BadgeButton';
 
 export type LessonSave =
   | { state: 'saving' }
   | { state: 'failed' }
-  | { state: 'saved'; added: number; before: number; after: number };
+  | {
+      state: 'saved';
+      added: number;
+      before: number;
+      after: number;
+      /** SCRUM-202: first-try answers and the multiplier applied to them. */
+      firstTry: number;
+      multiplier: Multiplier;
+    };
 
 /**
  * Points on the summary (SCRUM-117), signed in only. `frame` moves while the points fill the
@@ -45,9 +54,21 @@ export default function SummaryPoints({
     );
   return (
     <div className="summary-points">
-      <p className="points-added" role="status">
-        {fill(t.added, { points: pointsText(t.units, save.added) })}
-      </p>
+      {save.multiplier === 1 ? (
+        <p className="points-added" role="status">
+          {fill(t.added, { points: pointsText(t.units, save.added) })}
+        </p>
+      ) : (
+        // SCRUM-202: the calculation, e.g. "9 × 1/2 = 5 points" (nothing extra at x1).
+        <p className="points-added points-multiplied" role="status">
+          <span className="sr-only">{t.multiplierSaid[multiplierName(save.multiplier)]}: </span>
+          {fill(t.multiplied, {
+            firstTry: save.firstTry,
+            multiplier: t.multiplierShown[multiplierName(save.multiplier)],
+            points: pointsText(t.units, save.added),
+          })}
+        </p>
+      )}
       {newBadge ? (
         <div
           className="new-badge"

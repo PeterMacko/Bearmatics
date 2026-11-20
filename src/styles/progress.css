@@ -700,3 +700,57 @@
     white-space: nowrap;
   }
 }
+
+/* SCRUM-202: the calculation line on the summary ("9 × 1/2 = 5 points"), a bit smaller and
+   tighter than the plain "+9 points": beside a new badge on a small phone it takes its own row,
+   and that row must not make the summary scroll. It may wrap (no side scroll), but it grows
+   slower than the text size (18.4 px at 100%, 29.6 px at 200%), so at 200% text it stays one
+   line on 320 px phones (QA204-03). Its screen-reader prefix is .sr-only, never shown. */
+.points-multiplied {
+  font-size: calc(7.2px + 0.7rem);
+  line-height: 1.2;
+}
+/* Short landscape phones: a slightly smaller line and gap let the calculation keep the plain
+   line's place beside the badge meter instead of pushing the meter onto a row of its own. */
+@media (max-height: 420px) {
+  .summary-points:has(.points-multiplied) {
+    column-gap: 8px;
+  }
+  .points-multiplied {
+    font-size: 1rem;
+  }
+}
+/* The level menu's sign for the next play (star x1.5, 1/2, 1/4), pinned to the bottom edge
+   of the level number: out of flow, so the menu's layout and fit stay exactly as before.
+   The badge keeps its px size while its digit grows with the text size, so with enlarged text
+   the sign grows only half as fast and moves down by the text's growth (1rem - 16px): at 100%
+   it sits on the badge's bottom edge as before, at 200% just below the badge, off the digit
+   (QA204-02). It is aria-hidden decoration; the option's label carries the screen-reader text.
+   place-content keeps an enlarged digit centred on the badge: without it the digit's grid row
+   grows past the 35 px badge downwards only, onto the sign (Firefox's taller text box most). */
+.level-number {
+  position: relative;
+  place-content: center;
+}
+.next-play {
+  position: absolute;
+  left: 50%;
+  bottom: calc(-0.65em - 1rem + 16px);
+  transform: translateX(-50%);
+  min-width: 1.7em;
+  padding: 0 0.35em;
+  border-radius: 999px;
+  font-size: calc(5.76px + 0.36rem);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  font-weight: 800;
+  text-align: center;
+  white-space: nowrap;
+  border: 1.5px solid var(--paper);
+  background: #6f5b55;
+  color: #fff;
+}
+.next-play-bonus {
+  background: #b2611a;
+  color: #fff;
+}

@@ -213,6 +213,21 @@ export const copy = {
       toNext: '{points} to go to bear badge {next}',
       how: 'You get 1 point for every example solved on the first try in a finished lesson.',
       added: '+{points}',
+      // SCRUM-202: daily multipliers. The summary line, e.g. "9 × 1/2 = 5 points".
+      multiplied: '{firstTry} × {multiplier} = {points}',
+      multiplierShown: { half: '1/2', quarter: '1/4', bonus: '1.5' },
+      multiplierSaid: {
+        half: 'Half points',
+        quarter: 'A quarter of the points',
+        bonus: 'One and a half times the points',
+      },
+      // The level menu's sign for the next play of a level, and what a screen reader says.
+      nextPlaySign: { half: '1/2', quarter: '1/4', bonus: '★' },
+      nextPlay: {
+        half: 'Next play: half points',
+        quarter: 'Next play: a quarter of the points',
+        bonus: 'Next play: one and a half times the points',
+      },
       newBadge: 'New badge!',
       newBadgeSaid: 'New bear badge {badge}!',
       signIn: 'Sign in to collect points',
@@ -533,6 +548,19 @@ export const copy = {
       toNext: 'Ešte {points} do medvedieho odznaku {next}',
       how: 'Za každý príklad vyriešený na prvý pokus v dokončenej lekcii dostaneš 1 bod.',
       added: '+{points}',
+      multiplied: '{firstTry} × {multiplier} = {points}',
+      multiplierShown: { half: '1/2', quarter: '1/4', bonus: '1,5' },
+      multiplierSaid: {
+        half: 'Polovica bodov',
+        quarter: 'Štvrtina bodov',
+        bonus: 'Jeden a pol násobok bodov',
+      },
+      nextPlaySign: { half: '1/2', quarter: '1/4', bonus: '★' },
+      nextPlay: {
+        half: 'Ďalšia hra: polovica bodov',
+        quarter: 'Ďalšia hra: štvrtina bodov',
+        bonus: 'Ďalšia hra: jeden a pol násobok bodov',
+      },
       newBadge: 'Nový odznak!',
       newBadgeSaid: 'Nový medvedí odznak {badge}!',
       signIn: 'Prihlás sa a zbieraj body',
