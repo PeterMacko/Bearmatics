@@ -4,10 +4,6 @@
   line-height: 1.6;
   overflow-wrap: break-word;
 }
-/* Jumps (“Full details”) and keyboard focus land below the fixed bar. */
-html:has(.about-page) {
-  scroll-padding-top: calc(var(--about-bar, 4rem) + 12px);
-}
 .about-bar {
   position: sticky;
   top: 0;
@@ -83,16 +79,28 @@ html:has(.about-page) {
   margin: 0 auto;
   padding: 0 20px 32px;
 }
+/* Jumps (“Full details”) and keyboard focus land below the fixed bar (its height is measured
+   into --about-bar), in Chromium and Firefox alike. */
+.about-main :is([id], a) {
+  scroll-margin-top: calc(var(--about-bar, 4.5rem) + 12px);
+}
+/* Headings and captions wrap only between words (QA224-01); long words never break inside. */
+.about-main :is(h1, h2, h3, figcaption) {
+  overflow-wrap: normal;
+  word-break: normal;
+  hyphens: manual;
+}
 .about-main h1 {
   margin: 24px 0 12px;
-  font-size: clamp(1.9rem, 6vw, 2.6rem);
+  /* Capped by the window on small phones so “Bearmatics” fits even with 200% text. */
+  font-size: min(clamp(1.9rem, 6vw, 2.6rem), 13vw);
   line-height: 1.15;
   letter-spacing: -0.03em;
   text-wrap: balance;
 }
 .about-main h2 {
   margin: 36px 0 8px;
-  font-size: clamp(1.45rem, 4.5vw, 1.9rem);
+  font-size: min(clamp(1.45rem, 4.5vw, 1.9rem), 10vw);
   letter-spacing: -0.02em;
 }
 .about-main h3 {
@@ -124,9 +132,14 @@ html:has(.about-page) {
   gap: 16px;
   margin: 20px 0 8px;
 }
+/* Large enough to read (Tester observation O1): 280 px, one per row on phones. */
 .about-shot {
   margin: 0;
-  width: min(100%, 13rem);
+  width: min(100%, 17.5rem);
+}
+.about-shot-link {
+  display: block;
+  border-radius: 18px;
 }
 .about-shot img {
   display: block;
@@ -148,12 +161,6 @@ html:has(.about-page) {
   }
   .about-main {
     padding: 0 16px 24px;
-  }
-  .about-shot {
-    width: min(100%, calc(50% - 8px));
-  }
-  .about-shots:has(> :only-child) .about-shot {
-    width: min(100%, 13rem);
   }
 }
 /* Small bars (in em, so 200% text counts as small too): EN / SK instead of the full names,

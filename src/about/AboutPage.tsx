@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MouseEvent } from 'react';
 import { copy, type Language } from '../i18n';
 import { MATH_LEVELS, SMALL_MATH_LEVELS } from '../courses';
 import { PrivacyList } from '../account/PrivacyList';
@@ -60,19 +60,38 @@ function AboutBar({ language, label }: { language: Language; label: string }) {
   );
 }
 
+/**
+ * An in-page jump: the browser scrolls to the target (below the fixed bar, scroll-margin-top in
+ * about.css), then focus moves to it so keyboard and screen reader users continue there.
+ */
+function focusTarget(event: MouseEvent<HTMLAnchorElement>) {
+  const target = document.getElementById(event.currentTarget.hash.slice(1));
+  setTimeout(() => target?.focus({ preventScroll: true }));
+}
+
 /** One phone screenshot; only loaded when it scrolls near (the app never loads these). */
 function Screenshot({ language, shot }: { language: Language; shot: Shot }) {
   const { caption, alt } = aboutCopy[language].shots[shot];
+  const src = `/about/${language}/${shot}.webp`;
   return (
     <figure className="about-shot">
-      <img
-        src={`/about/${language}/${shot}.webp`}
-        width={SHOT_SIZE.width}
-        height={SHOT_SIZE.height}
-        loading="lazy"
-        decoding="async"
-        alt={alt}
-      />
+      {/* The full-size picture in a new tab (Tester observation O1: the text is small). */}
+      <a
+        className="about-shot-link"
+        href={src}
+        target="_blank"
+        rel="noopener"
+        aria-label={`${alt} ${aboutCopy[language].opensFull}`}
+      >
+        <img
+          src={src}
+          width={SHOT_SIZE.width}
+          height={SHOT_SIZE.height}
+          loading="lazy"
+          decoding="async"
+          alt={alt}
+        />
+      </a>
       <figcaption>{caption}</figcaption>
     </figure>
   );
@@ -173,10 +192,15 @@ export default function AboutPage({ language }: { language: Language }) {
               <li key={line}>{line}</li>
             ))}
             <li>
-              {a.dataLast} <a href="#about-store">{t.account.privacyTitle}</a>
+              {a.dataLast}{' '}
+              <a href="#about-store" onClick={focusTarget}>
+                {t.account.privacyTitle}
+              </a>
             </li>
           </ul>
-          <h3 id="about-store">{t.account.privacyTitle}</h3>
+          <h3 id="about-store" tabIndex={-1}>
+            {t.account.privacyTitle}
+          </h3>
           <p>{t.account.privacy[0]}</p>
           <PrivacyList lines={t.account.privacy.slice(1)} />
         </section>

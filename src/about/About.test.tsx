@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, test, vi } from 'vitest';
 import App from '../App';
 import { copy } from '../i18n';
@@ -86,6 +86,30 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(a.shots[SHOTS[index]].alt.length).toBeGreaterThan(30);
     }
     expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(7);
+  });
+
+  it('links every screenshot to its full-size file in a new tab (O1)', () => {
+    render(<AboutPage language={language} />);
+    for (const [index, image] of screen.getAllByRole('img').entries()) {
+      const link = image.closest('a')!;
+      expect(link).toHaveAttribute('href', image.getAttribute('src'));
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener');
+      expect(link).toHaveAccessibleName(`${a.shots[SHOTS[index]].alt} ${a.opensFull}`);
+    }
+  });
+
+  it('"Full details" moves focus to the What we store heading (O3)', async () => {
+    render(<AboutPage language={language} />);
+    const heading = screen.getByRole('heading', {
+      level: 3,
+      name: copy[language].account.privacyTitle,
+    });
+    expect(heading).toHaveAttribute('tabindex', '-1');
+    const link = screen.getByRole('link', { name: copy[language].account.privacyTitle });
+    expect(link).toHaveAttribute('href', '#about-store');
+    fireEvent.click(link);
+    await waitFor(() => expect(heading).toHaveFocus());
   });
 
   it('names every level exactly as the app does', () => {

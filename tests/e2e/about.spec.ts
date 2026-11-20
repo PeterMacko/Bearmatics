@@ -114,6 +114,42 @@ async function expectBarStaysAfterScroll(page: Page) {
   ).toBe(true);
 }
 
+/** Headings and captions wrap only between words (QA224-01): no word is split over two lines. */
+async function expectNoWordBreaks(page: Page) {
+  const broken = await page.locator('main :is(h1, h2, h3, figcaption)').evaluateAll((elements) =>
+    elements.flatMap((element) => {
+      const found: string[] = [];
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+        for (const match of node.textContent!.matchAll(/\S+/g)) {
+          const range = document.createRange();
+          range.setStart(node, match.index);
+          range.setEnd(node, match.index + match[0].length);
+          // A word split over two lines has boxes on two different lines.
+          const tops = new Set([...range.getClientRects()].map((rect) => Math.round(rect.top)));
+          if (tops.size > 1) found.push(match[0]);
+        }
+      }
+      return found;
+    }),
+  );
+  expect(broken).toEqual([]);
+}
+
+/** Screenshots large enough to read (O1): 260-300 px wide on phones, one per row there. */
+async function expectReadableShots(page: Page, oneRow: boolean) {
+  const boxes = await page
+    .locator('main figure img')
+    .evaluateAll((images) => images.map((image) => image.getBoundingClientRect().toJSON()));
+  expect(boxes).toHaveLength(7);
+  for (const box of boxes) {
+    expect(box.width).toBeGreaterThanOrEqual(260);
+    expect(box.width).toBeLessThanOrEqual(300);
+  }
+  // One per row: every picture starts at the same left edge.
+  if (oneRow) for (const box of boxes) expect(box.x).toBe(boxes[0].x);
+}
+
 /** Scrolls every screenshot into view (they load lazily) and waits until each has loaded. */
 async function expectImagesLoaded(page: Page, lang: Lang) {
   const images = page.locator('main img');
@@ -149,6 +185,8 @@ for (const device of ALL_DEVICES)
       await expect(page.getByRole('link', { name: /open bearmatics|otvoriť/i })).toHaveCount(0);
       await expectImagesLoaded(page, lang);
       await expectNoHorizontalScroll(page);
+      await expectNoWordBreaks(page);
+      await expectReadableShots(page, device.width <= 620);
       await expectBarStaysAfterScroll(page);
       await page.reload();
       await expectAboutPage(page, lang, `/about/${lang}`);
@@ -289,6 +327,7 @@ test('the About link in a lesson with work asks first; leaving opens the page', 
 for (const lang of LANGS)
   for (const size of [
     { width: 320, height: 568 },
+    { width: 360, height: 640 },
     { width: 390, height: 844 },
     { width: 568, height: 320 },
   ])
@@ -312,6 +351,9 @@ for (const lang of LANGS)
         const box = (await image.boundingBox())!;
         expect(box.x + box.width).toBeLessThanOrEqual(size.width + 1);
       }
+      // Images load lazily: scroll through so every layout is final, then check the words.
+      await expectImagesLoaded(page, lang);
+      await expectNoWordBreaks(page);
       await expectBarStaysAfterScroll(page);
       await expectNoHorizontalScroll(page);
     });
@@ -327,9 +369,17 @@ for (const lang of LANGS)
     const links = await page
       .locator('a[href]')
       .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
-    // Bearmatics, Slovenčina, English (bar), What we store, e-mail.
-    expect(links).toEqual([`/?lang=${lang}`, '/about/sk', '/about/en', '#about-store', links[4]]);
-    expect(links[4]).toMatch(/^mailto:/);
+    // Bearmatics, Slovenčina, English (bar), the 7 full-size screenshots, What we store, e-mail.
+    const shots = ['course', 'small-maths', 'take-away', 'english', 'summary', 'app-bar'];
+    expect(links).toEqual([
+      `/?lang=${lang}`,
+      '/about/sk',
+      '/about/en',
+      ...[...shots, 'leaderboard'].map((shot) => `/about/${lang}/${shot}.webp`),
+      '#about-store',
+      links[11],
+    ]);
+    expect(links[11]).toMatch(/^mailto:/);
     const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {
@@ -351,19 +401,34 @@ for (const lang of LANGS)
       }
     }
     expect(reached, browserName).toEqual(links);
-    // From the end of the page, Shift+Tab walks back up into the bar.
-    await page.keyboard.press('Shift+Tab');
-    await page.keyboard.press('Shift+Tab');
+    // From the end of the page, Shift+Tab walks back up into the bar; every link on the way
+    // stays clear of the bar.
+    for (let i = links.length - 2; i >= 2; i--) {
+      await page.keyboard.press('Shift+Tab');
+      const focused = page.locator(':focus');
+      await expect(focused).toHaveAttribute('href', links[i]!);
+      if (i >= 3) {
+        const bar = (await page.getByRole('banner').boundingBox())!;
+        expect((await focused.boundingBox())!.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+      }
+    }
     await expect(page.locator(':focus')).toHaveAttribute('href', '/about/en');
     await expect(page.locator(':focus')).toBeInViewport();
     // "Full details" jumps to the list, which lands below the bar.
     await page.goto(`/about/${lang}`);
     await page.locator('a[href="#about-store"]').click();
     await expect(page).toHaveURL(new RegExp(`/about/${lang}#about-store$`));
-    await expect
-      .poll(async () => (await page.locator('#about-store').boundingBox())!.y)
-      .toBeGreaterThanOrEqual((await page.getByRole('banner').boundingBox())!.height);
-    await expect(page.locator('#about-store')).toBeInViewport();
+    // Lands below the fixed bar (scroll-margin-top) and focus moves to the heading (O3).
+    const store = page.getByRole('heading', { level: 3 });
+    await expect(store).toBeFocused();
+    await expect(store).toHaveAttribute('id', 'about-store');
+    const barHeight = (await page.getByRole('banner').boundingBox())!.height;
+    await expect.poll(async () => (await store.boundingBox())!.y).toBeGreaterThanOrEqual(barHeight);
+    await expect(store).toBeInViewport();
+    expect((await store.boundingBox())!.y).toBeLessThan(barHeight + 40);
+    // Tab continues from there: the e-mail link in the list below.
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('href', /^mailto:/);
     // Enter follows the focused link (the second bar link: Slovenčina).
     await page.goto(`/about/${lang}`);
     await page.keyboard.press('Tab');
@@ -371,6 +436,18 @@ for (const lang of LANGS)
     await page.keyboard.press('Enter');
     await expectAboutPage(page, 'sk', '/about/sk');
   });
+
+test('a screenshot opens its full-size file in a new tab (O1)', async ({ page, context }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/about/sk');
+  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(6);
+  await expect(link).toHaveAttribute('href', '/about/sk/leaderboard.webp');
+  await link.scrollIntoViewIfNeeded();
+  const [tab] = await Promise.all([context.waitForEvent('page'), link.click()]);
+  await tab.waitForLoadState();
+  expect(new URL(tab.url()).pathname).toBe('/about/sk/leaderboard.webp');
+  await expect(page).toHaveURL('/about/sk');
+});
 
 test('the app start does not load the About page code or screenshots', async ({ page }) => {
   const requests: string[] = [];
