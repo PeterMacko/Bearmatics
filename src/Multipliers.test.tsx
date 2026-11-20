@@ -61,8 +61,8 @@ test('the level menu shows the next play: star on the top level, 1/2 and 1/4, no
     s.textContent,
   ]);
   expect(signs).toEqual([
-    ['level-option level-1', '½'],
-    ['level-option level-2', '¼'],
+    ['level-option level-1', '1/2'],
+    ['level-option level-2', '1/4'],
     ['level-option level-7', '★'],
   ]);
   toSlovak();

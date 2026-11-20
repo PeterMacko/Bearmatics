@@ -222,7 +222,7 @@ export const copy = {
         bonus: 'One and a half times the points',
       },
       // The level menu's sign for the next play of a level, and what a screen reader says.
-      nextPlaySign: { half: '½', quarter: '¼', bonus: '★' },
+      nextPlaySign: { half: '1/2', quarter: '1/4', bonus: '★' },
       nextPlay: {
         half: 'Next play: half points',
         quarter: 'Next play: a quarter of the points',
@@ -555,7 +555,7 @@ export const copy = {
         quarter: 'Štvrtina bodov',
         bonus: 'Jeden a pol násobok bodov',
       },
-      nextPlaySign: { half: '½', quarter: '¼', bonus: '★' },
+      nextPlaySign: { half: '1/2', quarter: '1/4', bonus: '★' },
       nextPlay: {
         half: 'Ďalšia hra: polovica bodov',
         quarter: 'Ďalšia hra: štvrtina bodov',

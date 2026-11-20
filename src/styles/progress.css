@@ -705,6 +705,7 @@
    the plain "+9 points" so it stays on one line beside a new badge on small phones. */
 .points-multiplied {
   font-size: 1.15rem;
+  line-height: 1.2;
   white-space: nowrap;
 }
 /* The level menu's sign for the next play (star x1.5, 1/2, 1/4), pinned to the bottom edge
@@ -715,13 +716,14 @@
 .next-play {
   position: absolute;
   left: 50%;
-  bottom: -9px;
+  bottom: -0.65em;
   transform: translateX(-50%);
-  min-width: 20px;
-  padding: 0 4px;
+  min-width: 1.7em;
+  padding: 0 0.35em;
   border-radius: 999px;
-  font-size: 0.7rem;
-  line-height: 15px;
+  font-size: 0.72rem;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
   font-weight: 800;
   text-align: center;
   white-space: nowrap;
