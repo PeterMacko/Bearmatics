@@ -722,9 +722,12 @@
    The badge keeps its px size while its digit grows with the text size, so with enlarged text
    the sign grows only half as fast and moves down by the text's growth (1rem - 16px): at 100%
    it sits on the badge's bottom edge as before, at 200% just below the badge, off the digit
-   (QA204-02). It is aria-hidden decoration; the option's label carries the screen-reader text. */
+   (QA204-02). It is aria-hidden decoration; the option's label carries the screen-reader text.
+   place-content keeps an enlarged digit centred on the badge: without it the digit's grid row
+   grows past the 35 px badge downwards only, onto the sign (Firefox's taller text box most). */
 .level-number {
   position: relative;
+  place-content: center;
 }
 .next-play {
   position: absolute;
