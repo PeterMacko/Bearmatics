@@ -98,12 +98,12 @@ describe('https only (SCRUM-198)', () => {
     const env = { DB: migrated, ASSETS: assets() };
     for (const path of ['/', '/settings?lang=sk', '/api/health', '/api/session']) {
       const response = await worker.fetch(
-        new Request(`http://bearmatics.mr-petermacko.workers.dev${path}`),
+        new Request(`http://bearmatics.pro22.workers.dev${path}`),
         env,
       );
       expect(response.status).toBe(301);
       expect(response.headers.get('location')).toBe(
-        `https://bearmatics.mr-petermacko.workers.dev${path}`,
+        `https://bearmatics.pro22.workers.dev${path}`,
       );
       expect(await response.text()).toBe('');
     }
