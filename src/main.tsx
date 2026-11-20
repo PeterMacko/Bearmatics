@@ -2,6 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import App from './App';
 import { aboutRoute } from './about/aboutRoute';
+import { takeStartLanguage } from './startLanguage';
 import './styles/index.css';
 const root = createRoot(document.getElementById('root')!);
 // SCRUM-218: /about[/sk|/en] is the About page, loaded on demand so the app does not grow.
@@ -17,6 +18,6 @@ if (about)
 else
   root.render(
     <StrictMode>
-      <App />
+      <App startLanguage={takeStartLanguage() ?? 'en'} />
     </StrictMode>,
   );
