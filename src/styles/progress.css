@@ -703,10 +703,19 @@
 
 /* SCRUM-202: the calculation line on the summary ("9 × 1/2 = 5 points"), a bit smaller and
    tighter than the plain "+9 points": beside a new badge on a small phone it takes its own row,
-   and that row must not make the summary scroll. It may wrap at 200% text (no side scroll). */
+   and that row must not make the summary scroll. It may wrap (no side scroll), but it grows
+   slower than the text size (18.4 px at 100%, 29.6 px at 200%), so at 200% text it stays one
+   line on 320 px phones (QA204-03). Its screen-reader prefix is .sr-only, never shown. */
 .points-multiplied {
-  font-size: 1.15rem;
+  font-size: calc(7.2px + 0.7rem);
   line-height: 1.2;
+}
+/* Short landscape phones: a slightly narrower badge meter lets the calculation line keep the
+   plain line's place beside it instead of pushing the meter onto a row of its own. */
+@media (max-height: 420px) {
+  .summary-points:has(.points-multiplied) .badge-meter {
+    max-width: 290px;
+  }
 }
 /* The level menu's sign for the next play (star x1.5, 1/2, 1/4), pinned to the bottom edge
    of the level number: out of flow, so the menu's layout and fit stay exactly as before.

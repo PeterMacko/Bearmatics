@@ -32,12 +32,15 @@ async function hideFromLeaderboard(page: Page) {
 const level = (page: Page, n: number) => page.locator(`.level-option.level-${n}`);
 const radio = (page: Page, n: number) => level(page, n).getByRole('radio');
 
-/** Plays a 5-exercise Maths lesson of level `n` to the summary, every answer right first try. */
-async function playLevel(page: Page, n: number) {
+/** Plays a 5- (or 10-) exercise Maths lesson of level `n` to the summary, all right first try. */
+async function playLevel(page: Page, n: number, exercises: 5 | 10 = 5) {
   await level(page, n).click();
-  await page.locator('.session-options label').first().click();
+  await page
+    .locator('.session-options label')
+    .nth(exercises === 5 ? 0 : 1)
+    .click();
   await page.locator('.start-button').click();
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < exercises; i++) {
     await page.getByRole('textbox').fill(String(await answerFor(page)));
     await page.locator('.answer-button').click(); // Check
     await page.locator('.answer-button').click(); // Next / See how you did
@@ -329,5 +332,104 @@ test('at 200% text the sign leaves the level number readable (phones, 3 courses,
         ).toBeVisible();
       }
     }
+  }
+});
+
+test('the calculation line adds no page scroll where summaries already scroll (EN and SK)', async ({
+  page,
+}) => {
+  // QA204-03: 568x320 and phones at 200% text already scroll at x1. On the same summary, the
+  // calculation line must not scroll more than the plain "+N points" line would, must stay one
+  // line, and its screen-reader prefix must stay visually hidden.
+  const username = uniqueName('mul');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/');
+  await createAccount(page, username);
+  await hideFromLeaderboard(page);
+  await page.evaluate((user) => {
+    const day = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Europe/Bratislava',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+    }).format(new Date());
+    const counts = { 'math:1': 2 };
+    localStorage.setItem(
+      'bearmatics-plays',
+      JSON.stringify({ [`password:${user}`]: { day, counts } }),
+    );
+  }, username);
+  await page.reload();
+  await page.getByRole('button', { name: 'Maths', exact: true }).click();
+  // 10 exercises (two-digit lines). Level 1 after two plays: x1/2; level 4 first play: x1.5.
+  for (const [n, calc] of [
+    [1, '10 × 1/2 = 5'],
+    [4, '10 × 1.5 = 15'],
+  ] as const) {
+    await playLevel(page, n, 10);
+    await expect(page.locator('.points-multiplied')).toContainText(calc);
+    for (const [width, height, zoom] of [
+      [568, 320, 100],
+      [320, 568, 200],
+      [390, 844, 200],
+    ] as const) {
+      await page.setViewportSize({ width, height });
+      const big =
+        zoom === 200
+          ? await page.addStyleTag({ content: 'html{font-size:200% !important}' })
+          : null;
+      for (const language of ['EN', 'SK'] as const) {
+        if (language === 'SK') {
+          await page.getByRole('button', { name: 'Settings' }).click();
+          await page.getByRole('button', { name: 'Slovenčina' }).click();
+          await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
+        }
+        const where = `${calc} ${language} ${width}x${height}@${zoom}%`;
+        const m = await page.evaluate(async () => {
+          const root = document.documentElement;
+          const scroll = () => root.scrollHeight - root.clientHeight;
+          const line = document.querySelector<HTMLElement>('.points-multiplied')!;
+          const sr = line.querySelector<HTMLElement>('.sr-only')!;
+          const srBox = sr.getBoundingClientRect();
+          const style = getComputedStyle(line);
+          const lines = Math.round(
+            line.getBoundingClientRect().height / parseFloat(style.lineHeight),
+          );
+          const withCalc = scroll();
+          // The same summary with the plain line in its place.
+          const plain = document.createElement('p');
+          plain.className = 'points-added';
+          plain.textContent = document.documentElement.lang === 'sk' ? '+8 bodov' : '+8 points';
+          line.style.display = 'none';
+          line.after(plain);
+          await new Promise(requestAnimationFrame);
+          const withPlain = scroll();
+          plain.remove();
+          line.style.display = '';
+          return {
+            withCalc,
+            withPlain,
+            lines,
+            side: root.scrollWidth - root.clientWidth,
+            srHidden:
+              srBox.width <= 1 && srBox.height <= 1 && getComputedStyle(sr).position === 'absolute',
+          };
+        });
+        expect(m.srHidden, `${where}: screen-reader prefix hidden`).toBe(true);
+        expect(m.lines, `${where}: calculation on one line`).toBe(1);
+        expect(m.side, `${where}: side scroll`).toBe(0);
+        expect(m.withCalc, `${where}: page scroll vs the plain line`).toBeLessThanOrEqual(
+          m.withPlain,
+        );
+        if (language === 'SK') {
+          await page.getByRole('button', { name: 'Nastavenia' }).click();
+          await page.getByRole('button', { name: 'English' }).click();
+          await page.getByRole('button', { name: 'Close settings' }).click();
+        }
+      }
+      if (big) await big.evaluate((el) => (el as unknown as Element).remove());
+    }
+    await page.setViewportSize({ width: 390, height: 844 });
+    await backToLevels(page);
   }
 });
