@@ -39,8 +39,10 @@ for (const language of ['en', 'sk']) {
       await page.locator(selector).evaluate((el) => (el as HTMLElement).focus());
       await expect(close).toBeFocused();
     }
+    // SCRUM-218: the About link is the dialog's last control.
+    const about = page.getByRole('link', { name: 'About Bearmatics' });
     await close.press('Shift+Tab');
-    await expect(page.getByRole('button', { name: 'English' })).toBeFocused();
+    await expect(about).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(close).toBeFocused();
     await close.press('Tab');
@@ -51,6 +53,8 @@ for (const language of ['en', 'sk']) {
     await expect(page.getByRole('button', { name: 'Slovenčina' })).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.getByRole('button', { name: 'English' })).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(about).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(close).toBeFocused();
     await page.getByRole('button', { name: 'Slovenčina' }).click();

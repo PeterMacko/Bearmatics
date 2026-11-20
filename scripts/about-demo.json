@@ -1,0 +1,270 @@
+{
+  "_comment": "SCRUM-222 demo data for the About page screenshots (made-up players, no real children). players = what the server would hold; leaderboard = the /api/leaderboard answer for Demo Bear (worker/aboutDemo.test.ts proves it equals leaderboardRows(players)).",
+  "account": {
+    "kind": "password",
+    "username": "demobear",
+    "nickname": "Demo Bear",
+    "bear": 4,
+    "email": null,
+    "leaderboard": true
+  },
+  "progress": {
+    "points": 131,
+    "streak": 5,
+    "frozen": false,
+    "today": true
+  },
+  "summary": {
+    "before": {
+      "points": 126,
+      "streak": 4,
+      "frozen": false,
+      "today": false
+    },
+    "after": {
+      "points": 131,
+      "streak": 5,
+      "frozen": false,
+      "today": true,
+      "added": 5,
+      "offer": null
+    }
+  },
+  "meId": "demo",
+  "players": [
+    {
+      "id": "rocket-fox",
+      "nickname": "Rocket Fox",
+      "bear": 3,
+      "points": 412,
+      "streak": 12,
+      "frozen": false
+    },
+    {
+      "id": "mia",
+      "nickname": "Mia",
+      "bear": 1,
+      "points": 388,
+      "streak": 7,
+      "frozen": false
+    },
+    {
+      "id": "tomi",
+      "nickname": "Tomi",
+      "bear": 5,
+      "points": 350,
+      "streak": 21,
+      "frozen": false
+    },
+    {
+      "id": "star-bear",
+      "nickname": "Star Bear",
+      "bear": 2,
+      "points": 350,
+      "streak": 4,
+      "frozen": false
+    },
+    {
+      "id": "lily_7",
+      "nickname": "Lily_7",
+      "bear": 6,
+      "points": 301,
+      "streak": 9,
+      "frozen": false
+    },
+    {
+      "id": "kubko",
+      "nickname": "Kubko",
+      "bear": 4,
+      "points": 276,
+      "streak": 15,
+      "frozen": false
+    },
+    {
+      "id": "ema",
+      "nickname": "Ema",
+      "bear": 7,
+      "points": 240,
+      "streak": 2,
+      "frozen": false
+    },
+    {
+      "id": "zebra-zoe",
+      "nickname": "Zebra Zoe",
+      "bear": 8,
+      "points": 212,
+      "streak": 6,
+      "frozen": false
+    },
+    {
+      "id": "maxo",
+      "nickname": "Maxo",
+      "bear": 2,
+      "points": 198,
+      "streak": 3,
+      "frozen": false
+    },
+    {
+      "id": "sunny",
+      "nickname": "Sunny",
+      "bear": 1,
+      "points": 187,
+      "streak": 11,
+      "frozen": false
+    },
+    {
+      "id": "leo",
+      "nickname": "Leo",
+      "bear": 3,
+      "points": 160,
+      "streak": 1,
+      "frozen": false
+    },
+    {
+      "id": "nela",
+      "nickname": "Nela",
+      "bear": 5,
+      "points": 142,
+      "streak": 8,
+      "frozen": false
+    },
+    {
+      "id": "demo",
+      "nickname": "Demo Bear",
+      "bear": 4,
+      "points": 131,
+      "streak": 5,
+      "frozen": false
+    },
+    {
+      "id": "oli",
+      "nickname": "Oli",
+      "bear": 6,
+      "points": 120,
+      "streak": 2,
+      "frozen": false
+    }
+  ],
+  "leaderboard": {
+    "rows": [
+      {
+        "place": 1,
+        "nickname": "Rocket Fox",
+        "bear": 3,
+        "points": 412,
+        "streak": 12,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 2,
+        "nickname": "Mia",
+        "bear": 1,
+        "points": 388,
+        "streak": 7,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 3,
+        "nickname": "Tomi",
+        "bear": 5,
+        "points": 350,
+        "streak": 21,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 3,
+        "nickname": "Star Bear",
+        "bear": 2,
+        "points": 350,
+        "streak": 4,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 5,
+        "nickname": "Lily_7",
+        "bear": 6,
+        "points": 301,
+        "streak": 9,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 6,
+        "nickname": "Kubko",
+        "bear": 4,
+        "points": 276,
+        "streak": 15,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 7,
+        "nickname": "Ema",
+        "bear": 7,
+        "points": 240,
+        "streak": 2,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 8,
+        "nickname": "Zebra Zoe",
+        "bear": 8,
+        "points": 212,
+        "streak": 6,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 9,
+        "nickname": "Maxo",
+        "bear": 2,
+        "points": 198,
+        "streak": 3,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 10,
+        "nickname": "Sunny",
+        "bear": 1,
+        "points": 187,
+        "streak": 11,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 12,
+        "nickname": "Nela",
+        "bear": 5,
+        "points": 142,
+        "streak": 8,
+        "frozen": false,
+        "me": false
+      },
+      {
+        "place": 13,
+        "nickname": "Demo Bear",
+        "bear": 4,
+        "points": 131,
+        "streak": 5,
+        "frozen": false,
+        "me": true
+      },
+      {
+        "place": 14,
+        "nickname": "Oli",
+        "bear": 6,
+        "points": 120,
+        "streak": 2,
+        "frozen": false,
+        "me": false
+      }
+    ],
+    "gapBefore": 10
+  }
+}

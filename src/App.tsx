@@ -77,8 +77,9 @@ type LessonKind = {
   practice: () => ReactNode;
 };
 
-export default function App() {
-  const [language, setLanguage] = useState<Language>('en');
+/** `startLanguage`: the language the app opens in (`/?lang=sk|en` from the About page, SCRUM-218). */
+export default function App({ startLanguage = 'en' }: { startLanguage?: Language } = {}) {
+  const [language, setLanguage] = useState<Language>(startLanguage);
   const [level, setLevel] = useState<Level>(1);
   const [size, setSize] = useState(10);
   // Small maths (SCRUM-141) keeps its own choice while the app is open.
@@ -741,6 +742,16 @@ export default function App() {
           triggerRef={settingsRef}
           onLanguageChange={setLanguage}
           onToggleSound={toggleSound}
+          onAbout={(event) => {
+            // SCRUM-218: the About page replaces the app; work in a lesson is asked about first.
+            if (!inLesson || !lessonKind || !hasProgress(lessonKind.session, lessonKind.answer))
+              return;
+            event.preventDefault();
+            const href = event.currentTarget.href;
+            setSettingsOpen(false);
+            afterLeave.current = () => window.location.assign(href);
+            setLeaveOpen(true);
+          }}
           onClose={() => setSettingsOpen(false)}
         />
       )}
