@@ -132,3 +132,50 @@ test('another account on the same device keeps its own counts', async ({ page })
   await expect(level(page, 1).locator('.next-play')).toHaveCount(0);
   await expect(level(page, 7).locator('.next-play')).toHaveText('★');
 });
+
+test('the summary calculation needs no page scroll on phones (EN and SK)', async ({ page }) => {
+  const username = uniqueName('mul');
+  await page.goto('/');
+  await createAccount(page, username);
+  const sizes = [
+    [390, 844],
+    [360, 640],
+    [320, 568],
+    [844, 390],
+  ] as const;
+  for (const [width, height] of sizes) {
+    await page.setViewportSize({ width, height });
+    // Two plays of level 1 saved today on this device: the next one gives half points.
+    await page.evaluate((user) => {
+      const day = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Europe/Bratislava',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
+      localStorage.setItem(
+        'bearmatics-plays',
+        JSON.stringify({ [`password:${user}`]: { day, counts: { 'math:1': 2 } } }),
+      );
+    }, username);
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Maths', exact: true }).click();
+    await playLevel(page, 1);
+    await expect(page.locator('.points-multiplied')).toHaveText(/5 × 1\/2 = 3 points$/);
+    await expect(page.locator('.summary-points .badge-meter')).toBeVisible();
+    const fit = () =>
+      page.evaluate(() => ({
+        down: document.documentElement.scrollHeight - document.documentElement.clientHeight,
+        side: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+      }));
+    expect(await fit(), `EN ${width}x${height}`).toEqual({ down: 0, side: 0 });
+    await page.getByRole('button', { name: 'Settings' }).click();
+    await page.getByRole('button', { name: 'Slovenčina' }).click();
+    await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
+    await expect(page.locator('.points-multiplied')).toHaveText(/5 × 1\/2 = 3 body$/);
+    expect(await fit(), `SK ${width}x${height}`).toEqual({ down: 0, side: 0 });
+    await page.getByRole('button', { name: 'Nastavenia' }).click();
+    await page.getByRole('button', { name: 'English' }).click();
+    await page.getByRole('button', { name: 'Close settings' }).click();
+  }
+});
