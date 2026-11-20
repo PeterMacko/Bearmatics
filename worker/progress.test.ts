@@ -4,6 +4,7 @@ import { SESSION_COOKIE } from './accounts';
 import { type Env } from './api';
 import { apiCaller, read } from './testApi';
 import { freshDb } from './testDb';
+import { slovakDay } from './streak';
 
 let db: Awaited<ReturnType<typeof freshDb>>;
 let env: Env;
@@ -87,11 +88,11 @@ describe('points (SCRUM-117)', () => {
     const cookie = await newPlayer();
     const id = await lesson(cookie, 5);
     for (const body of [
-      { lessonId: id, size: 5, points: 6 },
+      { lessonId: id, size: 5, points: 9 },
       { lessonId: id, size: 5, points: -1 },
       { lessonId: id, size: 5, points: 2.5 },
       { lessonId: id, size: 5, points: '5' },
-      { lessonId: id, size: 10, points: 6 },
+      { lessonId: id, size: 10, points: 9 },
       { lessonId: id, size: 7, points: 1 },
       { lessonId: 'nope', size: 5, points: 1 },
     ])
@@ -102,6 +103,35 @@ describe('points (SCRUM-117)', () => {
       404,
     );
     expect(await total(cookie)).toBe(0);
+  });
+
+  // SCRUM-202: the app multiplies first-try points (x0.25 ... x1.5, rounded up), so a lesson can
+  // give up to ceil(1.5 x size): 8 / 15 / 30.
+  it('accepts up to ceil(1.5 x size) points and rejects one more', async () => {
+    const cookie = await newPlayer();
+    for (const [size, most] of [
+      [5, 8],
+      [10, 15],
+      [20, 30],
+    ] as const) {
+      const id = await lesson(cookie, size);
+      const tooMany = await finish(cookie, { lessonId: id, size, points: most + 1 });
+      expect(tooMany.status, `${size}: ${most + 1}`).toBe(400);
+      const ok = await finish(cookie, { lessonId: id, size, points: most });
+      expect(ok.status, `${size}: ${most}`).toBe(200);
+      expect(await read(ok)).toMatchObject({ added: most });
+    }
+    expect(await total(cookie)).toBe(8 + 15 + 30);
+  });
+
+  it('tells the app the Slovak day (SCRUM-202 play counts change at Slovak midnight)', async () => {
+    const cookie = await newPlayer();
+    const day = slovakDay(Date.now());
+    expect(await read(await api('/api/progress', { cookie }))).toMatchObject({ day });
+    const id = await lesson(cookie, 5);
+    expect(await read(await finish(cookie, { lessonId: id, size: 5, points: 1 }))).toMatchObject({
+      day,
+    });
   });
 
   it("never counts another player's lesson", async () => {
@@ -249,6 +279,7 @@ describe('streak (SCRUM-118) through the API', () => {
       streak: 0,
       frozen: false,
       today: false,
+      day: slovakDay(Date.now()),
     });
     const id = await lesson(cookie, 5);
     expect(await read(await finish(cookie, { lessonId: id, size: 5, points: 5 }))).toEqual({
@@ -256,6 +287,7 @@ describe('streak (SCRUM-118) through the API', () => {
       streak: 1,
       frozen: false,
       today: true,
+      day: slovakDay(Date.now()),
       added: 5,
       offer: null,
     });
@@ -286,7 +318,13 @@ describe('streak (SCRUM-118) through the API', () => {
     expect(await read(changed)).toMatchObject({ error: 'offer_changed', offer: { cost: 14 } });
     const yes = await answer(cookie, { unlock: true, cost: 14 });
     expect(yes.status).toBe(200);
-    expect(await read(yes)).toEqual({ points: 126, streak: 13, frozen: false, today: true });
+    expect(await read(yes)).toEqual({
+      points: 126,
+      streak: 13,
+      frozen: false,
+      today: true,
+      day: slovakDay(Date.now()),
+    });
     // Answered: no second payment.
     expect((await answer(cookie, { unlock: true, cost: 14 })).status).toBe(409);
     expect(await play(cookie, 0)).toMatchObject({ points: 126, streak: 13, offer: null });
@@ -303,6 +341,7 @@ describe('streak (SCRUM-118) through the API', () => {
       streak: 1,
       frozen: false,
       today: true,
+      day: slovakDay(Date.now()),
     });
     await setRow(id, 50, 6, day(-9));
     expect(await play(cookie)).toMatchObject({ streak: 1, offer: null });
@@ -339,6 +378,7 @@ describe('streak (SCRUM-118) through the API', () => {
       streak: 5,
       frozen: false,
       today: true,
+      day: slovakDay(Date.now()),
     });
   });
 

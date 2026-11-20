@@ -529,7 +529,7 @@ exports[`every /api route in every session state > GET progress: unknown token 1
 
 exports[`every /api route in every session state > GET progress: valid 1`] = `
 {
-  "body": "{"points":0,"streak":0,"frozen":false,"today":false}",
+  "body": "{"points":0,"streak":0,"frozen":false,"today":false,"day":"<day>"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -943,7 +943,7 @@ exports[`every /api route in every session state > POST answer streak (unlock): 
 
 exports[`every /api route in every session state > POST answer streak (unlock): valid 1`] = `
 {
-  "body": "{"points":90,"streak":5,"frozen":false,"today":true}",
+  "body": "{"points":90,"streak":5,"frozen":false,"today":true,"day":"<day>"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1085,7 +1085,7 @@ exports[`every /api route in every session state > POST finish lesson: unknown t
 
 exports[`every /api route in every session state > POST finish lesson: valid 1`] = `
 {
-  "body": "{"points":3,"streak":1,"frozen":false,"today":true,"added":3,"offer":null}",
+  "body": "{"points":3,"streak":1,"frozen":false,"today":true,"day":"<day>","added":3,"offer":null}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1560,7 +1560,7 @@ exports[`other answers of signed-in routes > finish: unknown lesson, size mismat
     "status": 400,
   },
   {
-    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"added":4,"offer":null}",
+    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"day":"<day>","added":4,"offer":null}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1572,7 +1572,7 @@ exports[`other answers of signed-in routes > finish: unknown lesson, size mismat
     "status": 200,
   },
   {
-    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"added":0,"offer":null}",
+    "body": "{"points":4,"streak":1,"frozen":false,"today":true,"day":"<day>","added":0,"offer":null}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1584,7 +1584,7 @@ exports[`other answers of signed-in routes > finish: unknown lesson, size mismat
     "status": 200,
   },
   {
-    "body": "{"points":8,"streak":1,"frozen":true,"today":false,"added":4,"offer":{"streak":1,"missed":2,"cost":1}}",
+    "body": "{"points":8,"streak":1,"frozen":true,"today":false,"day":"<day>","added":4,"offer":{"streak":1,"missed":2,"cost":1}}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1596,7 +1596,7 @@ exports[`other answers of signed-in routes > finish: unknown lesson, size mismat
     "status": 200,
   },
   {
-    "body": "{"points":8,"streak":1,"frozen":true,"today":false}",
+    "body": "{"points":8,"streak":1,"frozen":true,"today":false,"day":"<day>"}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1812,7 +1812,7 @@ exports[`other answers of signed-in routes > sign-in attempt limit: 5 wrong trie
 exports[`other answers of signed-in routes > streak: no offer, changed price, answer No 1`] = `
 [
   {
-    "body": "{"error":"no_offer","points":0,"streak":0,"frozen":false,"today":false}",
+    "body": "{"error":"no_offer","points":0,"streak":0,"frozen":false,"today":false,"day":"<day>"}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1822,7 +1822,7 @@ exports[`other answers of signed-in routes > streak: no offer, changed price, an
     "status": 409,
   },
   {
-    "body": "{"error":"offer_changed","offer":{"streak":4,"missed":2,"cost":10},"points":100,"streak":4,"frozen":true,"today":false}",
+    "body": "{"error":"offer_changed","offer":{"streak":4,"missed":2,"cost":10},"points":100,"streak":4,"frozen":true,"today":false,"day":"<day>"}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",
@@ -1832,7 +1832,7 @@ exports[`other answers of signed-in routes > streak: no offer, changed price, an
     "status": 409,
   },
   {
-    "body": "{"points":100,"streak":1,"frozen":false,"today":true}",
+    "body": "{"points":100,"streak":1,"frozen":false,"today":true,"day":"<day>"}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",

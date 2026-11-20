@@ -1,6 +1,8 @@
 // SCRUM-117: points for finished lessons of signed-in players. The app counts the lesson's
 // first-try answers; the server only stores one total and checks the limits:
-// a lesson must be started while signed in, it counts once, and it gives at most its size.
+// a lesson must be started while signed in, it counts once, and it gives at most
+// ceil(1.5 x its size) (SCRUM-202: the app's daily multipliers go up to x1.5; the server
+// cannot check which multiplier applied).
 import type { Offer } from '../shared/api-types';
 import { notSignedIn, Renewed, type AccountEnv, type SessionHandler } from './accounts';
 import { randomHex } from './crypto';
@@ -36,10 +38,16 @@ async function readRow(env: AccountEnv, accountId: string): Promise<Row> {
   };
 }
 
-/** Points plus the streak as the app shows it (SCRUM-118). */
+/**
+ * Points plus the streak as the app shows it (SCRUM-118), and the Slovak day
+ * ('YYYY-MM-DD'): the app's daily play counts (SCRUM-202) change with it.
+ */
 function progressBody(row: Row, today: string) {
-  return { points: row.points, ...streakView(row.state, today, row.points) };
+  return { points: row.points, ...streakView(row.state, today, row.points), day: today };
 }
+
+/** Most points one lesson can give: x1.5 rounded up (8 / 15 / 30). */
+const mostPoints = (size: number) => Math.ceil((size * 3) / 2);
 
 /**
  * Writes a new streak state (and points) only if the row is still as read: two lessons
@@ -135,7 +143,12 @@ export const finishLesson: SessionHandler = async (request, env, session) => {
   }
   const size = lessonSize(body.size);
   const earned = body.points;
-  if (typeof earned !== 'number' || !Number.isInteger(earned) || earned < 0 || earned > size) {
+  if (
+    typeof earned !== 'number' ||
+    !Number.isInteger(earned) ||
+    earned < 0 ||
+    earned > mostPoints(size)
+  ) {
     throw new BadRequest('invalid', 'points');
   }
   const accountId = session.account.id;
