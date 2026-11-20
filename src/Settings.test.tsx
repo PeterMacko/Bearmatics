@@ -21,7 +21,8 @@ test('settings localizes in place, traps focus and restores its gear trigger wit
   expect(close).toHaveFocus();
   expect(screen.getByRole('main')).toHaveAttribute('inert');
   fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
-  expect(screen.getByRole('button', { name: 'English' })).toHaveFocus();
+  // SCRUM-218: the About link is the dialog's last control.
+  expect(screen.getByRole('link', { name: 'About Bearmatics' })).toHaveFocus();
   fireEvent.keyDown(document.activeElement!, { key: 'Tab' });
   expect(close).toHaveFocus();
   fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));

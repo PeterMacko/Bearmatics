@@ -130,7 +130,8 @@ for (const language of ['en', 'sk']) {
       const close = page.locator('.dialog-close');
       await close.focus();
       await close.press('Shift+Tab');
-      await expect(buttons.last()).toBeFocused();
+      // SCRUM-218: the About link is the dialog's last control.
+      await expect(page.locator('.hint-dialog .about-link')).toBeFocused();
       await page.keyboard.press('Tab');
       await expect(close).toBeFocused();
     }
