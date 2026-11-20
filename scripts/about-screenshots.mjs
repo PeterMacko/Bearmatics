@@ -90,6 +90,8 @@ async function home(page, lang) {
     await page.getByRole('button', { name: 'Slovenčina', exact: true }).click();
     await page.keyboard.press('Escape');
     await page.locator('[role=dialog]').waitFor({ state: 'detached' });
+    // Closing Settings returns focus to the gear: no focus ring in the picture (QA224-02).
+    await page.evaluate(() => document.activeElement?.blur?.());
   }
 }
 
@@ -274,6 +276,12 @@ async function shoot(browser, url, lang, name) {
     await STEPS[name](page, lang);
     // Nothing hovered from the last tap; animations finished or paused.
     await page.mouse.move(0, 0);
+    // No focus ring on a control left focused by the steps (QA224-02); an answer box the child
+    // is typing in stays focused, as in real use.
+    await page.evaluate(() => {
+      const active = document.activeElement;
+      if (active && active !== document.body && !active.matches('input, textarea')) active.blur();
+    });
     await page.evaluate(settle);
     const png = await page.screenshot({ animations: 'disabled', caret: 'hide' });
     const { webp, quality } = await toWebp(page, png);
