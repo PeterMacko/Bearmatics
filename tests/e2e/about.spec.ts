@@ -114,11 +114,19 @@ async function expectBarStaysAfterScroll(page: Page) {
   ).toBe(true);
 }
 
-/** The focused link is fully below the fixed bar (the page's scroll-padding-top is the bar). */
+/**
+ * The focused link is not hidden under the fixed bar: fully below it, or, for a tall screenshot
+ * link, a clear strip of at least 100 px below it (Firefox does not scroll a partly visible link
+ * when moving backwards; without the bar's scroll-padding only 44 px showed there).
+ */
 async function expectClearOfBar(page: Page) {
   const bar = (await page.getByRole('banner').boundingBox())!;
   const box = (await page.locator(':focus').boundingBox())!;
-  expect(box.y).toBeGreaterThanOrEqual(bar.y + bar.height - 1);
+  const barBottom = bar.y + bar.height;
+  if (box.y < barBottom - 1) {
+    expect(box.height).toBeGreaterThan(300);
+    expect(box.y + box.height).toBeGreaterThanOrEqual(barBottom + 100);
+  }
 }
 
 /** Headings and captions wrap only between words (QA224-01): no word is split over two lines. */
