@@ -11,6 +11,7 @@ export default function SummaryView({
   total,
   firstTry,
   headingRef,
+  time,
   points,
   streak,
   footer,
@@ -23,6 +24,8 @@ export default function SummaryView({
   total: number;
   firstTry: number;
   headingRef: RefObject<HTMLHeadingElement | null>;
+  /** SCRUM-211: lesson time, as shown and in full words for screen readers; null: no line. */
+  time?: { shown: string; spoken: string } | null;
   /** Points and badge for the lesson (SCRUM-117), shown above the buttons. */
   points?: ReactNode;
   /** The streak beside the check mark (SCRUM-118). */
@@ -55,6 +58,12 @@ export default function SummaryView({
           {firstTry} / {total}
         </strong>
       </p>
+      {time && (
+        <p className="lesson-time">
+          <span aria-hidden="true">{time.shown}</span>
+          <span className="sr-only">{time.spoken}</span>
+        </p>
+      )}
       {points}
       <button
         className="primary"

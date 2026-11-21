@@ -1,6 +1,7 @@
 import {
   useEffect,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -23,6 +24,12 @@ import PracticeView from './PracticeView';
 import SettingsDialog from './SettingsDialog';
 import AppBar, { type BarBack } from './AppBar';
 import SummaryView from './SummaryView';
+import {
+  clearLessonStart,
+  lessonTimeText,
+  measureLessonTime,
+  startLessonClock,
+} from './lessonTime';
 import { nextLabel, positionText } from './lesson/lessonText';
 import { useMenuLayout } from './useMenuLayout';
 import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
@@ -236,6 +243,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // Both ways out of a lesson (Back/summary and the leave dialog) end here.
   const endPractice = () => {
     endLesson();
+    clearLessonStart(); // SCRUM-211: leaving a lesson removes its start time
     focusMenuHeading.current = true;
     words.stop();
     setSession(null);
@@ -302,6 +310,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     resetForNewSession();
     void activateSound();
     setAnswer('');
+    // SCRUM-211: the first example appears with this tap; a new lesson overwrites the start.
+    startLessonClock(course === 'small' ? smallSize : size);
     beginLesson(
       course === 'small' ? smallSize : size,
       course === 'small'
@@ -334,6 +344,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
+    startLessonClock(englishSize);
     beginLesson(englishSize, { course: 'english', level: englishLevel });
     resetForNewSession();
     void activateSound();
@@ -563,6 +574,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
         onRetry={() => active && void saveLesson(active.firstTry)}
       />
     ) : null;
+  // SCRUM-211: measured once when the summary appears (a finished session object never changes),
+  // so switching language later does not move the time on.
+  const doneSession = active?.done ? active : null;
+  const lessonTime = useMemo(() => (doneSession ? measureLessonTime() : null), [doneSession]);
   const summaryFooter = accountKnown && !account ? <SignInHint t={t.points} /> : null;
   const summaryStreak =
     account && streak && lessonSave?.state === 'saved' ? (
@@ -656,6 +671,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               total={lessonKind.session.exercises.length}
               firstTry={lessonKind.session.firstTry}
               headingRef={summaryRef}
+              time={lessonTime && lessonTimeText(t.lessonTime, lessonTime)}
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}
@@ -753,8 +769,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
           onToggleSound={toggleSound}
           onAbout={(event) => {
             // SCRUM-218: the About page replaces the app; work in a lesson is asked about first.
-            if (!inLesson || !lessonKind || !hasProgress(lessonKind.session, lessonKind.answer))
+            if (!inLesson || !lessonKind || !hasProgress(lessonKind.session, lessonKind.answer)) {
+              clearLessonStart(); // leaving for the About page leaves the lesson too
               return;
+            }
             event.preventDefault();
             const href = event.currentTarget.href;
             setSettingsOpen(false);

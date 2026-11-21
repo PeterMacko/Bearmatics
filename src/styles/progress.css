@@ -207,6 +207,9 @@
   .summary .first-try {
     margin-bottom: 12px;
   }
+  .summary .lesson-time {
+    margin-bottom: 12px;
+  }
   .summary .summary-points {
     margin-bottom: 8px;
   }
