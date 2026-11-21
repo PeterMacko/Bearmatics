@@ -85,14 +85,16 @@ export function formatClock(seconds: number): string {
 type TimeCopy = Copy['lessonTime'];
 
 /** "3 minutes 25 seconds" / "3 minúty 25 sekúnd"; zero parts are left out (all zero: "0 seconds"). */
-function spokenDuration(t: TimeCopy, seconds: number): string {
+type Units = { hour: readonly string[]; minute: readonly string[]; second: readonly string[] };
+
+function spokenDuration(units: Units, seconds: number): string {
   const parts: string[] = [];
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
   const rest = seconds % 60;
-  if (hours) parts.push(pointsText(t.hourUnits, hours));
-  if (minutes) parts.push(pointsText(t.minuteUnits, minutes));
-  if (rest || parts.length === 0) parts.push(pointsText(t.secondUnits, rest));
+  if (hours) parts.push(pointsText(units.hour, hours));
+  if (minutes) parts.push(pointsText(units.minute, minutes));
+  if (rest || parts.length === 0) parts.push(pointsText(units.second, rest));
   return parts.join(' ');
 }
 
@@ -103,8 +105,11 @@ export function lessonTimeText(t: TimeCopy, time: LessonTime): { shown: string; 
   return {
     shown: fill(t.line, { time: formatClock(time.total), average }),
     spoken: fill(t.spoken, {
-      time: spokenDuration(t, time.total),
-      average: spokenDuration(t, time.average),
+      time: spokenDuration(
+        { hour: t.hourUnits, minute: t.minuteUnits, second: t.secondUnits },
+        time.total,
+      ),
+      average: spokenDuration(t.averageUnits, time.average),
     }),
   };
 }

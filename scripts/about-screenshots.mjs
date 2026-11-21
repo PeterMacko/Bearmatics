@@ -212,7 +212,7 @@ const STEPS = {
   summary: async (page, lang) => {
     await home(page, lang);
     // SCRUM-211: the lesson time is a demo value too: Date.now is held at the start and moved
-    // 65 s on before the last tap ("Time 1:05 · about 13 s per example"); timers keep running.
+    // 65 s on before the last tap ("Time 1:05 · about 13 s per exercise"); timers keep running.
     await page.clock.setFixedTime(CLOCK);
     await startLesson(page, 'maths', 0, 5);
     for (let i = 0; i < 5; i++) {

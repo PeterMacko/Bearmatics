@@ -80,23 +80,39 @@ describe('lesson time (SCRUM-211)', () => {
   it('visible and screen-reader text in English', () => {
     const t = copy.en.lessonTime;
     expect(lessonTimeText(t, { total: 205, average: 10 })).toEqual({
-      shown: 'Time 3:25 · about 10 s per example',
-      spoken: 'Time 3 minutes 25 seconds, about 10 seconds per example',
+      shown: 'Time 3:25 · about 10 s per exercise',
+      spoken: 'Time 3 minutes 25 seconds, about 10 seconds per exercise',
     });
     expect(lessonTimeText(t, { total: 800, average: 80 })).toEqual({
-      shown: 'Time 13:20 · about 1:20 per example',
-      spoken: 'Time 13 minutes 20 seconds, about 1 minute 20 seconds per example',
+      shown: 'Time 13:20 · about 1:20 per exercise',
+      spoken: 'Time 13 minutes 20 seconds, about 1 minute 20 seconds per exercise',
     });
     expect(lessonTimeText(t, { total: 7, average: 1 })).toEqual({
-      shown: 'Time 0:07 · about 1 s per example',
-      spoken: 'Time 7 seconds, about 1 second per example',
+      shown: 'Time 0:07 · about 1 s per exercise',
+      spoken: 'Time 7 seconds, about 1 second per exercise',
     });
     expect(lessonTimeText(t, { total: 3725, average: 60 })).toEqual({
-      shown: 'Time 1:02:05 · about 1:00 per example',
-      spoken: 'Time 1 hour 2 minutes 5 seconds, about 1 minute per example',
+      shown: 'Time 1:02:05 · about 1:00 per exercise',
+      spoken: 'Time 1 hour 2 minutes 5 seconds, about 1 minute per exercise',
     });
     expect(lessonTimeText(t, { total: 7200, average: 0 }).spoken).toBe(
-      'Time 2 hours, about 0 seconds per example',
+      'Time 2 hours, about 0 seconds per exercise',
+    );
+  });
+
+  it('Slovak average after "asi" uses the accusative (Peter): 1 minútu, 1 sekundu, 1 hodinu', () => {
+    const t = copy.sk.lessonTime;
+    expect(lessonTimeText(t, { total: 61, average: 61 }).spoken).toBe(
+      'Čas 1 minúta 1 sekunda, asi 1 minútu 1 sekundu na príklad',
+    );
+    expect(lessonTimeText(t, { total: 3725, average: 3661 }).spoken).toBe(
+      'Čas 1 hodina 2 minúty 5 sekúnd, asi 1 hodinu 1 minútu 1 sekundu na príklad',
+    );
+    expect(lessonTimeText(t, { total: 205, average: 122 }).spoken).toBe(
+      'Čas 3 minúty 25 sekúnd, asi 2 minúty 2 sekundy na príklad',
+    );
+    expect(lessonTimeText(t, { total: 205, average: 1 }).spoken).toBe(
+      'Čas 3 minúty 25 sekúnd, asi 1 sekundu na príklad',
     );
   });
 
@@ -111,7 +127,7 @@ describe('lesson time (SCRUM-211)', () => {
     );
     expect(lessonTimeText(t, { total: 3725, average: 80 })).toEqual({
       shown: 'Čas 1:02:05 · asi 1:20 na príklad',
-      spoken: 'Čas 1 hodina 2 minúty 5 sekúnd, asi 1 minúta 20 sekúnd na príklad',
+      spoken: 'Čas 1 hodina 2 minúty 5 sekúnd, asi 1 minútu 20 sekúnd na príklad',
     });
     expect(lessonTimeText(t, { total: 2 * 3600 + 5 * 60, average: 4 }).spoken).toBe(
       'Čas 2 hodiny 5 minút, asi 4 sekundy na príklad',

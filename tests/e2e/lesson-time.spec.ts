@@ -3,7 +3,7 @@ import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
 import { openMathematics, openSmallMaths } from './support/course';
 import { answerFor } from './support/maths';
 
-// SCRUM-211: lesson time and average time per example on the summary, every course, signed in
+// SCRUM-211: lesson time and average time per exercise on the summary, every course, signed in
 // (mocked server) and out. The clock is Playwright's fake clock: Date.now is held at the lesson
 // start and moved 3:25 on before the last tap, so the expected text is exact.
 
@@ -101,10 +101,10 @@ for (const course of ['small', 'maths', 'english'] as const)
       await playLesson(page, course);
       const line = page.locator('.summary .lesson-time');
       await expect(line.locator('[aria-hidden="true"]')).toHaveText(
-        'Time 3:25 · about 41 s per example',
+        'Time 3:25 · about 41 s per exercise',
       );
       await expect(line.locator('.sr-only')).toHaveText(
-        'Time 3 minutes 25 seconds, about 41 seconds per example',
+        'Time 3 minutes 25 seconds, about 41 seconds per exercise',
       );
       // Under the first-try score; signed in, above the points.
       expect(

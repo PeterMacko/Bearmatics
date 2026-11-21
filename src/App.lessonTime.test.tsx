@@ -7,7 +7,7 @@ import { fakeServer, reply } from './testing/fakeServer';
 import { openMathematics, openSmallMaths } from './testing/openMathematics';
 import { tap } from './testing/ui';
 
-// SCRUM-211: lesson time and average time per example on the summary. A fake clock (Date.now)
+// SCRUM-211: lesson time and average time per exercise on the summary. A fake clock (Date.now)
 // moves only where the test says so.
 
 const realGenerate = math.generateSession;
@@ -73,20 +73,20 @@ describe('maths: total and average for 5, 10 and 20', () => {
     [
       5,
       41_000,
-      'Time 3:25 · about 41 s per example',
-      'Time 3 minutes 25 seconds, about 41 seconds per example',
+      'Time 3:25 · about 41 s per exercise',
+      'Time 3 minutes 25 seconds, about 41 seconds per exercise',
     ],
     [
       10,
       20_500,
-      'Time 3:25 · about 21 s per example',
-      'Time 3 minutes 25 seconds, about 21 seconds per example',
+      'Time 3:25 · about 21 s per exercise',
+      'Time 3 minutes 25 seconds, about 21 seconds per exercise',
     ],
     [
       20,
       10_250,
-      'Time 3:25 · about 10 s per example',
-      'Time 3 minutes 25 seconds, about 10 seconds per example',
+      'Time 3:25 · about 10 s per exercise',
+      'Time 3 minutes 25 seconds, about 10 seconds per exercise',
     ],
   ] as const) {
     test(`${size} exercises`, () => {
@@ -124,7 +124,7 @@ test('a review round does not change the divisor; the line sits under the first-
   solve('3');
   tap('See how you did');
   expect(screen.getByText('4 / 5')).toBeInTheDocument();
-  expect(timeLine()).toHaveTextContent('Time 1:40 · about 20 s per example');
+  expect(timeLine()).toHaveTextContent('Time 1:40 · about 20 s per exercise');
   expect(document.querySelector('.first-try')!.nextElementSibling).toBe(timeLine());
 });
 
@@ -132,9 +132,9 @@ test('h:mm:ss from one hour; an average from one minute is m:ss', () => {
   render(<App />);
   openMathematics();
   playMaths(5, 745_000); // 62:05 in total
-  expect(timeLine()).toHaveTextContent('Time 1:02:05 · about 12:25 per example');
+  expect(timeLine()).toHaveTextContent('Time 1:02:05 · about 12:25 per exercise');
   expect(timeLine()!.querySelector('.sr-only')).toHaveTextContent(
-    'Time 1 hour 2 minutes 5 seconds, about 12 minutes 25 seconds per example',
+    'Time 1 hour 2 minutes 5 seconds, about 12 minutes 25 seconds per exercise',
   );
 });
 
@@ -243,7 +243,7 @@ test.each([1, 2, 3])('Small maths level %i: time on the summary', (level) => {
   openSmallMaths();
   fireEvent.click(screen.getByRole('radio', { name: new RegExp(`^Level ${level} `) }));
   playMaths(5, 7_000);
-  expect(timeLine()).toHaveTextContent('Time 0:35 · about 7 s per example');
+  expect(timeLine()).toHaveTextContent('Time 0:35 · about 7 s per exercise');
 });
 
 test.each([1, 2, 3, 4, 5, 6, 7])('Maths level %i: time on the summary', (level) => {
@@ -251,7 +251,7 @@ test.each([1, 2, 3, 4, 5, 6, 7])('Maths level %i: time on the summary', (level) 
   openMathematics();
   fireEvent.click(screen.getByRole('radio', { name: new RegExp(`^Level ${level} `) }));
   playMaths(5, 12_000);
-  expect(timeLine()).toHaveTextContent('Time 1:00 · about 12 s per example');
+  expect(timeLine()).toHaveTextContent('Time 1:00 · about 12 s per exercise');
 });
 
 async function playEnglish(level: 1 | 2 | 3, size: number, perExample: number) {
@@ -284,7 +284,7 @@ async function playEnglish(level: 1 | 2 | 3, size: number, perExample: number) {
 test.each([1, 2, 3] as const)('English level %i: time on the summary', async (level) => {
   render(<App />);
   await playEnglish(level, 5, 9_000);
-  expect(timeLine()).toHaveTextContent('Time 0:45 · about 9 s per example');
+  expect(timeLine()).toHaveTextContent('Time 0:45 · about 9 s per exercise');
   summaryBack();
   expect(stored()).toBeNull();
 });
@@ -304,7 +304,7 @@ test('signed in: the time line sits between the first-try score and the points',
   openMathematics();
   playMaths(5, 20_000);
   await act(async () => {});
-  expect(timeLine()).toHaveTextContent('Time 1:40 · about 20 s per example');
+  expect(timeLine()).toHaveTextContent('Time 1:40 · about 20 s per exercise');
   expect(document.querySelector('.first-try')!.nextElementSibling).toBe(timeLine());
   expect(document.querySelector('.summary-points')).not.toBeNull();
   // Not saved anywhere else: nothing about time goes to the server.
