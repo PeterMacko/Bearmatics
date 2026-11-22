@@ -53,6 +53,7 @@ export const aboutCopy = {
       'In Maths, hints show the problem in smaller steps.',
       'Exercises that needed more tries come back in a short review round.',
       'The summary shows how many were right on the first try without hints.',
+      'It also shows how long the lesson took and about how long one exercise took. The time is not saved anywhere.',
       'Mute switches the sounds off; English words are always spoken.',
     ],
     signInTitle: 'Signing in (optional)',
@@ -89,7 +90,7 @@ export const aboutCopy = {
       },
       summary: {
         caption: 'Lesson summary',
-        alt: 'The end of a lesson: exercises right on the first try without hints, new points and the streak.',
+        alt: 'The end of a lesson: exercises right on the first try without hints, the lesson time, new points and the streak.',
       },
       'app-bar': {
         caption: 'Bear badge, points and streak',
@@ -131,6 +132,7 @@ export const aboutCopy = {
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
       'Príklady, ktoré potrebovali viac pokusov, sa vrátia v krátkom opakovaní.',
       'Na konci vidíš, koľko príkladov bolo správne na prvý pokus bez pomôcky.',
+      'Uvidíš aj, ako dlho lekcia trvala a koľko asi trval jeden príklad. Čas sa nikam neukladá.',
       'Tlačidlo zvuku vypne zvuky; anglické slová zaznejú vždy.',
     ],
     signInTitle: 'Prihlásenie (nepovinné)',
@@ -167,7 +169,7 @@ export const aboutCopy = {
       },
       summary: {
         caption: 'Koniec lekcie',
-        alt: 'Koniec lekcie: príklady správne na prvý pokus bez pomôcky, nové body a séria.',
+        alt: 'Koniec lekcie: príklady správne na prvý pokus bez pomôcky, čas lekcie, nové body a séria.',
       },
       'app-bar': {
         caption: 'Medvedí odznak, body a séria',

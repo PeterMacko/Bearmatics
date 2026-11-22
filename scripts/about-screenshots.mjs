@@ -37,6 +37,8 @@ const { values: args } = parseArgs({
 const VIEWPORT = { width: 390, height: 844 };
 const MAX_BYTES = 60 * 1024;
 const CLOCK = new Date('2026-06-15T09:00:00+02:00');
+/** Demo lesson time on the summary shot (SCRUM-211). */
+const LESSON_MS = 65_000;
 
 /** The built app with the same fallback as the Worker's assets: unknown paths get index.html. */
 function serve(dir) {
@@ -209,9 +211,13 @@ const STEPS = {
   },
   summary: async (page, lang) => {
     await home(page, lang);
+    // SCRUM-211: the lesson time is a demo value too: Date.now is held at the start and moved
+    // 65 s on before the last tap ("Time 1:05 · about 13 s per exercise"); timers keep running.
+    await page.clock.setFixedTime(CLOCK);
     await startLesson(page, 'maths', 0, 5);
     for (let i = 0; i < 5; i++) {
       await solve(page);
+      if (i === 4) await page.clock.setFixedTime(new Date(CLOCK.getTime() + LESSON_MS));
       await page.locator('.answer-button').click();
     }
     await page.locator('.summary').waitFor();

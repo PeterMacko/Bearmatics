@@ -245,3 +245,17 @@ test.each([
     expect(within(play).getByText('»')).toHaveAttribute('aria-hidden', 'true');
   },
 );
+
+test.each([
+  [
+    'en',
+    'It also shows how long the lesson took and about how long one exercise took. The time is not saved anywhere.',
+  ],
+  [
+    'sk',
+    'Uvidíš aj, ako dlho lekcia trvala a koľko asi trval jeden príklad. Čas sa nikam neukladá.',
+  ],
+] as const)('SCRUM-211: the %s About page explains the lesson time', (language, sentence) => {
+  render(<AboutPage language={language} />);
+  expect(screen.getByText(sentence)).toBeInTheDocument();
+});

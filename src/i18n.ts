@@ -100,6 +100,22 @@ export const copy = {
     finished: 'exercises completed',
     first: 'First try, without hints',
     again: 'Play again',
+    // SCRUM-211: lesson time under the first-try score. {time}/{average} as 3:25, "10 s", 1:20;
+    // spoken: full words with their counted units (see lessonTimeText).
+    lessonTime: {
+      line: 'Time {time} · about {average} per exercise',
+      spoken: 'Time {time}, about {average} per exercise',
+      seconds: '{n} s',
+      hourUnits: ['hour', 'hours', 'hours'],
+      minuteUnits: ['minute', 'minutes', 'minutes'],
+      secondUnits: ['second', 'seconds', 'seconds'],
+      // The average after "about"/"asi" (Slovak accusative: 1 minútu, 1 sekundu, 1 hodinu).
+      averageUnits: {
+        hour: ['hour', 'hours', 'hours'],
+        minute: ['minute', 'minutes', 'minutes'],
+        second: ['second', 'seconds', 'seconds'],
+      },
+    },
     summary: 'Every little step helps your brain grow.',
     leaveTitle: 'Leave this trail?',
     leaveText: 'Your progress in this session will be lost.',
@@ -437,6 +453,19 @@ export const copy = {
     finished: 'vyriešených príkladov',
     first: 'Na prvý pokus bez pomôcky',
     again: 'Hrať znova',
+    lessonTime: {
+      line: 'Čas {time} · asi {average} na príklad',
+      spoken: 'Čas {time}, asi {average} na príklad',
+      seconds: '{n} s',
+      hourUnits: ['hodina', 'hodiny', 'hodín'],
+      minuteUnits: ['minúta', 'minúty', 'minút'],
+      secondUnits: ['sekunda', 'sekundy', 'sekúnd'],
+      averageUnits: {
+        hour: ['hodinu', 'hodiny', 'hodín'],
+        minute: ['minútu', 'minúty', 'minút'],
+        second: ['sekundu', 'sekundy', 'sekúnd'],
+      },
+    },
     summary: 'Každý malý krok ti pomáha učiť sa.',
     leaveTitle: 'Opustiť túto cestu?',
     leaveText: 'Priebeh tohto cvičenia sa neuloží.',
