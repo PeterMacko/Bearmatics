@@ -25,9 +25,12 @@ async function hideFromLeaderboard(page: Page) {
   );
 }
 
-/** Profile > Dress your bear (EN or SK names). */
+/** Profile > Dress your bear (EN or SK names). Waits for the signed-in bar first: under load the
+ * account can still be loading, and the bar button would open Sign in instead of the profile. */
 async function openProfileDress(page: Page, sk = false) {
-  await page.locator('.app-bar .account-button').click();
+  await page
+    .getByRole('button', { name: `${sk ? 'Tvoj profil' : 'Your profile'}: ${NICKNAME}` })
+    .click();
   await page.getByRole('button', { name: sk ? 'Oblč medveďa' : 'Dress your bear' }).click();
   await expect(
     page.getByRole('heading', { level: 2, name: sk ? 'Oblč medveďa' : 'Dress your bear' }),
@@ -127,33 +130,32 @@ async function expectContained(page: Page, where: string) {
 
 const SMALL = (d: Device) => d.width <= 620 || d.height <= 500;
 
-test('SCRUM-273 profile dress screen (EN and SK): heading, bear and Save | Cancel in view on every defined device; only the choices scroll', async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  await openApp(page);
-  await createAccount(page, uniqueName('fit273'), { nickname: NICKNAME });
-  await hideFromLeaderboard(page);
-  for (const [sk, device] of [false, true].flatMap((sk) =>
-    ALL_DEVICES.map((d) => [sk, d] as const),
-  )) {
-    await page.setViewportSize({ width: device.width, height: device.height });
-    await openApp(page, sk);
-    await openProfileDress(page, sk);
-    const where = `${sk ? 'SK' : 'EN'} ${device.name} ${device.width}x${device.height}`;
-    const result = await expectContained(page, where);
-    // Phones and the smaller windows have more choices than room: the pane really scrolls.
-    if (device.height <= 700) expect(result.paneScrolls, where).toBe(true);
-    // Scrolling the pane to its end moves no fixed part and never the page.
-    const before = await page.locator('.dress-actions').boundingBox();
-    await page.locator('.dress-choices').evaluate((pane) => (pane.scrollTop = pane.scrollHeight));
-    await page.mouse.wheel(0, 400);
-    await settled(page);
-    expect(await page.evaluate(() => scrollY), `${where} page scrolled`).toBe(0);
-    expect(await page.locator('.dress-actions').boundingBox(), where).toEqual(before);
-    await page.getByRole('button', { name: sk ? 'Zrušiť' : 'Cancel', exact: true }).click();
-  }
-});
+for (const sk of [false, true])
+  test(`SCRUM-273 profile dress screen ${sk ? 'SK' : 'EN'}: heading, bear and Save | Cancel in view on every defined device; only the choices scroll`, async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openApp(page);
+    await createAccount(page, uniqueName('fit273'), { nickname: NICKNAME });
+    await hideFromLeaderboard(page);
+    for (const device of ALL_DEVICES) {
+      await page.setViewportSize({ width: device.width, height: device.height });
+      await openApp(page, sk);
+      await openProfileDress(page, sk);
+      const where = `${sk ? 'SK' : 'EN'} ${device.name} ${device.width}x${device.height}`;
+      const result = await expectContained(page, where);
+      // Phones and the smaller windows have more choices than room: the pane really scrolls.
+      if (device.height <= 700) expect(result.paneScrolls, where).toBe(true);
+      // Scrolling the pane to its end moves no fixed part and never the page.
+      const before = await page.locator('.dress-actions').boundingBox();
+      await page.locator('.dress-choices').evaluate((pane) => (pane.scrollTop = pane.scrollHeight));
+      await page.mouse.wheel(0, 400);
+      await settled(page);
+      expect(await page.evaluate(() => scrollY), `${where} page scrolled`).toBe(0);
+      expect(await page.locator('.dress-actions').boundingBox(), where).toEqual(before);
+      await page.getByRole('button', { name: sk ? 'Zrušiť' : 'Cancel', exact: true }).click();
+    }
+  });
 
 test('SCRUM-273 sign-up Customize: same layout, in view on every defined device', async ({
   page,
@@ -169,60 +171,63 @@ test('SCRUM-273 sign-up Customize: same layout, in view on every defined device'
   }
 });
 
-test('SCRUM-273 heading: one line without intro on small devices (EN and SK, 320 px too); larger screens unchanged', async ({
-  page,
-}) => {
-  test.setTimeout(120_000);
-  await openApp(page);
-  await createAccount(page, uniqueName('head273'), { nickname: NICKNAME });
-  await hideFromLeaderboard(page);
-  for (const sk of [false, true]) {
-    for (const device of ALL_DEVICES) {
-      await page.setViewportSize({ width: device.width, height: device.height });
-      await openApp(page, sk);
-      await openProfileDress(page, sk);
-      const where = `${sk ? 'SK' : 'EN'} ${device.name}`;
-      const heading = await page.evaluate(() => {
-        const box = (s: string) =>
-          document.querySelector(`.dress-screen ${s}`)!.getBoundingClientRect();
-        const eyebrow = box('.eyebrow');
-        const title = box('h2');
-        const intro = document.querySelector<HTMLElement>('.dress-screen .intro')!;
-        return {
-          eyebrow: document.querySelector('.dress-screen .eyebrow')!.textContent,
-          titleSize: parseFloat(
-            getComputedStyle(document.querySelector('.dress-screen h2')!).fontSize,
-          ),
-          rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
-          // One line: the eyebrow sits beside the title, its middle inside the title's line.
-          oneLine:
-            eyebrow.right <= title.left &&
-            (eyebrow.top + eyebrow.bottom) / 2 > title.top &&
-            (eyebrow.top + eyebrow.bottom) / 2 < title.bottom,
-          titleLines: Math.round(
-            title.height /
-              parseFloat(getComputedStyle(document.querySelector('.dress-screen h2')!).lineHeight),
-          ),
-          below: eyebrow.bottom <= title.top + 1,
-          introShown: intro.offsetHeight > 0,
-        };
-      });
-      expect(heading.eyebrow, where).toBe(sk ? 'Tvoj účet' : 'Your account');
-      if (SMALL(device)) {
-        expect(heading.introShown, `${where} intro`).toBe(false);
-        expect(heading.oneLine, `${where} one line`).toBe(true);
-        expect(heading.titleLines, `${where} title lines`).toBe(1);
-        expect(heading.titleSize, `${where} title size`).toBeGreaterThanOrEqual(
-          1.25 * heading.rem - 0.01,
-        );
-      } else {
-        expect(heading.introShown, `${where} intro`).toBe(true);
-        expect(heading.below, `${where} eyebrow above title`).toBe(true);
+for (const sk of [false, true])
+  test(`SCRUM-273 heading ${sk ? 'SK' : 'EN'}: one line without intro on small devices (320 px too); larger screens unchanged`, async ({
+    page,
+  }) => {
+    test.setTimeout(120_000);
+    await openApp(page);
+    await createAccount(page, uniqueName('head273'), { nickname: NICKNAME });
+    await hideFromLeaderboard(page);
+    {
+      for (const device of ALL_DEVICES) {
+        await page.setViewportSize({ width: device.width, height: device.height });
+        await openApp(page, sk);
+        await openProfileDress(page, sk);
+        const where = `${sk ? 'SK' : 'EN'} ${device.name}`;
+        const heading = await page.evaluate(() => {
+          const box = (s: string) =>
+            document.querySelector(`.dress-screen ${s}`)!.getBoundingClientRect();
+          const eyebrow = box('.eyebrow');
+          const title = box('h2');
+          const intro = document.querySelector<HTMLElement>('.dress-screen .intro')!;
+          return {
+            eyebrow: document.querySelector('.dress-screen .eyebrow')!.textContent,
+            titleSize: parseFloat(
+              getComputedStyle(document.querySelector('.dress-screen h2')!).fontSize,
+            ),
+            rem: parseFloat(getComputedStyle(document.documentElement).fontSize),
+            // One line: the eyebrow sits beside the title, its middle inside the title's line.
+            oneLine:
+              eyebrow.right <= title.left &&
+              (eyebrow.top + eyebrow.bottom) / 2 > title.top &&
+              (eyebrow.top + eyebrow.bottom) / 2 < title.bottom,
+            titleLines: Math.round(
+              title.height /
+                parseFloat(
+                  getComputedStyle(document.querySelector('.dress-screen h2')!).lineHeight,
+                ),
+            ),
+            below: eyebrow.bottom <= title.top + 1,
+            introShown: intro.offsetHeight > 0,
+          };
+        });
+        expect(heading.eyebrow, where).toBe(sk ? 'Tvoj účet' : 'Your account');
+        if (SMALL(device)) {
+          expect(heading.introShown, `${where} intro`).toBe(false);
+          expect(heading.oneLine, `${where} one line`).toBe(true);
+          expect(heading.titleLines, `${where} title lines`).toBe(1);
+          expect(heading.titleSize, `${where} title size`).toBeGreaterThanOrEqual(
+            1.25 * heading.rem - 0.01,
+          );
+        } else {
+          expect(heading.introShown, `${where} intro`).toBe(true);
+          expect(heading.below, `${where} eyebrow above title`).toBe(true);
+        }
+        await page.getByRole('button', { name: sk ? 'Zrušiť' : 'Cancel', exact: true }).click();
       }
-      await page.getByRole('button', { name: sk ? 'Zrušiť' : 'Cancel', exact: true }).click();
     }
-  }
-});
+  });
 
 test('SCRUM-273 200% text at 390x844 and 320x568: one scrolling page, every choice and both buttons reachable, nothing clipped', async ({
   page,
