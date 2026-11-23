@@ -98,6 +98,11 @@ for (const { name, width, height } of ALL_DEVICES)
           await page.locator('.logic-go').click();
           await expect(page.locator('#answer-feedback')).not.toHaveText('', { timeout: 5000 });
           await expect(page.locator('.logic-practice')).not.toHaveAttribute('data-walking');
+          // The board fit re-measures one frame after the result line fills (input opens at
+          // once since QA271-01): judge the settled layout.
+          await expect
+            .poll(async () => (await lessonLayout(page)).pageScroll, { timeout: 2000 })
+            .toBeLessThanOrEqual(1);
         }
         const layout = await lessonLayout(page);
         expect(layout.pageScroll, `${state}: page scroll`).toBeLessThanOrEqual(1);
@@ -108,20 +113,37 @@ for (const { name, width, height } of ALL_DEVICES)
       }
     });
 
-for (const { name, width, height } of ALL_DEVICES)
-  test(`Logic menu: no page scroll while contained at ${name} ${width}x${height}`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height });
-    await openLogic(page);
-    const state = await page.evaluate(() => ({
+/** Menu mode, page scroll and the smallest control of the Logic menu. */
+const menuState = (page: Page) =>
+  page.evaluate(() => {
+    const d = document.documentElement;
+    const controls = [
+      ...document.querySelectorAll<HTMLElement>(
+        '.logic-home .start-button, .logic-home .session-options label > span, .logic-home .level-option',
+      ),
+    ];
+    return {
       mode: document.querySelector<HTMLElement>('.workspace')!.dataset.menuMode,
-      overflow: document.documentElement.scrollHeight - innerHeight,
-    }));
-    expect(state.mode).toMatch(/contained|flow/);
-    if (state.mode === 'contained') expect(state.overflow).toBeLessThanOrEqual(1);
-    await expect(page.locator('.logic-home .start-button')).toBeInViewport({ ratio: 1 });
+      overflow: d.scrollHeight - d.clientHeight,
+      smallestTarget: Math.min(...controls.map((c) => Math.min(c.offsetWidth, c.offsetHeight))),
+    };
   });
+
+// QA271-02: the Logic menu stays contained (no page scroll, Start on screen) like the other
+// menus, at every defined device in EN and SK.
+for (const { name, width, height } of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    test(`Logic menu: contained with no page scroll at ${name} ${width}x${height} ${lang}`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openLogic(page, lang);
+      await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
+      const state = await menuState(page);
+      expect(state.overflow, 'page scroll').toBeLessThanOrEqual(1);
+      expect(state.smallestTarget, 'smallest control').toBeGreaterThanOrEqual(48);
+      await expect(page.locator('.logic-home .start-button')).toBeInViewport({ ratio: 1 });
+    });
 
 // 200% text (set after the document exists, so both engines really enlarge it).
 for (const { name, width, height } of [DEVICE.phone, DEVICE.smallPhone])
@@ -132,12 +154,17 @@ for (const { name, width, height } of [DEVICE.phone, DEVICE.smallPhone])
       await page.setViewportSize({ width, height });
       await openLogic(page, lang);
       await page.addStyleTag({ content: 'html{font-size:200% !important}' });
-      // Menu: SCRUM-36 rule (contained = no page scroll, otherwise the page scrolls).
-      const menu = await page.evaluate(() => ({
-        mode: document.querySelector<HTMLElement>('.workspace')!.dataset.menuMode,
-        overflow: document.documentElement.scrollHeight - innerHeight,
-      }));
-      if (menu.mode === 'contained') expect(menu.overflow).toBeLessThanOrEqual(1);
+      // Menu: SCRUM-36 rule (contained = no page scroll, otherwise the page scrolls). The phone
+      // keeps it contained like the other menus (QA271-02); the smallest phone uses page flow
+      // at 200% text on every menu.
+      if (width >= 390)
+        await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
+      const menu = await menuState(page);
+      if (menu.mode === 'contained') {
+        expect(menu.overflow).toBeLessThanOrEqual(1);
+        await expect(page.locator('.logic-home .start-button')).toBeInViewport({ ratio: 1 });
+      }
+      expect(menu.smallestTarget).toBeGreaterThanOrEqual(48);
       await page.locator('.logic-home .start-button').click();
       await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
       for (const arrow of ['.arrow-right', '.arrow-down']) await page.locator(arrow).click();

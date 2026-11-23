@@ -27,6 +27,7 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       // sees only the final sizes, never the intermediate probe (no RO writes).
       menu.dataset.menuMode = 'contained';
       delete menu.dataset.menuCompact;
+      delete menu.dataset.menuTight;
       const style = getComputedStyle(menu);
       const card = Math.max(...cards.map((item) => item.getBoundingClientRect().height));
       const required = (visibleCards: number) =>
@@ -60,7 +61,16 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       const allCards = () => list.scrollHeight <= list.clientHeight + 1 && contentInside();
       if (view === 'choice' ? !allCards() : !fits(2)) {
         menu.dataset.menuCompact = '';
-        if (!fits(1)) menu.dataset.menuMode = 'flow';
+        if (!fits(1)) {
+          // Last try before page flow (QA271-02): tighter padding in Start and the exercise
+          // counts (same text size, 48 px targets), kept only when the whole menu then fits
+          // with no scrolling at all. Menus whose list would still scroll fall to flow as before.
+          menu.dataset.menuTight = '';
+          if (!allCards()) {
+            delete menu.dataset.menuTight;
+            menu.dataset.menuMode = 'flow';
+          }
+        }
       }
       reveal(
         list.querySelector<HTMLElement>(':focus')?.closest(LAYOUT.levelCard) ??
@@ -86,6 +96,7 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
       delete menu.dataset.menuCompact;
+      delete menu.dataset.menuTight;
     };
   }, [active, language, level, view]);
   return ref;
