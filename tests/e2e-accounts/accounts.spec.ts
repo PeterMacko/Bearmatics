@@ -337,6 +337,8 @@ test('the address bar cannot put a message on the sign-in screen (QA114-04)', as
 });
 
 test('the parent checkbox has a large enough tap target (QA114-05)', async ({ browser }) => {
+  // Loops over every device: ~30 s in Firefox under the full suite already on main.
+  test.setTimeout(120_000);
   for (const device of DEVICES) {
     const context = await browser.newContext({
       viewport: { width: device.width, height: device.height },
