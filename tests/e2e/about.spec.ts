@@ -268,7 +268,7 @@ for (const lang of LANGS)
     await expect(home).toHaveAttribute('href', `/?lang=${lang}`);
     await home.click();
     // The app opens in the page's language and the parameter leaves the address.
-    await expect(page.locator('.course-option')).toHaveCount(3);
+    await expect(page.locator('.course-option')).toHaveCount(4);
     await expect(page).toHaveURL('/');
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await expect(page.getByRole('button', { name: COPY[lang].appSettings })).toBeVisible();
@@ -296,7 +296,7 @@ for (const other of LANGS)
       .click();
     await expectAboutPage(page, other, `/about/${other}`);
     await page.getByRole('link', { name: 'Bearmatics', exact: true }).click();
-    await expect(page.locator('.course-option')).toHaveCount(3);
+    await expect(page.locator('.course-option')).toHaveCount(4);
     await expect(page).toHaveURL('/');
     await expect(page.locator('html')).toHaveAttribute('lang', other);
   });

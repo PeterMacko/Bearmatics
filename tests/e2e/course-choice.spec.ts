@@ -138,8 +138,10 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
   await page.keyboard.press('Tab'); // settings gear
   await page.keyboard.press('Tab');
-  // SCRUM-141: Small maths comes first, then Maths.
+  // SCRUM-141: Small maths comes first, then (SCRUM-262) Logic, then Maths.
   await expect(page.getByRole('button', { name: 'Small maths', exact: true })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Logic', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
   const math = page.getByRole('button', { name: 'Maths', exact: true });
   await expect(math).toBeFocused();
@@ -157,9 +159,7 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   await expect(page.getByRole('button', { name: 'Back to courses' })).toBeFocused();
   await page.keyboard.press('Space');
   await expect(page.getByRole('heading', { name: 'What shall we learn today?' })).toBeFocused();
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
-  await page.keyboard.press('Tab');
+  for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'English', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Which level shall we try?' })).toBeFocused();
@@ -280,7 +280,7 @@ test('tall window keeps the full heading with its intro', async ({ page }) => {
 });
 
 // SCRUM-77 QA D1/D2: while the menu is "contained", the page itself never scrolls
-// (course choice, Small maths, Maths and English), including the sizes that used to break.
+// (course choice, Small maths, Logic, Maths and English), including the sizes that used to break.
 for (const [width, height] of [
   [1280, 520],
   [1280, 400],
@@ -295,7 +295,7 @@ for (const [width, height] of [
   }) => {
     await page.setViewportSize({ width, height });
     await page.goto('/');
-    for (const course of [null, 'Small maths', 'Maths', 'English']) {
+    for (const course of [null, 'Small maths', 'Logic', 'Maths', 'English']) {
       if (course) await page.getByRole('button', { name: course, exact: true }).click();
       const workspace = page.locator('.workspace');
       await expect(workspace).toHaveAttribute('data-menu-mode', /contained|flow/);
@@ -341,20 +341,20 @@ for (const [width, height, screens] of [
     }
   });
 
-// SCRUM-141 QA146-01: on short landscape phones all three course cards are fully visible
-// without scrolling the card list.
+// SCRUM-141 QA146-01: on short landscape phones all course cards (four since SCRUM-262) are
+// fully visible without scrolling the card list.
 for (const [width, height] of [
   [844, 390],
   [568, 320],
   [733, 500],
 ] as const)
   for (const lang of ['en', 'sk'])
-    test(`all three course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
+    test(`all four course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
       if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
       const cards = page.locator('.course-option');
-      await expect(cards).toHaveCount(3);
+      await expect(cards).toHaveCount(4);
       for (const card of await cards.all()) {
         await expect(card).toBeInViewport({ ratio: 1 });
         expect((await card.boundingBox())!.height).toBeGreaterThanOrEqual(48);

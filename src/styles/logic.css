@@ -758,3 +758,33 @@
     padding-right: 6px;
   }
 }
+
+/* Large text on a phone (the lesson narrower than 16em: never at 100% text on the defined
+   devices): Go and Show me get their own row under the arrows, so nothing runs off the side. */
+@container logic (max-width: 16em) {
+  .logic-play {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      'stage'
+      'plan'
+      'pad'
+      'actions'
+      'feedback' !important;
+  }
+  .logic-play .logic-actions {
+    display: flex !important;
+    grid-area: actions;
+    flex-wrap: wrap;
+  }
+  .logic-play .logic-actions .answer-button,
+  .logic-play .logic-show-me {
+    position: static !important;
+    grid-area: auto !important;
+    flex: 1 1 auto;
+    max-width: none !important;
+    min-height: var(--target);
+  }
+  .logic-play .arrow-pad {
+    justify-self: center;
+  }
+}

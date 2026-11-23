@@ -97,3 +97,69 @@
     row-gap: 4px;
   }
 }
+
+/* SCRUM-262: four course cards. On short windows the cards get shorter, and short landscape
+   phones (the phone menu layout) show them two by two, so every card stays fully visible
+   without scrolling the list. */
+@media (max-height: 600px) {
+  .course-option {
+    min-height: 0;
+    padding-block: 8px;
+    grid-template-columns: 44px minmax(0, 1fr) max-content;
+  }
+  .course-icon svg {
+    width: 44px;
+    height: 44px;
+  }
+}
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 620px) {
+  .menu-shell .course-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .course-option {
+    height: 100%;
+    gap: 10px;
+    grid-template-columns: 40px minmax(0, 1fr);
+    padding: 8px 10px;
+  }
+  .course-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+  .course-arrow {
+    display: none;
+  }
+}
+@media (min-width: 621px) and (max-height: 500px) {
+  .menu-shell .course-options {
+    gap: 6px;
+  }
+  .course-option {
+    padding-block: 5px;
+    column-gap: 10px;
+  }
+  .course-option .level-detail {
+    line-height: 1.2;
+  }
+}
+@media (min-width: 621px) and (max-height: 420px) {
+  .menu-shell .course-options {
+    gap: 4px;
+  }
+  .course-option {
+    padding-block: 3px;
+  }
+  .course-option .course-title {
+    font-size: 1rem;
+  }
+  .course-option .level-detail {
+    font-size: 0.72rem;
+  }
+  .course-option {
+    grid-template-columns: 40px minmax(0, 1fr) max-content;
+  }
+  .course-icon svg {
+    width: 40px;
+    height: 40px;
+  }
+}

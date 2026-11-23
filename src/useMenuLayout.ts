@@ -55,8 +55,10 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
         contentInside();
       // Short window: if the list could not show two whole levels, give it more room
       // with a compact heading (smaller title, intro hidden). Page scrolling is the
-      // last resort, when even one level does not fit.
-      if (!fits(2)) {
+      // last resort, when even one level does not fit. The course choice (SCRUM-262: four
+      // courses) compacts as soon as any course card would be cut off.
+      const allCards = () => list.scrollHeight <= list.clientHeight + 1 && contentInside();
+      if (view === 'choice' ? !allCards() : !fits(2)) {
         menu.dataset.menuCompact = '';
         if (!fits(1)) menu.dataset.menuMode = 'flow';
       }
