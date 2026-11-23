@@ -69,15 +69,22 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(screen.getByRole('main')).toHaveTextContent(a.intro);
   });
 
-  it('shows the seven screenshots of its language, lazily, sized and with alt text', () => {
+  it('shows the eight screenshots of its language, lazily, sized and with alt text', () => {
     render(<AboutPage language={language} />);
     const images = screen.getAllByRole('img');
     expect(images.map((image) => image.getAttribute('src'))).toEqual(
-      ['course', 'small-maths', 'take-away', 'english', 'summary', 'app-bar', 'leaderboard'].map(
-        (shot) => `/about/${language}/${shot}.webp`,
-      ),
+      [
+        'course',
+        'small-maths',
+        'take-away',
+        'logic',
+        'english',
+        'summary',
+        'app-bar',
+        'leaderboard',
+      ].map((shot) => `/about/${language}/${shot}.webp`),
     );
-    expect(SHOTS).toHaveLength(7);
+    expect(SHOTS).toHaveLength(8);
     for (const [index, image] of images.entries()) {
       expect(image).toHaveAttribute('loading', 'lazy');
       expect(image).toHaveAttribute('width', '390');
@@ -85,7 +92,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(image).toHaveAccessibleName(a.shots[SHOTS[index]].alt);
       expect(a.shots[SHOTS[index]].alt.length).toBeGreaterThan(30);
     }
-    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(7);
+    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(8);
   });
 
   it('links every screenshot to its full-size file in a new tab (O1)', () => {
@@ -119,8 +126,17 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(items).toContain(`${t.level} ${shown}: ${t.levels[value]} (${a.levelDetails[value]})`);
     for (const value of [1, 2, 3] as const)
       expect(items).toContain(`${t.level} ${value}: ${t.englishLevels[value]}`);
-    for (const course of [t.smallCourse, t.mathCourse, t.englishCourse])
+    // SCRUM-262: Logic, level 1.
+    expect(items).toContain(`${t.level} 1: ${t.logicLevels[1]} (${a.logicDetail})`);
+    for (const course of [t.smallCourse, t.logicCourse, t.mathCourse, t.englishCourse])
       expect(screen.getByText(course, { selector: 'strong' })).toBeInTheDocument();
+  });
+
+  it('names the age 5–9 (SCRUM-262)', () => {
+    render(<AboutPage language={language} />);
+    expect(screen.getByRole('main')).toHaveTextContent(
+      language === 'en' ? 'children aged 5–9' : 'pre deti od 5 do 9 rokov',
+    );
   });
 
   it('shows the full "What we store" list of the profile', () => {

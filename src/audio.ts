@@ -1,4 +1,4 @@
-type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl';
+type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl' | 'step';
 
 /** Minimal part of HTMLAudioElement the growl needs (injectable for tests). */
 type GrowlAudio = {
@@ -51,18 +51,19 @@ export class FeedbackAudio {
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
-      if (outcome === 'pop') {
+      if (outcome === 'pop' || outcome === 'step') {
         // SCRUM-156: a short soft pop when a picture moves (a quick falling blip, quieter
-        // than the answer sounds).
+        // than the answer sounds). SCRUM-262: the bear's step is a lower, softer pop.
+        const step = outcome === 'step';
         const oscillator = context.createOscillator();
         const gain = context.createGain();
         const note = { oscillator, gain };
         this.active.add(note);
         oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(720, anchor);
-        oscillator.frequency.exponentialRampToValueAtTime(320, anchor + 0.09);
+        oscillator.frequency.setValueAtTime(step ? 330 : 720, anchor);
+        oscillator.frequency.exponentialRampToValueAtTime(step ? 190 : 320, anchor + 0.09);
         gain.gain.setValueAtTime(0, anchor);
-        gain.gain.linearRampToValueAtTime(0.35, anchor + 0.008);
+        gain.gain.linearRampToValueAtTime(step ? 0.25 : 0.35, anchor + 0.008);
         gain.gain.exponentialRampToValueAtTime(0.001, anchor + 0.12);
         oscillator.connect(gain);
         gain.connect(context.destination);

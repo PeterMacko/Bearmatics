@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// SCRUM-222: phone screenshots for the About page (SCRUM-218), 7 per language.
+// SCRUM-222: phone screenshots for the About page (SCRUM-218), 8 per language (SCRUM-262: Logic).
 // Usage: npm run about:shots  (builds, then runs this script), or
 //        node scripts/about-screenshots.mjs [--dist dist] [--langs en,sk] [--shots course,leaderboard]
 // Renders the built app (dist/) in Chromium at 390 x 844 (phone, portrait, touch) with /api mocked
@@ -21,6 +21,7 @@ const SHOTS = [
   'course',
   'small-maths',
   'take-away',
+  'logic',
   'english',
   'summary',
   'app-bar',
@@ -81,7 +82,7 @@ async function mockApi(page, { summary = false } = {}) {
   });
 }
 
-const COURSE = { small: 0, maths: 1, english: 2 };
+const COURSE = { small: 0, logic: 1, maths: 2, english: 3 };
 
 async function home(page, lang) {
   await page.goto('/');
@@ -203,6 +204,28 @@ const STEPS = {
       .waitFor();
     // Back to the answer box, as when the child goes on to type the answer.
     await page.locator('.equation input').focus();
+  },
+  logic: async (page, lang) => {
+    await home(page, lang);
+    // SCRUM-262: the third puzzle of a 5-puzzle lesson (3 moves) with its three arrows planned.
+    await startLesson(page, 'logic', 0, 5);
+    await page.clock.runFor(6_000); // the demo
+    await page.locator('.logic-board').waitFor();
+    const path = async () => {
+      const label = await page.locator('.logic-board').getAttribute('aria-label');
+      const [bearRow, bearCol, honeyRow, honeyCol] = label.match(/\d+/g).map(Number);
+      return [
+        ...Array(Math.abs(honeyCol - bearCol)).fill(honeyCol > bearCol ? 'right' : 'left'),
+        ...Array(Math.abs(honeyRow - bearRow)).fill(honeyRow > bearRow ? 'down' : 'up'),
+      ];
+    };
+    for (let i = 0; i < 2; i++) {
+      for (const arrow of await path()) await page.locator(`.arrow-${arrow}`).click();
+      await page.locator('.logic-go').click();
+      await page.clock.runFor(3_000);
+      await page.locator('.logic-actions .answer-button').click();
+    }
+    for (const arrow of await path()) await page.locator(`.arrow-${arrow}`).click();
   },
   english: async (page, lang) => {
     await home(page, lang);

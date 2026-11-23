@@ -5,7 +5,7 @@ import App from './App';
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const heading = () => screen.getByRole('heading', { level: 2 });
 
-test('the app opens on the course choice with the three courses and nothing else to start', () => {
+test('the app opens on the course choice with the four courses and nothing else to start', () => {
   render(<App />);
   expect(heading()).toHaveTextContent('What shall we learn today?');
   expect(button('Maths')).toHaveAccessibleDescription('Count, add, subtract, multiply and share');

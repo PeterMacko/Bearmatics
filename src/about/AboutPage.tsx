@@ -182,6 +182,10 @@ export default function AboutPage({ language }: { language: Language }) {
               </ul>
             </li>
             <li>
+              <strong>{t.logicCourse}</strong>, {a.logicLead}:
+              <ul>{level(1, t.logicLevels[1], a.logicDetail)}</ul>
+            </li>
+            <li>
               <strong>{t.mathCourse}</strong>:
               <ul>
                 {MATH_LEVELS.map(({ value, shown }) =>
@@ -200,7 +204,7 @@ export default function AboutPage({ language }: { language: Language }) {
               </ul>
             </li>
           </ul>
-          <Shots language={language} shots={['small-maths', 'take-away', 'english']} />
+          <Shots language={language} shots={['small-maths', 'take-away', 'logic', 'english']} />
         </section>
 
         <section aria-labelledby="about-lesson">

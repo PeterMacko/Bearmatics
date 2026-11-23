@@ -1,0 +1,810 @@
+/* SCRUM-262: Logic course, level 1 "Bear goes to the honey". Part of index.css; keep the import
+   order (last, so these rules win ties). The board size (--cell) comes from useBoardFit. */
+.course-logic .course-icon svg {
+  border-radius: 14px;
+}
+.logic-practice {
+  --cell: 64px;
+  --cell-gap: 4px;
+  --board-pad: 6px;
+  container: logic / inline-size;
+}
+.logic-play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-areas:
+    'stage'
+    'plan'
+    'pad'
+    'feedback'
+    'actions';
+  gap: 10px;
+  justify-items: center;
+  margin-top: 8px;
+}
+.logic-stage {
+  grid-area: stage;
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.logic-board,
+.logic-demo {
+  position: relative;
+  box-sizing: content-box;
+  width: calc(4 * var(--cell) + 3 * var(--cell-gap));
+  height: calc(4 * var(--cell) + 3 * var(--cell-gap));
+  padding: var(--board-pad);
+  border: 2px solid #e2cfa5;
+  border-radius: 18px;
+  background: #fff6e0;
+}
+.logic-board {
+  display: grid;
+  grid-template-columns: repeat(4, var(--cell));
+  grid-template-rows: repeat(4, var(--cell));
+  gap: var(--cell-gap);
+}
+.logic-board:focus {
+  outline: none;
+}
+.logic-board:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.logic-cell {
+  position: relative;
+  border-radius: 10px;
+  background: #e3f1d6;
+}
+.logic-cell[data-dark] {
+  background: #d4eac2;
+}
+.logic-honey {
+  position: absolute;
+  inset: 10%;
+}
+.logic-honey svg,
+.logic-bear svg,
+.logic-paw svg,
+.demo-honey svg,
+.demo-bear svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.logic-paw {
+  position: absolute;
+  left: 6%;
+  bottom: 6%;
+  width: 34%;
+  height: 34%;
+  fill: #8a5a3b;
+  opacity: 0.6;
+}
+.logic-bear {
+  position: absolute;
+  top: var(--board-pad);
+  left: var(--board-pad);
+  width: var(--cell);
+  height: var(--cell);
+  padding: 4%;
+  box-sizing: border-box;
+  transform: translate(
+    calc(var(--col) * (var(--cell) + var(--cell-gap))),
+    calc(var(--row) * (var(--cell) + var(--cell-gap)))
+  );
+  transition: transform 0.35s ease-in-out;
+  pointer-events: none;
+}
+.logic-bear svg {
+  filter: drop-shadow(0 2px 1px #0002);
+}
+.logic-bear[data-bump='up'] svg {
+  animation: logic-bump-up 0.35s ease-in-out;
+}
+.logic-bear[data-bump='down'] svg {
+  animation: logic-bump-down 0.35s ease-in-out;
+}
+.logic-bear[data-bump='left'] svg {
+  animation: logic-bump-left 0.35s ease-in-out;
+}
+.logic-bear[data-bump='right'] svg {
+  animation: logic-bump-right 0.35s ease-in-out;
+}
+@keyframes logic-bump-up {
+  50% {
+    transform: translateY(-18%);
+  }
+}
+@keyframes logic-bump-down {
+  50% {
+    transform: translateY(18%);
+  }
+}
+@keyframes logic-bump-left {
+  50% {
+    transform: translateX(-18%);
+  }
+}
+@keyframes logic-bump-right {
+  50% {
+    transform: translateX(18%);
+  }
+}
+/* A new walk right after a wrong one: the bear jumps back to the start. */
+.logic-bear[data-snap] {
+  transition: none;
+}
+/* Reduced motion: the bear jumps from cell to cell (no slide, no bump). */
+@media (prefers-reduced-motion: reduce) {
+  .logic-bear {
+    transition: none;
+  }
+}
+
+/* Planned arrows: 4 slots and Remove last. */
+.arrow-plan {
+  grid-area: plan;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.arrow-slots {
+  display: flex;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.arrow-slot {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  box-sizing: border-box;
+  border: 2px dashed #a9bfd8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--blue-ink);
+}
+.arrow-slot[data-filled] {
+  border-style: solid;
+  border-color: #6489b3;
+  background: #e9f2ff;
+}
+.arrow-slot[data-current] {
+  border-color: var(--accent);
+  background: #ffe6b3;
+  box-shadow: 0 0 0 2px var(--accent);
+}
+.arrow-icon {
+  display: block;
+  width: 26px;
+  height: 26px;
+}
+.logic-practice button[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.45;
+}
+.logic-remove,
+.arrow-button {
+  display: grid;
+  place-items: center;
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0;
+  border: 2px solid #6489b3;
+  border-radius: 14px;
+  background: #fff;
+  color: var(--blue-ink);
+  box-shadow: 0 3px 0 #b9cde4;
+  cursor: pointer;
+}
+.logic-remove .button-icon {
+  width: 26px;
+  height: 26px;
+  margin: 0;
+}
+.arrow-pad {
+  grid-area: pad;
+  display: flex;
+  gap: 8px;
+}
+.arrow-button {
+  width: 56px;
+  height: 56px;
+}
+.arrow-button .arrow-icon {
+  width: 30px;
+  height: 30px;
+}
+.logic-remove:focus-visible,
+.arrow-button:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.logic-practice .feedback {
+  grid-area: feedback;
+  width: 100%;
+  min-height: 2.6em;
+  padding: 0;
+  text-align: center;
+}
+.logic-actions {
+  grid-area: actions;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+}
+.logic-actions > button {
+  flex: 1 1 auto;
+  margin: 0;
+}
+.logic-actions .answer-button {
+  min-width: 120px;
+}
+.logic-show-me {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.logic-show-me .button-icon {
+  width: 22px;
+  height: 22px;
+}
+
+/* Two-column lessons: the board on the left; on the right the slots, the arrows as a cross with
+   Remove last in its free corner, Go and Show me; the feedback line under both (one line is
+   enough at this width; the board refits if it wraps). The wrappers become
+   invisible so every control is a cell of one grid; DOM and tab order stay: slots, Remove last,
+   arrows, Go, Show me. Used when the lesson column is wide (520 px), or a little narrower on
+   wide-short windows (e.g. a foldable in a browser with tab and address bars, 884x600). */
+@container logic (min-width: 520px) {
+  .logic-play {
+    --key: 56px;
+    grid-template-columns: minmax(0, 1fr) var(--key) var(--key) var(--key);
+    grid-template-areas:
+      'stage slots slots slots'
+      'stage . up remove'
+      'stage left down right'
+      'stage go go go'
+      'stage show show show'
+      'stage . . .'
+      'feedback feedback feedback feedback';
+    grid-template-rows: auto auto auto auto auto 1fr auto;
+    column-gap: 8px;
+    row-gap: 10px;
+    align-items: center;
+    justify-items: stretch;
+  }
+  .logic-play .arrow-plan,
+  .logic-play .arrow-pad,
+  .logic-play .logic-actions {
+    display: contents;
+  }
+  .logic-play .arrow-slots {
+    grid-area: slots;
+    justify-content: space-between;
+  }
+  .logic-play .arrow-slot {
+    width: calc((100% - 18px) / 4);
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .logic-play .logic-remove {
+    grid-area: remove;
+  }
+  .logic-play .arrow-up {
+    grid-area: up;
+  }
+  .logic-play .arrow-left {
+    grid-area: left;
+  }
+  .logic-play .arrow-down {
+    grid-area: down;
+  }
+  .logic-play .arrow-right {
+    grid-area: right;
+  }
+  .logic-play .arrow-button,
+  .logic-play .logic-remove {
+    width: var(--key);
+    height: var(--key);
+  }
+  .logic-play .logic-actions .answer-button {
+    grid-area: go;
+    width: 100%;
+    min-width: 0;
+  }
+  .logic-play .logic-show-me {
+    grid-area: show;
+    width: 100%;
+  }
+  .logic-stage {
+    place-items: start center;
+    padding-right: 8px;
+  }
+  .logic-practice .feedback {
+    min-height: 1.4em;
+  }
+}
+@media (min-width: 621px) and (max-height: 700px) {
+  @container logic (min-width: 440px) {
+    .logic-play {
+      --key: 56px;
+      grid-template-columns: minmax(0, 1fr) var(--key) var(--key) var(--key);
+      grid-template-areas:
+        'stage slots slots slots'
+        'stage . up remove'
+        'stage left down right'
+        'stage go go go'
+        'stage show show show'
+        'stage . . .'
+        'feedback feedback feedback feedback';
+      grid-template-rows: auto auto auto auto auto 1fr auto;
+      column-gap: 8px;
+      row-gap: 10px;
+      align-items: center;
+      justify-items: stretch;
+    }
+    .logic-play .arrow-plan,
+    .logic-play .arrow-pad,
+    .logic-play .logic-actions {
+      display: contents;
+    }
+    .logic-play .arrow-slots {
+      grid-area: slots;
+      justify-content: space-between;
+    }
+    .logic-play .arrow-slot {
+      width: calc((100% - 18px) / 4);
+      height: auto;
+      aspect-ratio: 1;
+    }
+    .logic-play .logic-remove {
+      grid-area: remove;
+    }
+    .logic-play .arrow-up {
+      grid-area: up;
+    }
+    .logic-play .arrow-left {
+      grid-area: left;
+    }
+    .logic-play .arrow-down {
+      grid-area: down;
+    }
+    .logic-play .arrow-right {
+      grid-area: right;
+    }
+    .logic-play .arrow-button,
+    .logic-play .logic-remove {
+      width: var(--key);
+      height: var(--key);
+    }
+    .logic-play .logic-actions .answer-button {
+      grid-area: go;
+      width: 100%;
+      min-width: 0;
+    }
+    .logic-play .logic-show-me {
+      grid-area: show;
+      width: 100%;
+    }
+    .logic-stage {
+      place-items: start center;
+      padding-right: 8px;
+    }
+    .logic-practice .feedback {
+      min-height: 1.4em;
+    }
+  }
+}
+
+/* The picture demo, drawn in the board's place (same box, so nothing moves). */
+.logic-demo {
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 4px;
+  --demo-cell: calc(var(--cell) * 1.1);
+}
+.logic-demo-still {
+  --demo-cell: calc(var(--cell) * 0.68);
+}
+.demo-frame {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.demo-number {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+.demo-scene {
+  display: grid;
+  justify-items: center;
+  gap: calc(var(--demo-cell) * 0.18);
+}
+.logic-demo-still .demo-scene {
+  grid-auto-flow: column;
+  align-items: center;
+}
+.demo-strip {
+  position: relative;
+  display: flex;
+  gap: var(--cell-gap);
+}
+.demo-cell {
+  position: relative;
+  width: var(--demo-cell);
+  height: var(--demo-cell);
+  border-radius: 10px;
+  background: #d4eac2;
+}
+.demo-honey {
+  position: absolute;
+  inset: 10%;
+}
+.demo-bear {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: var(--demo-cell);
+  height: var(--demo-cell);
+  padding: 4%;
+  box-sizing: border-box;
+}
+.demo-controls {
+  display: flex;
+  align-items: center;
+  gap: calc(var(--demo-cell) * 0.2);
+}
+.demo-arrow-button,
+.demo-slot,
+.demo-go {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: calc(var(--demo-cell) * 0.62);
+  height: calc(var(--demo-cell) * 0.62);
+  box-sizing: border-box;
+  border-radius: 10px;
+  color: var(--blue-ink);
+}
+.demo-arrow-button {
+  border: 2px solid #6489b3;
+  background: #fff;
+}
+.demo-slot {
+  border: 2px dashed #a9bfd8;
+  background: #fff;
+}
+.demo-go {
+  width: calc(var(--demo-cell) * 0.9);
+  border-radius: 999px;
+  background: var(--blue);
+  color: #fff;
+  font-size: calc(var(--demo-cell) * 0.24);
+}
+.demo-arrow-button .arrow-icon,
+.demo-slot .arrow-icon {
+  width: 70%;
+  height: 70%;
+}
+.demo-slot-arrow {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+}
+.demo-finger {
+  position: absolute;
+  left: 45%;
+  top: 55%;
+  width: calc(var(--demo-cell) * 0.45);
+  opacity: 0;
+}
+.demo-finger svg {
+  display: block;
+  width: 100%;
+}
+/* Moving demo: ~3 s. Finger taps the arrow, the arrow lands in the slot, Go pulses, the bear
+   steps onto the honey. */
+.logic-demo-moving .demo-finger {
+  animation: demo-finger 3.2s ease-in-out both;
+}
+.logic-demo-moving .demo-slot-arrow {
+  animation: demo-slot 3.2s step-end both;
+}
+.logic-demo-moving .demo-go {
+  animation: demo-go 3.2s ease-in-out both;
+}
+.logic-demo-moving .demo-bear {
+  animation: demo-bear 3.2s ease-in-out both;
+}
+@keyframes demo-finger {
+  0% {
+    opacity: 0;
+    transform: translate(60%, 70%);
+  }
+  12% {
+    opacity: 1;
+    transform: translate(60%, 70%);
+  }
+  24% {
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: translate(0, 0) scale(0.85);
+  }
+  38%,
+  100% {
+    opacity: 0;
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes demo-slot {
+  0% {
+    opacity: 0;
+  }
+  30%,
+  100% {
+    opacity: 1;
+  }
+}
+@keyframes demo-go {
+  0%,
+  38% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+  46% {
+    transform: scale(1.18);
+    box-shadow: 0 0 0 4px #ffd35c;
+  }
+  54%,
+  100% {
+    transform: scale(1);
+    box-shadow: none;
+  }
+}
+@keyframes demo-bear {
+  0%,
+  58% {
+    transform: translateX(0);
+  }
+  78%,
+  100% {
+    transform: translateX(calc(var(--demo-cell) + var(--cell-gap)));
+  }
+}
+/* Reduced motion: three still steps. */
+.demo-scene[data-step='1'] .demo-finger {
+  opacity: 1;
+}
+.demo-scene[data-step='2'] .demo-slot-arrow,
+.demo-scene[data-step='3'] .demo-slot-arrow {
+  opacity: 1;
+}
+.demo-scene[data-step='2'] .demo-go {
+  box-shadow: 0 0 0 4px #ffd35c;
+}
+.demo-scene[data-step='3'] .demo-bear {
+  transform: translateX(calc(var(--demo-cell) + var(--cell-gap)));
+}
+
+/* Phones (compact lessons), portrait: the shared centred bear and position on top (a smaller
+   bear on shorter phones), Show me at the top right; then the board, the plan, the pad with Go
+   beside it, and the feedback line. */
+@media (orientation: portrait) {
+  .compact-practice:has(.logic-practice) {
+    --practice-bear-size: 120px;
+  }
+  .compact-practice .logic-practice {
+    position: relative;
+    --cell-gap: 3px;
+    --board-pad: 4px;
+  }
+  .compact-practice .workspace:has(.logic-practice) .companion {
+    z-index: 1;
+  }
+  .compact-practice .logic-play {
+    grid-template-columns: minmax(0, 1fr) max-content max-content minmax(0, 1fr);
+    grid-template-areas:
+      'stage stage stage stage'
+      'plan plan plan plan'
+      '. pad actions .'
+      'feedback feedback feedback feedback';
+    gap: 8px;
+    margin-top: 6px;
+    align-items: center;
+  }
+  .compact-practice .logic-actions {
+    display: contents;
+  }
+  .compact-practice .logic-actions .answer-button {
+    grid-area: actions;
+    min-width: 0;
+    width: 100%;
+    padding-inline: 14px;
+  }
+  .compact-practice .logic-practice[data-solved] .arrow-pad {
+    display: none;
+  }
+  .compact-practice .logic-practice[data-solved] .logic-actions .answer-button {
+    grid-area: auto;
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+  .compact-practice .logic-show-me {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-height: var(--target);
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    max-width: calc(50% - var(--practice-bear-size) / 2 - 8px);
+  }
+  .compact-practice .arrow-pad {
+    gap: 6px;
+  }
+  .compact-practice .arrow-button {
+    width: 50px;
+    height: 50px;
+  }
+  .compact-practice .logic-practice .feedback {
+    min-height: 2.5em;
+    font-size: 0.85rem;
+  }
+}
+@media (orientation: portrait) and (max-height: 759px) {
+  .compact-practice:has(.logic-practice) {
+    --practice-bear-size: 80px;
+  }
+}
+@media (orientation: portrait) and (max-height: 600px) {
+  .compact-practice:has(.logic-practice) {
+    --practice-bear-size: 56px;
+  }
+}
+@media (orientation: portrait) and (max-width: 360px) {
+  .compact-practice .logic-play {
+    column-gap: 6px;
+  }
+  .compact-practice .arrow-pad {
+    gap: 4px;
+  }
+  .compact-practice .arrow-button {
+    width: var(--target);
+    height: var(--target);
+  }
+  .compact-practice .logic-actions .answer-button {
+    padding-inline: 10px;
+  }
+}
+
+/* Short landscape phones: header and bear in the left column (shared compact rules); the same
+   two-column grid as wide lessons, a little smaller. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .logic-play {
+    --key: var(--target);
+    margin-left: 110px;
+    margin-top: 0;
+    grid-template-columns: minmax(0, 1fr) var(--key) var(--key) var(--key);
+    grid-template-areas:
+      'stage slots slots slots'
+      'stage . up remove'
+      'stage left down right'
+      'stage go go go'
+      'stage show show show'
+      'feedback feedback feedback feedback';
+    column-gap: 6px;
+    row-gap: 6px;
+    align-items: center;
+    justify-items: stretch;
+  }
+  .compact-practice .logic-practice {
+    --cell-gap: 3px;
+    --board-pad: 3px;
+  }
+  .compact-practice .logic-practice .feedback {
+    min-height: 1.3em;
+    font-size: 0.8rem;
+    line-height: 1.25;
+  }
+}
+
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .logic-play .arrow-plan,
+  .compact-practice .logic-play .arrow-pad,
+  .compact-practice .logic-play .logic-actions {
+    display: contents;
+  }
+  .compact-practice .logic-play .arrow-slots {
+    grid-area: slots;
+    justify-content: space-between;
+  }
+  .compact-practice .logic-play .logic-remove {
+    grid-area: remove;
+  }
+  .compact-practice .logic-play .arrow-up {
+    grid-area: up;
+  }
+  .compact-practice .logic-play .arrow-left {
+    grid-area: left;
+  }
+  .compact-practice .logic-play .arrow-down {
+    grid-area: down;
+  }
+  .compact-practice .logic-play .arrow-right {
+    grid-area: right;
+  }
+  .compact-practice .logic-play .logic-actions .answer-button {
+    grid-area: go;
+    width: 100%;
+    min-width: 0;
+  }
+  .compact-practice .logic-play .logic-show-me {
+    grid-area: show;
+    width: 100%;
+    position: static;
+  }
+  .compact-practice .logic-play .arrow-button,
+  .compact-practice .logic-play .logic-remove {
+    width: var(--key);
+    height: var(--key);
+  }
+  .compact-practice .logic-play .arrow-slot {
+    width: calc((100% - 12px) / 4);
+    height: auto;
+    aspect-ratio: 1;
+  }
+  .compact-practice .logic-stage {
+    place-items: center;
+    padding-right: 6px;
+  }
+}
+
+/* Large text on a phone (the lesson narrower than 16em: never at 100% text on the defined
+   devices): Go and Show me get their own row under the arrows, so nothing runs off the side. */
+@container logic (max-width: 16em) {
+  .logic-play {
+    grid-template-columns: minmax(0, 1fr) !important;
+    grid-template-areas:
+      'stage'
+      'plan'
+      'pad'
+      'actions'
+      'feedback' !important;
+  }
+  .logic-play .logic-actions {
+    display: flex !important;
+    grid-area: actions;
+    flex-wrap: wrap;
+  }
+  .logic-play .logic-actions .answer-button,
+  .logic-play .logic-show-me {
+    position: static !important;
+    grid-area: auto !important;
+    flex: 1 1 auto;
+    max-width: none !important;
+    min-height: var(--target);
+  }
+  .logic-play .arrow-pad {
+    justify-self: center;
+  }
+}

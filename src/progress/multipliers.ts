@@ -4,7 +4,7 @@
 // (code only, no settings screen).
 
 /** The courses as the app names them (CourseChoice). */
-export type PointsCourse = 'small' | 'math' | 'english';
+export type PointsCourse = 'small' | 'logic' | 'math' | 'english';
 
 /** Allowed multipliers: whole points, half, quarter, one and a half. */
 export type Multiplier = 1 | 0.5 | 0.25 | 1.5;
@@ -34,7 +34,7 @@ const bonus = (course: PointsCourse, from: number, to: number): MultiplierRow =>
 
 /**
  * The table (Jira SCRUM-202; Peter's revision: Maths levels 4-7 all get the first-play bonus
- * and are never reduced). Anything without a row is x1.
+ * and are never reduced). Anything without a row is x1 (Logic has no row, SCRUM-262).
  */
 export const MULTIPLIER_ROWS: readonly MultiplierRow[] = [
   ...repeated('small', 1, 2),

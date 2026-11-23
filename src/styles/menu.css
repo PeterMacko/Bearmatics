@@ -194,3 +194,12 @@
     gap: 12px;
   }
 }
+/* Last step before page flow (set by useMenuLayout only when the whole menu then fits without
+   any scrolling): less padding in Start and the exercise counts. Same text size, 48 px targets. */
+.menu-shell .workspace[data-menu-tight] .start-button {
+  padding: 8px 12px;
+  gap: 6px;
+}
+.menu-shell .workspace[data-menu-tight] .session-options label > span {
+  padding-block: 6px;
+}

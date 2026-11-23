@@ -5,6 +5,7 @@ export const SHOTS = [
   'course',
   'small-maths',
   'take-away',
+  'logic',
   'english',
   'summary',
   'app-bar',
@@ -27,12 +28,14 @@ export const aboutCopy = {
     title: 'About Bearmatics',
     pageTitle: 'About Bearmatics',
     intro:
-      'Bearmatics is a free learning app for children aged 6–9, in Slovak and English. A friendly bear guides your child through short lessons in maths and English. It runs in a web browser on phones, tablets, foldable phones and computers – nothing to install, no ads.',
+      'Bearmatics is a free learning app for children aged 5–9, in Slovak and English. A friendly bear guides your child through short lessons in maths, logic and English. It runs in a web browser on phones, tablets, foldable phones and computers – nothing to install, no ads.',
     languages: 'Language / Jazyk',
     play: "Let's play",
     opensFull: '(full size, opens in a new tab)',
     coursesTitle: 'Courses',
     smallLead: 'with pictures for the youngest',
+    logicLead: 'think ahead and plan the way',
+    logicDetail: 'plan the way with arrows, up to 4 steps',
     englishLead: '21 school words spoken in a British voice',
     levelDetails: {
       0: 'add up to 6',
@@ -51,6 +54,7 @@ export const aboutCopy = {
       'Choose a level and 5, 10 or 20 exercises.',
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
+      'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how; Show me plays it again.',
       'Exercises that needed more tries come back in a short review round.',
       'The summary shows how many were right on the first try without hints.',
       'It also shows how long the lesson took and about how long one exercise took. The time is not saved anywhere.',
@@ -60,7 +64,7 @@ export const aboutCopy = {
     signIn: [
       'Everything works without an account.',
       'Sign in with Google or a username and password to collect points: 1 point for each exercise right on the first try in a finished lesson.',
-      'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
+      'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. Logic always gives whole points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
       'Points grow your bear badge. Play every day to build a streak; missed days freeze it and points can unlock it.',
       'A leaderboard shows nickname, bear, bear badge, streak and points of players; you can hide yourself in the profile.',
       'The profile is only a nickname and a bear your child dresses from parts (fur, background, something for the head, neck and eyes); the bear look is stored as five numbers, no photo or real name. The account can be deleted any time.',
@@ -74,7 +78,7 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Choosing a course',
-        alt: 'Bearmatics on a phone: the bear and the three courses Small maths, Maths and English.',
+        alt: 'Bearmatics on a phone: the bear and the four courses Small maths, Logic, Maths and English.',
       },
       'small-maths': {
         caption: 'Small maths: count the pictures',
@@ -83,6 +87,10 @@ export const aboutCopy = {
       'take-away': {
         caption: 'Small maths: take away',
         alt: 'A take-away exercise: pictures in a basket, some of them taken out, and the number pad.',
+      },
+      logic: {
+        caption: 'Logic: guide the bear to the honey',
+        alt: 'A Logic exercise: a 4 by 4 grid with the bear and a honey pot, three planned arrows, the arrow buttons and Go.',
       },
       english: {
         caption: 'English: listen and choose',
@@ -106,12 +114,14 @@ export const aboutCopy = {
     title: 'O aplikácii Bearmatics',
     pageTitle: 'O aplikácii Bearmatics',
     intro:
-      'Bearmatics je bezplatná aplikácia na učenie pre deti od 6 do 9 rokov, v slovenčine a angličtine. Priateľský medveď sprevádza dieťa krátkymi lekciami matematiky a angličtiny. Funguje vo webovom prehliadači na mobile, tablete, skladacom telefóne aj počítači – bez inštalácie a bez reklám.',
+      'Bearmatics je bezplatná aplikácia na učenie pre deti od 5 do 9 rokov, v slovenčine a angličtine. Priateľský medveď sprevádza dieťa krátkymi lekciami matematiky, logiky a angličtiny. Funguje vo webovom prehliadači na mobile, tablete, skladacom telefóne aj počítači – bez inštalácie a bez reklám.',
     languages: 'Language / Jazyk',
     play: 'Poď hrať',
     opensFull: '(plná veľkosť, otvorí sa na novej karte)',
     coursesTitle: 'Kurzy',
     smallLead: 's obrázkami pre najmenších',
+    logicLead: 'mysli dopredu a naplánuj cestu',
+    logicDetail: 'naplánuj cestu šípkami, najviac 4 kroky',
     englishLead: '21 slov zo školy v britskej výslovnosti',
     levelDetails: {
       0: 'sčítanie s obrázkami do 6',
@@ -130,6 +140,7 @@ export const aboutCopy = {
       'Vyber úroveň a 5, 10 alebo 20 príkladov.',
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
+      'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako; tlačidlo Ukáž mi ju zopakuje.',
       'Príklady, ktoré potrebovali viac pokusov, sa vrátia v krátkom opakovaní.',
       'Na konci vidíš, koľko príkladov bolo správne na prvý pokus bez pomôcky.',
       'Uvidíš aj, ako dlho lekcia trvala a koľko asi trval jeden príklad. Čas sa nikam neukladá.',
@@ -139,7 +150,7 @@ export const aboutCopy = {
     signIn: [
       'Všetko funguje aj bez účtu.',
       'Prihlásenie cez Google alebo menom a heslom zbiera body: 1 bod za každý príklad správne na prvý pokus v dokončenej lekcii.',
-      'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
+      'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Logika dáva vždy celé body. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
       'Body zväčšujú medvedí odznak. Hraj každý deň a buduj sériu; vynechané dni ju zmrazia a body ju môžu odomknúť.',
       'Rebríček ukazuje prezývku, medveďa, medvedí odznak, sériu a body hráčov; v profile sa môžeš skryť.',
       'Profil je len prezývka a medvedík, ktorého si dieťa oblečie z dielikov (srsť, pozadie, niečo na hlavu, krk a oči); vzhľad medvedíka sa ukladá ako päť čísel, žiadna fotka ani skutočné meno. Účet sa dá kedykoľvek zmazať.',
@@ -153,7 +164,7 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Výber kurzu',
-        alt: 'Bearmatics na mobile: medveď a tri kurzy Malá matematika, Matematika a Angličtina.',
+        alt: 'Bearmatics na mobile: medveď a štyri kurzy Malá matematika, Logika, Matematika a Angličtina.',
       },
       'small-maths': {
         caption: 'Malá matematika: počítame obrázky',
@@ -162,6 +173,10 @@ export const aboutCopy = {
       'take-away': {
         caption: 'Malá matematika: odoberáme',
         alt: 'Príklad na odoberanie: obrázky v košíku, niektoré vybrané, a číselník.',
+      },
+      logic: {
+        caption: 'Logika: priveď medveďa k medu',
+        alt: 'Príklad z Logiky: mriežka 4 krát 4 s medveďom a hrncom medu, tri naplánované šípky, tlačidlá so šípkami a Choď.',
       },
       english: {
         caption: 'Angličtina: počúvaj a vyber',
