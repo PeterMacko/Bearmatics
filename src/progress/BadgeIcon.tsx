@@ -7,8 +7,19 @@ const METALS = {
   gold: { face: '#ffd65c', rim: '#c08a12', text: '#5a3d00' },
 };
 
-/** Original bear badge: a bear head medal with the badge number (decorative; label elsewhere). */
-export default function BadgeIcon({ badge, size = 40 }: { badge: number; size?: number }) {
+/**
+ * Original bear badge: a bear head medal with the badge number (decorative; label elsewhere).
+ * `plain` leaves the number out (the narrow leaderboard's Badge column header, SCRUM-258).
+ */
+export default function BadgeIcon({
+  badge,
+  size = 40,
+  plain = false,
+}: {
+  badge: number;
+  size?: number;
+  plain?: boolean;
+}) {
   const { metal, stars } = badgeLook(badge);
   const colour = METALS[metal];
   return (
@@ -33,16 +44,18 @@ export default function BadgeIcon({ badge, size = 40 }: { badge: number; size?: 
           strokeWidth="2"
         />
       ))}
-      <text
-        x="24"
-        y="33"
-        textAnchor="middle"
-        fontSize={badge > 99 ? 13 : 17}
-        fontWeight="800"
-        fill={colour.text}
-      >
-        {badge}
-      </text>
+      {!plain && (
+        <text
+          x="24"
+          y="33"
+          textAnchor="middle"
+          fontSize={badge > 99 ? 13 : 17}
+          fontWeight="800"
+          fill={colour.text}
+        >
+          {badge}
+        </text>
+      )}
     </svg>
   );
 }

@@ -259,3 +259,12 @@ test.each([
   render(<AboutPage language={language} />);
   expect(screen.getByText(sentence)).toBeInTheDocument();
 });
+
+test('SCRUM-258: the leaderboard sentence mentions the bear badge (EN and SK)', () => {
+  expect(aboutCopy.en.signIn).toContain(
+    'A leaderboard shows nickname, bear, bear badge, streak and points of players; you can hide yourself in the profile.',
+  );
+  expect(aboutCopy.sk.signIn).toContain(
+    'Rebríček ukazuje prezývku, medveďa, medvedí odznak, sériu a body hráčov; v profile sa môžeš skryť.',
+  );
+});

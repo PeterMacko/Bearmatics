@@ -1,4 +1,11 @@
-import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
+import {
+  useLayoutEffect,
+  useRef,
+  type MouseEvent as ReactMouseEvent,
+  type PointerEvent as ReactPointerEvent,
+  type ReactNode,
+  type RefObject,
+} from 'react';
 import { useModalFocus } from './useModalFocus';
 
 export default function HintDialog({
@@ -11,12 +18,15 @@ export default function HintDialog({
   triggerRef,
   children,
   titleId = 'hint-title',
+  closeOnShade = false,
 }: {
   title: string;
   closeLabel: string;
   nextLabel?: string;
   nextDisabled?: boolean;
   titleId?: string;
+  /** A tap on the shade outside the window closes it (leaderboard, badge details). */
+  closeOnShade?: boolean;
   onClose: () => void;
   onNext?: () => void;
   triggerRef: RefObject<HTMLButtonElement | null>;
@@ -34,8 +44,48 @@ export default function HintDialog({
     }
   }, [nextDisabled]);
   const onKeyDown = useModalFocus(dialogRef, { onEscape: onClose, restoreTo: triggerRef });
+  // Only a tap that starts AND ends on the shade closes: a drag (text selection, scrolling the
+  // table) that starts inside the window and ends outside must not.
+  const downOnShade = useRef(false);
+  const upOnShade = useRef(false);
+  const shadeProps = closeOnShade
+    ? {
+        onPointerDown: (event: ReactPointerEvent) => {
+          downOnShade.current = event.target === event.currentTarget;
+        },
+        // A press released inside the window still gets its click on the shade (the common
+        // ancestor), so the release must be on the shade too (QA265-01).
+        onPointerUp: (event: ReactPointerEvent) => {
+          upOnShade.current = event.target === event.currentTarget;
+        },
+        // Keep focus in the window until it closes, so it returns to the trigger.
+        onMouseDown: (event: ReactMouseEvent) => {
+          if (event.target === event.currentTarget) event.preventDefault();
+        },
+        onClick: (event: ReactMouseEvent) => {
+          if (event.target !== event.currentTarget || !downOnShade.current || !upOnShade.current)
+            return;
+          downOnShade.current = false;
+          // Closing uncovers the page under the finger: the second tap of a double tap must not
+          // press a button there, so clicks are swallowed for a moment.
+          // (mousedown too, or the second press moves focus away from the trigger.)
+          // Keyboard activation (click detail 0) is never a stray tap, so it passes.
+          const swallow = (press: Event) => {
+            if (press.type === 'click' && (press as MouseEvent).detail === 0) return;
+            press.preventDefault();
+            press.stopPropagation();
+          };
+          const kinds = ['mousedown', 'click', 'dblclick'];
+          for (const kind of kinds) document.addEventListener(kind, swallow, true);
+          window.setTimeout(() => {
+            for (const kind of kinds) document.removeEventListener(kind, swallow, true);
+          }, 600);
+          onClose();
+        },
+      }
+    : {};
   return (
-    <div className="modal-backdrop hint-backdrop">
+    <div className="modal-backdrop hint-backdrop" {...shadeProps}>
       <div
         ref={dialogRef}
         id={titleId.replace(/-title$/, '-dialog')}
