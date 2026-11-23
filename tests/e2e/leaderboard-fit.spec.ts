@@ -230,7 +230,18 @@ for (const [width, height, language, big] of [
           td: td!.getBoundingClientRect(),
           svg: svg!.getBoundingClientRect(),
         }));
+      // Space between the streak number and the points (QA265-02).
+      const numberGap = Math.min(
+        ...rows
+          .filter((r) => r.querySelector('td:nth-child(4) .leaderboard-streak'))
+          .map(
+            (r) =>
+              textRect(r.querySelector('td:last-child')!).left -
+              textRect(r.querySelector('td:nth-child(4) .leaderboard-streak')!).right,
+          ),
+      );
       return {
+        numberGap,
         badgeWord: box.querySelector('th:nth-child(3) .th-long')!.getBoundingClientRect().width,
         over: table.right - content.right,
         pointsOut: Math.max(...points.map((p) => p.right - content.right)),
@@ -247,6 +258,7 @@ for (const [width, height, language, big] of [
     });
     expect(m.over, 'table wider than the window').toBeLessThanOrEqual(1);
     expect(m.pointsOut, 'Points cut off').toBeLessThanOrEqual(1);
+    expect(m.numberGap, 'streak and points too close').toBeGreaterThanOrEqual(4);
     expect(m.pageScroll, 'horizontal page scroll').toBeLessThanOrEqual(0);
     // 1234, 999, 378, 166, 120, 30 points and the three bottom rows have a badge.
     expect(m.medals).toBe(9);

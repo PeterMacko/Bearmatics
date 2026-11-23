@@ -44,6 +44,12 @@ for (const [width, height] of [
     await page.mouse.move(4, height - 4, { steps: 4 });
     await page.mouse.up();
     await expect(dialog).toBeVisible();
+    // A press that starts on the shade and is released inside the window too (QA265-01).
+    await page.mouse.move(4, height - 4);
+    await page.mouse.down();
+    await page.mouse.move(table.x + 10, table.y + 10, { steps: 4 });
+    await page.mouse.up();
+    await expect(dialog).toBeVisible();
 
     // A double tap on the shade over a menu button: closes, and the button is not pressed.
     const box = (await dialog.boundingBox())!;

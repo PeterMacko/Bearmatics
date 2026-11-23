@@ -237,19 +237,30 @@ test('tap on the shade closes the leaderboard and the badge details', async () =
   fireEvent.pointerDown(within(dialog).getByRole('table'));
   fireEvent.click(shade());
   expect(screen.getByRole('dialog', { name: 'Leaderboard' })).toBeInTheDocument();
+  // QA265-01: a press that starts on the shade but is released inside the window stays open.
   fireEvent.pointerDown(shade());
+  fireEvent.pointerUp(within(dialog).getByRole('table'));
+  fireEvent.click(shade());
+  expect(screen.getByRole('dialog', { name: 'Leaderboard' })).toBeInTheDocument();
+  fireEvent.pointerDown(shade());
+  fireEvent.pointerUp(shade());
   fireEvent.click(shade());
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(board).toHaveFocus();
 
-  // The second tap of a double tap on the shade does not press what lies under it.
+  // The second tap of a double tap on the shade does not press what lies under it, but a
+  // keyboard press (click detail 0) right after the close does.
   const medal = within(nav).getByRole('button', { name: 'Bear badge 3, 112 points' });
-  fireEvent.click(medal);
+  fireEvent.click(medal, { detail: 1 });
   expect(screen.queryByRole('dialog')).toBeNull();
+  fireEvent.click(medal, { detail: 0 });
+  expect(screen.getByRole('dialog', { name: 'Your bear badge' })).toBeInTheDocument();
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
   await act(() => new Promise((done) => setTimeout(done, 650)));
   fireEvent.click(medal);
   dialog = screen.getByRole('dialog', { name: 'Your bear badge' });
   fireEvent.pointerDown(shade());
+  fireEvent.pointerUp(shade());
   fireEvent.click(shade());
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(medal).toHaveFocus();
@@ -258,6 +269,7 @@ test('tap on the shade closes the leaderboard and the badge details', async () =
   await act(() => new Promise((done) => setTimeout(done, 650)));
   fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
   fireEvent.pointerDown(shade());
+  fireEvent.pointerUp(shade());
   fireEvent.click(shade());
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 });

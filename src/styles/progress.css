@@ -684,6 +684,11 @@
   .leaderboard-table td {
     padding-inline: 1px;
   }
+  /* Streak and points must not read as one number ("365 9999", QA265-02). */
+  .leaderboard-table th:last-child,
+  .leaderboard-table td:last-child {
+    padding-inline-start: 4px;
+  }
   .leaderboard-player > .bear-icon {
     display: none;
   }
