@@ -68,6 +68,7 @@ export default function BadgeButton({
           closeLabel={t.close}
           onClose={() => setOpen(false)}
           triggerRef={ref}
+          closeOnShade
         >
           <BadgeDetails t={t} points={points} />
         </HintDialog>

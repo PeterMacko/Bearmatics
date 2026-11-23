@@ -219,3 +219,45 @@ test('badge column: medal number from points, dash below 30 points (EN and SK)',
     'Zatiaľ bez odznaku',
   ]);
 });
+
+// Peter 2026-11-23: a tap on the shade outside closes the leaderboard and the badge details
+// (not other dialogs); a drag that starts inside does not.
+test('tap on the shade closes the leaderboard and the badge details', async () => {
+  server();
+  render(<App />);
+  const nav = await screen.findByRole('navigation', { name: 'Main controls' });
+  const board = await within(nav).findByRole('button', { name: 'Leaderboard, 112 points' });
+  fireEvent.click(board);
+  let dialog = screen.getByRole('dialog', { name: 'Leaderboard' });
+  await within(dialog).findByRole('table');
+  const shade = () => screen.getByRole('dialog').parentElement!;
+  // Inside the window: stays open, also when a drag from inside ends on the shade.
+  fireEvent.pointerDown(within(dialog).getByRole('table'));
+  fireEvent.click(within(dialog).getByRole('table'));
+  fireEvent.pointerDown(within(dialog).getByRole('table'));
+  fireEvent.click(shade());
+  expect(screen.getByRole('dialog', { name: 'Leaderboard' })).toBeInTheDocument();
+  fireEvent.pointerDown(shade());
+  fireEvent.click(shade());
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(board).toHaveFocus();
+
+  // The second tap of a double tap on the shade does not press what lies under it.
+  const medal = within(nav).getByRole('button', { name: 'Bear badge 3, 112 points' });
+  fireEvent.click(medal);
+  expect(screen.queryByRole('dialog')).toBeNull();
+  await act(() => new Promise((done) => setTimeout(done, 650)));
+  fireEvent.click(medal);
+  dialog = screen.getByRole('dialog', { name: 'Your bear badge' });
+  fireEvent.pointerDown(shade());
+  fireEvent.click(shade());
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(medal).toHaveFocus();
+
+  // Other dialogs keep their behaviour (settings stays open).
+  await act(() => new Promise((done) => setTimeout(done, 650)));
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  fireEvent.pointerDown(shade());
+  fireEvent.click(shade());
+  expect(screen.getByRole('dialog')).toBeInTheDocument();
+});

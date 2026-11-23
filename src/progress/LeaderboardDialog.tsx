@@ -58,6 +58,7 @@ export default function LeaderboardDialog({
       closeLabel={t.closeLeaderboard}
       onClose={onClose}
       triggerRef={triggerRef}
+      closeOnShade
     >
       <div className="leaderboard" aria-busy={state.kind === 'loading'} ref={box} tabIndex={-1}>
         {state.kind === 'loading' && (
