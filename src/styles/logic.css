@@ -254,7 +254,8 @@
 }
 
 /* Two-column lessons: the board on the left; on the right the slots, the arrows as a cross with
-   Remove last in its free corner, the feedback line, Go and Show me. The wrappers become
+   Remove last in its free corner, Go and Show me; the feedback line under both (one line is
+   enough at this width; the board refits if it wraps). The wrappers become
    invisible so every control is a cell of one grid; DOM and tab order stay: slots, Remove last,
    arrows, Go, Show me. Used when the lesson column is wide (520 px), or a little narrower on
    wide-short windows (e.g. a foldable in a browser with tab and address bars, 884x600). */
@@ -266,11 +267,11 @@
       'stage slots slots slots'
       'stage . up remove'
       'stage left down right'
-      'stage feedback feedback feedback'
       'stage go go go'
       'stage show show show'
-      'stage . . .';
-    grid-template-rows: auto auto auto auto auto auto 1fr;
+      'stage . . .'
+      'feedback feedback feedback feedback';
+    grid-template-rows: auto auto auto auto auto 1fr auto;
     column-gap: 8px;
     row-gap: 10px;
     align-items: center;
@@ -323,6 +324,9 @@
     place-items: start center;
     padding-right: 8px;
   }
+  .logic-practice .feedback {
+    min-height: 1.4em;
+  }
 }
 @media (min-width: 621px) and (max-height: 700px) {
   @container logic (min-width: 440px) {
@@ -333,11 +337,11 @@
         'stage slots slots slots'
         'stage . up remove'
         'stage left down right'
-        'stage feedback feedback feedback'
         'stage go go go'
         'stage show show show'
-        'stage . . .';
-      grid-template-rows: auto auto auto auto auto auto 1fr;
+        'stage . . .'
+        'feedback feedback feedback feedback';
+      grid-template-rows: auto auto auto auto auto 1fr auto;
       column-gap: 8px;
       row-gap: 10px;
       align-items: center;
@@ -389,6 +393,9 @@
     .logic-stage {
       place-items: start center;
       padding-right: 8px;
+    }
+    .logic-practice .feedback {
+      min-height: 1.4em;
     }
   }
 }
@@ -671,9 +678,18 @@
   }
 }
 @media (orientation: portrait) and (max-width: 360px) {
+  .compact-practice .logic-play {
+    column-gap: 6px;
+  }
+  .compact-practice .arrow-pad {
+    gap: 4px;
+  }
   .compact-practice .arrow-button {
     width: var(--target);
     height: var(--target);
+  }
+  .compact-practice .logic-actions .answer-button {
+    padding-inline: 10px;
   }
 }
 
@@ -689,9 +705,9 @@
       'stage slots slots slots'
       'stage . up remove'
       'stage left down right'
-      'stage feedback feedback feedback'
       'stage go go go'
-      'stage show show show';
+      'stage show show show'
+      'feedback feedback feedback feedback';
     column-gap: 6px;
     row-gap: 6px;
     align-items: center;
@@ -702,7 +718,7 @@
     --board-pad: 3px;
   }
   .compact-practice .logic-practice .feedback {
-    min-height: 2.5em;
+    min-height: 1.3em;
     font-size: 0.8rem;
     line-height: 1.25;
   }

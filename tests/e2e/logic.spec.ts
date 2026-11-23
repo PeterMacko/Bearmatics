@@ -43,10 +43,24 @@ async function rightPath(page: Page) {
 const lessonLayout = (page: Page) =>
   page.evaluate(() => {
     const d = document.documentElement;
-    const parts = ['.logic-board', '.arrow-slots', '.arrow-pad', '.logic-actions .answer-button']
-      .map((s) => document.querySelector(s)!)
-      .concat([document.querySelector('.logic-show-me')!]);
-    const boxes = parts.map((el) => el.getBoundingClientRect());
+    // (On phones the arrow pad hides once the puzzle is solved: Next takes its row.)
+    const parts = [
+      '.logic-board',
+      '.arrow-slots',
+      '.arrow-pad',
+      '.logic-actions .answer-button',
+      '.logic-show-me',
+    ]
+      .map((s) => document.querySelector<HTMLElement>(s)!)
+      .filter((el) => el.offsetParent || getComputedStyle(el).display === 'contents');
+    const boxes = parts
+      .filter((el) => getComputedStyle(el).display !== 'contents')
+      .concat(
+        [...document.querySelectorAll<HTMLElement>('.logic-practice button')].filter(
+          (b) => b.offsetParent,
+        ),
+      )
+      .map((el) => el.getBoundingClientRect());
     const buttons = [...document.querySelectorAll<HTMLElement>('.logic-practice button')].filter(
       (b) => b.offsetParent,
     );
@@ -70,20 +84,29 @@ const lessonLayout = (page: Page) =>
   });
 
 for (const { name, width, height } of ALL_DEVICES)
-  test(`Logic lesson fits ${name} ${width}x${height}: board, slots, arrows and Go on screen, no page scroll`, async ({
-    page,
-  }) => {
-    await page.setViewportSize({ width, height });
-    await startLesson(page);
-    for (const arrow of ['.arrow-right', '.arrow-right', '.arrow-down'])
-      await page.locator(arrow).click();
-    const layout = await lessonLayout(page);
-    expect(layout.pageScroll, 'page scroll').toBeLessThanOrEqual(1);
-    expect(layout.sideScroll, 'side scroll').toBeLessThanOrEqual(0);
-    expect(layout.inView, 'board, slots, pad, Go and Show me on screen').toBe(true);
-    expect(layout.cell, 'grid cell').toBeGreaterThanOrEqual(56);
-    expect(layout.smallestTarget, 'smallest button').toBeGreaterThanOrEqual(48);
-  });
+  for (const lang of ['en', 'sk'] as const)
+    test(`Logic lesson fits ${name} ${width}x${height} ${lang}: board, slots, arrows and Go on screen, no page scroll`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await startLesson(page, lang);
+      for (const arrow of ['.arrow-right', '.arrow-right', '.arrow-down'])
+        await page.locator(arrow).click();
+      // Plan state, then after Go (the feedback line filled, right or wrong).
+      for (const state of ['plan', 'after Go']) {
+        if (state === 'after Go') {
+          await page.locator('.logic-go').click();
+          await expect(page.locator('#answer-feedback')).not.toHaveText('', { timeout: 5000 });
+          await expect(page.locator('.logic-practice')).not.toHaveAttribute('data-walking');
+        }
+        const layout = await lessonLayout(page);
+        expect(layout.pageScroll, `${state}: page scroll`).toBeLessThanOrEqual(1);
+        expect(layout.sideScroll, `${state}: side scroll`).toBeLessThanOrEqual(0);
+        expect(layout.inView, `${state}: board, slots, pad, Go/Next, Show me on screen`).toBe(true);
+        expect(layout.cell, `${state}: grid cell`).toBeGreaterThanOrEqual(56);
+        expect(layout.smallestTarget, `${state}: smallest button`).toBeGreaterThanOrEqual(48);
+      }
+    });
 
 for (const { name, width, height } of ALL_DEVICES)
   test(`Logic menu: no page scroll while contained at ${name} ${width}x${height}`, async ({
