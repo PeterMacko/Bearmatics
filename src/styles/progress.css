@@ -567,6 +567,18 @@
   text-align: end;
   white-space: nowrap;
 }
+.leaderboard-table .mid {
+  text-align: center;
+  white-space: nowrap;
+}
+/* SCRUM-258: the bear badge medal, same look as the bar medal; smaller on narrow tables. */
+.leaderboard-badge {
+  display: inline-flex;
+  vertical-align: middle;
+}
+.leaderboard-badge .badge-icon {
+  flex: none;
+}
 .leaderboard-table tr.me td {
   background: #fff1dc;
   font-weight: 800;
@@ -679,6 +691,10 @@
   .leaderboard-streak .streak-icon {
     width: 14px;
     height: 14px;
+  }
+  .leaderboard-badge .badge-icon {
+    width: 22px;
+    height: 22px;
   }
 }
 .leaderboard:focus {

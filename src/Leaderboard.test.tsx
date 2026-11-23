@@ -80,9 +80,19 @@ test('badge opens the badge details; points + bar open the leaderboard with my r
   expect(within(me).getByLabelText('Place 14')).toBeInTheDocument();
   expect(within(me).getByLabelText('Streak 3 days, frozen')).toBeInTheDocument();
   // Accessible names (narrow windows show "#" for Place, hidden from screen readers).
-  for (const name of ['Place', 'Player', 'Streak', 'Points'])
+  // SCRUM-258: the Badge column sits between Player and Streak.
+  expect(
+    within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent),
+  ).toEqual(['Place#', 'Player', 'Badge', 'Streak', 'Points']);
+  for (const name of ['Place', 'Player', 'Badge', 'Streak', 'Points'])
     expect(within(table).getByRole('columnheader', { name })).toBeInTheDocument();
-  expect(within(table).getAllByRole('columnheader')).toHaveLength(4);
+  expect(within(table).getAllByRole('columnheader')).toHaveLength(5);
+  // The gap row spans all five columns.
+  expect(rows[11].querySelector('td')).toHaveAttribute('colspan', '5');
+  // My row shows the same badge as my bar medal (112 points = badge 3).
+  expect(within(me).getByLabelText('Bear badge 3')).toBeInTheDocument();
   fireEvent.keyDown(dialog, { key: 'Escape' });
   expect(screen.queryByRole('dialog')).toBeNull();
   expect(within(nav).getByRole('button', { name: 'Leaderboard, 112 points' })).toHaveFocus();
@@ -140,4 +150,72 @@ test('rude nickname: the profile form asks for a different one (SK too)', async 
   fireEvent.click(screen.getAllByRole('button', { name: 'Save' })[0]);
   expect(await screen.findByText('Please choose a different nickname.')).toBeInTheDocument();
   expect(calls.filter((c) => c.method === 'PATCH')).toEqual([]);
+});
+
+// SCRUM-258: the badge follows the points; no badge yet = a dash read as "No badge yet".
+const BADGE_POINTS = [1234, 378, 166, 30, 29, 1];
+const BADGES = ['22', '10', '5', '1', '–', '–'];
+
+function badgeServer() {
+  return fakeServer(({ path }) => {
+    if (path === '/api/me') return reply({ account: ACCOUNT });
+    if (path === '/api/auth/google') return reply({ available: false });
+    if (path === '/api/progress')
+      return reply({ points: 30, streak: 1, frozen: false, today: true });
+    if (path === '/api/leaderboard')
+      return reply({
+        rows: BADGE_POINTS.map((points, i) =>
+          row(i + 1, `P${i + 1}`, points, { me: points === 30 }),
+        ),
+        gapBefore: null,
+      });
+    return reply({ error: 'not_found' }, 404);
+  });
+}
+
+test('badge column: medal number from points, dash below 30 points (EN and SK)', async () => {
+  badgeServer();
+  render(<App />);
+  const nav = await screen.findByRole('navigation', { name: 'Main controls' });
+  fireEvent.click(await within(nav).findByRole('button', { name: 'Leaderboard, 30 points' }));
+  let table = await within(screen.getByRole('dialog')).findByRole('table');
+  const cells = () =>
+    within(table)
+      .getAllByRole('row')
+      .slice(1)
+      .map((r) => r.querySelectorAll('td')[2]);
+  expect(cells().map((c) => c.textContent)).toEqual(BADGES);
+  expect(cells().map((c) => c.firstElementChild?.getAttribute('aria-label'))).toEqual([
+    'Bear badge 22',
+    'Bear badge 10',
+    'Bear badge 5',
+    'Bear badge 1',
+    'No badge yet',
+    'No badge yet',
+  ]);
+  // The medal itself is decorative; it uses the same look as the bar medal.
+  const medal = cells()[0].querySelector('svg')!;
+  expect(medal).toHaveAttribute('aria-hidden', 'true');
+  expect(medal).toHaveClass('badge-icon', 'badge-silver');
+  // My row = my bar medal.
+  expect(within(nav).getByRole('button', { name: 'Bear badge 1, 30 points' })).toBeInTheDocument();
+  fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' });
+  fireEvent.click(screen.getByRole('button', { name: 'Settings' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Slovenčina' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Zavrieť nastavenia' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Rebríček, 30 bodov' }));
+  table = await within(screen.getByRole('dialog', { name: 'Rebríček' })).findByRole('table');
+  expect(
+    within(table)
+      .getAllByRole('columnheader')
+      .map((h) => h.textContent),
+  ).toEqual(['Poradie#', 'Hráč', 'Odznak', 'Séria', 'Body']);
+  expect(cells().map((c) => c.firstElementChild?.getAttribute('aria-label'))).toEqual([
+    'Medvedí odznak 22',
+    'Medvedí odznak 10',
+    'Medvedí odznak 5',
+    'Medvedí odznak 1',
+    'Zatiaľ bez odznaku',
+    'Zatiaľ bez odznaku',
+  ]);
 });

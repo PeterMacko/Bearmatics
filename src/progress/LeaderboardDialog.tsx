@@ -4,6 +4,8 @@ import HintDialog from '../HintDialog';
 import Icon from '../Icon';
 import { fill, pointsText, type Copy } from '../i18n';
 import { loadLeaderboard, type LeaderboardRow } from './api';
+import BadgeIcon from './BadgeIcon';
+import { badgeFor } from './badges';
 import StreakIcon from './StreakIcon';
 
 type State =
@@ -12,7 +14,8 @@ type State =
   | { kind: 'ready'; rows: LeaderboardRow[]; gapBefore: number | null };
 
 /**
- * Leaderboard window (SCRUM-148): place, bear, nickname, streak and points; my row highlighted;
+ * Leaderboard window (SCRUM-148): place, bear, nickname, bear badge (SCRUM-258), streak and
+ * points; my row highlighted;
  * top 10, and if I am lower a gap line, the player before me, me and the player after me.
  * A table with column headers for screen readers.
  */
@@ -95,6 +98,9 @@ export default function LeaderboardDialog({
                   </span>
                 </th>
                 <th scope="col">{t.player}</th>
+                <th scope="col" className="mid">
+                  {t.badgeColumn}
+                </th>
                 <th scope="col" className="num">
                   {t.streakColumn}
                 </th>
@@ -108,7 +114,7 @@ export default function LeaderboardDialog({
                 <Fragment key={`${row.place}:${row.nickname}:${index}`}>
                   {state.gapBefore === index && (
                     <tr className="leaderboard-gap">
-                      <td colSpan={4}>
+                      <td colSpan={5}>
                         <span aria-hidden="true">…</span>
                         <span className="sr-only">{t.gap}</span>
                       </td>
@@ -129,6 +135,9 @@ export default function LeaderboardDialog({
                           {row.me && <span className="sr-only"> ({t.you})</span>}
                         </span>
                       </span>
+                    </td>
+                    <td className="mid">
+                      <LeaderboardBadge t={t} points={row.points} />
                     </td>
                     <td className="num">
                       {row.streak > 0 ? (
@@ -157,5 +166,21 @@ export default function LeaderboardDialog({
         {hidden && <p className="leaderboard-note">{t.hiddenNote}</p>}
       </div>
     </HintDialog>
+  );
+}
+
+/** The bear badge follows the points (never stored); below 30 points a dash (SCRUM-258). */
+function LeaderboardBadge({ t, points }: { t: Copy['points']; points: number }) {
+  const { badge } = badgeFor(points);
+  if (badge === 0)
+    return (
+      <span role="img" aria-label={t.noBadgeName}>
+        –
+      </span>
+    );
+  return (
+    <span className="leaderboard-badge" role="img" aria-label={fill(t.badgeName, { badge })}>
+      <BadgeIcon badge={badge} size={28} />
+    </span>
   );
 }
