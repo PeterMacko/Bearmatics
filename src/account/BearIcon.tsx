@@ -188,12 +188,15 @@ function Eyes({ item, eyeColour }: { item: number; eyeColour: string }) {
   }
 }
 
+/** Drawn when an answer carries no look (never crash the whole app over a missing icon). */
+const PLAIN: BearLook = { fur: 0, background: 0, head: 0, neck: 0, eyes: 0 };
+
 export default function BearIcon({
-  look,
+  look = PLAIN,
   size = 48,
   label,
 }: {
-  look: BearLook;
+  look?: BearLook;
   size?: number;
   /** Spoken name (the look described); without it the picture is decorative. */
   label?: string;

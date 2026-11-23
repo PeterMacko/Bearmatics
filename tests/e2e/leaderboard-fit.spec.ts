@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { setLanguage } from './support/language';
 import { nextFrames } from './support/layout';
 import { mockApi } from './support/mockApi';
+import { OLD_BEARS } from '../../shared/bearLook';
 
 // SCRUM-148 QA154-02/03/05 with mocked server answers.
 const ROWS = [
@@ -19,7 +20,7 @@ const ROWS = [
   ].map((nickname, i) => ({
     place: i + 1,
     nickname,
-    bear: (i % 8) + 1,
+    look: OLD_BEARS[(i % 8) + 1],
     points: 1234 - i * 37,
     streak: 12 - i,
     frozen: i === 3,

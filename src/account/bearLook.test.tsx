@@ -96,6 +96,12 @@ describe('bear looks', () => {
     }
   });
 
+  it('draws a plain bear when an answer carries no look instead of failing', () => {
+    const answer: { look?: BearLook } = {};
+    const { container } = render(<BearIcon look={answer.look} />);
+    expect(container.querySelector('svg')).toHaveAttribute('data-look', '0.0.0.0.0');
+  });
+
   it('draws a named picture when given a name, a hidden one otherwise', () => {
     const { container } = render(
       <>
