@@ -106,6 +106,11 @@ const fit = (page: Page) =>
 
 async function expectContained(page: Page, where: string) {
   const result = await fit(page);
+  // Fit numbers per device and engine land in the JSON report (Dev's report reads them).
+  test.info().annotations.push({
+    type: 'fit',
+    description: JSON.stringify({ where, ...result, under: undefined, outside: undefined }),
+  });
   expect(result.mode, where).toBe('contained');
   // AC 3 / AC 10: Save (and everything fixed) visible without page scrolling.
   expect(result.pageScroll, `${where} page scroll`).toBeLessThanOrEqual(0);
