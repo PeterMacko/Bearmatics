@@ -204,6 +204,68 @@ test('wrong (ends elsewhere): paw dots, the bear goes back, arrows stay; a chang
   expect(feedback()).toHaveTextContent('The bear found the honey!');
 });
 
+test('QA271-01: input works as soon as the retry text shows; the bear is on the start, no stale walk back', () => {
+  startLesson();
+  plan('Right', 'Down');
+  tap('Go');
+  wait(STEP_MS * 2 + 200);
+  expect(feedback()).toHaveTextContent('The bear is not at the honey.');
+  expect(bearCell()).toEqual(['2', '1']);
+  // At once (no wait for the walk back): the tap adds an arrow and the bear is on the start.
+  tap('Right');
+  expect(slots()).toHaveAccessibleName('Arrows: right, down, right');
+  expect(bearCell()).toEqual(['1', '0']);
+  expect(paws()).toBe(0);
+  // Go right away: one walk, and the old walk back never pulls the bear to the start mid-walk.
+  tap('Go');
+  wait(160);
+  expect(bearCell()).toEqual(['1', '1']);
+  wait(STEP_MS);
+  expect(bearCell()).toEqual(['2', '1']);
+  wait(200); // past the old walk back (BACK_MS after the retry text): it must not fire
+  expect(bearCell()).toEqual(['2', '1']);
+  wait(STEP_MS);
+  expect(bearCell()).toEqual(['2', '2']);
+  wait(STEP_MS);
+  expect(feedback()).toHaveTextContent('The bear found the honey!');
+});
+
+test('QA271-01: keys, Remove, Go and Show me work right after a wrong walk', () => {
+  startLesson();
+  plan('Down');
+  go();
+  key('ArrowRight'); // nothing waits: the walk back was already over
+  expect(slots()).toHaveAccessibleName('Arrows: down, right');
+  tap('Go');
+  wait(STEP_MS * 2 + 200);
+  expect(feedback()).toHaveTextContent('The bear is not at the honey.');
+  key('ArrowRight');
+  expect(slots()).toHaveAccessibleName('Arrows: down, right, right');
+  tap('Remove last arrow');
+  expect(slots()).toHaveAccessibleName('Arrows: down, right');
+  expect(bearCell()).toEqual(['1', '0']);
+  tap('Go');
+  wait(STEP_MS * 2 + 200);
+  expect(feedback()).toHaveTextContent('The bear is not at the honey.');
+  expect(bearCell()).toEqual(['2', '1']);
+  // Go again with the same plan straight after the result: the bear starts from the start.
+  tap('Go');
+  expect(bearCell()).toEqual(['1', '0']);
+  expect(bear()).toHaveAttribute('data-snap', 'true');
+  wait(160);
+  expect(bearCell()).toEqual(['2', '0']);
+  wait(STEP_MS * 2);
+  expect(feedback()).toHaveTextContent('The bear is not at the honey.');
+  expect(bearCell()).toEqual(['2', '1']);
+  tap('Show me');
+  expect(screen.getByRole('img', { name: /^Demo/ })).toBeInTheDocument();
+  wait(DEMO_MS + 10);
+  expect(bearCell()).toEqual(['1', '0']);
+  expect(slots()).toHaveAccessibleName('Arrows: down, right');
+  wait(BACK_MS * 2);
+  expect(bearCell()).toEqual(['1', '0']);
+});
+
 test('wrong: passing over the honey but ending elsewhere is not right', () => {
   startLesson();
   plan('Right', 'Right', 'Down', 'Right');

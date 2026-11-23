@@ -133,6 +133,10 @@
     transform: translateX(18%);
   }
 }
+/* A new walk right after a wrong one: the bear jumps back to the start. */
+.logic-bear[data-snap] {
+  transition: none;
+}
 /* Reduced motion: the bear jumps from cell to cell (no slide, no bump). */
 @media (prefers-reduced-motion: reduce) {
   .logic-bear {

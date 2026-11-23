@@ -243,6 +243,48 @@ test('a double tap on Go walks once and counts one try', async ({ page }) => {
   await expect(page.locator('.logic-cell[data-paw]')).toHaveCount(1);
 });
 
+test('QA271-01: right after a wrong walk an arrow tap counts at once and Go walks again', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startLesson(page);
+  const p = await puzzle(page);
+  const away = p.bearCol < 3 ? '.arrow-right' : '.arrow-left';
+  await page.locator(away).click();
+  await page.locator('.logic-go').click();
+  // Tap an arrow in the same frame the retry text appears (no waiting for the walk back).
+  const tapped = await page.evaluate(
+    (selector) =>
+      new Promise<{ before: number; after: number }>((resolve) => {
+        const filled = () => document.querySelectorAll('.arrow-slot[data-filled]').length;
+        const poll = () => {
+          if (!document.getElementById('answer-feedback')!.textContent) {
+            requestAnimationFrame(poll);
+            return;
+          }
+          const before = filled();
+          document.querySelector<HTMLButtonElement>(selector)!.click();
+          setTimeout(() => resolve({ before, after: filled() }), 50);
+        };
+        poll();
+      }),
+    p.bearRow < 3 ? '.arrow-down' : '.arrow-up',
+  );
+  expect(tapped).toEqual({ before: 1, after: 2 });
+  await expect(page.locator('.logic-cell[data-paw]')).toHaveCount(0);
+  // The bear is on the start, and Go walks again straight away.
+  await expect(page.locator('.logic-bear')).toHaveAttribute(
+    'style',
+    new RegExp(`--row: ${p.bearRow}; --col: ${p.bearCol}`),
+    { timeout: 200 },
+  );
+  await page.locator('.logic-go').click();
+  await expect(page.locator('.logic-practice')).toHaveAttribute('data-walking', 'true', {
+    timeout: 300,
+  });
+  await expect(page.locator('#answer-feedback')).not.toHaveText('');
+});
+
 test('reduced motion: the demo is three still steps, then the puzzle', async ({ browser }) => {
   const context = await browser.newContext({
     viewport: { width: 390, height: 844 },

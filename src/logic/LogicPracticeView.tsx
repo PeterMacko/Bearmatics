@@ -28,7 +28,11 @@ import useBoardFit from './useBoardFit';
 
 /** One step of the walk on screen (scope 4: about 0.4 s per arrow). */
 export const STEP_MS = 400;
-/** After a wrong walk the bear waits this long, then goes back to the start. */
+/**
+ * After a wrong walk the bear waits this long, then goes back to the start. Input is open again
+ * as soon as the result shows (QA271-01): a new arrow, Remove, Go or Show me sends the bear
+ * back at once and cancels this wait.
+ */
 export const BACK_MS = 700;
 
 const KEY_ARROWS: Record<string, Arrow> = {
@@ -105,9 +109,13 @@ export default function LogicPracticeView({
   const [bumped, setBumped] = useState<Arrow | null>(null);
   const [paws, setPaws] = useState<readonly Cell[]>([]);
   const [outcome, setOutcome] = useState<'bumped' | 'missed' | null>(null);
+  /** The bear jumps (no slide) back to the start: a new walk starts right after. */
+  const [snap, setSnap] = useState(false);
   const [reduced] = useState(prefersReducedMotion);
   const walkingRef = useRef(false);
   const timers = useRef<number[]>([]);
+  /** The pending walk back to the start after a wrong walk (null when none). */
+  const backTimer = useRef<number | null>(null);
   const boardRef = useRef<HTMLDivElement>(null);
   const sectionRef = useBoardFit(demoRun, solved);
   const demo = demoRun > 0;
@@ -120,7 +128,18 @@ export default function LogicPracticeView({
     [],
   );
   const later = (run: () => void, ms: number) => {
-    timers.current.push(window.setTimeout(run, ms));
+    const timer = window.setTimeout(run, ms);
+    timers.current.push(timer);
+    return timer;
+  };
+  /** Ends a pending walk back now: the bear is on the start before anything new happens. */
+  const backToStart = (jump: boolean) => {
+    if (backTimer.current === null) return;
+    window.clearTimeout(backTimer.current);
+    backTimer.current = null;
+    setSnap(jump);
+    setBearAt(puzzle.bear);
+    setBumped(null);
   };
 
   // A new puzzle (mount) and the end of the demo put focus on the board, which reads the
@@ -131,6 +150,7 @@ export default function LogicPracticeView({
   }, [solved, demo, nextRef]);
 
   const change = (next: Arrow[]) => {
+    backToStart(false);
     setPaws([]);
     setOutcome(null);
     onArrowsChange(next);
@@ -146,6 +166,7 @@ export default function LogicPracticeView({
   const go = () => {
     if (locked || solved || arrows.length === 0 || walkingRef.current) return;
     walkingRef.current = true;
+    backToStart(true);
     onGo();
     const planned = [...arrows];
     const walk = walkArrows(puzzle.bear, planned);
@@ -163,17 +184,20 @@ export default function LogicPracticeView({
       }
       setPaws(walk.steps);
       setOutcome(walk.bumped ? 'bumped' : 'missed');
-      later(() => {
+      // Input opens with the result; the bear walks back meanwhile (or at once on new input).
+      walkingRef.current = false;
+      setWalking(false);
+      backTimer.current = later(() => {
+        backTimer.current = null;
         setBearAt(puzzle.bear);
         setBumped(null);
-        walkingRef.current = false;
-        setWalking(false);
       }, BACK_MS);
     };
     walk.steps.forEach((cell, i) =>
       later(
         () => {
           setActiveSlot(i);
+          setSnap(false);
           setBearAt(cell);
           onStep();
         },
@@ -287,6 +311,7 @@ export default function LogicPracticeView({
               <span
                 className="logic-bear"
                 data-bump={bumped ?? undefined}
+                data-snap={snap || undefined}
                 style={{ '--row': bearAt.row, '--col': bearAt.col } as CSSProperties}
               >
                 <GridBear mood={mood} />
@@ -366,7 +391,9 @@ export default function LogicPracticeView({
             className="secondary logic-show-me"
             aria-disabled={locked}
             onClick={(event: MouseEvent) => {
-              if (!ignoreRepeatClick(event) && !locked) onShowMe();
+              if (ignoreRepeatClick(event) || locked) return;
+              backToStart(true);
+              onShowMe();
             }}
           >
             <EyeIcon />
