@@ -1,4 +1,5 @@
 // SCRUM-148 rows and order with fixed data (AC 2) and the API (AC 3-5).
+import { OLD_BEARS } from '../shared/bearLook';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { SESSION_COOKIE } from './accounts';
 import { type Env } from './api';
@@ -9,7 +10,7 @@ import { freshDb } from './testDb';
 const p = (id: string, points: number, streak = 0, nickname = id): Player => ({
   id,
   nickname,
-  bear: 1,
+  look: { fur: 0, background: 0, head: 0, neck: 0, eyes: 0 },
   points,
   streak,
   frozen: false,
@@ -101,7 +102,7 @@ describe('API', () => {
         username: `lb${n}xx`,
         key: 'ab'.repeat(32),
         nickname,
-        bear: (n % 8) + 1,
+        look: OLD_BEARS[(n % 8) + 1],
         parentConfirmed: true,
       },
     });
@@ -132,7 +133,7 @@ describe('API', () => {
       {
         place: 1,
         nickname: 'Mia',
-        bear: expect.any(Number),
+        look: OLD_BEARS[2],
         points: 30,
         streak: 1,
         frozen: false,
@@ -140,8 +141,8 @@ describe('API', () => {
       },
     ]);
     expect(Object.keys(body.rows[0]).sort()).toEqual([
-      'bear',
       'frozen',
+      'look',
       'me',
       'nickname',
       'place',
@@ -188,7 +189,7 @@ describe('API', () => {
         username: 'rudexx',
         key: 'ab'.repeat(32),
         nickname: 'kok0t',
-        bear: 1,
+        look: OLD_BEARS[1],
         parentConfirmed: true,
       },
     });

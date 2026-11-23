@@ -2,6 +2,7 @@
 import { passwordVerifier, randomHex, sameHex, sha256Hex } from './crypto';
 import { BadRequest, cookie, json, readCookie, readJson } from './http';
 import type { Account } from '../shared/api-types';
+import { oldBearFor, type BearLook } from '../shared/bearLook';
 import { validKey, validUsername } from '../shared/rules';
 import * as rules from './rules';
 
@@ -26,9 +27,28 @@ interface AccountRow {
   verifier: string | null;
   email: string | null;
   nickname: string;
+  /** Before SCRUM-249: one of 8 bears. Still written (closest old bear) for older app versions. */
   bear: number;
+  bear_fur: number;
+  bear_bg: number;
+  bear_head: number;
+  bear_neck: number;
+  bear_eyes: number;
   leaderboard: number;
 }
+
+/** The parts as stored in the account row. */
+const lookOf = (row: AccountRow): BearLook => ({
+  fur: row.bear_fur,
+  background: row.bear_bg,
+  head: row.bear_head,
+  neck: row.bear_neck,
+  eyes: row.bear_eyes,
+});
+
+/** Column values for a look: the old bear number first, then the five parts. */
+export const lookColumns = (look: BearLook) =>
+  [oldBearFor(look), look.fur, look.background, look.head, look.neck, look.eyes] as const;
 
 /** What the browser may see about the signed-in account. */
 function publicAccount(row: AccountRow): Account {
@@ -36,7 +56,7 @@ function publicAccount(row: AccountRow): Account {
     kind: row.google_sub ? 'google' : 'password',
     username: row.username,
     nickname: row.nickname,
-    bear: row.bear,
+    look: lookOf(row),
     email: row.email,
     leaderboard: row.leaderboard !== 0,
   };
@@ -142,7 +162,7 @@ export async function signUp(request: Request, env: AccountEnv): Promise<Respons
   const username = rules.username(body.username);
   const key = rules.passwordKey(body.key);
   const nickname = rules.nickname(body.nickname);
-  const bear = rules.bear(body.bear);
+  const look = rules.look(body.look);
   const email = rules.email(body.email);
   rules.parentConfirmed(body.parentConfirmed);
   const id = randomHex(16);
@@ -150,7 +170,8 @@ export async function signUp(request: Request, env: AccountEnv): Promise<Respons
   try {
     await env.DB.prepare(
       `INSERT INTO accounts (id, username, username_key, server_salt, verifier, email, nickname, bear,
-        parent_confirmed_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        bear_fur, bear_bg, bear_head, bear_neck, bear_eyes, parent_confirmed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
       .bind(
         id,
@@ -160,7 +181,7 @@ export async function signUp(request: Request, env: AccountEnv): Promise<Respons
         await passwordVerifier(serverSalt, key),
         email,
         nickname,
-        bear,
+        ...lookColumns(look),
         now(),
       )
       .run();
@@ -267,7 +288,9 @@ export const updateProfile: SessionHandler = async (request, env, session) => {
   const body = await readJson(request);
   const { account } = session;
   const nickname = 'nickname' in body ? rules.nickname(body.nickname) : account.nickname;
-  const bear = 'bear' in body ? rules.bear(body.bear) : account.bear;
+  // SCRUM-249: the look replaces the old bear number; an old-style `bear` alone is refused.
+  if ('bear' in body && !('look' in body)) throw new BadRequest('invalid', 'look');
+  const look = 'look' in body ? rules.look(body.look) : lookOf(account);
   let email = account.email;
   if ('email' in body) {
     if (account.google_sub) throw new BadRequest('invalid', 'email');
@@ -279,13 +302,26 @@ export const updateProfile: SessionHandler = async (request, env, session) => {
     if (typeof body.leaderboard !== 'boolean') throw new BadRequest('invalid', 'leaderboard');
     leaderboard = body.leaderboard ? 1 : 0;
   }
+  const [bear, furPart, bgPart, headPart, neckPart, eyesPart] = lookColumns(look);
   await env.DB.prepare(
-    'UPDATE accounts SET nickname = ?, bear = ?, email = ?, leaderboard = ? WHERE id = ?',
+    `UPDATE accounts SET nickname = ?, bear = ?, bear_fur = ?, bear_bg = ?, bear_head = ?,
+      bear_neck = ?, bear_eyes = ?, email = ?, leaderboard = ? WHERE id = ?`,
   )
-    .bind(nickname, bear, email, leaderboard, account.id)
+    .bind(
+      nickname,
+      bear,
+      furPart,
+      bgPart,
+      headPart,
+      neckPart,
+      eyesPart,
+      email,
+      leaderboard,
+      account.id,
+    )
     .run();
   return new Renewed({
-    account: publicAccount({ ...account, nickname, bear, email, leaderboard }),
+    account: { ...publicAccount({ ...account, nickname, email, leaderboard }), look },
   });
 };
 

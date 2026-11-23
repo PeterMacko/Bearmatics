@@ -19,7 +19,13 @@ async function signedIn(page: Page) {
       route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
     if (path === '/api/me')
       return json({
-        account: { kind: 'password', username: 'kid', nickname: 'Kid', bear: 2, email: null },
+        account: {
+          kind: 'password',
+          username: 'kid',
+          nickname: 'Kid',
+          look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+          email: null,
+        },
       });
     if (path === '/api/progress')
       return json({ points: 123, streak: 4, frozen: false, today: false });

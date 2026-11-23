@@ -17,7 +17,7 @@ const show = (props: { screen: AccountScreen; notice?: string; signedIn?: boolea
               kind: 'password',
               username: 'kid',
               nickname: 'Cub',
-              bear: 1,
+              look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
               email: null,
               leaderboard: true,
             }

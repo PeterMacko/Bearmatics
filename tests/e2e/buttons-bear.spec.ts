@@ -177,7 +177,7 @@ async function signedIn(page: Page) {
           kind: 'password',
           username: 'kid',
           nickname: 'Brave Cub',
-          bear: 2,
+          look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
           email: null,
           leaderboard: true,
         },

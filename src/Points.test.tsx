@@ -8,7 +8,13 @@ import { tap } from './testing/ui';
 
 // SCRUM-117: points for finished lessons of signed-in players, badge in the bar and summary.
 
-const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
+const ACCOUNT = {
+  kind: 'password',
+  username: 'kid',
+  nickname: 'Kid',
+  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
+  email: null,
+};
 
 function server(
   start: number,

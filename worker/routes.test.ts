@@ -9,6 +9,7 @@ import { slovakDay } from './streak';
 import { freshDb } from './testDb';
 
 const ORIGIN = 'https://bearmatics.test';
+const LOOK = { fur: 1, background: 2, head: 3, neck: 4, eyes: 1 };
 const DAY_MS = 24 * 60 * 60 * 1000;
 let db: Awaited<ReturnType<typeof freshDb>>;
 let env: Env;
@@ -70,7 +71,7 @@ async function player() {
   const username = `route${users}x`;
   const response = await handleApi(
     request('/api/auth/signup', {
-      body: { username, key: key(1), nickname: 'Little Bear', bear: 2, parentConfirmed: true },
+      body: { username, key: key(1), nickname: 'Little Bear', look: LOOK, parentConfirmed: true },
     }),
     env,
   );
@@ -126,7 +127,7 @@ const CASES: Case[] = [
     name: 'update profile',
     path: '/api/me',
     method: 'PATCH',
-    body: () => ({ nickname: 'New  Name', bear: 4, email: 'p@example.com', leaderboard: false }),
+    body: () => ({ nickname: 'New  Name', look: LOOK, email: 'p@example.com', leaderboard: false }),
   },
   { name: 'delete account', path: '/api/me', method: 'DELETE' },
   {
@@ -186,7 +187,7 @@ const CASES: Case[] = [
       username: `signup${++users}x`,
       key: key(3),
       nickname: 'Cub',
-      bear: 5,
+      look: LOOK,
       parentConfirmed: true,
     }),
   },
@@ -204,7 +205,7 @@ const CASES: Case[] = [
     name: 'google complete',
     path: '/api/auth/google/complete',
     method: 'POST',
-    body: () => ({ nickname: 'Cub', bear: 1, parentConfirmed: true }),
+    body: () => ({ nickname: 'Cub', look: LOOK, parentConfirmed: true }),
   },
 ];
 
@@ -231,7 +232,7 @@ describe('write routes with a bad body, per session state', () => {
         expect(
           await call(c.path, {
             method: c.method,
-            body: { size: 7, key: 'x', username: '!', nickname: '', bear: 99, unlock: 'x' },
+            body: { size: 7, key: 'x', username: '!', nickname: '', look: 99, unlock: 'x' },
             cookie: setup.cookie,
           }),
         ).toMatchSnapshot();
@@ -381,7 +382,7 @@ describe('other answers of signed-in routes', () => {
       await call('/api/auth/google/callback?code=c&state=s', {}, google),
       await call(
         '/api/auth/google/complete',
-        { body: { nickname: 'Cub', bear: 1, parentConfirmed: true } },
+        { body: { nickname: 'Cub', look: LOOK, parentConfirmed: true } },
         google,
       ),
     ]).toMatchSnapshot();

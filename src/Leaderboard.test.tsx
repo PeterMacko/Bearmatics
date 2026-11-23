@@ -9,14 +9,14 @@ const ACCOUNT = {
   kind: 'password',
   username: 'kid',
   nickname: 'Mia',
-  bear: 1,
+  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
   email: null,
   leaderboard: true,
 };
 const row = (place: number, nickname: string, points: number, extra = {}) => ({
   place,
   nickname,
-  bear: 2,
+  look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
   points,
   streak: 3,
   frozen: false,

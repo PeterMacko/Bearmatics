@@ -5,6 +5,8 @@ import { googleCallback } from './google';
 import { ORIGIN, read } from './testApi';
 import { freshDb } from './testDb';
 
+const LOOK = { fur: 1, background: 2, head: 3, neck: 4, eyes: 2 };
+
 const CLIENT = 'client-123.apps.googleusercontent.com';
 let db: Awaited<ReturnType<typeof freshDb>>;
 let env: Env;
@@ -95,15 +97,29 @@ describe('Google sign-in', () => {
     expect(first.seenBody).toContain('code_verifier=');
     const pending = `bm_google_pending=${cookies(first.response).bm_google_pending}`;
     expect(
-      (await complete(pending, { nickname: 'Cub', bear: 2, parentConfirmed: false })).status,
+      (await complete(pending, { nickname: 'Cub', look: LOOK, parentConfirmed: false })).status,
     ).toBe(400);
-    const done = await complete(pending, { nickname: 'Cub', bear: 2, parentConfirmed: true });
+    // SCRUM-249: each part must be in range; an old bear number alone is not a look.
+    for (const body of [
+      { look: { ...LOOK, fur: 8 } },
+      { look: { ...LOOK, background: 8 } },
+      { look: { ...LOOK, head: 6 } },
+      { look: { ...LOOK, neck: 6 } },
+      { look: { ...LOOK, eyes: 4 } },
+      { look: { ...LOOK, eyes: -1 } },
+      { look: undefined, bear: 2 },
+    ]) {
+      const wrong = await complete(pending, { nickname: 'Cub', parentConfirmed: true, ...body });
+      expect(wrong.status).toBe(400);
+      expect(await read(wrong)).toEqual({ error: 'invalid', field: 'look' });
+    }
+    const done = await complete(pending, { nickname: 'Cub', look: LOOK, parentConfirmed: true });
     expect(done.status).toBe(201);
     expect((await read(done)).account).toEqual({
       kind: 'google',
       username: null,
       nickname: 'Cub',
-      bear: 2,
+      look: LOOK,
       email: null,
       leaderboard: true,
     });
@@ -111,6 +127,12 @@ describe('Google sign-in', () => {
       .bind('1098765')
       .first<Record<string, unknown>>();
     expect(row).toMatchObject({
+      bear: 2, // dark brown fur = old bear 2, for older app versions
+      bear_fur: 1,
+      bear_bg: 2,
+      bear_head: 3,
+      bear_neck: 4,
+      bear_eyes: 2,
       username: null,
       username_key: null,
       server_salt: null,
@@ -119,7 +141,7 @@ describe('Google sign-in', () => {
     });
     // The pending entry is used up.
     expect(
-      (await complete(pending, { nickname: 'Cub', bear: 2, parentConfirmed: true })).status,
+      (await complete(pending, { nickname: 'Cub', look: LOOK, parentConfirmed: true })).status,
     ).toBe(410);
   });
 

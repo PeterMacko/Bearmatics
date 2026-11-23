@@ -21,7 +21,7 @@ export async function mockApi(page: Page, o: MockApi) {
       kind: 'password',
       username: 'kid',
       nickname: o.nickname,
-      bear: 2,
+      look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
       email: null,
       ...(o.leaderboard ? { leaderboard: onLeaderboard } : {}),
     });

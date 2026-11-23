@@ -25,9 +25,33 @@ const ROWS = [
     frozen: i === 3,
     me: false,
   })),
-  { place: 23, nickname: 'Miška', bear: 3, points: 140, streak: 2, frozen: false, me: false },
-  { place: 24, nickname: 'Medvedík77', bear: 2, points: 200, streak: 365, frozen: true, me: true },
-  { place: 25, nickname: 'Adam', bear: 5, points: 120, streak: 0, frozen: false, me: false },
+  {
+    place: 23,
+    nickname: 'Miška',
+    look: { fur: 3, background: 2, head: 0, neck: 3, eyes: 0 },
+    points: 140,
+    streak: 2,
+    frozen: false,
+    me: false,
+  },
+  {
+    place: 24,
+    nickname: 'Medvedík77',
+    look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+    points: 200,
+    streak: 365,
+    frozen: true,
+    me: true,
+  },
+  {
+    place: 25,
+    nickname: 'Adam',
+    look: { fur: 5, background: 4, head: 4, neck: 0, eyes: 0 },
+    points: 120,
+    streak: 0,
+    frozen: false,
+    me: false,
+  },
 ];
 
 const mock = (page: Page, points: number, streak: number, nickname = 'Brave Cub') =>

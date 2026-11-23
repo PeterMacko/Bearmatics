@@ -48,7 +48,7 @@ export function ProfileView({
       headingRef={headingRef}
     >
       <div className="profile-badge" aria-hidden="true">
-        <BearIcon look={OLD_BEARS[account.bear] ?? OLD_BEARS[1]} size={72} />
+        <BearIcon look={account.look} size={72} />
       </div>
       <LookForm t={t} account={account} onAccount={onAccount} />
       <LeaderboardSwitch t={t} id={switchId} account={account} onAccount={onAccount} />
@@ -66,7 +66,7 @@ export function ProfileView({
 /** Nickname and bear. */
 function LookForm({ t, account, onAccount }: Saves) {
   const [nickname, setNickname] = useState(account.nickname);
-  const [bear, setBear] = useState(account.bear);
+  const [bear, setBear] = useState(0);
   const look = useAction();
   const saveLook = (event: FormEvent) => {
     event.preventDefault();
@@ -74,7 +74,12 @@ function LookForm({ t, account, onAccount }: Saves) {
     if (problem) return look.setError(problem);
     void look.run(
       async () => {
-        onAccount(await api.updateProfile({ nickname: nickname.trim(), bear }));
+        onAccount(
+          await api.updateProfile({
+            nickname: nickname.trim(),
+            ...(bear ? { look: OLD_BEARS[bear] } : {}),
+          }),
+        );
         look.setNote(t.saved);
       },
       (e) => errorText(t, e),

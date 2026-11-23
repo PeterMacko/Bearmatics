@@ -11,6 +11,7 @@ import {
   useAction,
   type Common,
 } from './fields';
+import { OLD_BEARS } from '../../shared/bearLook';
 import { passwordKey } from './passwordKey';
 import { errorText, firstProblem, nicknameProblem } from './problems';
 import { validEmail, validPassword, validUsername } from './rules';
@@ -54,7 +55,7 @@ export function SignUpView({
             key: await passwordKey(username, password),
             email: email.trim(),
             nickname: nickname.trim(),
-            bear,
+            look: OLD_BEARS[bear],
             parentConfirmed: parent,
           }),
         ),

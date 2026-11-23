@@ -25,7 +25,7 @@ async function newPlayer(): Promise<string> {
       username: `player${users}x`,
       key: 'ab'.repeat(32),
       nickname: 'Bear',
-      bear: 1,
+      look: { fur: 0, background: 0, head: 0, neck: 0, eyes: 0 },
       parentConfirmed: true,
     },
   });

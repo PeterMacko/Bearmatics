@@ -1,7 +1,13 @@
 // Google sign-in (SCRUM-97): basic `openid` permission only, so Google gives us nothing but a
 // stable account ID (`sub`). We store only that ID. Disabled until GOOGLE_CLIENT_ID and the
 // GOOGLE_CLIENT_SECRET secret are set (Peter, SCRUM-110).
-import { publicAccount, startSession, type AccountEnv, type AccountRow } from './accounts';
+import {
+  lookColumns,
+  publicAccount,
+  startSession,
+  type AccountEnv,
+  type AccountRow,
+} from './accounts';
 import { randomHex, sha256Hex } from './crypto';
 import { cookie, json, readCookie, readJson } from './http';
 import { validKey } from '../shared/rules';
@@ -145,7 +151,7 @@ export async function googleCallback(
 export async function googleComplete(request: Request, env: GoogleEnv): Promise<Response> {
   const body = await readJson(request);
   const nickname = rules.nickname(body.nickname);
-  const bear = rules.bear(body.bear);
+  const look = rules.look(body.look);
   rules.parentConfirmed(body.parentConfirmed);
   const token = readCookie(request, PENDING_COOKIE);
   const tokenHash = token && validKey(token) ? await sha256Hex(token) : '';
@@ -166,9 +172,10 @@ export async function googleComplete(request: Request, env: GoogleEnv): Promise<
   const id = randomHex(16);
   await env.DB.batch([
     env.DB.prepare(
-      `INSERT INTO accounts (id, google_sub, nickname, bear, parent_confirmed_at)
-       VALUES (?, ?, ?, ?, ?) ON CONFLICT (google_sub) DO NOTHING`,
-    ).bind(id, pending.google_sub, nickname, bear, Date.now()),
+      `INSERT INTO accounts (id, google_sub, nickname, bear, bear_fur, bear_bg, bear_head, bear_neck,
+        bear_eyes, parent_confirmed_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (google_sub) DO NOTHING`,
+    ).bind(id, pending.google_sub, nickname, ...lookColumns(look), Date.now()),
     env.DB.prepare('DELETE FROM google_pending WHERE token_hash = ?').bind(tokenHash),
   ]);
   const account = await env.DB.prepare('SELECT * FROM accounts WHERE google_sub = ?')

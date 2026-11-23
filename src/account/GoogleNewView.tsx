@@ -12,6 +12,7 @@ import {
   useAction,
   type Common,
 } from './fields';
+import { OLD_BEARS } from '../../shared/bearLook';
 import { errorText, firstProblem, nicknameProblem } from './problems';
 
 export function GoogleNewView({
@@ -35,7 +36,11 @@ export function GoogleNewView({
     void run(
       async () =>
         onSignedIn(
-          await api.completeGoogle({ nickname: nickname.trim(), bear, parentConfirmed: parent }),
+          await api.completeGoogle({
+            nickname: nickname.trim(),
+            look: OLD_BEARS[bear],
+            parentConfirmed: parent,
+          }),
         ),
       (e) => {
         setExpired(e instanceof AccountError && e.code === 'google_expired');

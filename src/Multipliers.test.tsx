@@ -8,7 +8,13 @@ import { PLAYS_KEY, deviceSlovakDay } from './progress/playCounts';
 
 // SCRUM-202: daily points multipliers in the app: menu signs and the summary calculation.
 
-const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
+const ACCOUNT = {
+  kind: 'password',
+  username: 'kid',
+  nickname: 'Kid',
+  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
+  email: null,
+};
 
 function server(signedIn = true) {
   let total = 20;

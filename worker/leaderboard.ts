@@ -1,6 +1,7 @@
 // SCRUM-148: leaderboard of all players who have it on and at least 1 point.
-// Only nickname, bear, streak and points of other players are sent (no ids, no usernames).
-import type { Leaderboard, LeaderboardRow } from '../shared/api-types';
+// Only nickname, bear look (SCRUM-249: its five parts), streak and points of other players are
+// sent (no ids, no usernames).
+import type { BearLook, Leaderboard, LeaderboardRow } from '../shared/api-types';
 import { isRudeNickname } from '../shared/rules';
 import { Renewed, type SessionHandler } from './accounts';
 import { slovakDay, streakView } from './streak';
@@ -10,7 +11,7 @@ const TOP = 10;
 export type Player = {
   id: string;
   nickname: string;
-  bear: number;
+  look: BearLook;
   points: number;
   streak: number;
   frozen: boolean;
@@ -35,7 +36,7 @@ export function leaderboardRows(players: Player[], meId: string | null): Leaderb
     return {
       place,
       nickname: player.nickname,
-      bear: player.bear,
+      look: player.look,
       points: player.points,
       streak: player.streak,
       frozen: player.frozen,
@@ -54,13 +55,17 @@ export function leaderboardRows(players: Player[], meId: string | null): Leaderb
 export const getLeaderboard: SessionHandler = async (_request, env, session) => {
   const today = slovakDay(Date.now());
   const { results } = await env.DB.prepare(
-    `SELECT a.id, a.nickname, a.bear, p.points, p.streak, p.last_day, p.offer_day
+    `SELECT a.id, a.nickname, a.bear_fur, a.bear_bg, a.bear_head, a.bear_neck, a.bear_eyes, p.points, p.streak, p.last_day, p.offer_day
      FROM progress p JOIN accounts a ON a.id = p.account_id
      WHERE p.points >= 1 AND a.leaderboard = 1`,
   ).all<{
     id: string;
     nickname: string;
-    bear: number;
+    bear_fur: number;
+    bear_bg: number;
+    bear_head: number;
+    bear_neck: number;
+    bear_eyes: number;
     points: number;
     streak: number;
     last_day: string | null;
@@ -72,7 +77,13 @@ export const getLeaderboard: SessionHandler = async (_request, env, session) => 
     .map((row) => ({
       id: row.id,
       nickname: row.nickname,
-      bear: row.bear,
+      look: {
+        fur: row.bear_fur,
+        background: row.bear_bg,
+        head: row.bear_head,
+        neck: row.bear_neck,
+        eyes: row.bear_eyes,
+      },
       points: row.points,
       ...streakView(
         { streak: row.streak, lastDay: row.last_day, offerDay: row.offer_day },
