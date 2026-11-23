@@ -364,3 +364,44 @@ for (const [width, height] of [
         .evaluate((l) => ({ hidden: l.scrollHeight - l.clientHeight, top: l.scrollTop }));
       expect(list.hidden).toBeLessThanOrEqual(1);
     });
+
+// QA271-03: at 200% text on the phone the course detail runs under the icon (full card width),
+// so the four cards are shorter: the card list hides at most 200 px (it hid 277-351 px before).
+// At normal text the cards keep the detail beside the icon.
+for (const lang of ['en', 'sk'])
+  test(`200% text ${lang} at 390x844: course cards use the full width for the detail`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto('/');
+    if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
+    const layout = () =>
+      page.evaluate(() => {
+        const list = document.querySelector<HTMLElement>('.course-options')!;
+        const cards = [...list.querySelectorAll<HTMLElement>('.course-option')].map((card) => {
+          const box = (s: string) => card.querySelector(s)!.getBoundingClientRect();
+          return {
+            detailUnderIcon: box('.level-detail').left < box('.course-icon').right,
+            detailBelowTitle: box('.level-detail').top >= box('.course-title').bottom - 1,
+            height: card.offsetHeight,
+          };
+        });
+        const d = document.documentElement;
+        return {
+          hidden: list.scrollHeight - list.clientHeight,
+          pageScroll: d.scrollHeight - d.clientHeight,
+          sideScroll: d.scrollWidth - d.clientWidth,
+          cards,
+        };
+      });
+    const normal = await layout();
+    expect(normal.cards.every((c) => !c.detailUnderIcon)).toBe(true);
+    await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+    await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
+    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200);
+    const large = await layout();
+    expect(large.cards.every((c) => c.detailUnderIcon && c.detailBelowTitle)).toBe(true);
+    expect(large.pageScroll).toBeLessThanOrEqual(1);
+    expect(large.sideScroll).toBeLessThanOrEqual(0);
+    expect(Math.min(...large.cards.map((c) => c.height))).toBeGreaterThanOrEqual(48);
+  });

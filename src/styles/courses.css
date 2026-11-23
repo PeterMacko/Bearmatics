@@ -163,3 +163,36 @@
     height: 40px;
   }
 }
+
+/* QA271-03: very large text (the card list narrower than 12em, e.g. 200% text on phones; never
+   at normal text sizes): the title uses the width beside the icon and the detail the full width
+   below it, with the arrow at its end, so the four cards are much shorter and titles break less.
+   Same text, nothing hidden. */
+.menu-shell .course-options {
+  container-type: inline-size;
+}
+@container (max-width: 12em) {
+  .menu-shell .course-options .course-option {
+    grid-template-columns: auto minmax(0, 1fr) max-content;
+    grid-template-areas:
+      'icon title title'
+      'detail detail arrow';
+    row-gap: 4px;
+  }
+  .menu-shell .course-options .course-option > span:nth-child(2) {
+    display: contents;
+  }
+  .menu-shell .course-options .course-icon {
+    grid-area: icon;
+  }
+  .menu-shell .course-options .course-title {
+    grid-area: title;
+  }
+  .menu-shell .course-options .level-detail {
+    grid-area: detail;
+  }
+  .menu-shell .course-options .course-arrow {
+    grid-area: arrow;
+    align-self: end;
+  }
+}
