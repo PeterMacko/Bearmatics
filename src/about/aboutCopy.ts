@@ -63,7 +63,7 @@ export const aboutCopy = {
       'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
       'Points grow your bear badge. Play every day to build a streak; missed days freeze it and points can unlock it.',
       'A leaderboard shows nickname, bear, streak and points of players; you can hide yourself in the profile.',
-      'The profile is only a nickname and a bear icon. The account can be deleted any time.',
+      'The profile is only a nickname and a bear your child dresses from parts (fur, background, something for the head, neck and eyes); the bear look is stored as five numbers, no photo or real name. The account can be deleted any time.',
     ],
     dataTitle: 'Your data',
     data: [
@@ -142,7 +142,7 @@ export const aboutCopy = {
       'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
       'Body zväčšujú medvedí odznak. Hraj každý deň a buduj sériu; vynechané dni ju zmrazia a body ju môžu odomknúť.',
       'Rebríček ukazuje prezývku, medveďa, sériu a body hráčov; v profile sa môžeš skryť.',
-      'Profil je len prezývka a ikona medveďa. Účet sa dá kedykoľvek zmazať.',
+      'Profil je len prezývka a medvedík, ktorého si dieťa oblečie z dielikov (srsť, pozadie, niečo na hlavu, krk a oči); vzhľad medvedíka sa ukladá ako päť čísel, žiadna fotka ani skutočné meno. Účet sa dá kedykoľvek zmazať.',
     ],
     dataTitle: 'Vaše údaje',
     data: [

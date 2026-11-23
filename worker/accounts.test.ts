@@ -1,4 +1,5 @@
 // Accounts against a real local D1 (SQLite): sign-up, sign-in, limits, sessions, profile, delete.
+import { OLD_BEARS } from '../shared/bearLook';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { LOCK_MINUTES, MAX_FAILURES, SESSION_COOKIE } from './accounts';
 import { handleApi, type Env } from './api';
@@ -31,7 +32,7 @@ const signup = (username: string, extra: Record<string, unknown> = {}) =>
       username,
       key: key(1),
       nickname: 'Little Bear',
-      bear: 3,
+      look: OLD_BEARS[3],
       parentConfirmed: true,
       ...extra,
     },
@@ -49,7 +50,7 @@ describe('sign-up', () => {
         kind: 'password',
         username: 'Mia2019',
         nickname: 'Little Bear',
-        bear: 3,
+        look: OLD_BEARS[3],
         email: 'parent@example.com',
         leaderboard: true,
       },
@@ -67,6 +68,11 @@ describe('sign-up', () => {
       .first<Record<string, unknown>>();
     expect(Object.keys(row!).sort()).toEqual([
       'bear',
+      'bear_bg',
+      'bear_eyes',
+      'bear_fur',
+      'bear_head',
+      'bear_neck',
       'email',
       'google_sub',
       'id',
@@ -111,9 +117,9 @@ describe('sign-up', () => {
     [{ nickname: '   ' }, 'nickname'],
     [{ nickname: 'x'.repeat(21) }, 'nickname'],
     [{ nickname: '<b>hi</b>' }, 'nickname'],
-    [{ bear: 0 }, 'bear'],
-    [{ bear: 9 }, 'bear'],
-    [{ bear: '3' }, 'bear'],
+    [{ look: { ...OLD_BEARS[3], fur: 8 } }, 'look'],
+    [{ look: { ...OLD_BEARS[3], eyes: 4 } }, 'look'],
+    [{ look: 3 }, 'look'],
     [{ email: 'not-an-email' }, 'email'],
     [{ parentConfirmed: false }, 'parentConfirmed'],
     [{ parentConfirmed: 'yes' }, 'parentConfirmed'],
@@ -240,24 +246,28 @@ describe('signed-in account', () => {
     expect(row!.e).toBeGreaterThan(Date.now() + 29.9 * 24 * 3600 * 1000);
   });
 
-  it('changes nickname and bear, adds and removes the email', async () => {
+  it('changes nickname and look, adds and removes the email', async () => {
     let response = await api('/api/me', {
       method: 'PATCH',
       cookie,
-      body: { nickname: 'Brave Cub', bear: 8, email: 'p@example.org' },
+      body: { nickname: 'Brave Cub', look: OLD_BEARS[8], email: 'p@example.org' },
     });
     expect((await read(response)).account).toMatchObject({
       nickname: 'Brave Cub',
-      bear: 8,
+      look: OLD_BEARS[8],
       email: 'p@example.org',
     });
     response = await api('/api/me', { method: 'PATCH', cookie, body: { email: null } });
     expect((await read(response)).account).toMatchObject({
       nickname: 'Brave Cub',
-      bear: 8,
+      look: OLD_BEARS[8],
       email: null,
     });
-    response = await api('/api/me', { method: 'PATCH', cookie, body: { bear: 12 } });
+    response = await api('/api/me', {
+      method: 'PATCH',
+      cookie,
+      body: { look: { ...OLD_BEARS[8], head: 6 } },
+    });
     expect(response.status).toBe(400);
   });
 

@@ -22,5 +22,5 @@ export const finishLesson = (lessonId: string, size: number, points: number) =>
 export const answerStreak = (unlock: boolean, cost: number) =>
   call<Progress>('/api/progress/streak', 'POST', { unlock, cost });
 
-/** SCRUM-148: leaderboard rows (only nickname, bear, streak and points of other players). */
+/** SCRUM-148: leaderboard rows (only nickname, bear look, streak and points of other players). */
 export const loadLeaderboard = () => call<Leaderboard>('/api/leaderboard');

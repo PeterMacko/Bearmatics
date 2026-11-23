@@ -20,6 +20,7 @@ export default function AccountScreens({
   headingRef,
   onAccount,
   onOpen,
+  onSubView,
 }: {
   t: Copy['account'];
   screen: AccountScreen;
@@ -30,11 +31,14 @@ export default function AccountScreens({
   headingRef: RefObject<HTMLHeadingElement | null>;
   onAccount: (account: Account | null) => void;
   onOpen: (next: AccountScreen | null, notice?: string) => void;
+  /** SCRUM-249: the dress screen opened over a form (`close` cancels it) or closed. */
+  onSubView?: (close: (() => void) | null) => void;
 }) {
   const common = {
     t,
     headingRef,
     onPrivacy: () => onOpen('privacy'),
+    onSubView,
   };
   const signedIn = (found: Account) => {
     onAccount(found);

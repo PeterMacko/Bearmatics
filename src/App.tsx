@@ -1,4 +1,5 @@
 import {
+  useCallback,
   useEffect,
   useLayoutEffect,
   useMemo,
@@ -130,6 +131,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   } = accountState;
   const menuRef = useMenuLayout(!active && !accountScreen, language, level, course ?? 'choice');
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
+  // SCRUM-249: the dress screen open over an account form; Back closes it.
+  const [closeSubView, setCloseSubView] = useState<(() => void) | null>(null);
+  const onSubView = useCallback((close: (() => void) | null) => setCloseSubView(() => close), []);
   const navigate = (next: Course | null) => {
     focusMenuHeading.current = true;
     setCourse(next);
@@ -543,14 +547,17 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     : accountScreen
       ? {
           label: t.account.back,
+          // SCRUM-249: on the dress screen Back cancels it (back to the form it came from).
           onClick: () =>
-            openAccount(
-              accountScreen === 'privacy'
-                ? privacyFrom
-                : accountScreen === 'signup'
-                  ? 'signin'
-                  : null,
-            ),
+            closeSubView
+              ? closeSubView()
+              : openAccount(
+                  accountScreen === 'privacy'
+                    ? privacyFrom
+                    : accountScreen === 'signup'
+                      ? 'signin'
+                      : null,
+                ),
         }
       : course
         ? { label: t.backToCourses, onClick: () => navigate(null) }
@@ -691,6 +698,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             onAccount={setAccount}
             onOpen={openAccount}
+            onSubView={onSubView}
           />
         ) : course === 'small' ? (
           <LevelMenu

@@ -290,7 +290,13 @@ test.each([1, 2, 3] as const)('English level %i: time on the summary', async (le
 });
 
 test('signed in: the time line sits between the first-try score and the points', async () => {
-  const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Kid', bear: 1, email: null };
+  const ACCOUNT = {
+    kind: 'password',
+    username: 'kid',
+    nickname: 'Kid',
+    look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
+    email: null,
+  };
   const calls = fakeServer(({ path }) => {
     if (path === '/api/me') return reply({ account: ACCOUNT });
     if (path === '/api/auth/google') return reply({ available: false });

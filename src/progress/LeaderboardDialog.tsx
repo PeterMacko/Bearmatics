@@ -123,7 +123,7 @@ export default function LeaderboardDialog({
                     </td>
                     <td>
                       <span className="leaderboard-player">
-                        <BearIcon bear={row.bear} size={28} />
+                        <BearIcon look={row.look} size={28} />
                         <span>
                           {row.nickname}
                           {row.me && <span className="sr-only"> ({t.you})</span>}

@@ -22,7 +22,7 @@ export function AccountButton({
       onClick={onClick}
     >
       {account ? (
-        <BearIcon bear={account.bear} size={32} />
+        <BearIcon look={account.look} size={32} />
       ) : (
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className="account-person">
           <circle cx="12" cy="8" r="4" fill="currentColor" />

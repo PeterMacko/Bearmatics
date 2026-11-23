@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { setLanguage } from './support/language';
 import { nextFrames } from './support/layout';
 import { mockApi } from './support/mockApi';
+import { OLD_BEARS } from '../../shared/bearLook';
 
 // SCRUM-148 QA154-02/03/05 with mocked server answers.
 const ROWS = [
@@ -19,15 +20,39 @@ const ROWS = [
   ].map((nickname, i) => ({
     place: i + 1,
     nickname,
-    bear: (i % 8) + 1,
+    look: OLD_BEARS[(i % 8) + 1],
     points: 1234 - i * 37,
     streak: 12 - i,
     frozen: i === 3,
     me: false,
   })),
-  { place: 23, nickname: 'Miška', bear: 3, points: 140, streak: 2, frozen: false, me: false },
-  { place: 24, nickname: 'Medvedík77', bear: 2, points: 200, streak: 365, frozen: true, me: true },
-  { place: 25, nickname: 'Adam', bear: 5, points: 120, streak: 0, frozen: false, me: false },
+  {
+    place: 23,
+    nickname: 'Miška',
+    look: { fur: 3, background: 2, head: 0, neck: 3, eyes: 0 },
+    points: 140,
+    streak: 2,
+    frozen: false,
+    me: false,
+  },
+  {
+    place: 24,
+    nickname: 'Medvedík77',
+    look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+    points: 200,
+    streak: 365,
+    frozen: true,
+    me: true,
+  },
+  {
+    place: 25,
+    nickname: 'Adam',
+    look: { fur: 5, background: 4, head: 4, neck: 0, eyes: 0 },
+    points: 120,
+    streak: 0,
+    frozen: false,
+    me: false,
+  },
 ];
 
 const mock = (page: Page, points: number, streak: number, nickname = 'Brave Cub') =>

@@ -2,12 +2,12 @@
 import {
   isRudeNickname,
   tidyNickname,
-  validBear,
   validEmail,
   validKey,
   validNickname,
   validUsername,
 } from '../shared/rules';
+import { pickLook, validLook, type BearLook } from '../shared/bearLook';
 import { BadRequest } from './http';
 
 export function username(value: unknown): string {
@@ -30,9 +30,10 @@ export function nickname(value: unknown): string {
   return trimmed;
 }
 
-export function bear(value: unknown): number {
-  if (!validBear(value)) throw new BadRequest('invalid', 'bear');
-  return value;
+/** SCRUM-249: the bear's five parts, each a whole number in its range. */
+export function look(value: unknown): BearLook {
+  if (!validLook(value)) throw new BadRequest('invalid', 'look');
+  return pickLook(value);
 }
 
 /** Optional email: empty/null means none. */

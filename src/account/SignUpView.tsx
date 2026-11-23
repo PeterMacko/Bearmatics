@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import * as api from './api';
 import type { Account } from './api';
+import { DressView, LookChoice, useDressing, useLookChoice } from './DressView';
 import {
-  BearPicker,
   Field,
   Message,
   ParentCheck,
@@ -19,6 +19,7 @@ export function SignUpView({
   t,
   headingRef,
   onPrivacy,
+  onSubView,
   onSignedIn,
 }: Common & { onSignedIn: (account: Account) => void }) {
   const [username, setUsername] = useState('');
@@ -26,7 +27,8 @@ export function SignUpView({
   const [again, setAgain] = useState('');
   const [email, setEmail] = useState('');
   const [nickname, setNickname] = useState('');
-  const [bear, setBear] = useState(1);
+  const choice = useLookChoice();
+  const dress = useDressing(onSubView);
   const [parent, setParent] = useState(false);
   const [checked, setChecked] = useState(false);
   const { busy, error, setError, run } = useAction();
@@ -54,13 +56,26 @@ export function SignUpView({
             key: await passwordKey(username, password),
             email: email.trim(),
             nickname: nickname.trim(),
-            bear,
+            look: choice.look,
             parentConfirmed: parent,
           }),
         ),
       (e) => errorText(t, e),
     );
   };
+  if (dress.dressing) {
+    return (
+      <DressView
+        t={t}
+        initial={choice.look}
+        onSave={(look) => {
+          choice.replace(look);
+          dress.close();
+        }}
+        onCancel={dress.close}
+      />
+    );
+  }
   return (
     <Screen t={t} title={t.createTitle} intro={t.createIntro} headingRef={headingRef}>
       <form className="account-form" onSubmit={submit} noValidate aria-busy={busy}>
@@ -110,7 +125,14 @@ export function SignUpView({
           maxLength={20}
           invalid={checked && !!nicknameWrong}
         />
-        <BearPicker t={t} value={bear} onChange={setBear} />
+        <LookChoice
+          t={t}
+          looks={choice.looks}
+          chosen={choice.chosen}
+          onChoose={choice.setChosen}
+          onCustomize={dress.open}
+          customizeRef={dress.opener}
+        />
         <ParentCheck t={t} checked={parent} onChange={setParent} onPrivacy={onPrivacy} />
         <Message error={error} />
         <SubmitButton busy={busy} label={t.createAccount} working={t.working} />

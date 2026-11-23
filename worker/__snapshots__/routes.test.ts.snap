@@ -272,7 +272,7 @@ exports[`every /api route in every session state > GET google start: valid 1`] =
 
 exports[`every /api route in every session state > GET health: expired 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "body": "{"status":"ok","database":"ok","schema":"6"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -285,7 +285,7 @@ exports[`every /api route in every session state > GET health: expired 1`] = `
 
 exports[`every /api route in every session state > GET health: malformed token 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "body": "{"status":"ok","database":"ok","schema":"6"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -298,7 +298,7 @@ exports[`every /api route in every session state > GET health: malformed token 1
 
 exports[`every /api route in every session state > GET health: signed out 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "body": "{"status":"ok","database":"ok","schema":"6"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -311,7 +311,7 @@ exports[`every /api route in every session state > GET health: signed out 1`] = 
 
 exports[`every /api route in every session state > GET health: unknown token 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "body": "{"status":"ok","database":"ok","schema":"6"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -324,7 +324,7 @@ exports[`every /api route in every session state > GET health: unknown token 1`]
 
 exports[`every /api route in every session state > GET health: valid 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"5"}",
+  "body": "{"status":"ok","database":"ok","schema":"6"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -389,7 +389,7 @@ exports[`every /api route in every session state > GET leaderboard: unknown toke
 
 exports[`every /api route in every session state > GET leaderboard: valid 1`] = `
 {
-  "body": "{"rows":[{"place":1,"nickname":"Little Bear","bear":2,"points":90,"streak":5,"frozen":false,"me":false},{"place":2,"nickname":"Little Bear","bear":2,"points":3,"streak":1,"frozen":false,"me":false}],"gapBefore":null}",
+  "body": "{"rows":[{"place":1,"nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"points":90,"streak":5,"frozen":false,"me":false},{"place":2,"nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"points":3,"streak":1,"frozen":false,"me":false}],"gapBefore":null}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -462,7 +462,7 @@ exports[`every /api route in every session state > GET me: unknown token 1`] = `
 
 exports[`every /api route in every session state > GET me: valid 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route6x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route6x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -876,7 +876,7 @@ exports[`every /api route in every session state > PATCH update profile: unknown
 
 exports[`every /api route in every session state > PATCH update profile: valid 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route10x","nickname":"New Name","bear":4,"email":"p@example.com","leaderboard":false}}",
+  "body": "{"account":{"kind":"password","username":"route10x","nickname":"New Name","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":"p@example.com","leaderboard":false}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1165,7 +1165,7 @@ exports[`every /api route in every session state > POST google complete: valid 1
 
 exports[`every /api route in every session state > POST sign in: expired 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route38x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route38x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1180,7 +1180,7 @@ exports[`every /api route in every session state > POST sign in: expired 1`] = `
 
 exports[`every /api route in every session state > POST sign in: malformed token 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route40x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route40x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1195,7 +1195,7 @@ exports[`every /api route in every session state > POST sign in: malformed token
 
 exports[`every /api route in every session state > POST sign in: signed out 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route36x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route36x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1210,7 +1210,7 @@ exports[`every /api route in every session state > POST sign in: signed out 1`] 
 
 exports[`every /api route in every session state > POST sign in: unknown token 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route39x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route39x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1225,7 +1225,7 @@ exports[`every /api route in every session state > POST sign in: unknown token 1
 
 exports[`every /api route in every session state > POST sign in: valid 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"route42x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"route42x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1315,7 +1315,7 @@ exports[`every /api route in every session state > POST sign out: valid 1`] = `
 
 exports[`every /api route in every session state > POST sign up: expired 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"signup31x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"signup31x","nickname":"Cub","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1330,7 +1330,7 @@ exports[`every /api route in every session state > POST sign up: expired 1`] = `
 
 exports[`every /api route in every session state > POST sign up: malformed token 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"signup33x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"signup33x","nickname":"Cub","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1345,7 +1345,7 @@ exports[`every /api route in every session state > POST sign up: malformed token
 
 exports[`every /api route in every session state > POST sign up: signed out 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"signup29x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"signup29x","nickname":"Cub","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1360,7 +1360,7 @@ exports[`every /api route in every session state > POST sign up: signed out 1`] 
 
 exports[`every /api route in every session state > POST sign up: unknown token 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"signup32x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"signup32x","nickname":"Cub","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1375,7 +1375,7 @@ exports[`every /api route in every session state > POST sign up: unknown token 1
 
 exports[`every /api route in every session state > POST sign up: valid 1`] = `
 {
-  "body": "{"account":{"kind":"password","username":"signup35x","nickname":"Cub","bear":5,"email":null,"leaderboard":true}}",
+  "body": "{"account":{"kind":"password","username":"signup35x","nickname":"Cub","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -1700,7 +1700,7 @@ exports[`other answers of signed-in routes > password change for a Google-less p
     "status": 200,
   },
   {
-    "body": "{"account":{"kind":"password","username":"route75x","nickname":"Little Bear","bear":2,"email":null,"leaderboard":true}}",
+    "body": "{"account":{"kind":"password","username":"route75x","nickname":"Little Bear","look":{"fur":1,"background":2,"head":3,"neck":4,"eyes":1},"email":null,"leaderboard":true}}",
     "headers": {
       "cache-control": "no-store",
       "content-type": "application/json; charset=utf-8",

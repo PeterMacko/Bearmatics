@@ -1,5 +1,5 @@
 // Browser side of the account API. Only JSON bodies; nothing personal ever goes in a URL.
-import type { Account } from '../../shared/api-types';
+import type { Account, BearLook } from '../../shared/api-types';
 
 export type { Account };
 
@@ -60,7 +60,7 @@ export const signUp = (body: {
   key: string;
   email: string;
   nickname: string;
-  bear: number;
+  look: BearLook;
   parentConfirmed: boolean;
 }) => call<AccountReply>('/api/auth/signup', 'POST', body).then((r) => r.account!);
 export const signIn = (username: string, key: string) =>
@@ -69,7 +69,7 @@ export const signOut = () => call<AccountReply>('/api/auth/signout', 'POST', {})
 export const updateProfile = (changes: {
   leaderboard?: boolean;
   nickname?: string;
-  bear?: number;
+  look?: BearLook;
   email?: string | null;
 }) => call<AccountReply>('/api/me', 'PATCH', changes).then((r) => r.account!);
 export const changePassword = (currentKey: string, newKey: string) =>
@@ -77,6 +77,6 @@ export const changePassword = (currentKey: string, newKey: string) =>
 export const deleteAccount = () => call<AccountReply>('/api/me', 'DELETE', {});
 export const completeGoogle = (body: {
   nickname: string;
-  bear: number;
+  look: BearLook;
   parentConfirmed: boolean;
 }) => call<AccountReply>('/api/auth/google/complete', 'POST', body).then((r) => r.account!);
