@@ -25,7 +25,13 @@ export const QUICK = ['390x844', '844x390', '1366x900'];
 
 export const LANGUAGES = ['en', 'sk'];
 
-const ACCOUNT = { kind: 'password', username: 'kid', nickname: 'Brave Cub', bear: 2, email: null };
+const ACCOUNT = {
+  kind: 'password',
+  username: 'kid',
+  nickname: 'Brave Cub',
+  look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+  email: null,
+};
 
 /** Mocks /api so screens do not depend on a server: signed out, or signed in with progress. */
 export async function mockApi(page, signedIn) {
@@ -47,7 +53,7 @@ export async function mockApi(page, signedIn) {
           {
             place: 1,
             nickname: 'Speedy Otter',
-            bear: 1,
+            look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
             points: 960,
             streak: 12,
             frozen: false,
@@ -56,7 +62,7 @@ export async function mockApi(page, signedIn) {
           {
             place: 2,
             nickname: 'Quiet Fox',
-            bear: 3,
+            look: { fur: 3, background: 2, head: 0, neck: 3, eyes: 0 },
             points: 410,
             streak: 0,
             frozen: true,
