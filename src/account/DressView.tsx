@@ -128,6 +128,11 @@ export function DressView({
       <form
         className="account-form dress-form"
         onSubmit={submit}
+        onKeyDown={(event) => {
+          // QA256-01: Enter on a choice would submit the form (save and close); only Save does.
+          if (event.key === 'Enter' && (event.target as HTMLElement).matches('input[type="radio"]'))
+            event.preventDefault();
+        }}
         noValidate
         aria-busy={action.busy}
       >

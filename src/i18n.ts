@@ -753,7 +753,7 @@ export const copy = {
         'Súbor cookie ťa drží prihláseného na tomto zariadení. Platí 30 dní od poslednej návštevy alebo do odhlásenia.',
         'Body: ukladáme jedno číslo, tvoj súčet bodov, a na 2 dni tvoje posledné lekcie (náhodné označenie, veľkosť, čas začiatku a konca), aby sa lekcia započítala len raz. Žiadne odpovede ani zoznamy lekcií.',
         'Séria: ukladáme, koľko dní za sebou si dokončil lekciu, dátum posledného takého dňa a, kým neodpovieš, dátum ponuky na odomknutie zamrznutej série. Žiadny kalendár ani história.',
-        'Rebríček: ostatní prihlásení hráči vidia tvoju prezývku, tvojho medvedíka tak, ako si ho obliekol, sériu a body (až keď máš aspoň 1 bod). Na začiatku je zapnutý; kedykoľvek ho vypneš vo svojom profile („Zobraziť ma v rebríčku“). Ukladáme len túto voľbu. Prezývky s hrubými slovami nie sú povolené.',
+        'Rebríček: ostatní prihlásení hráči vidia tvoju prezývku, tvojho oblečeného medvedíka, sériu a body (až keď máš aspoň 1 bod). Na začiatku je zapnutý; kedykoľvek ho vypneš vo svojom profile („Zobraziť ma v rebríčku“). Ukladáme len túto voľbu. Prezývky s hrubými slovami nie sú povolené.',
         'Prečo: aby si sa mohol vrátiť k svojmu účtu a mal svoje body a medvedí odznak.',
         'Tieto údaje nepredávame ani nezdieľame a nezobrazujeme reklamy.',
         'Všetko naraz zmažeš v Profil → Zmazať účet.',

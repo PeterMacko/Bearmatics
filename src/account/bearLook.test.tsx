@@ -116,3 +116,10 @@ describe('bear looks', () => {
     expect(icons[1]).not.toHaveAttribute('role');
   });
 });
+
+// QA256-02: the Slovak leaderboard privacy sentence stays gender-neutral (no "obliekol/obliekla").
+it('Slovak privacy text about the dressed bear is gender-neutral', () => {
+  const text = JSON.stringify(copy.sk);
+  expect(text).toContain('tvojho oblečeného medvedíka');
+  expect(text).not.toMatch(/obliekol|obliekla/);
+});
