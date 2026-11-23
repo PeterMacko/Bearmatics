@@ -231,6 +231,7 @@ for (const [width, height, language, big] of [
           svg: svg!.getBoundingClientRect(),
         }));
       return {
+        badgeWord: box.querySelector('th:nth-child(3) .th-long')!.getBoundingClientRect().width,
         over: table.right - content.right,
         pointsOut: Math.max(...points.map((p) => p.right - content.right)),
         medals: medals.length,
@@ -252,5 +253,8 @@ for (const [width, height, language, big] of [
     expect(m.medalOut, 'medal outside its cell').toBeLessThanOrEqual(0.5);
     expect(m.smallest, 'medal too small to read').toBeGreaterThanOrEqual(21);
     expect(m.narrowest).toBeGreaterThan(40);
+    // Peter's header word stays visible on ordinary phones and larger (plain medal only on
+    // 320 px phones and at 200% text).
+    if (!big && width >= 360) expect(m.badgeWord, 'Badge header word').toBeGreaterThan(20);
   });
 }

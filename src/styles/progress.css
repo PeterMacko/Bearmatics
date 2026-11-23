@@ -708,6 +708,21 @@
 .leaderboard-table .th-short {
   display: none;
 }
+/* SCRUM-258: with the Badge column, ordinary phones (390 px, Slovak) need the short Place
+   header too; the bears and the word "Odznak"/"Badge" stay. */
+@container (max-width: 24em) {
+  .leaderboard-table th:first-child .th-short {
+    display: inline;
+  }
+  .leaderboard-table th:first-child .th-long {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+}
 @container (max-width: 20em) {
   .leaderboard-table .th-short {
     display: inline;
