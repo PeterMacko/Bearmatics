@@ -113,8 +113,9 @@ function Neck({ item }: { item: number }) {
     case 2: // tie
       return (
         <g fill="#d63c4a" stroke="#8f1f2b" strokeWidth="1" strokeLinejoin="round">
-          <path d="M26.5 51.5h11l-2.5 5.5h-6z" />
-          <path d="M29 57h6l4 8h-14z" />
+          {/* Peter: lower, below the mouth (it read as a tongue); the blade runs off the edge. */}
+          <path d="M27.5 56h9l-2 4.5h-5z" />
+          <path d="M29.5 60.5h5l3.5 6h-12z" />
         </g>
       );
     case 3: // scarf (first bear 3)
@@ -139,9 +140,10 @@ function Neck({ item }: { item: number }) {
     case 5: // medal on a ribbon
       return (
         <g>
-          <path d="M25 49l7 8 7-8" fill="none" stroke="#356da6" strokeWidth="3.5" />
-          <circle cx="32" cy="58.5" r="5.5" fill="#ffd23f" stroke="#b97c12" strokeWidth="1.5" />
-          <path d={star(32, 58.8, 3, 1.3)} fill="#b97c12" />
+          {/* Peter: lower, ribbon beside the medal instead of above it (it read as a tongue). */}
+          <path d="M18 52.5l9.5 5M46 52.5l-9.5 5" fill="none" stroke="#356da6" strokeWidth="3.5" />
+          <circle cx="32" cy="58" r="5.5" fill="#ffd23f" stroke="#b97c12" strokeWidth="1.5" />
+          <path d={star(32, 58.3, 3, 1.3)} fill="#b97c12" />
         </g>
       );
     default:
