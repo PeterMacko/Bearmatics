@@ -254,7 +254,7 @@ for (const [width, height, language, big] of [
     expect(m.smallest, 'medal too small to read').toBeGreaterThanOrEqual(21);
     expect(m.narrowest).toBeGreaterThan(40);
     // Peter's header word stays visible on ordinary phones and larger (plain medal only on
-    // 320 px phones and at 200% text).
-    if (!big && width >= 360) expect(m.badgeWord, 'Badge header word').toBeGreaterThan(20);
+    // 320/360 px phones, where the bears hide too, and at 200% text).
+    if (!big && width >= 390) expect(m.badgeWord, 'Badge header word').toBeGreaterThan(20);
   });
 }
