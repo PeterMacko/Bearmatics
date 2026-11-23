@@ -362,6 +362,11 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
   };
   let dialog = await open(second);
   await expect(dialog.getByRole('row', { name: /Board One/ })).toBeVisible();
+  // SCRUM-249: each row shows that player's look (its parts come from the server).
+  const firstLook = await first.locator('.app-bar .account-button svg').getAttribute('data-look');
+  await expect(
+    dialog.getByRole('row', { name: /Board One/ }).locator('svg.bear-icon'),
+  ).toHaveAttribute('data-look', firstLook!);
   await expect(dialog.locator('tr.me')).toContainText('Board Two');
   // The first player switches it off: gone for the second at once.
   await first.getByRole('button', { name: 'Your profile: Board One' }).click();

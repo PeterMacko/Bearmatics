@@ -1,11 +1,11 @@
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from 'react';
 import { fill } from '../i18n';
 import BearIcon from './BearIcon';
-import { OLD_BEARS } from '../../shared/bearLook';
+import { describeLook } from './bearLook';
+import { DressView, useDressing } from './DressView';
 import * as api from './api';
 import type { Account } from './api';
 import {
-  BearPicker,
   CheckRow,
   Field,
   Message,
@@ -26,6 +26,7 @@ export function ProfileView({
   t,
   headingRef,
   onPrivacy,
+  onSubView,
   account,
   onAccount,
   onSignedOut,
@@ -36,37 +37,76 @@ export function ProfileView({
 }) {
   // Created here, before the forms' own ids, so every id stays as it was.
   const switchId = useId();
+  const dress = useDressing(onSubView);
+  const [dressNote, setDressNote] = useState('');
+  // The profile stays mounted (hidden) while dressing, so unsaved edits in its forms are kept.
   return (
-    <Screen
-      t={t}
-      title={fill(t.profileTitle, { name: account.nickname })}
-      intro={
-        account.kind === 'google'
-          ? t.signedInGoogle
-          : fill(t.signedInAs, { username: account.username ?? '' })
-      }
-      headingRef={headingRef}
-    >
-      <div className="profile-badge" aria-hidden="true">
-        <BearIcon look={account.look} size={72} />
-      </div>
-      <LookForm t={t} account={account} onAccount={onAccount} />
-      <LeaderboardSwitch t={t} id={switchId} account={account} onAccount={onAccount} />
-      {account.kind === 'password' && (
-        <>
-          <EmailForm t={t} account={account} onAccount={onAccount} />
-          <PasswordForm t={t} account={account} />
-        </>
+    <>
+      {dress.dressing && (
+        <DressView
+          t={t}
+          initial={account.look}
+          onSave={async (look) => {
+            onAccount(await api.updateProfile({ look }));
+            setDressNote(t.saved);
+            dress.close();
+          }}
+          onCancel={() => {
+            setDressNote('');
+            dress.close();
+          }}
+        />
       )}
-      <LeaveSection t={t} onSignedOut={onSignedOut} onPrivacy={onPrivacy} />
-    </Screen>
+      <div hidden={dress.dressing}>
+        <Screen
+          t={t}
+          title={fill(t.profileTitle, { name: account.nickname })}
+          intro={
+            account.kind === 'google'
+              ? t.signedInGoogle
+              : fill(t.signedInAs, { username: account.username ?? '' })
+          }
+          headingRef={headingRef}
+        >
+          <LookForm
+            t={t}
+            account={account}
+            onAccount={onAccount}
+            onDress={() => {
+              setDressNote('');
+              dress.open();
+            }}
+            dressRef={dress.opener}
+            dressNote={dressNote}
+          />
+          <LeaderboardSwitch t={t} id={switchId} account={account} onAccount={onAccount} />
+          {account.kind === 'password' && (
+            <>
+              <EmailForm t={t} account={account} onAccount={onAccount} />
+              <PasswordForm t={t} account={account} />
+            </>
+          )}
+          <LeaveSection t={t} onSignedOut={onSignedOut} onPrivacy={onPrivacy} />
+        </Screen>
+      </div>
+    </>
   );
 }
 
-/** Nickname and bear. */
-function LookForm({ t, account, onAccount }: Saves) {
+/** Nickname and bear: the bear is dressed on its own screen (SCRUM-249). */
+function LookForm({
+  t,
+  account,
+  onAccount,
+  onDress,
+  dressRef,
+  dressNote,
+}: Saves & {
+  onDress: () => void;
+  dressRef: RefObject<HTMLButtonElement | null>;
+  dressNote: string;
+}) {
   const [nickname, setNickname] = useState(account.nickname);
-  const [bear, setBear] = useState(0);
   const look = useAction();
   const saveLook = (event: FormEvent) => {
     event.preventDefault();
@@ -74,12 +114,7 @@ function LookForm({ t, account, onAccount }: Saves) {
     if (problem) return look.setError(problem);
     void look.run(
       async () => {
-        onAccount(
-          await api.updateProfile({
-            nickname: nickname.trim(),
-            ...(bear ? { look: OLD_BEARS[bear] } : {}),
-          }),
-        );
+        onAccount(await api.updateProfile({ nickname: nickname.trim() }));
         look.setNote(t.saved);
       },
       (e) => errorText(t, e),
@@ -88,6 +123,19 @@ function LookForm({ t, account, onAccount }: Saves) {
   return (
     <form className="account-form" onSubmit={saveLook} noValidate aria-busy={look.busy}>
       <h3>{t.profileLook}</h3>
+      <div className="profile-look">
+        <div className="profile-badge">
+          <BearIcon look={account.look} size={72} label={describeLook(t.look, account.look)} />
+        </div>
+        <button ref={dressRef} className="secondary-button" type="button" onClick={onDress}>
+          {t.look.dress}
+        </button>
+      </div>
+      {dressNote ? (
+        <p className="account-note" role="status">
+          {dressNote}
+        </p>
+      ) : null}
       <Field
         label={t.nickname}
         hint={t.nicknameHint}
@@ -96,7 +144,6 @@ function LookForm({ t, account, onAccount }: Saves) {
         autoComplete="off"
         maxLength={20}
       />
-      <BearPicker t={t} value={bear} onChange={setBear} />
       <Message error={look.error} note={look.note} />
       <SubmitButton busy={look.busy} label={t.save} working={t.working} />
     </form>

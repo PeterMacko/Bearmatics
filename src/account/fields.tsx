@@ -2,9 +2,6 @@
 import { useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { Copy } from '../i18n';
 import MenuHeading from '../MenuHeading';
-import BearIcon from './BearIcon';
-import { OLD_BEARS } from '../../shared/bearLook';
-import { BEARS } from './rules';
 
 export type T = Copy['account'];
 
@@ -13,6 +10,8 @@ export type Common = {
   t: T;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onPrivacy: () => void;
+  /** SCRUM-249: a sub-screen (dress) opened or closed; App's Back then closes it. */
+  onSubView?: (close: (() => void) | null) => void;
 };
 
 /** Runs one request at a time with a busy flag and a single message line. */
@@ -97,38 +96,6 @@ export function Field({
         </span>
       ) : null}
     </div>
-  );
-}
-
-export function BearPicker({
-  t,
-  value,
-  onChange,
-}: {
-  t: T;
-  value: number;
-  onChange: (bear: number) => void;
-}) {
-  const name = useId();
-  return (
-    <fieldset className="bear-picker">
-      <legend>{t.chooseBear}</legend>
-      <div className="bear-options">
-        {BEARS.map((bear) => (
-          <label key={bear} className="bear-option" title={t.bears[bear - 1]}>
-            <input
-              type="radio"
-              name={name}
-              value={bear}
-              checked={value === bear}
-              aria-label={t.bears[bear - 1]}
-              onChange={() => onChange(bear)}
-            />
-            <BearIcon look={OLD_BEARS[bear] ?? OLD_BEARS[1]} size={52} />
-          </label>
-        ))}
-      </div>
-    </fieldset>
   );
 }
 

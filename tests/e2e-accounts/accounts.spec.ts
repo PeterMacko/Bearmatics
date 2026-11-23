@@ -105,12 +105,15 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await expect(page.getByRole('alert')).toHaveText('Please tick that a parent knows.');
   expect(sent.filter((line) => line.includes('/api/auth/signup'))).toHaveLength(0);
   await expect(page.getByText('A forgotten password cannot be reset yet.')).toBeVisible();
-  await page.getByRole('radio', { name: 'Panda' }).check();
+  // SCRUM-249: one of 4 random looks; the app bar shows the chosen one.
+  const chosen = page.locator('.bear-option').nth(1);
+  await chosen.locator('input').check();
+  const look = await chosen.locator('svg').getAttribute('data-look');
   await page.getByLabel('A parent knows I am creating this account').check();
   await page.getByRole('button', { name: 'Create account' }).click();
   const profileButton = page.getByRole('button', { name: 'Your profile: Brave Cub' });
   await expect(profileButton).toBeVisible();
-  await expect(profileButton.locator('[data-bear="4"]')).toBeVisible();
+  await expect(profileButton.locator(`svg[data-look="${look}"]`)).toBeVisible();
 
   // The plain password never leaves the browser.
   const signup = sent.find((line) => line.includes('/api/auth/signup'))!;
@@ -122,12 +125,24 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await page.reload();
   await expect(profileButton).toBeVisible();
 
-  // Profile: nickname and bear, email add and remove.
+  // Profile: dress the bear, nickname, email add and remove.
   await profileButton.click();
   await expect(page.getByRole('heading', { name: 'Hi, Brave Cub!' })).toBeFocused();
   await expect(page.getByText(`Signed in as ${username}`)).toBeVisible();
+  await page.getByRole('button', { name: 'Dress your bear' }).click();
+  await page.getByRole('group', { name: 'Fur' }).getByRole('radio', { name: 'Honey' }).check();
+  await page.getByRole('group', { name: 'Head' }).getByRole('radio', { name: 'Crown' }).check();
+  await page.getByRole('group', { name: 'Neck' }).getByRole('radio', { name: 'None' }).check();
+  await page
+    .getByRole('group', { name: 'Eyes' })
+    .getByRole('radio', { name: 'Glasses', exact: true })
+    .check();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(
+    page.getByRole('img', { name: 'Honey bear with a crown and glasses' }),
+  ).toBeVisible();
+  await expect(profileButton.locator('svg[data-look^="2."][data-look$=".3.0.1"]')).toBeVisible();
   await page.getByLabel('Nickname').fill('Honey Star');
-  await page.getByRole('radio', { name: 'Sunny bear' }).check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(page.getByText('Saved.', { exact: true })).toBeVisible();
   await page.getByLabel('Email (optional)').fill('parent@example.com');
@@ -241,8 +256,14 @@ test('Slovak texts and keyboard-only sign-up', async ({ page }) => {
   await page.keyboard.press('Tab');
   await page.keyboard.type('Medvedík');
   await page.keyboard.press('Tab');
+  // SCRUM-249: 4 random looks with Slovak names, then Customize (Upraviť).
   await page.keyboard.press('ArrowRight');
-  await expect(page.getByRole('radio', { name: 'Kakaový medvedík' })).toBeChecked();
+  const second = page.getByRole('group', { name: 'Vyber si medvedíka' }).getByRole('radio').nth(1);
+  await expect(second).toBeChecked();
+  await expect(second).toBeFocused();
+  await expect(second).toHaveAccessibleName(/^(\S+ medvedík|Panda)( so? .+)?$/);
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('button', { name: 'Upraviť' })).toBeFocused();
   await page.keyboard.press('Tab');
   await page.keyboard.press('Space');
   await expect(page.getByLabel('Rodič vie, že si zakladám účet')).toBeChecked();
@@ -343,7 +364,20 @@ test('Google: first sign-in asks for nickname, bear and parent; later sign-ins g
   await expect(page.getByRole('heading', { name: 'Almost done!' })).toBeVisible();
   await expect(page).toHaveURL(/\/$/);
   await page.getByLabel('Nickname').fill('Maculko');
-  await page.getByRole('radio', { name: 'Cocoa bear' }).check();
+  // SCRUM-249: 4 random looks; dress the third one and keep it.
+  const picker = page.getByRole('group', { name: 'Choose your bear' });
+  await expect(picker.getByRole('radio')).toHaveCount(4);
+  await picker.getByRole('radio').nth(2).check();
+  await page.getByRole('button', { name: 'Customize' }).click();
+  await page.getByRole('group', { name: 'Fur' }).getByRole('radio', { name: 'Panda' }).check();
+  await page.getByRole('group', { name: 'Head' }).getByRole('radio', { name: 'Cap' }).check();
+  await page.getByRole('group', { name: 'Neck' }).getByRole('radio', { name: 'Medal' }).check();
+  await page.getByRole('group', { name: 'Eyes' }).getByRole('radio', { name: 'None' }).check();
+  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(picker.getByRole('radio').nth(2)).toHaveAccessibleName(
+    'Panda with a cap and a medal',
+  );
+  await expect(picker.getByRole('radio').nth(2)).toBeChecked();
   await page.getByRole('button', { name: 'Continue' }).click();
   await expect(page.getByRole('alert')).toHaveText('Please tick that a parent knows.');
   await page.getByLabel('A parent knows I am creating this account').check();
@@ -352,8 +386,10 @@ test('Google: first sign-in asks for nickname, bear and parent; later sign-ins g
   await expect(profile).toBeVisible();
   await page.reload();
   await expect(profile).toBeVisible();
+  await expect(profile.locator('svg[data-look^="4."][data-look$=".1.5.0"]')).toBeVisible();
   await profile.click();
   await expect(page.getByText('Signed in with Google')).toBeVisible();
+  await expect(page.getByRole('img', { name: 'Panda with a cap and a medal' })).toBeVisible();
   await expect(page.getByLabel('Email (optional)')).toHaveCount(0);
   await expect(page.getByLabel('Current password')).toHaveCount(0);
   await page.getByRole('button', { name: 'Sign out' }).click();

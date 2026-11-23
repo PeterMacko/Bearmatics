@@ -24,7 +24,8 @@ export async function createAccount(
   await page.getByLabel('Password again').fill(PASSWORD);
   if (email) await page.getByLabel('Email (optional)').fill(email);
   await page.getByLabel('Nickname').fill(nickname);
-  await page.getByRole('radio', { name: 'Panda' }).check();
+  // SCRUM-249: 4 random looks; take the second one.
+  await page.getByRole('group', { name: 'Choose your bear' }).getByRole('radio').nth(1).check();
   await page.getByLabel('A parent knows I am creating this account').check();
   await page.getByRole('button', { name: 'Create account' }).click();
   await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();

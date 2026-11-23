@@ -311,3 +311,77 @@
   color: var(--blue-ink);
   overflow-wrap: anywhere;
 }
+
+/* ---------- Dress your bear (SCRUM-249) ---------- */
+.profile-look {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+}
+.profile-look .profile-badge {
+  margin: 0;
+}
+.profile-look .profile-badge .bear-icon {
+  display: block;
+}
+.look-customize {
+  margin-top: 10px;
+}
+.dress-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+.dress-preview .bear-icon {
+  flex: none;
+  border-radius: 28px;
+}
+.look-part {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.look-part legend {
+  margin-bottom: 6px;
+  padding: 0;
+  font-weight: 700;
+}
+/* One group per part; on narrow phones a group's choices wrap onto a second line. */
+.look-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.look-option {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border: 3px solid transparent;
+  border-radius: 14px;
+  cursor: pointer;
+}
+.look-option input {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+.look-option .bear-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+}
+.look-option:has(input:checked) {
+  border-color: var(--blue);
+  background: var(--sky);
+}
+.look-option:has(input:focus-visible) {
+  outline: 3px solid var(--blue);
+  outline-offset: 2px;
+}

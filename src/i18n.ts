@@ -362,16 +362,6 @@ export const copy = {
         googleUnavailable: 'Google sign-in is not ready yet.',
         generic: 'Something went wrong. Try again.',
       },
-      bears: [
-        'Honey bear',
-        'Cocoa bear',
-        'Polar bear',
-        'Panda',
-        'Berry bear',
-        'Sky bear',
-        'Mint bear',
-        'Sunny bear',
-      ],
       privacyTitle: 'What we store',
       privacy: [
         'Signing in is optional. Without an account, nothing about you is stored on our server.',
@@ -755,16 +745,6 @@ export const copy = {
         googleUnavailable: 'Prihlásenie cez Google ešte nie je pripravené.',
         generic: 'Niečo sa pokazilo. Skús znova.',
       },
-      bears: [
-        'Medový medvedík',
-        'Kakaový medvedík',
-        'Ľadový medvedík',
-        'Panda',
-        'Malinový medvedík',
-        'Nebeský medvedík',
-        'Mätový medvedík',
-        'Slniečkový medvedík',
-      ],
       privacyTitle: 'Čo ukladáme',
       privacy: [
         'Prihlásenie je dobrovoľné. Bez účtu sa o tebe na našom serveri nič neukladá.',
