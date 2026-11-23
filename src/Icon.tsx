@@ -4,7 +4,19 @@ import type { ReactNode } from 'react';
  * Original button icons (SCRUM-172), drawn in the button's text colour. Decorative only: the
  * button's text stays its accessible name, so every icon is hidden from assistive technology.
  */
-type IconName = 'replay' | 'list' | 'play' | 'door' | 'unlock' | 'cross' | 'tick' | 'back' | 'wand';
+type IconName =
+  | 'replay'
+  | 'list'
+  | 'play'
+  | 'door'
+  | 'unlock'
+  | 'cross'
+  | 'tick'
+  | 'back'
+  | 'wand'
+  | 'pencil'
+  | 'key'
+  | 'bin';
 
 const SHAPES: Record<IconName, ReactNode> = {
   // Circular arrow: Play again and every Try again.
@@ -53,6 +65,28 @@ const SHAPES: Record<IconName, ReactNode> = {
       <path d="M18.5 2.5v4M16.5 4.5h4" strokeWidth="1.8" />
       <path d="M20.5 10v3M19 11.5h3" strokeWidth="1.8" />
       <path d="M10 2.5v3M8.5 4h3" strokeWidth="1.8" />
+    </>
+  ),
+  // Pencil: change a profile value, Dress your bear (SCRUM-281).
+  pencil: (
+    <>
+      <path d="M4.5 19.5l1-4.6L15.4 5a2.1 2.1 0 0 1 3 0l.6.6a2.1 2.1 0 0 1 0 3L9.1 18.5z" />
+      <path d="M13.5 7l3.5 3.5" />
+    </>
+  ),
+  // Key: Change password.
+  key: (
+    <>
+      <circle cx="7.5" cy="15.5" r="4" />
+      <path d="M10.4 12.6L19.5 3.5M15.5 7.5l2.5 2.5M13 10l2 2" />
+    </>
+  ),
+  // Rubbish bin: Delete account.
+  bin: (
+    <>
+      <path d="M4 6.5h16M9.5 6.5V4h5v2.5" />
+      <path d="M6.5 6.5l1 13.5h9l1-13.5" />
+      <path d="M10.2 10.5v6M13.8 10.5v6" />
     </>
   ),
 };

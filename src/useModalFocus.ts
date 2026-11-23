@@ -2,7 +2,8 @@ import { useEffect, type KeyboardEvent, type RefObject } from 'react';
 
 /**
  * Focus handling shared by the app's modal dialogs:
- * - on open, the dialog's first button takes focus;
+ * - on open, the dialog's first button takes focus, or the element marked `data-autofocus`
+ *   (a window's first field or its safe button, SCRUM-281);
  * - on close, focus returns to `restoreTo`: a trigger ref (focused without scrolling), or
  *   'opener', the element that had focus when the dialog opened (focused normally);
  * - the returned keydown handler closes on Escape and keeps Tab inside the dialog, also when
@@ -18,7 +19,10 @@ export function useModalFocus(
   useEffect(() => {
     const opener =
       restoreTo === 'opener' ? (document.activeElement as HTMLElement | null) : restoreTo.current;
-    ref.current?.querySelector<HTMLButtonElement>('button')?.focus();
+    (
+      ref.current?.querySelector<HTMLElement>('[data-autofocus]') ??
+      ref.current?.querySelector<HTMLButtonElement>('button')
+    )?.focus();
     return () => {
       if (!opener?.isConnected) return;
       if (restoreTo === 'opener') opener.focus();
@@ -32,7 +36,7 @@ export function useModalFocus(
     }
     if (event.key === 'Tab') {
       const controls = ref.current?.querySelectorAll<HTMLElement>(
-        'button:not(:disabled), a[href], [tabindex="0"]',
+        'button:not(:disabled), a[href], input:not(:disabled), [tabindex="0"]',
       );
       if (!controls?.length) return;
       const first = controls[0],
