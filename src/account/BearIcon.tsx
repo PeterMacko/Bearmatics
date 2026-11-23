@@ -3,10 +3,10 @@
 // exact drawing: their colours and extras (hat, scarf, bow, glasses, crown) are unchanged here.
 import type { BearLook } from '../../shared/bearLook';
 
-type Fur = { fur: string; inner: string; muzzle: string; ears?: string; patches?: boolean };
+export type Fur = { fur: string; inner: string; muzzle: string; ears?: string; patches?: boolean };
 
 /** Fur colours, in part order: brown, dark brown, honey, white (polar), panda, pink, blue, mint. */
-const FURS: Fur[] = [
+export const FURS: Fur[] = [
   { fur: '#ad754c', inner: '#e7b48c', muzzle: '#fff0ce' },
   { fur: '#6f4a33', inner: '#c99a72', muzzle: '#f1d4a4' },
   { fur: '#e2a43a', inner: '#f7d48b', muzzle: '#fff4d6' },
@@ -18,7 +18,7 @@ const FURS: Fur[] = [
 ];
 
 /** Background colours of the first eight bears, in their order. */
-const BACKGROUNDS = [
+export const BACKGROUNDS = [
   '#ffdc79',
   '#8cc5ef',
   '#97ccef',
@@ -29,7 +29,7 @@ const BACKGROUNDS = [
   '#ed746c',
 ];
 
-const INK = '#342c30';
+export const INK = '#342c30';
 
 /** Five-point star path around (cx, cy). */
 function star(cx: number, cy: number, outer: number, inner: number) {
@@ -48,7 +48,14 @@ const BEADS = [0.08, 0.24, 0.4, 0.6, 0.76, 0.92].map((s) => ({
 }));
 const BEAD_COLOURS = ['#ffd23f', '#e0567a', '#4f9be0', '#4f9be0', '#e0567a', '#ffd23f'];
 
-function Head({ item }: { item: number }) {
+/**
+ * Shared part shapes (SCRUM-273): the whole bear below and the part-only choice pictures
+ * (LookPartIcon) draw the same shapes. `outline` (choice pictures only) gives the coral hat and
+ * scarf a darker edge so they stand out on the pale choice tile; the bear itself is unchanged.
+ */
+export const ITEM_OUTLINE = '#b63e45';
+
+export function Head({ item, outline = false }: { item: number; outline?: boolean }) {
   switch (item) {
     case 1: // cap: dome with a button and a brim to the side
       return (
@@ -61,7 +68,15 @@ function Head({ item }: { item: number }) {
     case 2: // hat (first bear 2)
       return (
         <g>
-          <rect x="20" y="6" width="24" height="8" rx="3" fill="#ed746c" />
+          <rect
+            x="20"
+            y="6"
+            width="24"
+            height="8"
+            rx="3"
+            fill="#ed746c"
+            {...(outline ? { stroke: ITEM_OUTLINE, strokeWidth: 1 } : {})}
+          />
           <rect x="15" y="13" width="34" height="4" rx="2" fill="#b63e45" />
         </g>
       );
@@ -100,7 +115,7 @@ function Head({ item }: { item: number }) {
   }
 }
 
-function Neck({ item }: { item: number }) {
+export function Neck({ item, outline = false }: { item: number; outline?: boolean }) {
   switch (item) {
     case 1: // bow tie
       return (
@@ -119,7 +134,13 @@ function Neck({ item }: { item: number }) {
         </g>
       );
     case 3: // scarf (first bear 3)
-      return <path d="M14 55q18 8 36 0l-2 6q-16 5-32 0z" fill="#ed746c" />;
+      return (
+        <path
+          d="M14 55q18 8 36 0l-2 6q-16 5-32 0z"
+          fill="#ed746c"
+          {...(outline ? { stroke: ITEM_OUTLINE, strokeWidth: 1, strokeLinejoin: 'round' } : {})}
+        />
+      );
     case 4: // necklace: coloured beads on a string
       return (
         <g>
@@ -151,7 +172,7 @@ function Neck({ item }: { item: number }) {
   }
 }
 
-function Eyes({ item, eyeColour }: { item: number; eyeColour: string }) {
+export function Eyes({ item, eyeColour }: { item: number; eyeColour: string }) {
   switch (item) {
     case 1: // glasses (first bear 6)
       return (
@@ -190,6 +211,39 @@ function Eyes({ item, eyeColour }: { item: number; eyeColour: string }) {
   }
 }
 
+/** Panda eyes are white on their dark patches; every other bear has dark eyes. */
+export const eyeColourOf = (fur: Fur) => (fur.patches ? '#ffffff' : INK);
+
+/**
+ * The plain bear face: ears, head, panda patches, muzzle, eyes, nose and mouth. `outline` (the
+ * fur choice pictures) draws a dark edge round the ears and head, so pale furs (polar, panda)
+ * stay visible on a pale tile.
+ */
+export function Face({ fur, outline }: { fur: Fur; outline?: string }) {
+  const eyeColour = eyeColourOf(fur);
+  const edge = outline ? { stroke: outline, strokeWidth: 1.5 } : {};
+  return (
+    <>
+      <circle cx="16" cy="20" r="10" fill={fur.ears ?? fur.fur} {...edge} />
+      <circle cx="48" cy="20" r="10" fill={fur.ears ?? fur.fur} {...edge} />
+      <circle cx="16" cy="20" r="5" fill={fur.inner} />
+      <circle cx="48" cy="20" r="5" fill={fur.inner} />
+      <ellipse cx="32" cy="35" rx="24" ry="23" fill={fur.fur} {...edge} />
+      {fur.patches && (
+        <g fill="#2f2a2c">
+          <ellipse cx="23" cy="30" rx="6" ry="7" transform="rotate(-20 23 30)" />
+          <ellipse cx="41" cy="30" rx="6" ry="7" transform="rotate(20 41 30)" />
+        </g>
+      )}
+      <ellipse cx="32" cy="43" rx="15" ry="12" fill={fur.muzzle} />
+      <circle cx="23" cy="30" r="3" fill={eyeColour} />
+      <circle cx="41" cy="30" r="3" fill={eyeColour} />
+      <path d="M27 38q5-4 10 0q0 6-5 6t-5-6" fill={INK} />
+      <path d="M24 46q8 9 16 0" fill="none" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
+    </>
+  );
+}
+
 /** Drawn when an answer carries no look (never crash the whole app over a missing icon). */
 const PLAIN: BearLook = { fur: 0, background: 0, head: 0, neck: 0, eyes: 0 };
 
@@ -205,7 +259,6 @@ export default function BearIcon({
 }) {
   const fur = FURS[look.fur] ?? FURS[0];
   const background = BACKGROUNDS[look.background] ?? BACKGROUNDS[0];
-  const eyeColour = fur.patches ? '#ffffff' : INK;
   return (
     <svg
       className="bear-icon"
@@ -217,24 +270,9 @@ export default function BearIcon({
       focusable="false"
     >
       <rect width="64" height="64" rx="16" fill={background} />
-      <circle cx="16" cy="20" r="10" fill={fur.ears ?? fur.fur} />
-      <circle cx="48" cy="20" r="10" fill={fur.ears ?? fur.fur} />
-      <circle cx="16" cy="20" r="5" fill={fur.inner} />
-      <circle cx="48" cy="20" r="5" fill={fur.inner} />
-      <ellipse cx="32" cy="35" rx="24" ry="23" fill={fur.fur} />
-      {fur.patches && (
-        <g fill="#2f2a2c">
-          <ellipse cx="23" cy="30" rx="6" ry="7" transform="rotate(-20 23 30)" />
-          <ellipse cx="41" cy="30" rx="6" ry="7" transform="rotate(20 41 30)" />
-        </g>
-      )}
-      <ellipse cx="32" cy="43" rx="15" ry="12" fill={fur.muzzle} />
-      <circle cx="23" cy="30" r="3" fill={eyeColour} />
-      <circle cx="41" cy="30" r="3" fill={eyeColour} />
-      <path d="M27 38q5-4 10 0q0 6-5 6t-5-6" fill={INK} />
-      <path d="M24 46q8 9 16 0" fill="none" stroke={INK} strokeWidth="2.5" strokeLinecap="round" />
+      <Face fur={fur} />
       <Neck item={look.neck} />
-      <Eyes item={look.eyes} eyeColour={eyeColour} />
+      <Eyes item={look.eyes} eyeColour={eyeColourOf(fur)} />
       <Head item={look.head} />
     </svg>
   );

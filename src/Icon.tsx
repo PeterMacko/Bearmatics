@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
  * Original button icons (SCRUM-172), drawn in the button's text colour. Decorative only: the
  * button's text stays its accessible name, so every icon is hidden from assistive technology.
  */
-type IconName = 'replay' | 'list' | 'play' | 'door' | 'unlock' | 'cross' | 'tick' | 'back';
+type IconName = 'replay' | 'list' | 'play' | 'door' | 'unlock' | 'cross' | 'tick' | 'back' | 'wand';
 
 const SHAPES: Record<IconName, ReactNode> = {
   // Circular arrow: Play again and every Try again.
@@ -45,6 +45,16 @@ const SHAPES: Record<IconName, ReactNode> = {
   tick: <path d="M4.5 12.5l4.8 4.8L19.5 7" />,
   // Left arrow: Back.
   back: <path d="M19.5 12h-15M10.5 6l-6 6 6 6" />,
+  // Magic wand with sparkles: Surprise me (SCRUM-273).
+  wand: (
+    <>
+      <path d="M4 20L14.5 9.5" />
+      <path d="M13 8l3 3" strokeWidth="3.4" />
+      <path d="M18.5 2.5v4M16.5 4.5h4" strokeWidth="1.8" />
+      <path d="M20.5 10v3M19 11.5h3" strokeWidth="1.8" />
+      <path d="M10 2.5v3M8.5 4h3" strokeWidth="1.8" />
+    </>
+  ),
 };
 
 export default function Icon({ name }: { name: IconName }) {

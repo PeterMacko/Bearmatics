@@ -16,7 +16,8 @@ const looksOnOffer = (page: Page) =>
     .evaluateAll((svgs) => svgs.map((svg) => svg.getAttribute('data-look')));
 const barLook = (page: Page) =>
   page.locator('.app-bar .account-button svg').getAttribute('data-look');
-const preview = (page: Page) => page.locator('.dress-preview svg');
+// SCRUM-273: the preview holds the bear and Surprise me's wand icon; the bear is the .bear-icon.
+const preview = (page: Page) => page.locator('.dress-preview .bear-icon');
 
 async function openSignUp(page: Page) {
   await page.getByRole('button', { name: 'Sign in' }).click();
