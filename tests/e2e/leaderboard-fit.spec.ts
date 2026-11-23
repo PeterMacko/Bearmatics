@@ -128,20 +128,42 @@ for (const [width, height, language] of [
   });
 }
 
-test('QA154-05: the profile switch keeps keyboard focus after Space', async ({ page }) => {
+test('QA154-05 / SCRUM-281: the Leaderboard window keeps keyboard focus; Save is never disabled while saving', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   await mock(page, 135, 5);
   await page.goto('/');
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
-  const box = page.getByRole('checkbox', { name: 'Show me on the leaderboard' });
-  await box.focus();
+  const pencil = page.getByRole('button', { name: 'Change leaderboard' });
+  await pencil.focus();
+  await page.keyboard.press('Enter');
+  const window = page.getByRole('dialog', { name: 'Leaderboard' });
+  const box = window.getByRole('checkbox', { name: 'Show me on the leaderboard' });
+  await expect(box).toBeFocused();
   await page.keyboard.press('Space');
   await expect(box).not.toBeChecked();
-  await expect(page.getByText('Saved.')).toBeVisible();
-  await expect(box).not.toHaveAttribute('aria-disabled');
   await expect(box).toBeFocused();
   await page.keyboard.press('Space');
   await expect(box).toBeChecked();
+  await page.keyboard.press('Space');
+  await page.keyboard.press('Tab');
+  await expect(window.getByRole('button', { name: 'Save', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  // The mocked server answers after 300 ms: meanwhile Save keeps focus (never disabled).
+  const saving = await page.evaluate(() => {
+    const focused = document.activeElement as HTMLButtonElement;
+    return {
+      text: focused.textContent,
+      disabled: focused.disabled,
+      busy: focused.getAttribute('aria-disabled'),
+    };
+  });
+  expect(saving).toEqual({ text: 'Just a moment…', disabled: false, busy: 'true' });
+  await expect(window).toHaveCount(0);
+  await expect(page.getByText('Saved.', { exact: true })).toBeVisible();
+  await expect(pencil).toBeFocused();
+  await expect(page.locator('.profile-row', { hasText: 'Leaderboard' })).toContainText('No');
 });
 
 // SCRUM-258: the bear badge column (Place | Player | Badge | Streak | Points) fits on every

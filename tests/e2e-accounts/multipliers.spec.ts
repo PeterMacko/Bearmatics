@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, uniqueName } from '../e2e/support/account';
+import { createAccount, leaveProfile, uniqueName } from '../e2e/support/account';
 import { answerFor } from '../e2e/support/maths';
 
 // SCRUM-202: daily points multipliers against the real server (local database). Play counts
@@ -150,7 +150,7 @@ test('another account on the same device keeps its own counts', async ({ page })
   await expect(level(page, 1).locator('.next-play')).toHaveText('1/2');
   // Sign out and create a second account: its first plays are full points again.
   await page.getByRole('button', { name: /^Your profile/ }).click();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await leaveProfile(page, 'sign-out');
   await expect(page.getByText('You are signed out.')).toBeVisible();
   await page.goto('/');
   await createAccount(page, uniqueName('mul'), { nickname: 'Little Cub' });

@@ -377,7 +377,7 @@ export function GrownUpWindow({
   const field = useRef<HTMLInputElement>(null);
   const id = useId();
   // A double tap on Sign out / Delete account must not press the window's button below it.
-  const openedAt = useRef(0);
+  const openedAt = useRef<number | null>(null);
   useEffect(() => {
     openedAt.current = performance.now();
   }, []);
@@ -411,7 +411,9 @@ export function GrownUpWindow({
       className={deleting ? 'danger-button' : 'primary'}
       aria-disabled={leave.busy || undefined}
       onClick={(event) => {
-        if (ignoreRepeatClick(event, performance.now() - openedAt.current < SETTLE_MS)) return;
+        const opened = openedAt.current;
+        if (ignoreRepeatClick(event, opened === null || performance.now() - opened < SETTLE_MS))
+          return;
       }}
     >
       <Icon name={deleting ? 'bin' : 'door'} />

@@ -606,7 +606,6 @@
   place-items: center;
   width: var(--target);
   height: var(--target);
-  margin-inline-end: -8px;
   padding: 0;
   border: 0;
   border-radius: 50%;
