@@ -68,6 +68,7 @@ export const aboutCopy = {
       'Points grow your bear badge. Play every day to build a streak; missed days freeze it and points can unlock it.',
       'A leaderboard shows nickname, bear, bear badge, streak and points of players; you can hide yourself in the profile.',
       'The profile is only a nickname and a bear your child dresses from parts (fur, background, something for the head, neck and eyes); the bear look is stored as five numbers, no photo or real name. The account can be deleted any time.',
+      'Sign out and Delete account first ask a question for a grown-up, so a child cannot press them by mistake.',
     ],
     dataTitle: 'Your data',
     data: [
@@ -154,6 +155,7 @@ export const aboutCopy = {
       'Body zväčšujú medvedí odznak. Hraj každý deň a buduj sériu; vynechané dni ju zmrazia a body ju môžu odomknúť.',
       'Rebríček ukazuje prezývku, medveďa, medvedí odznak, sériu a body hráčov; v profile sa môžeš skryť.',
       'Profil je len prezývka a medvedík, ktorého si dieťa oblečie z dielikov (srsť, pozadie, niečo na hlavu, krk a oči); vzhľad medvedíka sa ukladá ako päť čísel, žiadna fotka ani skutočné meno. Účet sa dá kedykoľvek zmazať.',
+      'Pri odhlásení a zmazaní účtu sa najprv objaví otázka pre dospelého, aby to dieťa neurobilo omylom.',
     ],
     dataTitle: 'Vaše údaje',
     data: [

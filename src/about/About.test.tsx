@@ -284,3 +284,17 @@ test('SCRUM-258: the leaderboard sentence mentions the bear badge (EN and SK)', 
     'Rebríček ukazuje prezývku, medveďa, medvedí odznak, sériu a body hráčov; v profile sa môžeš skryť.',
   );
 });
+
+test('SCRUM-281: the About page says Sign out and Delete account ask a grown-up question (EN and SK)', () => {
+  expect(aboutCopy.en.signIn).toContain(
+    'Sign out and Delete account first ask a question for a grown-up, so a child cannot press them by mistake.',
+  );
+  expect(aboutCopy.sk.signIn).toContain(
+    'Pri odhlásení a zmazaní účtu sa najprv objaví otázka pre dospelého, aby to dieťa neurobilo omylom.',
+  );
+  for (const language of ['en', 'sk'] as const) {
+    const { unmount } = render(<AboutPage language={language} />);
+    expect(screen.getByText(aboutCopy[language].signIn.at(-1)!)).toBeInTheDocument();
+    unmount();
+  }
+});
