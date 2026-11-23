@@ -99,7 +99,11 @@ export default function LeaderboardDialog({
                 </th>
                 <th scope="col">{t.player}</th>
                 <th scope="col" className="mid">
-                  {t.badgeColumn}
+                  {/* Narrow windows show a plain medal instead of the word (SCRUM-258 fit). */}
+                  <span className="th-long">{t.badgeColumn}</span>
+                  <span className="th-short" aria-hidden="true">
+                    <BadgeIcon badge={0} size={18} plain />
+                  </span>
                 </th>
                 <th scope="col" className="num">
                   {t.streakColumn}

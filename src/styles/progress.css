@@ -680,7 +680,7 @@
   }
   .leaderboard-table th,
   .leaderboard-table td {
-    padding-inline: 2px;
+    padding-inline: 1px;
   }
   .leaderboard-player > .bear-icon {
     display: none;

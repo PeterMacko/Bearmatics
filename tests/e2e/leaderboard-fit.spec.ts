@@ -143,3 +143,112 @@ test('QA154-05: the profile switch keeps keyboard focus after Space', async ({ p
   await page.keyboard.press('Space');
   await expect(box).toBeChecked();
 });
+
+// SCRUM-258: the bear badge column (Place | Player | Badge | Streak | Points) fits on every
+// defined device with the longest nicknames, 3-4 digit points and a 365-day streak.
+const LONG = [
+  'Medvedíkovia_Šťastní',
+  'Zuzanka.Veľkolepá_77',
+  'Kráľovná-Matematiky1',
+  'Ema',
+  'Šimon Šampión Šikula',
+  'Lucia',
+  'Peter_Prvák_Najlepší',
+  'Dominik',
+  'Hugo-Hviezdoslav.123',
+  'Kubko',
+];
+const BADGE_ROWS = [
+  ...LONG.map((nickname, i) => ({
+    place: i + 1,
+    nickname,
+    look: OLD_BEARS[(i % 8) + 1],
+    points: [1234, 999, 378, 166, 120, 30, 29, 12, 5, 1][i],
+    streak: 365 - i,
+    frozen: i === 3,
+    me: false,
+  })),
+  { ...ROWS[11], nickname: 'Medvedík_Odvážny_007', points: 999, streak: 365 },
+  { ...ROWS[10], nickname: 'Miška_Malá_Múdra_123' },
+  { ...ROWS[12], nickname: 'Adam_Andrej_Alžbeta1' },
+];
+
+for (const [width, height, language, big] of [
+  [320, 568, 'Slovenčina', false],
+  [320, 568, 'Slovenčina', true],
+  [320, 568, 'English', true],
+  [360, 640, 'Slovenčina', true],
+  [390, 844, 'Slovenčina', true],
+  [390, 844, 'English', false],
+  [568, 320, 'Slovenčina', false],
+  [844, 390, 'English', false],
+  [820, 1180, 'Slovenčina', false],
+  [884, 1004, 'Slovenčina', true],
+  [1366, 900, 'English', false],
+  [1366, 900, 'Slovenčina', true],
+] as const) {
+  test(`SCRUM-258: badge column fits at ${width}x${height} ${language}${big ? ' 200% text' : ''}`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await mockApi(page, {
+      nickname: 'Medvedík_Odvážny_007',
+      points: 999,
+      streak: 365,
+      frozen: true,
+      today: false,
+      leaderboard: { rows: BADGE_ROWS, gapBefore: 10 },
+    });
+    await page.goto('/');
+    if (language !== 'English') await setLanguage(page, language, { gear: 'name' });
+    if (big) await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    await page.getByRole('button', { name: /^(Leaderboard|Rebríček),/ }).click();
+    const dialog = page.getByRole('dialog', {
+      name: language === 'English' ? 'Leaderboard' : 'Rebríček',
+    });
+    await expect(dialog.getByRole('table')).toBeVisible();
+    await expect(dialog.getByRole('columnheader').nth(2)).toHaveText(
+      language === 'English' ? 'Badge' : 'Odznak',
+    );
+    await nextFrames(page);
+    const m = await dialog.evaluate((box) => {
+      const content = box.querySelector('.leaderboard')!.getBoundingClientRect();
+      const table = box.querySelector('table')!.getBoundingClientRect();
+      const rows = [...box.querySelectorAll('tbody tr:not(.leaderboard-gap)')];
+      const textRect = (el: Element) => {
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        return range.getBoundingClientRect();
+      };
+      const points = rows.map((r) => textRect(r.querySelector('td:last-child')!));
+      const medals = rows
+        .map((r) => [r.querySelector('td:nth-child(3)')!, r.querySelector('td:nth-child(3) svg')])
+        .filter(([, svg]) => svg)
+        .map(([td, svg]) => ({
+          td: td!.getBoundingClientRect(),
+          svg: svg!.getBoundingClientRect(),
+        }));
+      return {
+        over: table.right - content.right,
+        pointsOut: Math.max(...points.map((p) => p.right - content.right)),
+        medals: medals.length,
+        medalOut: Math.max(
+          ...medals.map(({ td, svg }) => Math.max(td.left - svg.left, svg.right - td.right)),
+        ),
+        smallest: Math.min(...medals.map(({ svg }) => svg.width)),
+        pageScroll: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        narrowest: Math.min(
+          ...rows.map((r) => r.querySelector('td:nth-child(2)')!.getBoundingClientRect().width),
+        ),
+      };
+    });
+    expect(m.over, 'table wider than the window').toBeLessThanOrEqual(1);
+    expect(m.pointsOut, 'Points cut off').toBeLessThanOrEqual(1);
+    expect(m.pageScroll, 'horizontal page scroll').toBeLessThanOrEqual(0);
+    // 1234, 999, 378, 166, 120, 30 points and the three bottom rows have a badge.
+    expect(m.medals).toBe(9);
+    expect(m.medalOut, 'medal outside its cell').toBeLessThanOrEqual(0.5);
+    expect(m.smallest, 'medal too small to read').toBeGreaterThanOrEqual(21);
+    expect(m.narrowest).toBeGreaterThan(40);
+  });
+}
