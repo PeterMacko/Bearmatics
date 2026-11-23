@@ -220,3 +220,44 @@ test('dispose cancels pending activation and never schedules stale completion', 
   expect(player.play('complete')).toBe(false);
   expect(f.nodes).toHaveLength(0);
 });
+
+test('SCRUM-262: the bear step is one short, soft, low falling blip (quieter than the answer cues)', async () => {
+  const f = fixture();
+  const peaks: number[] = [];
+  const ends: number[] = [];
+  f.context.createGain = vi.fn(() => ({
+    gain: {
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: (value: number) => peaks.push(value),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+  f.context.createOscillator = vi.fn(() => {
+    const node = {
+      frequency: {
+        setValueAtTime: (value: number) => f.frequencies.push(value),
+        exponentialRampToValueAtTime: (value: number) => f.frequencies.push(value),
+      },
+      type: '',
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn((time?: number) => time !== undefined && ends.push(time)),
+      onended: null,
+    };
+    f.nodes.push(node);
+    return node;
+  });
+  const player = new PlayerClass(f.factory) as unknown as { play(o: string): boolean } & Player;
+  expect(player.play('step')).toBe(false); // not before a gesture enabled sound
+  await player.setEnabled(true);
+  expect(player.play('step')).toBe(true);
+  expect(f.nodes).toHaveLength(1);
+  expect(f.frequencies).toEqual([330, 190]);
+  expect(Math.max(...peaks)).toBeLessThan(0.3);
+  expect(ends).toEqual([0.13]);
+  await player.setEnabled(false);
+  expect(player.play('step')).toBe(false);
+});

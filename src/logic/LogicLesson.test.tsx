@@ -8,6 +8,7 @@ import type { BearPuzzle } from './bearPath';
 import { DEMO_MS } from './LogicDemo';
 import { BACK_MS, STEP_MS } from './LogicPracticeView';
 import { multiplierFor } from '../progress/multipliers';
+import { FeedbackAudio } from '../audio';
 
 // SCRUM-262: Logic course, level 1 "Bear goes to the honey".
 
@@ -146,6 +147,7 @@ test('arrow slots: up to 4, the bear does not move before Go, Remove last; Go ne
   tap('Go'); // not an attempt: nothing happens
   wait(3000);
   expect(feedback()).toHaveTextContent('');
+  expect(bear().querySelector('svg')).toHaveAttribute('data-mood', 'neutral');
   plan('Right', 'Right', 'Down');
   expect(slots()).toHaveAccessibleName('Arrows: right, right, down');
   expect(bearCell()).toEqual(['1', '0']);
@@ -234,7 +236,9 @@ test('keyboard: arrows add, Backspace removes, Enter goes; Enter on a button kee
   key('ArrowDown');
   // Enter on a focused button (Show me) is that button's, not Go.
   key('Enter', exact('Show me'));
+  wait(STEP_MS * 4 + BACK_MS);
   expect(bearCell()).toEqual(['1', '0']);
+  expect(feedback()).toHaveTextContent('');
   // Keys are off while a dialog is open.
   fireEvent.click(button('Settings'));
   key('ArrowLeft');
@@ -348,4 +352,20 @@ test('signed in: the finished lesson saves its first-try points and shows them w
   const summary = document.querySelector<HTMLElement>('.summary')!;
   await waitFor(() => expect(within(summary).getByText('+5 points')).toBeInTheDocument());
   expect(summary.querySelector('.points-multiplied')).toBeNull();
+});
+
+test('one soft step sound per arrow; Go or Enter again during the walk starts no second walk', async () => {
+  vi.spyOn(FeedbackAudio.prototype, 'setEnabled').mockResolvedValue(true);
+  const play = vi.spyOn(FeedbackAudio.prototype, 'play').mockReturnValue(true);
+  openLogic();
+  await act(async () => tap('Let’s plan'));
+  wait(DEMO_MS + 10);
+  plan('Right', 'Down');
+  tap('Go');
+  wait(200);
+  tap('Go'); // a deliberate second tap (detail 1) while the bear walks
+  key('Enter');
+  wait(STEP_MS * 6 + BACK_MS * 2);
+  expect(play.mock.calls.filter(([sound]) => sound === 'step')).toHaveLength(2);
+  expect(play.mock.calls.filter(([sound]) => sound === 'incorrect')).toHaveLength(1);
 });

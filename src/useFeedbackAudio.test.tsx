@@ -118,3 +118,15 @@ test('audio is disposed on unmount', () => {
   hook.unmount();
   expect(dispose).toHaveBeenCalledOnce();
 });
+
+test('SCRUM-262: the bear step plays only after a gesture allowed sound, and never when muted', async () => {
+  const { play, hook } = setup();
+  act(() => hook.result.current.playStep());
+  expect(play).not.toHaveBeenCalled();
+  await activate(hook);
+  act(() => hook.result.current.playStep());
+  expect(play.mock.calls).toEqual([['step']]);
+  act(() => hook.result.current.toggleSound());
+  act(() => hook.result.current.playStep());
+  expect(play.mock.calls).toEqual([['step']]);
+});
