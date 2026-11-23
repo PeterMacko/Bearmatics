@@ -570,6 +570,8 @@
 .leaderboard-table .mid {
   text-align: center;
   white-space: nowrap;
+  /* The medal has its own margin; Firefox's wider text needs the room at 390 px (SCRUM-258). */
+  padding-inline: 2px;
 }
 /* SCRUM-258: the bear badge medal, same look as the bar medal; smaller on narrow tables. */
 .leaderboard-badge {
@@ -691,6 +693,9 @@
   .leaderboard-streak .streak-icon {
     width: 14px;
     height: 14px;
+  }
+  .leaderboard-table .mid {
+    padding-inline: 0;
   }
   .leaderboard-badge .badge-icon {
     width: 22px;

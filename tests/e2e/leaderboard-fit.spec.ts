@@ -180,6 +180,8 @@ for (const [width, height, language, big] of [
   [360, 640, 'Slovenčina', true],
   [390, 844, 'Slovenčina', true],
   [390, 844, 'English', false],
+  [390, 844, 'Slovenčina', false],
+  [360, 640, 'English', false],
   [568, 320, 'Slovenčina', false],
   [844, 390, 'English', false],
   [820, 1180, 'Slovenčina', false],
