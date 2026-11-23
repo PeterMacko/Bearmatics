@@ -336,6 +336,8 @@
 }
 .dress-preview .bear-icon {
   flex: none;
+  width: var(--dress-bear, 120px);
+  height: var(--dress-bear, 120px);
   border-radius: 28px;
 }
 .look-part {
@@ -384,4 +386,123 @@
 .look-option:has(input:focus-visible) {
   outline: 3px solid var(--blue);
   outline-offset: 2px;
+}
+
+/* ---------- Dress your bear: tidier screen (SCRUM-273) ----------
+   Heading, the big bear with Surprise me, the choices in their own scroll pane, then Save | Cancel
+   in one row. useDressLayout sets data-dress-mode: 'contained' = one window high (only the pane
+   scrolls), 'flow' = one ordinary page (very large text). */
+.dress-screen {
+  /* Big, but Surprise me still fits beside it on a 320 px phone. */
+  --dress-bear: clamp(100px, min(100vw - 220px, 20dvh), 168px);
+}
+.dress-screen .dress-preview {
+  column-gap: 12px;
+}
+.dress-screen .dress-form {
+  margin-bottom: 0;
+}
+.dress-choices {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+  min-width: 0;
+}
+/* Save | Cancel side by side; they wrap only when even their shortest text cannot share a row. */
+.dress-actions {
+  flex-wrap: wrap;
+  align-items: stretch;
+}
+.dress-actions > * {
+  flex: 1 1 0;
+  min-width: min-content;
+}
+.dress-screen[data-dress-mode='contained'] {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - var(--dress-top, 0px) - max(12px, env(safe-area-inset-bottom)));
+  height: calc(100dvh - var(--dress-top, 0px) - max(12px, env(safe-area-inset-bottom)));
+}
+.account-shell .workspace:has(.dress-screen[data-dress-mode='contained']) {
+  padding-bottom: 0;
+}
+.dress-screen[data-dress-mode='contained'] .menu-heading {
+  flex: none;
+}
+.dress-screen[data-dress-mode='contained'] .dress-form {
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto;
+  min-height: 0;
+}
+.dress-screen[data-dress-mode='contained'] .dress-form > * {
+  flex: none;
+}
+.dress-screen[data-dress-mode='contained'] .dress-choices {
+  flex: 0 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  /* Room for the focus ring of the edge choices; the bar below never covers a choice. */
+  margin-inline: -8px;
+  padding: 8px;
+  scroll-padding: 8px;
+  border-block: 1.5px solid var(--line);
+}
+.dress-screen[data-dress-mode='contained'] .dress-actions {
+  padding-top: 2px;
+}
+/* Small devices (phones, short windows): no intro; eyebrow and title share one line. */
+@media (max-width: 620px), (max-height: 500px) {
+  .dress-screen .menu-heading {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 12px;
+    margin-bottom: 10px;
+  }
+  .dress-screen .menu-heading .eyebrow {
+    margin: 0;
+  }
+  .dress-screen .menu-heading h2 {
+    font-size: clamp(1.25rem, calc(9vw - 0.75rem), 1.8rem);
+  }
+  .dress-screen .menu-heading .intro {
+    display: none;
+  }
+}
+/* Short landscape windows: bear + Surprise me on the left, the choices on the right with
+   Save | Cancel under them. Also short desktop windows (e.g. 1280x520), where the tall heading
+   with its intro would leave the choices almost no room. */
+@media (min-width: 480px) and (max-height: 500px), (min-width: 951px) and (max-height: 620px) {
+  .dress-screen {
+    --dress-bear: clamp(96px, 38dvh, 168px);
+    max-width: 760px;
+  }
+  .dress-screen .dress-form {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 20px;
+  }
+  .dress-screen .dress-preview {
+    grid-column: 1;
+    grid-row: 1 / span 3;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-self: start;
+    gap: 10px;
+  }
+  .dress-screen .dress-form > :not(.dress-preview) {
+    grid-column: 2;
+  }
+  .dress-screen[data-dress-mode='contained'] .dress-form {
+    display: grid;
+    flex: 1 1 0;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    row-gap: 8px;
+  }
+  /* The pane is as tall as its choices, at most the whole row; Save | Cancel stay at the bottom. */
+  .dress-screen[data-dress-mode='contained'] .dress-choices {
+    align-self: start;
+    max-height: 100%;
+  }
 }

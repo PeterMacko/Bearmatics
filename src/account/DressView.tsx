@@ -10,10 +10,12 @@ import {
   type BearLook,
   type LookPart,
 } from '../../shared/bearLook';
+import Icon from '../Icon';
 import MenuHeading from '../MenuHeading';
 import BearIcon from './BearIcon';
 import { describeLook } from './bearLook';
 import LookPartIcon from './LookPartIcon';
+import { useDressLayout } from './useDressLayout';
 import { Message, useAction, type T } from './fields';
 import { errorText } from './problems';
 
@@ -118,8 +120,10 @@ export function DressView({
     while (sameLook(next, look)) next = randomLook();
     setLook(next);
   };
+  // SCRUM-273: heading, big bear and Save | Cancel stay in view; only the choices scroll.
+  const screenRef = useDressLayout(t.look.dress);
   return (
-    <section className="account-screen dress-screen">
+    <section ref={screenRef} className="account-screen dress-screen">
       <MenuHeading
         eyebrow={t.eyebrow}
         title={t.look.dress}
@@ -140,18 +144,23 @@ export function DressView({
         <div className="dress-preview">
           <BearIcon look={look} size={120} label={describeLook(t.look, look)} />
           <button className="secondary-button" type="button" onClick={surprise}>
+            <Icon name="wand" />
             {t.look.surprise}
           </button>
         </div>
-        {LOOK_PARTS.map((part) => (
-          <PartChoices key={part} t={t} part={part} look={look} onChange={setLook} />
-        ))}
+        <div className="dress-choices">
+          {LOOK_PARTS.map((part) => (
+            <PartChoices key={part} t={t} part={part} look={look} onChange={setLook} />
+          ))}
+        </div>
         <Message error={action.error} />
-        <div className="account-actions">
+        <div className="account-actions dress-actions">
           <button className="primary account-submit" type="submit" disabled={action.busy}>
+            <Icon name="tick" />
             {action.busy ? t.working : t.save}
           </button>
           <button className="secondary-button" type="button" onClick={onCancel}>
+            <Icon name="cross" />
             {t.look.cancel}
           </button>
         </div>

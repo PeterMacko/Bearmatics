@@ -152,6 +152,38 @@ describe('dress your bear (profile)', () => {
     ).toBeInTheDocument();
   });
 
+  it('SCRUM-273: Save has a tick, Cancel a cross, Surprise me a wand; icons hidden, names unchanged', () => {
+    for (const [language, names] of [
+      ['en', ['Save', 'Cancel', 'Surprise me']],
+      ['sk', ['Uložiť', 'Zrušiť', 'Prekvap ma']],
+    ] as const) {
+      const { unmount } = show('profile', language);
+      fireEvent.click(screen.getByRole('button', { name: copy[language].account.look.dress }));
+      const icons = names.map((name) => {
+        const button = screen.getByRole('button', { name });
+        expect(button).toHaveAccessibleName(name);
+        const icon = button.querySelector('svg.button-icon')!;
+        expect(icon).toHaveAttribute('aria-hidden', 'true');
+        return icon.getAttribute('data-icon');
+      });
+      expect(icons).toEqual(['tick', 'cross', 'wand']);
+      unmount();
+    }
+  });
+
+  it('SCRUM-273: the choices sit in their own pane between the bear and Save | Cancel', () => {
+    show('profile');
+    fireEvent.click(screen.getByRole('button', { name: 'Dress your bear' }));
+    const pane = document.querySelector('.dress-choices')!;
+    expect(groups().every((group) => pane.contains(group))).toBe(true);
+    const order = [...document.querySelector('.dress-form')!.children].map((el) => el.className);
+    expect(order[0]).toBe('dress-preview');
+    expect(order[1]).toBe('dress-choices');
+    expect(order[order.length - 1]).toContain('dress-actions');
+    const actions = within(document.querySelector<HTMLElement>('.dress-actions')!);
+    expect(actions.getAllByRole('button').map((b) => b.textContent)).toEqual(['Save', 'Cancel']);
+  });
+
   it('is in Slovak with Slovak item names', () => {
     show('profile', 'sk');
     expect(screen.getByRole('img', { name: 'Medový medvedík s korunou' })).toBeInTheDocument();
