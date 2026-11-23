@@ -3,6 +3,7 @@ import { useId, useRef, useState, type ReactNode, type RefObject } from 'react';
 import type { Copy } from '../i18n';
 import MenuHeading from '../MenuHeading';
 import BearIcon from './BearIcon';
+import { OLD_BEARS } from '../../shared/bearLook';
 import { BEARS } from './rules';
 
 export type T = Copy['account'];
@@ -123,7 +124,7 @@ export function BearPicker({
               aria-label={t.bears[bear - 1]}
               onChange={() => onChange(bear)}
             />
-            <BearIcon bear={bear} size={52} />
+            <BearIcon look={OLD_BEARS[bear] ?? OLD_BEARS[1]} size={52} />
           </label>
         ))}
       </div>

@@ -1,5 +1,6 @@
 import { Fragment, useEffect, useRef, useState, type RefObject } from 'react';
 import BearIcon from '../account/BearIcon';
+import { OLD_BEARS } from '../../shared/bearLook';
 import HintDialog from '../HintDialog';
 import Icon from '../Icon';
 import { fill, pointsText, type Copy } from '../i18n';
@@ -123,7 +124,7 @@ export default function LeaderboardDialog({
                     </td>
                     <td>
                       <span className="leaderboard-player">
-                        <BearIcon bear={row.bear} size={28} />
+                        <BearIcon look={OLD_BEARS[row.bear] ?? OLD_BEARS[1]} size={28} />
                         <span>
                           {row.nickname}
                           {row.me && <span className="sr-only"> ({t.you})</span>}

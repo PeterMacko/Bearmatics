@@ -1,6 +1,7 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { fill } from '../i18n';
 import BearIcon from './BearIcon';
+import { OLD_BEARS } from '../../shared/bearLook';
 import * as api from './api';
 import type { Account } from './api';
 import {
@@ -47,7 +48,7 @@ export function ProfileView({
       headingRef={headingRef}
     >
       <div className="profile-badge" aria-hidden="true">
-        <BearIcon bear={account.bear} size={72} />
+        <BearIcon look={OLD_BEARS[account.bear] ?? OLD_BEARS[1]} size={72} />
       </div>
       <LookForm t={t} account={account} onAccount={onAccount} />
       <LeaderboardSwitch t={t} id={switchId} account={account} onAccount={onAccount} />

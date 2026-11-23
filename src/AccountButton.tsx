@@ -1,5 +1,6 @@
 import { fill, type Copy } from './i18n';
 import BearIcon from './account/BearIcon';
+import { OLD_BEARS } from '../shared/bearLook';
 import type { Account } from './account/api';
 
 /** App bar button: "Sign in", or the bear and nickname (opens the profile). */
@@ -22,7 +23,7 @@ export function AccountButton({
       onClick={onClick}
     >
       {account ? (
-        <BearIcon bear={account.bear} size={32} />
+        <BearIcon look={OLD_BEARS[account.bear] ?? OLD_BEARS[1]} size={32} />
       ) : (
         <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" className="account-person">
           <circle cx="12" cy="8" r="4" fill="currentColor" />
