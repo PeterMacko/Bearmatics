@@ -11,8 +11,8 @@ export const TILE_EDGE = '#cfc4bb';
 export const PART_OUTLINE = INK;
 export const NONE_SIGN = '#626178';
 
-/** Square part of the drawing: left, top, size. `edge`: the item runs off the tile's lower edge. */
-type Crop = readonly [x: number, y: number, size: number, edge?: 'bottom'];
+/** Square part of the drawing: left, top, size. */
+type Crop = readonly [x: number, y: number, size: number];
 
 /** Square part of the 64x64 bear drawing that holds the face. */
 const FACE_CROP: Crop = [4, 6, 56];
@@ -20,19 +20,12 @@ const FACE_CROP: Crop = [4, 6, 56];
 /**
  * Per item: the square part of the 64x64 bear drawing that holds it, so the item fills the
  * tile. Index 0 ("None") has no crop. The cap keeps its side brim, the necklace its whole string
- * of beads, and the tie's blade runs off the lower edge as it does on the bear (a whole short
- * tie read as an hourglass).
+ * of beads, and the tie is shown whole inside the tile (a blade running off the edge was cut flat
+ * on the tile border, QA279-01).
  */
 const ITEM_CROPS: Record<'head' | 'neck' | 'eyes', readonly (Crop | null)[]> = {
   head: [null, [16, -10, 44], [13, -6.5, 38], [17, -5, 30], [20, 0, 24], [38.5, -0.5, 21]],
-  neck: [
-    null,
-    [20, 46, 24],
-    [24.5, 50, 15, 'bottom'],
-    [12, 39, 40],
-    [14.5, 36.5, 35],
-    [15.5, 41, 33],
-  ],
+  neck: [null, [20, 46, 24], [24.5, 53.5, 15], [12, 39, 40], [14.5, 36.5, 35], [15.5, 41, 33]],
   eyes: [null, [14, 12, 36], [13, 11, 38], [12.5, 11.5, 39]],
 };
 
@@ -81,8 +74,8 @@ export default function LookPartIcon({
           x="5"
           y="5"
           width="54"
-          height={crop[3] ? 59 : 54}
-          viewBox={`${crop[0]} ${crop[1]} ${crop[2]} ${crop[3] ? (crop[2] * 59) / 54 : crop[2]}`}
+          height="54"
+          viewBox={`${crop[0]} ${crop[1]} ${crop[2]} ${crop[2]}`}
           overflow="hidden"
           data-shape={part === 'fur' ? 'face' : 'item'}
         >

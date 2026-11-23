@@ -92,6 +92,25 @@ describe('part-only choice pictures', () => {
       }
   });
 
+  it('every item and face picture stays inside the tile border; the tie is shown whole (QA279-01)', () => {
+    for (const part of ['fur', ...ITEM_PARTS] as const) {
+      for (const index of range(part)) {
+        const crop = tile(part, index).querySelector('svg svg');
+        if (!crop) continue; // "None"
+        const bottom = Number(crop.getAttribute('y')) + Number(crop.getAttribute('height'));
+        // The tile's border (1.5 wide around a 62.5 square at 0.75) starts at 62.5.
+        expect(bottom, `${part} ${index}`).toBeLessThanOrEqual(62.5);
+      }
+    }
+    // The tie's blade ends at y 66.5 (+0.5 outline) in the bear drawing: the crop shows all of it.
+    const [, y, , h] = tile('neck', 2)
+      .querySelector('svg svg')!
+      .getAttribute('viewBox')!
+      .split(' ')
+      .map(Number);
+    expect(y + h).toBeGreaterThanOrEqual(67);
+  });
+
   it('None: an empty tile with a "no" sign (circle with a slash)', () => {
     for (const part of ITEM_PARTS) {
       const svg = tile(part, 0);
