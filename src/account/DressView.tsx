@@ -13,6 +13,7 @@ import {
 import MenuHeading from '../MenuHeading';
 import BearIcon from './BearIcon';
 import { describeLook } from './bearLook';
+import LookPartIcon from './LookPartIcon';
 import { Message, useAction, type T } from './fields';
 import { errorText } from './problems';
 
@@ -47,7 +48,7 @@ export function useDressing(onSubView?: SubView) {
   };
 }
 
-/** One part (fur, background, ...): a radio group of choices drawn on the current look. */
+/** One part (fur, background, ...): a radio group; each choice shows only that part (SCRUM-273). */
 function PartChoices({
   t,
   part,
@@ -77,7 +78,7 @@ function PartChoices({
                 aria-label={names[index]}
                 onChange={() => onChange(option)}
               />
-              <BearIcon look={option} size={40} />
+              <LookPartIcon part={part} index={index} size={44} />
             </label>
           );
         })}

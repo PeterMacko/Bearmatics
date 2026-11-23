@@ -372,10 +372,10 @@
   opacity: 0;
   cursor: pointer;
 }
-.look-option .bear-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+.look-option .look-part-icon {
+  display: block;
+  width: 44px;
+  height: 44px;
 }
 .look-option:has(input:checked) {
   border-color: var(--blue);
