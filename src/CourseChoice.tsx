@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import type { Copy } from './i18n';
 import MenuHeading from './MenuHeading';
 
-export type Course = 'small' | 'math' | 'english';
+export type Course = 'small' | 'logic' | 'math' | 'english';
 
 function SmallMathIcon() {
   // A die face: count the dots.
@@ -43,6 +43,26 @@ function MathIcon() {
   );
 }
 
+function LogicIcon() {
+  // SCRUM-262: an arrow pointing to a honey pot.
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#c9e3b8" />
+      <path
+        d="M10 34h17M21 27l7 7-7 7"
+        fill="none"
+        stroke="#356da6"
+        strokeWidth="5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <rect x="36" y="22" width="18" height="6" rx="3" fill="#a5642a" />
+      <path d="M37 28h16c3 4 4 9 3 14-1 6-6 9-11 9s-10-3-11-9c-1-5 0-10 3-14z" fill="#f2a93b" />
+      <path d="M38 33h14" stroke="#c47a17" strokeWidth="2.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 function EnglishIcon() {
   return (
     <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
@@ -57,9 +77,9 @@ function EnglishIcon() {
   );
 }
 
-const ICONS = { small: SmallMathIcon, math: MathIcon, english: EnglishIcon };
+const ICONS = { small: SmallMathIcon, logic: LogicIcon, math: MathIcon, english: EnglishIcon };
 
-/** First screen: choose Small maths, Maths or English. */
+/** First screen: choose Small maths, Logic, Maths or English. */
 export default function CourseChoice({
   t,
   headingRef,
@@ -71,6 +91,7 @@ export default function CourseChoice({
 }) {
   const courses: { id: Course; title: string; detail: string }[] = [
     { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
+    { id: 'logic', title: t.logicCourse, detail: t.logicCourseDetail },
     { id: 'math', title: t.mathCourse, detail: t.mathCourseDetail },
     { id: 'english', title: t.englishCourse, detail: t.englishCourseDetail },
   ];

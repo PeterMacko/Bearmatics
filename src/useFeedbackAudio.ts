@@ -93,6 +93,10 @@ export function useFeedbackAudio(
   const playPop = () => {
     if (desiredSound.current && readySound.current) audio.play('pop');
   };
+  /** SCRUM-262: the bear's soft step on the logic grid (follows Mute). */
+  const playStep = () => {
+    if (desiredSound.current && readySound.current) audio.play('step');
+  };
   /**
    * SCRUM-172: the bear's growl when it is tapped. Follows Mute; the tap is a user gesture, so
    * it may also allow sound that no Start has allowed yet (menus).
@@ -122,6 +126,7 @@ export function useFeedbackAudio(
     resetForNewSession,
     playBadge,
     playPop,
+    playStep,
     playGrowl,
   };
 }
