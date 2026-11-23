@@ -141,6 +141,11 @@ test('SCRUM-249 dress screen by keyboard; Cancel and Back keep the old look, Sav
   const eyesAfter = await eyes.getByRole('radio', { checked: true }).getAttribute('value');
   expect(eyesAfter).toBe(String((Number(eyesBefore) + 1) % 4));
   await expect(preview(page)).toHaveAttribute('data-look', new RegExp(`\\.${eyesAfter}$`));
+  // QA256-01: Enter on a choice does not save and close the screen (no implicit form submit).
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('heading', { name: 'Dress your bear' })).toBeVisible();
+  await expect(eyes.getByRole('radio', { checked: true })).toBeFocused();
+  expect(await barLook(page)).toBe(before);
   await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'Save', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
