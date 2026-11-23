@@ -148,7 +148,9 @@ export function DressView({
             {t.look.surprise}
           </button>
         </div>
-        <div className="dress-choices">
+        {/* tabIndex -1: Firefox would make the scrolling pane its own Tab stop (before the
+            first choice); the choices inside are reachable and scroll it themselves. */}
+        <div className="dress-choices" tabIndex={-1}>
           {LOOK_PARTS.map((part) => (
             <PartChoices key={part} t={t} part={part} look={look} onChange={setLook} />
           ))}
