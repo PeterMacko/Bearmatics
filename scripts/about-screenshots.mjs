@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-// SCRUM-222: phone screenshots for the About page (SCRUM-218), 8 per language (SCRUM-262: Logic).
+// SCRUM-222: phone screenshots for the About page (SCRUM-218), 8 per language (SCRUM-262: Logic;
+// SCRUM-289: Logic level 2).
 // Usage: npm run about:shots  (builds, then runs this script), or
 //        node scripts/about-screenshots.mjs [--dist dist] [--langs en,sk] [--shots course,leaderboard]
 // Renders the built app (dist/) in Chromium at 390 x 844 (phone, portrait, touch) with /api mocked
@@ -207,22 +208,37 @@ const STEPS = {
   },
   logic: async (page, lang) => {
     await home(page, lang);
-    // SCRUM-262: the third puzzle of a 5-puzzle lesson (3 moves) with its three arrows planned.
-    await startLesson(page, 'logic', 0, 5);
+    // SCRUM-289: Level 2 (stones). Puzzles 1-3 of a 5-puzzle lesson are solved; the 4th (a way
+    // round of 6 moves) gets its six arrows planned.
+    await startLesson(page, 'logic', 1, 5);
     await page.clock.runFor(6_000); // the demo
     await page.locator('.logic-board').waitFor();
+    // The shortest way from the board's accessible name (bear, honey, then the stones).
     const path = async () => {
       const label = await page.locator('.logic-board').getAttribute('aria-label');
-      const [bearRow, bearCol, honeyRow, honeyCol] = label.match(/\d+/g).map(Number);
-      return [
-        ...Array(Math.abs(honeyCol - bearCol)).fill(honeyCol > bearCol ? 'right' : 'left'),
-        ...Array(Math.abs(honeyRow - bearRow)).fill(honeyRow > bearRow ? 'down' : 'up'),
-      ];
+      const [bearRow, bearCol, honeyRow, honeyCol, ...rest] = label.match(/\d+/g).map(Number);
+      const stones = new Set();
+      for (let i = 0; i < rest.length; i += 2) stones.add(`${rest[i]},${rest[i + 1]}`);
+      const moves = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] };
+      const queue = [[bearRow, bearCol, []]];
+      const seen = new Set([`${bearRow},${bearCol}`]);
+      while (queue.length) {
+        const [row, col, way] = queue.shift();
+        if (row === honeyRow && col === honeyCol) return way;
+        for (const [name, [dr, dc]] of Object.entries(moves)) {
+          const next = `${row + dr},${col + dc}`;
+          if (row + dr < 1 || row + dr > 4 || col + dc < 1 || col + dc > 4) continue;
+          if (stones.has(next) || seen.has(next)) continue;
+          seen.add(next);
+          queue.push([row + dr, col + dc, [...way, name]]);
+        }
+      }
+      throw new Error('no way to the honey');
     };
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 3; i++) {
       for (const arrow of await path()) await page.locator(`.arrow-${arrow}`).click();
       await page.locator('.logic-go').click();
-      await page.clock.runFor(3_000);
+      await page.clock.runFor(4_000);
       await page.locator('.logic-actions .answer-button').click();
     }
     for (const arrow of await path()) await page.locator(`.arrow-${arrow}`).click();

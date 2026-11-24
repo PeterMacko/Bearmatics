@@ -59,7 +59,7 @@ function plan(...arrows: string[]) {
 /** Go, then the whole walk (and the walk back after a wrong try). */
 function go() {
   tap('Go');
-  wait(STEP_MS * 5 + BACK_MS + 200);
+  wait(STEP_MS * 7 + BACK_MS + 200);
 }
 
 test('course choice: Small maths, Logic, Maths, English with the Logic card text (EN and SK)', () => {
@@ -84,7 +84,13 @@ test('Logic menu: Level 1, sizes 5/10/20 (10 first), heading focused; Back retur
   expect(document.activeElement).toBe(heading());
   const level = screen.getByRole('radio', { name: /^Level 1 · Bear goes to the honey/ });
   expect(level).toBeChecked();
-  expect(screen.getAllByRole('radio', { name: /^Level / })).toHaveLength(1);
+  // SCRUM-289: Level 2 "Around the stones" follows Level 1.
+  expect(
+    screen.getAllByRole('radio', { name: /^Level / }).map((r) => r.closest('label')!.textContent),
+  ).toEqual([
+    expect.stringMatching(/^1.*Bear goes to the honey.*Plan the way with arrows, up to 4 steps/),
+    expect.stringMatching(/^2.*Around the stones.*Find the free way, up to 6 steps/),
+  ]);
   expect(screen.getByText('Plan the way with arrows, up to 4 steps')).toBeInTheDocument();
   expect(
     screen
@@ -430,4 +436,193 @@ test('one soft step sound per arrow; Go or Enter again during the walk starts no
   wait(STEP_MS * 6 + BACK_MS * 2);
   expect(play.mock.calls.filter(([sound]) => sound === 'step')).toHaveLength(2);
   expect(play.mock.calls.filter(([sound]) => sound === 'incorrect')).toHaveLength(1);
+});
+
+// ---------------------------------------------------------------------------------------------
+// SCRUM-289 / SCRUM-293: Level 2 "Around the stones".
+
+/** One stone between bear (row 2, column 1) and honey (row 2, column 3). */
+const ONE_STONE: BearPuzzle = { bear: at(1, 0), honey: at(1, 2), stones: [at(1, 1)] };
+/** Two stones beside the honey's corner: the only ways round take 6 arrows (URRDDL). */
+const TWO_STONES: BearPuzzle = { bear: at(1, 1), honey: at(2, 2), stones: [at(1, 2), at(2, 1)] };
+
+function startLevel2(puzzles: readonly BearPuzzle[], size = '5 exercises') {
+  vi.spyOn(bearPath, 'generateStoneSession').mockImplementation((n) =>
+    Array.from({ length: n }, (_, i) => puzzles[i % puzzles.length]),
+  );
+  openLogic();
+  fireEvent.click(screen.getByRole('radio', { name: /^Level 2 · Around the stones/ }));
+  fireEvent.click(screen.getByRole('radio', { name: size }));
+  tap('Let’s plan');
+  wait(DEMO_MS + 10);
+}
+
+test('Level 2: stones on the board and in its text (one / two), 6 arrow slots, no 7th arrow', () => {
+  startLevel2([TWO_STONES, ONE_STONE]);
+  expect(screen.getByText('Level 2')).toBeInTheDocument();
+  expect(board()).toHaveAccessibleName(
+    'Bear: row 2, column 2. Honey: row 3, column 3. Stones: row 2, column 3 and row 3, column 2.',
+  );
+  expect(document.querySelectorAll('.logic-cell .logic-stone')).toHaveLength(2);
+  const cells = [...document.querySelectorAll('.logic-cell')];
+  expect(cells.flatMap((c, i) => (c.querySelector('.logic-stone') ? [i] : []))).toEqual([6, 9]);
+  expect(document.querySelectorAll('.arrow-slot')).toHaveLength(6);
+  plan('Up', 'Right', 'Right', 'Down', 'Down', 'Left');
+  expect(slots()).toHaveAccessibleName('Arrows: up, right, right, down, down, left');
+  for (const name of ['Up', 'Down', 'Left', 'Right'])
+    expect(exact(name)).toHaveAttribute('aria-disabled', 'true');
+  plan('Up');
+  key('ArrowUp');
+  expect(slots()).toHaveAccessibleName('Arrows: up, right, right, down, down, left');
+  go();
+  expect(feedback()).toHaveTextContent('The bear found the honey! Well done.');
+  tap('Next exercise');
+  expect(board()).toHaveAccessibleName(
+    'Bear: row 2, column 1. Honey: row 2, column 3. Stone: row 2, column 2.',
+  );
+  expect(document.querySelectorAll('.logic-cell .logic-stone')).toHaveLength(1);
+});
+
+test('Level 2: an arrow into a stone bumps and stops the bear = wrong, announced; arrows kept', () => {
+  startLevel2([ONE_STONE]);
+  plan('Right', 'Right');
+  tap('Go');
+  wait(200);
+  expect(bearCell()).toEqual(['1', '0']);
+  expect(bear()).toHaveAttribute('data-bump', 'right');
+  wait(STEP_MS + 50);
+  // The feedback line is the polite status that screen readers announce.
+  expect(feedback()).toHaveTextContent(
+    'The bear bumped into a stone. Fix the arrows and try again.',
+  );
+  expect(feedback().closest('[role="status"], [aria-live]')).not.toBeNull();
+  expect(paws()).toBe(0);
+  wait(BACK_MS);
+  expect(bearCell()).toEqual(['1', '0']);
+  expect(slots()).toHaveAccessibleName('Arrows: right, right');
+  // A bump after some steps leaves paw dots on the walked cells, like the edge.
+  tap('Remove last arrow');
+  tap('Remove last arrow');
+  plan('Up', 'Right', 'Down', 'Down');
+  go();
+  expect(feedback()).toHaveTextContent('The bear bumped into a stone.');
+  expect(paws()).toBe(2);
+  // The edge keeps its own text on Level 2.
+  tap('Remove last arrow');
+  tap('Remove last arrow');
+  tap('Remove last arrow');
+  tap('Remove last arrow');
+  plan('Left');
+  go();
+  expect(feedback()).toHaveTextContent('The bear bumped into the edge.');
+});
+
+test('Level 2 in Slovak: stone texts (kameň / kamene) and the bump into a stone', () => {
+  vi.spyOn(bearPath, 'generateStoneSession').mockImplementation((n) =>
+    Array.from({ length: n }, (_, i) => [TWO_STONES, ONE_STONE][i % 2]),
+  );
+  render(<App />);
+  fireEvent.click(button('Settings'));
+  fireEvent.click(button('Slovenčina'));
+  fireEvent.click(button('Zavrieť nastavenia'));
+  fireEvent.click(exact('Logika'));
+  fireEvent.click(screen.getByRole('radio', { name: /^Úroveň 2 · Okolo kameňov/ }));
+  expect(screen.getByText('Nájdi voľnú cestu, najviac 6 krokov')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('radio', { name: '5 príkladov' }));
+  tap('Poďme plánovať');
+  wait(DEMO_MS + 10);
+  expect(board()).toHaveAccessibleName(
+    'Medveď: riadok 2, stĺpec 2. Med: riadok 3, stĺpec 3. Kamene: riadok 2, stĺpec 3 a riadok 3, stĺpec 2.',
+  );
+  const choď = () => {
+    tap('Choď');
+    wait(STEP_MS * 7 + BACK_MS + 200);
+  };
+  plan('Vpravo');
+  choď();
+  expect(feedback()).toHaveTextContent('Medveď narazil na kameň. Oprav šípky a skús znova.');
+  tap('Zmazať poslednú šípku');
+  plan('Hore', 'Vpravo', 'Vpravo', 'Dole', 'Dole', 'Vľavo');
+  choď();
+  tap('Ďalší príklad');
+  expect(board()).toHaveAccessibleName(
+    'Medveď: riadok 2, stĺpec 1. Med: riadok 2, stĺpec 3. Kameň: riadok 2, stĺpec 2.',
+  );
+});
+
+test('Level 2: first try, review round and summary like Level 1', () => {
+  startLevel2([ONE_STONE]);
+  for (let i = 0; i < 5; i++) {
+    if (i === 2) {
+      plan('Right');
+      go();
+      tap('Remove last arrow');
+    }
+    plan('Up', 'Right', 'Right', 'Down');
+    go();
+    expect(feedback()).toHaveTextContent('The bear found the honey!');
+    tap(i < 4 ? 'Next exercise' : 'Review tricky ones');
+  }
+  expect(screen.getByText('Review · 1 to practise')).toBeInTheDocument();
+  expect(board()).toHaveAccessibleName(
+    'Bear: row 2, column 1. Honey: row 2, column 3. Stone: row 2, column 2.',
+  );
+  plan('Down', 'Right', 'Right', 'Up');
+  go();
+  tap('See how you did');
+  expect(screen.getByText('4 / 5')).toBeInTheDocument();
+});
+
+test('Level 2 points: x1 (no multiplier row) and the play is counted as logic level 2', async () => {
+  for (let play = 1; play <= 8; play++) expect(multiplierFor('logic', 2, play)).toBe(1);
+  vi.useRealTimers();
+  localStorage.clear();
+  let total = 7;
+  const calls = fakeServer(({ path, body }) => {
+    if (path === '/api/me')
+      return reply({
+        account: {
+          kind: 'password',
+          username: 'kid',
+          nickname: 'Kid',
+          look: { fur: 0, background: 0, head: 0, neck: 0, eyes: 0 },
+          email: null,
+          leaderboard: true,
+        },
+      });
+    if (path === '/api/progress') return reply({ points: total });
+    if (path === '/api/progress/lessons') return reply({ lessonId: 'c'.repeat(32) }, 201);
+    if (path === '/api/progress/lessons/finish') {
+      total += (body as { points: number }).points;
+      return reply({ points: total, added: (body as { points: number }).points });
+    }
+    return reply({ error: 'not_found' }, 404);
+  });
+  vi.useFakeTimers({ shouldAdvanceTime: true });
+  vi.spyOn(bearPath, 'generateStoneSession').mockImplementation((n) =>
+    Array.from({ length: n }, () => ONE_STONE),
+  );
+  render(<App />);
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: /Leaderboard/ })).toBeInTheDocument(),
+  );
+  fireEvent.click(exact('Logic'));
+  fireEvent.click(screen.getByRole('radio', { name: /^Level 2 · Around the stones/ }));
+  fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
+  tap('Let’s plan');
+  wait(DEMO_MS + 10);
+  for (let i = 0; i < 5; i++) {
+    plan('Up', 'Right', 'Right', 'Down');
+    go();
+    tap(i < 4 ? 'Next exercise' : 'See how you did');
+  }
+  await waitFor(() =>
+    expect(calls.find((c) => c.path === '/api/progress/lessons/finish')?.body).toMatchObject({
+      points: 5,
+    }),
+  );
+  const summary = document.querySelector<HTMLElement>('.summary')!;
+  await waitFor(() => expect(within(summary).getByText('+5 points')).toBeInTheDocument());
+  expect(summary.querySelector('.points-multiplied')).toBeNull();
+  expect(localStorage.getItem('bearmatics-plays')).toMatch(/"logic:2":1/);
 });

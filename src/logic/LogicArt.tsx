@@ -54,6 +54,37 @@ export function HoneyPot() {
   );
 }
 
+/** A grey stone (Level 2, SCRUM-289): a rounded rock with a light top and a soft shadow. */
+export function Stone() {
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <ellipse cx="32" cy="53" rx="25" ry="5" fill="#0000001f" />
+      <path
+        d="M9 47c-3-9 1-19 9-25 5-9 15-13 25-10 9 3 14 11 14 20 4 6 2 13-4 16-6 3-15 4-22 4-8 0-16-1-20-3-2-1-2-1-2-2z"
+        fill="#8e979f"
+      />
+      <path
+        d="M14 34c2-6 6-10 11-12 4-7 12-9 19-7 6 2 10 7 10 13-6-3-13-3-19 0-8-4-15-2-21 6z"
+        fill="#b7bfc6"
+      />
+      <path
+        d="M22 22q6-6 14-6"
+        stroke="#dde2e6"
+        strokeWidth="3.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+      <path
+        d="M17 47q10 3 22 0M42 38l5 4"
+        stroke="#6e777f"
+        strokeWidth="2.4"
+        fill="none"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 /** Small paw print left on a walked cell after a wrong try. */
 export function Paw() {
   return (
@@ -139,6 +170,37 @@ export function Finger() {
         strokeWidth="2"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/**
+ * The "?" speech balloon (SCRUM-289): a white bubble with its tail at the bottom corner toward
+ * the bear's mouth (bottom left; `side="left"` mirrors the bubble, never the "?").
+ */
+export function QuestionBalloon({ side }: { side: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 100 92" aria-hidden="true" focusable="false">
+      <g transform={side === 'left' ? 'matrix(-1 0 0 1 100 0)' : undefined}>
+        <path
+          d="M28 4h48a20 20 0 0 1 20 20v22a20 20 0 0 1-20 20H34L6 88l10-24A20 20 0 0 1 8 46V24A20 20 0 0 1 28 4z"
+          fill="#fff"
+          stroke="#5c3b28"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+      </g>
+      <text
+        x="52"
+        y="50"
+        textAnchor="middle"
+        fontSize="46"
+        fontWeight="800"
+        fontFamily="inherit"
+        fill="#2f5f93"
+      >
+        ?
+      </text>
     </svg>
   );
 }

@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE } from './support/devices';
 import { setLanguage } from './support/language';
+import { mockApi } from './support/mockApi';
 
 // SCRUM-262: Logic course, level 1 "Bear goes to the honey" on the defined devices.
 
@@ -330,5 +331,348 @@ test('reduced motion: the demo is three still steps, then the puzzle', async ({ 
   expect(
     await page.locator('.logic-bear').evaluate((el) => getComputedStyle(el).transitionDuration),
   ).toMatch(/^0s/);
+  await context.close();
+});
+
+// ---------------------------------------------------------------------------------------------
+// SCRUM-289: Level 2 "Around the stones" (1-2 stones, up to 6 arrows).
+
+/** Bear, honey and stones (0-based) from the board's accessible name. */
+async function stonePuzzle(page: Page) {
+  const label = (await page.locator('.logic-board').getAttribute('aria-label'))!;
+  const [bearRow, bearCol, honeyRow, honeyCol, ...rest] = label
+    .match(/\d+/g)!
+    .map((n) => Number(n) - 1);
+  const stones: [number, number][] = [];
+  for (let i = 0; i < rest.length; i += 2) stones.push([rest[i], rest[i + 1]]);
+  return { bear: [bearRow, bearCol], honey: [honeyRow, honeyCol], stones };
+}
+
+const MOVES = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] } as const;
+
+/** Arrow selectors of the shortest way from the bear to `target` around the stones. */
+async function wayTo(page: Page, to: 'honey' | 'stone') {
+  const p = await stonePuzzle(page);
+  const key = ([r, c]: readonly number[]) => `${r},${c}`;
+  const stones = new Set(p.stones.map(key));
+  const goal = to === 'honey' ? [key(p.honey)] : p.stones.map(key);
+  const queue: [number[], string[]][] = [[p.bear, []]];
+  const seen = new Set([key(p.bear)]);
+  while (queue.length) {
+    const [cell, way] = queue.shift()!;
+    for (const [name, [dr, dc]] of Object.entries(MOVES)) {
+      const next = [cell[0] + dr, cell[1] + dc];
+      if (next.some((n) => n < 0 || n > 3) || seen.has(key(next))) continue;
+      // Into a stone: the end of a bump way; around the stones otherwise.
+      if (goal.includes(key(next))) return [...way, `.arrow-${name}`];
+      if (stones.has(key(next))) continue;
+      seen.add(key(next));
+      queue.push([next, [...way, `.arrow-${name}`]]);
+    }
+  }
+  throw new Error(`no way to the ${to}`);
+}
+
+/** Starts a Level 2 lesson whose first puzzle has `stones` stones (new lessons until it has). */
+async function startLevel2(page: Page, lang: 'en' | 'sk' = 'en', stones = 2) {
+  await openLogic(page, lang);
+  await page.locator('.logic-home .level-2').click();
+  for (let tries = 0; tries < 30; tries++) {
+    await page.locator('.logic-home .start-button').click();
+    await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+    if ((await page.locator('.logic-stone').count()) === stones) return;
+    await page.locator('.back-button').click();
+    await expect(page.locator('.logic-home')).toBeVisible();
+  }
+  throw new Error(`no first puzzle with ${stones} stones`);
+}
+
+for (const { name, width, height } of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    for (const account of ['signed out', 'signed in'] as const)
+      test(`Level 2 fits ${name} ${width}x${height} ${lang} ${account}: 2 stones, 6 arrows, Go on screen, no page scroll`, async ({
+        page,
+      }) => {
+        test.setTimeout(60_000); // new lessons until the first puzzle has two stones
+        if (account === 'signed in')
+          await mockApi(page, {
+            nickname: 'Medvedík Bru',
+            points: 1234,
+            streak: 12,
+            frozen: false,
+            today: true,
+          });
+        await page.setViewportSize({ width, height });
+        await startLevel2(page, lang);
+        await expect(page.locator('.logic-stone')).toHaveCount(2);
+        await expect(page.locator('.arrow-slot')).toHaveCount(6);
+        for (const arrow of ['.arrow-right', '.arrow-down', '.arrow-left', '.arrow-up']
+          .flatMap((a) => [a, a])
+          .slice(0, 6))
+          await page.locator(arrow).click();
+        await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(6);
+        for (const state of ['plan', 'after Go']) {
+          if (state === 'after Go') {
+            await page.locator('.logic-go').click();
+            await expect(page.locator('#answer-feedback')).not.toHaveText('', { timeout: 6000 });
+            await expect(page.locator('.logic-practice')).not.toHaveAttribute('data-walking');
+            await expect
+              .poll(async () => (await lessonLayout(page)).pageScroll, { timeout: 2000 })
+              .toBeLessThanOrEqual(1);
+          }
+          const layout = await lessonLayout(page);
+          test.info().annotations.push({
+            type: 'fit',
+            description: JSON.stringify({ state, ...layout }),
+          });
+          expect(layout.pageScroll, `${state}: page scroll`).toBeLessThanOrEqual(1);
+          expect(layout.sideScroll, `${state}: side scroll`).toBeLessThanOrEqual(0);
+          expect(layout.inView, `${state}: board, slots, pad, Go/Next, Show me on screen`).toBe(
+            true,
+          );
+          expect(layout.cell, `${state}: grid cell`).toBeGreaterThanOrEqual(56);
+          expect(layout.smallestTarget, `${state}: smallest button`).toBeGreaterThanOrEqual(48);
+          // Every stone stays inside its cell.
+          const inside = await page.evaluate(() =>
+            [...document.querySelectorAll('.logic-stone svg')].every((svg) => {
+              const s = svg.getBoundingClientRect();
+              const c = svg.closest('.logic-cell')!.getBoundingClientRect();
+              return (
+                s.left >= c.left - 0.5 &&
+                s.right <= c.right + 0.5 &&
+                s.top >= c.top - 0.5 &&
+                s.bottom <= c.bottom + 0.5
+              );
+            }),
+          );
+          expect(inside, `${state}: stones inside their cells`).toBe(true);
+        }
+      });
+
+for (const { name, width, height } of [DEVICE.phone, DEVICE.smallPhone])
+  for (const lang of ['en', 'sk'] as const)
+    test(`Level 2, 200% text ${lang} at ${name} ${width}x${height}: 6 slots usable, no sideways scroll`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openLogic(page, lang);
+      await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+      await page.locator('.logic-home .level-2').click();
+      await page.locator('.logic-home .start-button').click();
+      await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+      for (const arrow of [
+        '.arrow-right',
+        '.arrow-down',
+        '.arrow-left',
+        '.arrow-up',
+        '.arrow-right',
+        '.arrow-down',
+      ])
+        await page.locator(arrow).click();
+      await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(6);
+      const layout = await lessonLayout(page);
+      expect(layout.sideScroll).toBeLessThanOrEqual(0);
+      expect(layout.cell).toBeGreaterThanOrEqual(56);
+      expect(layout.smallestTarget).toBeGreaterThanOrEqual(48);
+      // Same rule as Level 1: the phone fits; the smallest phone scrolls with Go reachable.
+      if (width >= 390) expect(layout.pageScroll).toBeLessThanOrEqual(1);
+      await page.locator('.logic-go').scrollIntoViewIfNeeded();
+      await expect(page.locator('.logic-go')).toBeInViewport({ ratio: 1 });
+    });
+
+test('Level 2: the right way round the stones finds the honey; a walk into a stone bumps (paw dots, back to start)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startLevel2(page, 'en', 2);
+  const p = await stonePuzzle(page);
+  const bump = await wayTo(page, 'stone');
+  for (const arrow of bump) await page.locator(arrow).click();
+  await page.locator('.logic-go').click();
+  await expect(page.locator('#answer-feedback')).toHaveText(
+    'The bear bumped into a stone. Fix the arrows and try again.',
+  );
+  await expect(page.locator('.logic-cell[data-paw]')).toHaveCount(bump.length - 1);
+  await expect(page.locator('.logic-bear')).toHaveAttribute(
+    'style',
+    new RegExp(`--row: ${p.bear[0]}; --col: ${p.bear[1]}`),
+  );
+  await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(bump.length);
+  for (let i = 0; i < bump.length; i++) await page.locator('.logic-remove').click();
+  for (const arrow of await wayTo(page, 'honey')) await page.locator(arrow).click();
+  await page.locator('.logic-go').click();
+  await expect(page.locator('#answer-feedback')).toHaveText('The bear found the honey! Well done.');
+  await expect(page.locator('.logic-bear')).toHaveAttribute(
+    'style',
+    new RegExp(`--row: ${p.honey[0]}; --col: ${p.honey[1]}`),
+  );
+});
+
+test('Level 2: a whole lesson of 5 (tiers easier first), first try counted on the summary', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await openLogic(page);
+  await page.locator('.logic-home .level-2').click();
+  await page.getByRole('radio', { name: '5 exercises' }).check({ force: true });
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+  const lengths: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    await expect(page.getByText(`Exercise ${i + 1} of 5`)).toBeVisible();
+    const way = await wayTo(page, 'honey');
+    lengths.push(way.length);
+    for (const arrow of way) await page.locator(arrow).click();
+    await page.locator('.logic-go').click();
+    await expect(page.locator('#answer-feedback')).toHaveText(/found the honey/, {
+      timeout: 6000,
+    });
+    await page.getByRole('button', { name: i < 4 ? 'Next exercise' : 'See how you did' }).click();
+  }
+  // Tier A (2-3 moves), B (4-5), B, C (6), C.
+  expect(lengths[0]).toBeLessThanOrEqual(3);
+  expect(lengths.slice(1, 3).every((n) => n === 4 || n === 5)).toBe(true);
+  expect(lengths.slice(3)).toEqual([6, 6]);
+  await expect(page.getByText('5 / 5')).toBeVisible();
+});
+
+// ---------------------------------------------------------------------------------------------
+// SCRUM-289 / SCRUM-294: the demo once per device and the "?" balloon.
+
+const DEMO_SEEN_KEY = 'bearmatics-logic-demo-seen';
+const demoFlag = (page: Page) => page.evaluate((key) => localStorage.getItem(key), DEMO_SEEN_KEY);
+
+test('demo once per device: fresh device sees it; after it finished the next lesson starts with the puzzle; Show me still plays it', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openLogic(page);
+  expect(await demoFlag(page)).toBeNull();
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-demo')).toBeVisible();
+  await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+  expect(await demoFlag(page)).toBe('1');
+  await page.locator('.back-button').click();
+  await page.locator('.logic-home .level-2').click();
+  await page.locator('.logic-home .start-button').click();
+  // Straight to the puzzle: the demo never shows (not even for a frame).
+  await expect(page.locator('.logic-board')).toBeVisible();
+  await expect(page.locator('.logic-board')).toBeFocused();
+  await expect(page.locator('.logic-demo')).toHaveCount(0);
+  // A new visit (reload) on this device too.
+  await page.reload();
+  await page.locator('.course-logic').click();
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-board')).toBeVisible();
+  await expect(page.locator('.logic-demo')).toHaveCount(0);
+  await page.locator('.logic-show-me').click();
+  await expect(page.locator('.logic-demo')).toBeVisible();
+  await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+});
+
+test('demo once per device: leaving during the demo is not "seen"', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openLogic(page);
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-demo')).toBeVisible();
+  await page.locator('.back-button').click();
+  await expect(page.locator('.logic-home')).toBeVisible();
+  await page.waitForTimeout(DEMO_MS + 300);
+  expect(await demoFlag(page)).toBeNull();
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-demo')).toBeVisible();
+});
+
+test('demo once per device: blocked storage plays the demo at every lesson (as before)', async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    for (const name of ['getItem', 'setItem'] as const)
+      Storage.prototype[name] = () => {
+        throw new DOMException('blocked', 'SecurityError');
+      };
+  });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openLogic(page);
+  for (let lesson = 0; lesson < 2; lesson++) {
+    await page.locator('.logic-home .start-button').click();
+    await expect(page.locator('.logic-demo')).toBeVisible();
+    await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+    await page.locator('.back-button').click();
+    await expect(page.locator('.logic-home')).toBeVisible();
+  }
+});
+
+/** The balloon's box, the board's box and what a tap at the balloon's centre would hit. */
+const balloonState = (page: Page) =>
+  page.evaluate(() => {
+    const balloon = document.querySelector<HTMLElement>('.logic-balloon');
+    if (!balloon) return null;
+    const b = balloon.getBoundingClientRect();
+    const board = document.querySelector('.logic-board')!.getBoundingClientRect();
+    const hit = document.elementFromPoint(b.left + b.width / 2, b.top + b.height / 2);
+    return {
+      inside:
+        b.left >= board.left - 0.5 &&
+        b.right <= board.right + 0.5 &&
+        b.top >= board.top - 0.5 &&
+        b.bottom <= board.bottom + 0.5,
+      hitsBalloon: !!hit?.closest('.logic-balloon'),
+      hidden: balloon.getAttribute('aria-hidden'),
+      animations: balloon.getAnimations({ subtree: true }).length,
+    };
+  });
+
+test('balloon: pops in on the first puzzle when the bear appears, inside the board, takes no taps, fades after 3 s', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openLogic(page);
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-demo')).toBeVisible();
+  await expect(page.locator('.logic-balloon')).toHaveCount(0);
+  await expect(page.locator('.logic-balloon')).toBeVisible({ timeout: DEMO_MS + 3000 });
+  await page.waitForTimeout(400); // the pop in (0.3 s)
+  const state = await balloonState(page);
+  expect(state).toMatchObject({ inside: true, hitsBalloon: false, hidden: 'true' });
+  await expect(page.locator('.logic-balloon')).toHaveCount(0, { timeout: 4000 });
+});
+
+for (const width of [320, 1366])
+  test(`balloon stays inside the board on every bear column (${width} px)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 320 ? 568 : 900 });
+    await page.addInitScript((key) => localStorage.setItem(key, '1'), DEMO_SEEN_KEY);
+    await openLogic(page);
+    const columns = new Set<number>();
+    for (let tries = 0; tries < 40 && columns.size < 4; tries++) {
+      await page.locator('.logic-home .start-button').click();
+      await expect(page.locator('.logic-balloon')).toBeVisible();
+      const { bearCol } = await puzzle(page);
+      if (!columns.has(bearCol)) {
+        columns.add(bearCol);
+        await expect(page.locator('.logic-balloon')).toHaveAttribute(
+          'data-side',
+          bearCol === 3 ? 'left' : 'right',
+        );
+        await page.waitForTimeout(400);
+        expect((await balloonState(page))!.inside, `bear column ${bearCol + 1}`).toBe(true);
+      }
+      await page.locator('.back-button').click();
+      await expect(page.locator('.logic-home')).toBeVisible();
+    }
+    expect(columns.size).toBe(4);
+  });
+
+test('balloon, reduced motion: appears without growing (no animation)', async ({ browser }) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    reducedMotion: 'reduce',
+  });
+  await context.addInitScript((key) => localStorage.setItem(key, '1'), DEMO_SEEN_KEY);
+  const page = await context.newPage();
+  await openLogic(page);
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-balloon')).toBeVisible();
+  expect((await balloonState(page))!.animations).toBe(0);
   await context.close();
 });
