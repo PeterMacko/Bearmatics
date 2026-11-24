@@ -234,6 +234,19 @@
   color: var(--blue-ink);
   font-size: 0.9rem;
 }
+/* Focused but off: shown over the side column (no layout shift for the words below). */
+.ws-side {
+  position: relative;
+}
+.ws-letters-toggle:focus:not([data-on]) {
+  position: absolute;
+  z-index: 2;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 0.15);
+}
 .ws-letters-toggle:not(:focus):not([data-on]) {
   position: absolute;
   width: 1px;
@@ -366,6 +379,10 @@
     justify-content: flex-start;
     text-align: left;
   }
+  /* (Next and the focused letters switch are placed against the lesson, not the side.) */
+  .compact-practice .ws-side {
+    position: static;
+  }
   .compact-practice .ws-actions {
     position: absolute;
     top: 0;
@@ -415,9 +432,9 @@
   letter-spacing: 0;
 }
 
-/* Short wide windows (e.g. a foldable in a browser with tab and address bars, 884x600): two
-   columns already from a narrower lesson. */
-@media (min-width: 621px) and (max-height: 700px) {
+/* Short wide windows (e.g. a foldable in a browser with tab and address bars, 884x600 and
+   742x702): two columns already from a narrower lesson. */
+@media (min-width: 621px) and (max-height: 760px) {
   @container wordsearch (min-width: 420px) {
     .ws-play {
       grid-template-columns: max-content minmax(0, 1fr);

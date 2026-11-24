@@ -213,6 +213,50 @@ export default function WordSearchView({
           </div>
         </div>
         <div className="ws-side">
+          <button
+            type="button"
+            className="ws-letters-toggle"
+            aria-pressed={lettersMode}
+            data-on={lettersMode || undefined}
+            onClick={() => setLettersMode((on) => !on)}
+          >
+            {t.searchLettersMode}
+          </button>
+          {lettersMode && target !== -1 && (
+            <div className="ws-letters">
+              <p className="ws-letters-word">
+                {fill(t.searchLettersWord, { n: target + 1, total: puzzle.words.length })}
+                {level !== 2 && <>: {gridLetters(targetWord)}</>}
+              </p>
+              <button
+                type="button"
+                className="ws-speaker"
+                data-playing={playing === 'letters' || undefined}
+                aria-label={t.playWord}
+                onClick={() => onPlay(target, 'letters')}
+              >
+                <SpeakerIcon />
+              </button>
+              <p className="ws-letters-chosen" aria-live="polite">
+                {t.searchLettersPrompt}{' '}
+                {fill(t.searchLettersChosen, {
+                  letters: chosen ? [...chosen].join(', ') : t.searchLettersNone,
+                })}
+              </p>
+              <div className="ws-letter-buttons" role="group" aria-label={t.searchLetterButtons}>
+                {choices.map((letter) => (
+                  <button
+                    key={letter}
+                    type="button"
+                    className="ws-letter"
+                    onClick={() => chooseLetter(letter)}
+                  >
+                    {letter}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           {level === 2 ? (
             <ul className="ws-words ws-speakers" aria-label={t.searchWordList}>
               {puzzle.words.map(({ word }, i) => {
@@ -262,50 +306,6 @@ export default function WordSearchView({
                 );
               })}
             </ul>
-          )}
-          <button
-            type="button"
-            className="ws-letters-toggle"
-            aria-pressed={lettersMode}
-            data-on={lettersMode || undefined}
-            onClick={() => setLettersMode((on) => !on)}
-          >
-            {t.searchLettersMode}
-          </button>
-          {lettersMode && target !== -1 && (
-            <div className="ws-letters">
-              <p className="ws-letters-word">
-                {fill(t.searchLettersWord, { n: target + 1, total: puzzle.words.length })}
-                {level !== 2 && <>: {gridLetters(targetWord)}</>}
-              </p>
-              <button
-                type="button"
-                className="ws-speaker"
-                data-playing={playing === 'letters' || undefined}
-                aria-label={t.playWord}
-                onClick={() => onPlay(target, 'letters')}
-              >
-                <SpeakerIcon />
-              </button>
-              <p className="ws-letters-chosen" aria-live="polite">
-                {t.searchLettersPrompt}{' '}
-                {fill(t.searchLettersChosen, {
-                  letters: chosen ? [...chosen].join(', ') : t.searchLettersNone,
-                })}
-              </p>
-              <div className="ws-letter-buttons" role="group" aria-label={t.searchLetterButtons}>
-                {choices.map((letter) => (
-                  <button
-                    key={letter}
-                    type="button"
-                    className="ws-letter"
-                    onClick={() => chooseLetter(letter)}
-                  >
-                    {letter}
-                  </button>
-                ))}
-              </div>
-            </div>
           )}
           <FeedbackLine
             kind={feedbackKind}

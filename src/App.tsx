@@ -156,7 +156,14 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // for the bar, bear, leave question, summary and points.
   const [searchLevel, setSearchLevel] = useState<SearchLevel>(1);
   const [searchSize, setSearchSize] = useState(10);
-  const [searchLesson, setSearchLesson] = useState<SearchLesson | null>(null);
+  const [searchLesson, setSearchLessonState] = useState<SearchLesson | null>(null);
+  // The latest lesson for tap handlers: two taps in one batch (before a render) still see each
+  // other, so a quick first + last tap always counts as a pair.
+  const searchRef = useRef<SearchLesson | null>(null);
+  const setSearchLesson = (next: SearchLesson | null) => {
+    searchRef.current = next;
+    setSearchLessonState(next);
+  };
   const searchSession = useMemo(() => searchLesson && asSession(searchLesson), [searchLesson]);
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null =
@@ -446,6 +453,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   };
   /** A found word: a pop (follows Mute) and the word itself (always), from the tap's gesture. */
   const afterSearch = (before: SearchLesson, after: SearchLesson) => {
+    if (after === before) return;
     setSearchLesson(after);
     if (after.event === before.event || after.event?.kind !== 'found') return;
     playPop();
@@ -453,16 +461,18 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     void words.play(currentPuzzle(after).words[after.event.word].word);
   };
   const tapSearch = (cell: Cell) => {
-    if (!searchLesson) return;
+    const current = searchRef.current;
+    if (!current) return;
     void activateSound();
-    afterSearch(searchLesson, tapCell(searchLesson, cell));
+    afterSearch(current, tapCell(current, cell));
   };
   const nextSearch = () => {
-    if (!searchLesson) return;
+    const current = searchRef.current;
+    if (!current) return;
     void activateSound();
     words.stop();
     setPresentation((n) => n + 1);
-    setSearchLesson(nextPuzzle(searchLesson));
+    setSearchLesson(nextPuzzle(current));
   };
   const searchPuzzle = searchLesson && !searchLesson.done ? currentPuzzle(searchLesson) : null;
   useEffect(() => {
@@ -577,10 +587,15 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                   void words.play(searchPuzzle.words[index].word);
                 }}
                 onFoundByLetters={(index) => {
+                  const current = searchRef.current;
+                  if (!current) return;
                   void activateSound();
-                  afterSearch(searchLesson, findWord(searchLesson, index));
+                  afterSearch(current, findWord(current, index));
                 }}
-                onWrongLetter={() => setSearchLesson(wrongTry(searchLesson))}
+                onWrongLetter={() => {
+                  const current = searchRef.current;
+                  if (current) setSearchLesson(wrongTry(current));
+                }}
                 onRetryPlay={() => void words.retry()}
                 onNext={nextSearch}
               />

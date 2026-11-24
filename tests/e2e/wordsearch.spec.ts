@@ -1,0 +1,232 @@
+import { expect, test, type Page } from '@playwright/test';
+import { ALL_DEVICES, DEVICE } from './support/devices';
+import {
+  cell,
+  findWord,
+  gridWords,
+  searchLayout,
+  startSearch,
+  wrongPair,
+} from './support/wordsearch';
+
+// SCRUM-241: Word search (Osemsmerovka) on the defined devices: fit before and after finding
+// words, selection, wrong-pair flash, word playback, level 2 speakers, lesson sizes, keyboard.
+
+/** Records which word file each play() uses (window.played). */
+async function recordPlays(page: Page) {
+  await page.addInitScript(() => {
+    const played: string[] = [];
+    (window as unknown as { played: string[] }).played = played;
+    HTMLMediaElement.prototype.play = function (this: HTMLMediaElement) {
+      played.push(decodeURIComponent(this.src.split('/').pop()!.replace('.mp3', '')));
+      setTimeout(() => this.dispatchEvent(new Event('ended')), 300);
+      return Promise.resolve();
+    };
+  });
+}
+const played = (page: Page) =>
+  page.evaluate(() => (window as unknown as { played: string[] }).played);
+
+/** Fit numbers must hold: no page or sideways scroll, 48 px cells and targets, list in view. */
+function expectFit(m: Awaited<ReturnType<typeof searchLayout>>, where: string) {
+  expect(m.pageScroll, `${where} page scroll`).toBeLessThanOrEqual(1);
+  expect(m.sideScroll, `${where} sideways scroll`).toBeLessThanOrEqual(0);
+  expect(m.cell, `${where} cell`).toBeGreaterThanOrEqual(48);
+  expect(m.target, `${where} smallest target`).toBeGreaterThanOrEqual(48);
+  expect(m.listVisible, `${where} word list in view`).toBe(true);
+}
+
+const FIT_DEVICES = ALL_DEVICES.filter((d) => d !== DEVICE.phone369);
+for (const level of [1, 2, 3] as const)
+  for (const d of FIT_DEVICES)
+    test(`level ${level} fits ${d.name} ${d.width}x${d.height} before and after finding words`, async ({
+      browser,
+    }) => {
+      const context = await browser.newContext({
+        viewport: { width: d.width, height: d.height },
+        hasTouch: d.touch,
+      });
+      const page = await context.newPage();
+      await startSearch(page, { level, lang: level === 2 ? 'sk' : 'en' });
+      await page.waitForTimeout(200);
+      expectFit(await searchLayout(page), 'start');
+      const words = await gridWords(page);
+      // Longest words first: the level 2 list shows them, the largest growth.
+      words.sort((a, b) => b.word.length - a.word.length);
+      await findWord(page, words[0]);
+      await findWord(page, words[1]);
+      await page.waitForTimeout(200);
+      expectFit(await searchLayout(page), 'two found');
+      for (const w of words.slice(2)) await findWord(page, w);
+      await page.waitForTimeout(200);
+      const solved = await searchLayout(page);
+      expectFit(solved, 'solved');
+      await expect(page.locator('.ws-actions .answer-button')).toBeInViewport({ ratio: 1 });
+      await expect(page.locator('.ws-actions .answer-button')).toBeFocused();
+      await context.close();
+    });
+
+// 200% text: cells and targets stay 48 px, nothing runs off sideways (the page may scroll).
+for (const d of [DEVICE.phone, DEVICE.smallPhone])
+  for (const level of [1, 2] as const)
+    test(`200% text level ${level} at ${d.width}x${d.height}: 48 px cells, no sideways scroll`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width: d.width, height: d.height });
+      await startSearch(page, { level });
+      await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+      await page.waitForTimeout(300);
+      const words = await gridWords(page);
+      await findWord(page, words[0]);
+      await page.waitForTimeout(200);
+      const m = await searchLayout(page);
+      expect(m.sideScroll).toBeLessThanOrEqual(0);
+      expect(m.cell).toBeGreaterThanOrEqual(48);
+      expect(m.target).toBeGreaterThanOrEqual(48);
+      expect(m.boardRight).toBeLessThanOrEqual(d.width);
+    });
+
+test('level 1: tapping a listed word plays it; a found word plays again and is struck through', async ({
+  page,
+}) => {
+  await recordPlays(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startSearch(page, { level: 1 });
+  const list = page.getByRole('list', { name: 'Words to find' });
+  const first = list.getByRole('button').first();
+  const word = (await first.textContent())!;
+  await first.click();
+  expect(await played(page)).toEqual([word.toLowerCase()]);
+  await expect(first).toHaveAttribute('data-playing', 'true');
+  const target = (await gridWords(page)).find((w) => w.word.toUpperCase() === word)!;
+  await findWord(page, target);
+  expect(await played(page)).toEqual([word.toLowerCase(), word.toLowerCase()]);
+  await expect(list.getByRole('button', { name: `${word}, found` })).toBeVisible();
+  await expect(list.locator('s')).toHaveText([word]);
+  await expect(page.getByRole('status')).toHaveText(`Well done, you found ${word}!`);
+  await expect(cell(page, target.first)).toHaveAttribute('data-word', '0');
+});
+
+test('level 2: speakers play the words; a found word appears struck through beside its speaker', async ({
+  page,
+}) => {
+  await recordPlays(page);
+  await page.setViewportSize({ width: 360, height: 640 });
+  await startSearch(page, { level: 2 });
+  const speakers = page.getByRole('list', { name: 'Words to find' }).getByRole('button');
+  await expect(speakers).toHaveCount(5);
+  for (let i = 0; i < 5; i++) await expect(speakers.nth(i)).toHaveAccessibleName(`Word ${i + 1}`);
+  await speakers.nth(2).click();
+  const spoken = (await played(page)).at(-1)!;
+  await expect(speakers.nth(2)).toHaveAttribute('data-playing', 'true');
+  await expect(page.locator('.ws-revealed')).toHaveCount(0);
+  const words = await gridWords(page);
+  await findWord(
+    page,
+    words.find((w) => w.word.toLowerCase() === spoken)!,
+  );
+  expect((await played(page)).at(-1)).toBe(spoken);
+  await expect(speakers.nth(2)).toHaveAccessibleName(`Word 3: ${spoken.toUpperCase()}, found`);
+  await expect(page.locator('.ws-revealed')).toHaveText([spoken.toUpperCase()]);
+  await expect(page.locator('.ws-revealed')).toHaveCSS('text-decoration-line', 'line-through');
+});
+
+test('selection: first tap marks, wrong pair flashes and clears, double tap keeps the mark', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startSearch(page, { level: 1 });
+  const words = await gridWords(page);
+  const [a, b] = wrongPair(words);
+  await cell(page, a).click();
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'true');
+  await cell(page, b).click();
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'false');
+  await expect(cell(page, a)).toHaveAttribute('data-flash', 'true');
+  await expect(page.getByRole('status')).toHaveText('That is not a word from the list. Try again.');
+  await expect(cell(page, a)).not.toHaveAttribute('data-flash', 'true', { timeout: 2000 });
+  // A double tap on one letter: the second click (detail 2) must not cancel the mark.
+  const box = (await cell(page, a).boundingBox())!;
+  await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+  await page.mouse.down({ clickCount: 1 });
+  await page.mouse.up({ clickCount: 1 });
+  await page.mouse.down({ clickCount: 2 });
+  await page.mouse.up({ clickCount: 2 });
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'true');
+  // A deliberate second tap cancels it.
+  await page.waitForTimeout(600);
+  await cell(page, a).click();
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'false');
+  // A quick last tap right after the first one on another letter counts (crossing words too).
+  await cell(page, words[0].first).click();
+  await cell(page, words[0].last).click({ delay: 0 });
+  await expect(cell(page, words[0].first)).toHaveAttribute('data-word', /^[0-4]$/);
+});
+
+test('a lesson of 10 words is two grids; the summary shows found on the first try', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await startSearch(page, { level: 3, size: 10 });
+  await expect(page.getByText('Word search 1 of 2')).toBeVisible();
+  let words = await gridWords(page);
+  await cell(page, wrongPair(words)[0]).click();
+  await cell(page, wrongPair(words)[1]).click();
+  for (const w of words) await findWord(page, w);
+  await page.getByRole('button', { name: /Next word search/ }).click();
+  await expect(page.getByText('Word search 2 of 2')).toBeVisible();
+  await expect(page.locator('.ws-cell').first()).toBeFocused();
+  words = await gridWords(page);
+  for (const w of words) await findWord(page, w);
+  await page.getByRole('button', { name: /See how you did/ }).click();
+  await expect(page.getByText('10 words found')).toBeVisible();
+  await expect(page.locator('.first-try')).toHaveText('First try, without hints 9 / 10');
+  await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeFocused();
+});
+
+test('keyboard: Tab reaches the grid once, arrows move, Enter taps; letters-in-order mode works', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await startSearch(page, { level: 1 });
+  await expect(page.locator('.ws-cell').first()).toBeFocused();
+  const words = await gridWords(page);
+  const w = words[0];
+  /** Arrow keys from one cell to another (rows, then columns). */
+  const move = async (from: [number, number], to: [number, number]) => {
+    for (let r = from[0]; r !== to[0]; r += Math.sign(to[0] - from[0]))
+      await page.keyboard.press(to[0] > from[0] ? 'ArrowDown' : 'ArrowUp');
+    for (let c = from[1]; c !== to[1]; c += Math.sign(to[1] - from[1]))
+      await page.keyboard.press(to[1] > from[1] ? 'ArrowRight' : 'ArrowLeft');
+  };
+  await move([0, 0], w.first);
+  await page.keyboard.press('Enter');
+  await expect(cell(page, w.first)).toBeFocused();
+  await move(w.first, w.last);
+  await page.keyboard.press('Space');
+  await expect(cell(page, w.first)).toHaveAttribute('data-word', /\d/);
+  // Tab leaves the grid in one step: the hidden letters-mode switch appears on focus.
+  await page.keyboard.press('Tab');
+  const toggle = page.getByRole('button', { name: 'Choose the letters in order' });
+  await expect(toggle).toBeFocused();
+  await expect(toggle).toBeInViewport();
+  await page.keyboard.press('Enter');
+  await expect(toggle).toHaveAttribute('aria-pressed', 'true');
+  const label = (await page.locator('.ws-letters-word').textContent())!;
+  const word = label.split(': ')[1];
+  for (const letter of word)
+    await page
+      .getByRole('group', { name: 'Letter buttons' })
+      .getByRole('button', { name: letter, exact: true })
+      .click();
+  await expect(page.getByRole('button', { name: `${word}, found` })).toBeVisible();
+});
+
+test('the app bar stays one row at 320x568 during the lesson', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await startSearch(page, { level: 2 });
+  const tops = await page
+    .locator('.app-bar button:visible')
+    .evaluateAll((items) => items.map((b) => Math.round(b.getBoundingClientRect().top)));
+  expect(new Set(tops).size).toBe(1);
+});
