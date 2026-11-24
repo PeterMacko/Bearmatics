@@ -63,6 +63,7 @@ export function Field({
   autoComplete,
   invalid,
   maxLength,
+  first,
 }: {
   label: string;
   hint?: string;
@@ -72,6 +73,8 @@ export function Field({
   autoComplete?: string;
   invalid?: boolean;
   maxLength?: number;
+  /** The first control of a window: it takes focus when the window opens (SCRUM-281). */
+  first?: boolean;
 }) {
   const id = useId();
   return (
@@ -86,6 +89,7 @@ export function Field({
         autoCorrect="off"
         spellCheck={false}
         maxLength={maxLength}
+        data-autofocus={first || undefined}
         aria-invalid={invalid || undefined}
         aria-describedby={hint ? `${id}-hint` : undefined}
         onChange={(event) => onChange(event.target.value)}
@@ -111,6 +115,7 @@ export function CheckRow({
   describedBy,
   onChange,
   children,
+  first,
 }: {
   id: string;
   label: string;
@@ -119,6 +124,8 @@ export function CheckRow({
   describedBy?: string;
   onChange: (checked: boolean) => void;
   children?: ReactNode;
+  /** The first control of a window: it takes focus when the window opens (SCRUM-281). */
+  first?: boolean;
 }) {
   return (
     <div className="parent-check">
@@ -128,6 +135,7 @@ export function CheckRow({
         checked={checked}
         aria-disabled={busy || undefined}
         aria-describedby={describedBy}
+        data-autofocus={first || undefined}
         onChange={(event) => onChange(event.target.checked)}
       />
       <label htmlFor={id}>{label}</label>

@@ -121,34 +121,60 @@ test('offline: says so and Try again loads it', async () => {
   expect(screen.queryByRole('dialog')).toBeNull();
 });
 
-test('profile switch turns the leaderboard off at once; hidden note in the window', async () => {
+test('SCRUM-281: profile Leaderboard window saves only on Save; row says No; hidden note in the window', async () => {
   const calls = server();
   render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: 'Your profile: Mia' }));
-  const box = await screen.findByRole('checkbox', { name: 'Show me on the leaderboard' });
+  const pencil = await screen.findByRole('button', { name: 'Change leaderboard' });
+  const row = pencil.closest('.profile-row') as HTMLElement;
+  expect(row).toHaveTextContent('LeaderboardYes');
+  fireEvent.click(pencil);
+  const dialog = screen.getByRole('dialog', { name: 'Leaderboard' });
+  const box = within(dialog).getByRole('checkbox', { name: 'Show me on the leaderboard' });
   expect(box).toBeChecked();
+  expect(box).toHaveFocus();
   expect(box).toHaveAccessibleDescription('Others see your nickname, streak and points.');
-  box.focus();
+  fireEvent.click(box);
+  // Not saved by the switch itself any more.
+  expect(calls.filter((c) => c.method === 'PATCH')).toEqual([]);
   await act(async () => {
-    fireEvent.click(box);
+    fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
   });
   expect(calls.find((c) => c.method === 'PATCH')?.body).toEqual({ leaderboard: false });
-  // QA154-05: the switch keeps keyboard focus while and after saving.
-  expect(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' })).toHaveFocus();
-  expect(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' })).not.toBeChecked();
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(row).toHaveTextContent('LeaderboardNo');
+  expect(screen.getByRole('status')).toHaveTextContent('Saved.');
+  expect(screen.getByRole('button', { name: 'Change leaderboard' })).toHaveFocus();
   fireEvent.click(screen.getByRole('button', { name: 'Leaderboard, 112 points' }));
   expect(
     await screen.findByText('You are hidden from others. You can change it in your profile.'),
   ).toBeInTheDocument();
 });
 
-test('rude nickname: the profile form asks for a different one (SK too)', async () => {
+test('SCRUM-281: Cancel in the Leaderboard window keeps the old choice and sends nothing', async () => {
   const calls = server();
   render(<App />);
   fireEvent.click(await screen.findByRole('button', { name: 'Your profile: Mia' }));
-  fireEvent.change(await screen.findByLabelText('Nickname'), { target: { value: 'kok0t' } });
-  fireEvent.click(screen.getAllByRole('button', { name: 'Save' })[0]);
-  expect(await screen.findByText('Please choose a different nickname.')).toBeInTheDocument();
+  fireEvent.click(await screen.findByRole('button', { name: 'Change leaderboard' }));
+  fireEvent.click(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(calls.filter((c) => c.method === 'PATCH')).toEqual([]);
+  fireEvent.click(screen.getByRole('button', { name: 'Change leaderboard' }));
+  expect(screen.getByRole('checkbox', { name: 'Show me on the leaderboard' })).toBeChecked();
+});
+
+test('rude nickname: the nickname window asks for a different one (SK too)', async () => {
+  const calls = server();
+  render(<App />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Your profile: Mia' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Change nickname' }));
+  const dialog = screen.getByRole('dialog', { name: 'Change nickname' });
+  fireEvent.change(within(dialog).getByLabelText('Nickname'), { target: { value: 'kok0t' } });
+  fireEvent.click(within(dialog).getByRole('button', { name: 'Save' }));
+  expect(
+    await within(dialog).findByText('Please choose a different nickname.'),
+  ).toBeInTheDocument();
   expect(calls.filter((c) => c.method === 'PATCH')).toEqual([]);
 });
 

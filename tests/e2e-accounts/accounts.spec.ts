@@ -1,5 +1,12 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, PASSWORD, uniqueName } from '../e2e/support/account';
+import {
+  answerGrownUp,
+  createAccount,
+  leaveProfile,
+  PASSWORD,
+  uniqueName,
+  WINDOW_SETTLE_MS,
+} from '../e2e/support/account';
 import { ACCOUNT_DEVICES as DEVICES } from '../e2e/support/devices';
 import { setLanguage } from '../e2e/support/language';
 import { horizontalOverflow } from '../e2e/support/layout';
@@ -138,48 +145,76 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
     .getByRole('radio', { name: 'Glasses', exact: true })
     .check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(
-    page.getByRole('img', { name: 'Honey bear with a crown and glasses' }),
-  ).toBeVisible();
+  // SCRUM-281 review: the profile bear is a button (full screen); its look is the description.
+  await expect(page.getByRole('button', { name: 'Show my bear big' })).toHaveAccessibleDescription(
+    'Honey bear with a crown and glasses',
+  );
   await expect(profileButton.locator('svg[data-look^="2."][data-look$=".3.0.1"]')).toBeVisible();
-  await page.getByLabel('Nickname').fill('Honey Star');
-  await page.getByRole('button', { name: 'Save', exact: true }).click();
+  // SCRUM-281: every change in its own window.
+  await page.getByRole('button', { name: 'Change nickname' }).click();
+  const window = page.getByRole('dialog');
+  await expect(window.getByLabel('Nickname')).toBeFocused();
+  await window.getByLabel('Nickname').fill('Honey Star');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
+  await window.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(window).toHaveCount(0);
   await expect(page.getByText('Saved.', { exact: true })).toBeVisible();
-  await page.getByLabel('Email (optional)').fill('parent@example.com');
-  await page.getByRole('button', { name: 'Save email' }).click();
-  await expect(page.getByRole('button', { name: 'Remove email' })).toBeVisible();
-  await page.getByRole('button', { name: 'Remove email' }).click();
+  await expect(page.getByRole('heading', { name: 'Hi, Honey Star!' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Your profile: Honey Star' })).toBeVisible();
+  await page.getByRole('button', { name: 'Change email' }).click();
+  await window.getByLabel('Email (optional)').fill('parent@example.com');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
+  await window.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(window).toHaveCount(0);
+  await expect(page.locator('.profile-row', { hasText: 'Email' })).toContainText(
+    'parent@example.com',
+  );
+  await page.getByRole('button', { name: 'Change email' }).click();
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
+  await window.getByRole('button', { name: 'Remove email' }).click();
   await expect(page.getByText('Email removed.')).toBeVisible();
-  await expect(page.getByLabel('Email (optional)')).toHaveValue('');
+  await expect(page.locator('.profile-row', { hasText: 'Email' })).toContainText('No email saved.');
+  await page.getByRole('button', { name: 'Change email' }).click();
+  await expect(window.getByLabel('Email (optional)')).toHaveValue('');
+  await page.keyboard.press('Escape');
 
   // Change password: wrong current one first.
-  await page.getByLabel('Current password').fill('notMyPassword');
-  await page.getByLabel('New password', { exact: true }).fill('newHoney42');
-  await page.getByLabel('New password again').fill('newHoney42');
   await page.getByRole('button', { name: 'Change password' }).click();
-  await expect(page.getByText('The current password is not right.')).toBeVisible();
-  await page.getByLabel('Current password').fill(PASSWORD);
-  await page.getByLabel('New password', { exact: true }).fill('newHoney42');
-  await page.getByLabel('New password again').fill('newHoney42');
-  await page.getByRole('button', { name: 'Change password' }).click();
-  await expect(page.getByText('Password changed.')).toBeVisible();
+  await window.getByLabel('Current password').fill('notMyPassword');
+  await window.getByLabel('New password', { exact: true }).fill('newHoney42');
+  await window.getByLabel('New password again').fill('newHoney42');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
+  await window.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(window.getByText('The current password is not right.')).toBeVisible();
+  await window.getByLabel('Current password').fill(PASSWORD);
+  await window.getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(window).toHaveCount(0);
+  await expect(page.getByText('Password changed. Other devices are signed out.')).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Change password' })).toBeFocused();
 
-  // Sign out, wrong password, sign in with the new one (username case ignored).
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  // Sign out (grown-up question), wrong password, sign in with the new one (username case ignored).
+  await leaveProfile(page, 'sign-out');
   await expect(page.getByText('You are signed out.')).toBeVisible();
   await signIn(page, username.toUpperCase(), PASSWORD);
   await expect(page.getByRole('alert')).toHaveText('Wrong username or password.');
   await signIn(page, username.toLowerCase(), 'newHoney42');
   await expect(page.getByRole('button', { name: 'Your profile: Honey Star' })).toBeVisible();
 
-  // Delete: two steps, Keep first.
+  // Delete: a window with the grown-up question, Keep first.
   await page.getByRole('button', { name: 'Your profile: Honey Star' }).click();
   await page.getByRole('button', { name: 'Delete account' }).click();
   await expect(page.getByRole('button', { name: 'Keep my account' })).toBeFocused();
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await page.getByRole('button', { name: 'Keep my account' }).click();
   await expect(page.getByRole('button', { name: 'Delete account' })).toBeFocused();
+  // A wrong answer deletes nothing and asks a new question.
   await page.getByRole('button', { name: 'Delete account' }).click();
-  await page.getByRole('button', { name: 'Yes, delete forever' }).click();
+  await answerGrownUp(page, 1);
+  await page.waitForTimeout(WINDOW_SETTLE_MS);
+  await window.getByRole('button', { name: 'Yes, delete forever' }).click();
+  await expect(window.getByRole('alert')).toHaveText('That is not right. Here is a new question.');
+  await answerGrownUp(page);
+  await window.getByRole('button', { name: 'Yes, delete forever' }).click();
   await expect(page.getByText('Your account was deleted.')).toBeVisible();
   await signIn(page, username, 'newHoney42');
   await expect(page.getByRole('alert')).toHaveText('Wrong username or password.');
@@ -191,7 +226,7 @@ test('an account without email, and a username that is already taken', async ({ 
   await createAccount(page, username);
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
   await expect(page.getByText('No email saved.', { exact: false })).toBeVisible();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await leaveProfile(page, 'sign-out');
   await page.getByRole('button', { name: 'Create account' }).click();
   await page.getByLabel('Username').fill(username.toUpperCase());
   await page.getByLabel('Password', { exact: true }).fill(PASSWORD);
@@ -207,7 +242,7 @@ test('too many wrong passwords lock the username for a while', async ({ page }) 
   await openApp(page);
   await createAccount(page, username);
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await leaveProfile(page, 'sign-out');
   for (let i = 0; i < 4; i++) {
     await signIn(page, username, `wrong${i}pass`);
     await expect(page.getByRole('alert')).toHaveText('Wrong username or password.');
@@ -322,7 +357,10 @@ test('profile at 200% text on a phone stays inside the screen', async ({ browser
   await createAccount(page, uniqueName('Big'), { email: 'parent@example.com' });
   await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
+  expect(await horizontalOverflow(page)).toBe(0);
+  // SCRUM-281: the Delete window (warning + grown-up question) fits too.
   await page.getByRole('button', { name: 'Delete account' }).click();
+  await expect(page.getByRole('dialog')).toBeVisible();
   expect(await horizontalOverflow(page)).toBe(0);
   await context.close();
 });
@@ -391,15 +429,18 @@ test('Google: first sign-in asks for nickname, bear and parent; later sign-ins g
   await expect(profile.locator('svg[data-look^="4."][data-look$=".1.5.0"]')).toBeVisible();
   await profile.click();
   await expect(page.getByText('Signed in with Google')).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Panda with a cap and a medal' })).toBeVisible();
-  await expect(page.getByLabel('Email (optional)')).toHaveCount(0);
-  await expect(page.getByLabel('Current password')).toHaveCount(0);
-  await page.getByRole('button', { name: 'Sign out' }).click();
+  await expect(page.getByRole('button', { name: 'Show my bear big' })).toHaveAccessibleDescription(
+    'Panda with a cap and a medal',
+  );
+  // SCRUM-281: no Email row and no Change password for Google accounts.
+  await expect(page.getByRole('button', { name: 'Change email' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Change password' })).toHaveCount(0);
+  await expect(page.locator('.profile-row')).toHaveCount(2);
+  await leaveProfile(page, 'sign-out');
   await page.getByRole('link', { name: 'Continue with Google' }).click();
   await expect(profile).toBeVisible();
   await profile.click();
-  await page.getByRole('button', { name: 'Delete account' }).click();
-  await page.getByRole('button', { name: 'Yes, delete forever' }).click();
+  await leaveProfile(page, 'delete');
   await expect(page.getByText('Your account was deleted.')).toBeVisible();
   // After deleting, Google asks for nickname and bear again (a new account).
   await page.getByRole('link', { name: 'Continue with Google' }).click();

@@ -1,5 +1,10 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount as createPasswordAccount, uniqueName } from '../e2e/support/account';
+import {
+  createAccount as createPasswordAccount,
+  leaveProfile,
+  uniqueName,
+  WINDOW_SETTLE_MS,
+} from '../e2e/support/account';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 import { answerFor } from '../e2e/support/maths';
 import { horizontalOverflow, nextFrames } from '../e2e/support/layout';
@@ -62,8 +67,7 @@ test('a finished lesson adds its first-try points once; leaving early adds nothi
   await expect(badge(page)).toBeFocused();
   // Deleting the account removes the points: a new account starts at 0.
   await page.getByRole('button', { name: 'Your profile: Brave Cub' }).click();
-  await page.getByRole('button', { name: 'Delete account' }).click();
-  await page.getByRole('button', { name: 'Yes, delete forever' }).click();
+  await leaveProfile(page, 'delete');
   await expect(badge(page)).toHaveCount(0);
 });
 
@@ -368,12 +372,15 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
     dialog.getByRole('row', { name: /Board One/ }).locator('svg.bear-icon'),
   ).toHaveAttribute('data-look', firstLook!);
   await expect(dialog.locator('tr.me')).toContainText('Board Two');
-  // The first player switches it off: gone for the second at once.
+  // The first player switches it off (SCRUM-281: in the Leaderboard window, saved on Save):
+  // gone for the second at once.
   await first.getByRole('button', { name: 'Your profile: Board One' }).click();
+  await first.getByRole('button', { name: 'Change leaderboard' }).click();
   await first.getByRole('checkbox', { name: 'Show me on the leaderboard' }).uncheck();
-  await expect(
-    first.getByRole('checkbox', { name: 'Show me on the leaderboard' }),
-  ).not.toBeChecked();
+  await first.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
+  await first.getByRole('dialog').getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(first.getByRole('dialog')).toHaveCount(0);
+  await expect(first.locator('.profile-row', { hasText: 'Leaderboard' })).toContainText('No');
   dialog = await open(second);
   await expect(dialog.getByRole('row', { name: /Board One/ })).toHaveCount(0);
   for (const { width, height } of [...DEVICES, DEVICE.phone369]) {

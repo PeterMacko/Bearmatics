@@ -506,3 +506,267 @@
     max-height: 100%;
   }
 }
+
+/* ---------- Profile: rows, edit windows, grown-up question (SCRUM-281) ---------- */
+/* Greeting left; the bear with "Dress your bear" under it on the right. */
+.profile-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.profile-screen {
+  container: profile / inline-size;
+}
+.profile-top .menu-heading {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.account-screen .profile-top .menu-heading {
+  margin-bottom: 0;
+}
+.profile-bear {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  align-items: center;
+  max-width: 7.5rem;
+}
+.profile-bear .bear-icon {
+  display: block;
+  border-radius: 20px;
+}
+/* The bear is a button (72 px, Peter's review): a tap shows it full screen. */
+.profile-bear-button {
+  display: block;
+  flex: none;
+  min-width: var(--target);
+  min-height: var(--target);
+  padding: 0;
+  border: 0;
+  border-radius: 20px;
+  background: none;
+  cursor: zoom-in;
+}
+/* The bear full screen: as large as fits with a small margin, never under the corner X (the
+   longer side keeps room for the X on both ends, so the bear stays centred). */
+.bear-full {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  height: 100dvh;
+  overflow: hidden;
+  container-type: size;
+  background: #302b49f2;
+  cursor: zoom-out;
+  overscroll-behavior: contain;
+  touch-action: none;
+  animation: bear-full-in 160ms ease-out;
+}
+.bear-full .bear-icon {
+  /* The layer's size (a page scrollbar is not part of it). */
+  --bear-full: min(100cqw - 16px, 100cqh - 16px, max(100cqw, 100cqh) - 128px);
+  display: block;
+  width: var(--bear-full);
+  height: var(--bear-full);
+}
+.bear-full-close {
+  position: absolute;
+  top: 8px;
+  inset-inline-end: 8px;
+  display: grid;
+  place-items: center;
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--paper);
+  color: var(--blue-ink);
+  font-size: 32px;
+  line-height: 1;
+}
+.bear-full-close:focus-visible {
+  outline-color: var(--paper);
+  outline-offset: 3px;
+}
+@keyframes bear-full-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bear-full {
+    animation: none;
+  }
+}
+/* A small text button (no border) with a pencil; 48 px tall, its text wraps under the bear. */
+/* Large text on a phone: the greeting gets the whole width; the bear and its button go under it,
+   side by side. */
+@container profile (max-width: 17em) {
+  .profile-top {
+    flex-direction: column;
+  }
+  .profile-bear {
+    flex-direction: row;
+    gap: 8px;
+    max-width: 100%;
+  }
+  .profile-dress {
+    text-align: start;
+  }
+}
+.profile-dress {
+  display: inline-grid;
+  min-width: var(--target);
+  min-height: var(--target);
+  max-width: 100%;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 10px;
+  background: none;
+  color: var(--blue-ink);
+  font-size: 0.9rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+.profile-dress:hover,
+.profile-edit:hover {
+  background: var(--sky);
+}
+/* Read-only rows: label above, the value and its pencil below. */
+.profile-rows {
+  margin: 0 0 4px;
+  border-top: 1.5px solid var(--line);
+}
+.profile-row {
+  padding: 6px 0;
+  border-bottom: 1.5px solid var(--line);
+}
+.profile-row dt {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.profile-row dd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0;
+}
+.profile-value {
+  min-width: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+/* Pencil: icon only, no border, 48 x 48 tap target, the shared visible focus ring. */
+.profile-edit {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: var(--target);
+  height: var(--target);
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: none;
+  color: var(--blue-ink);
+}
+.profile-edit .button-icon {
+  width: 24px;
+  height: 24px;
+  margin: 0;
+}
+.profile-note {
+  margin: 8px 0 20px;
+}
+.profile-note:empty {
+  margin-bottom: 12px;
+}
+.profile-buttons > button:has(> .button-icon) {
+  display: inline-grid;
+}
+/* The windows: content scrolls inside the window (200% text, on-screen keyboard); the buttons
+   use the page's look (the dialog's default button rule is more specific, so restate it). */
+.hint-dialog:has(.profile-window) {
+  width: min(100%, 460px);
+  max-height: calc(var(--window-height, 100dvh) - 24px);
+}
+.profile-window {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  /* Room for the focus ring (3 px + 5 px offset) of the fields inside the scrolling window. */
+  padding: 9px;
+}
+.profile-window .account-error {
+  overflow-wrap: anywhere;
+}
+.profile-window-actions {
+  margin-top: 4px;
+}
+.profile-window-actions > * {
+  flex: 1 1 140px;
+}
+.hint-dialog .profile-window button.primary {
+  min-height: var(--target);
+  padding: 8px 16px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--blue);
+  color: var(--paper);
+  font-weight: 700;
+  line-height: 1.2;
+  box-shadow: 0 3px 0 var(--blue-shadow);
+}
+.hint-dialog .profile-window button.primary:hover {
+  background: #295d94;
+}
+.hint-dialog .profile-window button.secondary {
+  border-radius: 12px;
+}
+.hint-dialog .profile-window button.danger-button {
+  min-height: var(--target);
+  padding: 4px 16px;
+  border: 2px solid var(--accent);
+  border-radius: 12px;
+  background: var(--paper);
+  color: var(--accent);
+  font-weight: 700;
+  line-height: 1.2;
+}
+.hint-dialog .profile-window button.danger-button:hover {
+  background: #fde8e6;
+}
+.hint-dialog .profile-window .profile-remove-email {
+  flex-basis: 100%;
+}
+.profile-warning,
+.grown-up-ask {
+  margin: 0;
+}
+.profile-warning {
+  padding: 10px 12px;
+  border: 1.5px solid var(--accent);
+  border-radius: 12px;
+  background: #fff4f2;
+}
+.grown-up-ask {
+  font-weight: 700;
+}
+.grown-up-question {
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+.grown-up-field input {
+  max-width: 10rem;
+  font-size: 1.25rem;
+}
