@@ -143,6 +143,55 @@
     transform: translateX(18%);
   }
 }
+/* SCRUM-289: the "?" balloon at the bear's mouth (box: BALLOON_BOX in useIdleBalloon.ts, in %
+   of the bear's cell). It stays in the bear's row and reaches only into the next cell of that
+   row: right of the bear, left in the last column. Grows from the mouth in 0.3 s, fades after
+   3 s; reduced motion: no growing, no fading. Never takes taps (the bear box has none). */
+.logic-balloon {
+  position: absolute;
+  top: 0%;
+  left: 68%;
+  width: 64%;
+  height: 58%;
+  z-index: 1;
+  pointer-events: none;
+  transform-origin: 0% 100%;
+  animation: logic-balloon-pop 0.3s ease-out both;
+  transition: opacity 0.3s ease-in;
+}
+.logic-balloon[data-side='left'] {
+  left: auto;
+  right: 68%;
+  transform-origin: 100% 100%;
+}
+.logic-balloon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: none;
+}
+.logic-balloon[data-phase='fading'] {
+  opacity: 0;
+}
+@keyframes logic-balloon-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+.logic-balloon[data-still] {
+  animation: none;
+  transition: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logic-balloon {
+    animation: none;
+    transition: none;
+  }
+}
 /* A new walk right after a wrong one: the bear jumps back to the start. */
 .logic-bear[data-snap] {
   transition: none;

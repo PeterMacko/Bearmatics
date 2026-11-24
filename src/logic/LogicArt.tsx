@@ -173,3 +173,34 @@ export function Finger() {
     </svg>
   );
 }
+
+/**
+ * The "?" speech balloon (SCRUM-289): a white bubble with its tail at the bottom corner toward
+ * the bear's mouth (bottom left; `side="left"` mirrors the bubble, never the "?").
+ */
+export function QuestionBalloon({ side }: { side: 'left' | 'right' }) {
+  return (
+    <svg viewBox="0 0 100 92" aria-hidden="true" focusable="false">
+      <g transform={side === 'left' ? 'matrix(-1 0 0 1 100 0)' : undefined}>
+        <path
+          d="M28 4h48a20 20 0 0 1 20 20v22a20 20 0 0 1-20 20H34L6 88l10-24A20 20 0 0 1 8 46V24A20 20 0 0 1 28 4z"
+          fill="#fff"
+          stroke="#5c3b28"
+          strokeWidth="4"
+          strokeLinejoin="round"
+        />
+      </g>
+      <text
+        x="52"
+        y="50"
+        textAnchor="middle"
+        fontSize="46"
+        fontWeight="800"
+        fontFamily="inherit"
+        fill="#2f5f93"
+      >
+        ?
+      </text>
+    </svg>
+  );
+}

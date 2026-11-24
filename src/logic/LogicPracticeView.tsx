@@ -21,9 +21,19 @@ import {
   type BearPuzzle,
   type Cell,
 } from './bearPath';
-import { ArrowIcon, EyeIcon, GridBear, HoneyPot, Paw, RemoveIcon, Stone } from './LogicArt';
+import {
+  ArrowIcon,
+  EyeIcon,
+  GridBear,
+  HoneyPot,
+  Paw,
+  QuestionBalloon,
+  RemoveIcon,
+  Stone,
+} from './LogicArt';
 import LogicDemo from './LogicDemo';
 import useBoardFit from './useBoardFit';
+import { balloonSide, useIdleBalloon } from './useIdleBalloon';
 
 /** One step of the walk on screen (scope 4: about 0.4 s per arrow). */
 export const STEP_MS = 400;
@@ -62,6 +72,7 @@ export default function LogicPracticeView({
   puzzle,
   level,
   maxArrows,
+  first = false,
   position,
   reviewing,
   solved,
@@ -84,6 +95,8 @@ export default function LogicPracticeView({
   level: number;
   /** How many arrow slots (Level 1: 4, Level 2: 6). */
   maxArrows: number;
+  /** The first puzzle of the lesson: the "?" balloon pops in when the bear first appears. */
+  first?: boolean;
   position: string;
   reviewing: boolean;
   solved: boolean;
@@ -123,6 +136,8 @@ export default function LogicPracticeView({
   const sectionRef = useBoardFit(demoRun, solved);
   const demo = demoRun > 0;
   const locked = walking || demo;
+  // SCRUM-289: the "?" balloon, hidden during the demo, the walk and once solved.
+  const balloon = useIdleBalloon({ active: !demo && !walking && !solved, first });
 
   useEffect(
     () => () => {
@@ -335,6 +350,17 @@ export default function LogicPracticeView({
                 style={{ '--row': bearAt.row, '--col': bearAt.col } as CSSProperties}
               >
                 <GridBear mood={mood} />
+                {balloon !== 'hidden' && (
+                  <span
+                    className="logic-balloon"
+                    data-side={balloonSide(bearAt)}
+                    data-phase={balloon}
+                    data-still={reduced || undefined}
+                    aria-hidden="true"
+                  >
+                    <QuestionBalloon side={balloonSide(bearAt)} />
+                  </span>
+                )}
               </span>
             </div>
           )}

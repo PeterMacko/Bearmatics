@@ -58,6 +58,7 @@ import {
   type LogicLevel,
 } from './logic/bearPath';
 import LogicPracticeView from './logic/LogicPracticeView';
+import { logicDemoSeen, markLogicDemoSeen } from './logic/demoSeen';
 import { AccountButton } from './AccountButton';
 import AccountScreens from './account/AccountScreens';
 import { useAccount, useAccountLoad } from './account/useAccount';
@@ -376,7 +377,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setHintOpen(true);
   };
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
-  // SCRUM-262: a Logic lesson starts with the picture demo, then the first puzzle.
+  // SCRUM-262: a Logic lesson starts with the picture demo (SCRUM-289: only until it has been
+  // seen once on this device), then the first puzzle.
   const startLogic = () => {
     setPresentation((n) => n + 1);
     resetForNewSession();
@@ -385,7 +387,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     beginLesson(logicSize, { course: 'logic', level: logicLevel });
     setLogicLessonLevel(logicLevel);
     setLogicArrows([]);
-    showDemo();
+    // SCRUM-289: the demo plays until it has been seen to the end once on this device.
+    if (logicDemoSeen()) setDemoRun(0);
+    else showDemo();
     setLogicSession(
       createSession(
         logicLevel === 2 ? generateStoneSession(logicSize) : generateBearSession(logicSize),
@@ -490,6 +494,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               puzzle={logicPuzzle}
               level={logicLessonLevel}
               maxArrows={ARROW_LIMIT[logicLessonLevel]}
+              first={logicSession.index === 0 && !logicSession.reviewing}
               position={positionText(t, logicSession, t.exercise)}
               reviewing={logicSession.reviewing}
               solved={logicSession.solved}
@@ -512,7 +517,11 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               }
               onNext={nextLogic}
               onShowMe={showDemo}
-              onDemoDone={() => setDemoRun(0)}
+              onDemoDone={() => {
+                // Played to its end (leaving earlier unmounts it without this call).
+                markLogicDemoSeen();
+                setDemoRun(0);
+              }}
               onStep={playStep}
             />
           ),
