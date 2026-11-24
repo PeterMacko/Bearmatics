@@ -574,7 +574,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                 key={presentation}
                 t={t}
                 lesson={searchLesson}
-                position={`${t.searchPuzzle} ${searchLesson.index + 1} ${t.of} ${searchLesson.puzzles.length}`}
+                // "1 of 2" stays on one line where the position wraps beside the bear.
+                position={`${t.searchPuzzle} ${searchLesson.index + 1}\u00a0${t.of}\u00a0${searchLesson.puzzles.length}`}
                 playing={words.playing ? playSource : null}
                 playFailed={words.failed}
                 nextLabel={
