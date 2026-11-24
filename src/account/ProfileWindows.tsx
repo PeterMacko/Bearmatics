@@ -1,5 +1,5 @@
-// SCRUM-281: the profile's small windows. Every change happens in one of them; a tap on the dark
-// background never closes them (typed text would be lost), only X, Cancel or Escape.
+// SCRUM-281: the profile's small windows. Every change happens in one of them. X, Cancel, Escape
+// or a tap on the dark background outside (Peter's review) close them without saving.
 import {
   useEffect,
   useId,
@@ -105,6 +105,8 @@ function ProfileWindow({
       closeLabel={t.closeWindow}
       onClose={onClose}
       triggerRef={triggerRef}
+      closeOnShade
+      settleMs={SETTLE_MS}
     >
       <form
         ref={form}

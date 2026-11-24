@@ -1,11 +1,13 @@
 // SCRUM-281: the tidier profile: rows with pencils, edit windows and the grown-up question.
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { createRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { copy } from '../i18n';
 import type { Account } from './api';
+import { describeLook } from './bearLook';
 import { checkGrownUp, grownUpQuestion } from './grownUp';
 import { ProfileView } from './ProfileView';
+import { releaseStrayTaps } from '../useShadeClose';
 
 const api = vi.hoisted(() => ({
   updateProfile: vi.fn(),
@@ -81,6 +83,7 @@ beforeEach(() => {
   api.deleteAccount.mockResolvedValue(undefined);
 });
 afterEach(() => {
+  releaseStrayTaps();
   vi.clearAllMocks();
   vi.restoreAllMocks();
 });
@@ -96,7 +99,13 @@ describe('SCRUM-281 profile layout', () => {
     expect(top).toHaveTextContent('Your account');
     expect(top).toHaveTextContent('Signed in as kid');
     const bear = top.querySelector('.profile-bear') as HTMLElement;
-    expect(within(bear).getByRole('img', { name: 'Honey bear with a crown' })).toBeInTheDocument();
+    // The bear is a button now (full screen); its look is the full-screen picture's name.
+    expect(
+      within(bear).getByRole('button', {
+        name: 'Show my bear big',
+        description: 'Honey bear with a crown',
+      }),
+    ).toContainElement(bear.querySelector('svg.bear-icon[data-look]'));
     const dress = within(bear).getByRole('button', { name: 'Dress your bear' });
     expect(dress.querySelector('svg')).toHaveAttribute('data-icon', 'pencil');
     const rows = [...document.querySelectorAll('.profile-row')].map((row) => [
@@ -225,14 +234,72 @@ describe('SCRUM-281 edit windows', () => {
     },
   );
 
-  it('a tap on the dark background does not close the window', () => {
-    show();
-    fireEvent.click(button('Change nickname'));
+  /** A tap on the dark shade outside the window (press and release on the shade). */
+  const tapShade = () => {
     const shade = document.querySelector('.modal-backdrop')!;
     fireEvent.pointerDown(shade);
+    fireEvent.mouseDown(shade);
     fireEvent.pointerUp(shade);
-    fireEvent.click(shade);
+    fireEvent.click(shade, { detail: 1 });
+  };
+  // Peter's review: a tap outside closes every window like Cancel (was: never closes).
+  it.each([
+    ['Change nickname', 'Change nickname'],
+    ['Change email', 'Change email'],
+    ['Change leaderboard', 'Leaderboard'],
+    ['Change password', 'Change password'],
+    ['Sign out', 'Sign out'],
+    ['Delete account', 'Delete account'],
+  ])(
+    'a tap on the dark background closes "%s" like Cancel: nothing saved, focus back',
+    (opener, title) => {
+      show();
+      fireEvent.click(button(opener));
+      const window = screen.getByRole('dialog', { name: title });
+      const field = window.querySelector('input:not([type="checkbox"])');
+      if (field) fireEvent.change(field, { target: { value: '38' } });
+      else fireEvent.click(within(window).getByRole('checkbox'));
+      settle();
+      tapShade();
+      expect(screen.queryByRole('dialog')).toBeNull();
+      for (const call of Object.values(api)) expect(call).not.toHaveBeenCalled();
+      expect(button(opener)).toHaveFocus();
+      // Typed text is gone: the window opens again with the saved value.
+      fireEvent.click(button(opener));
+      const again = screen.getByRole('dialog', { name: title });
+      const fresh = again.querySelector<HTMLInputElement>('input:not([type="checkbox"])');
+      if (fresh) expect(fresh.value).not.toBe('38');
+      else expect(within(again).getByRole('checkbox')).toBeChecked();
+    },
+  );
+
+  it('a press that starts inside the window and ends on the shade does not close (QA265-01)', () => {
+    show();
+    fireEvent.click(button('Change nickname'));
+    settle();
+    const shade = document.querySelector('.modal-backdrop')!;
+    const field = within(dialog()).getByLabelText('Nickname');
+    fireEvent.change(field, { target: { value: 'Typed' } });
+    fireEvent.pointerDown(field);
+    fireEvent.pointerUp(shade);
+    fireEvent.click(shade, { detail: 1 });
+    // And the other way round: starts on the shade, released inside.
+    fireEvent.pointerDown(shade);
+    fireEvent.pointerUp(field);
+    fireEvent.click(shade, { detail: 1 });
     expect(screen.getByRole('dialog', { name: 'Change nickname' })).toBeInTheDocument();
+    expect(field).toHaveValue('Typed');
+  });
+
+  it('the second tap of a double tap on a pencil does not close the window it opened', () => {
+    show();
+    fireEvent.click(button('Change email'));
+    now += 150; // the second tap lands on the shade
+    tapShade();
+    expect(screen.getByRole('dialog', { name: 'Change email' })).toBeInTheDocument();
+    settle();
+    tapShade();
+    expect(screen.queryByRole('dialog')).toBeNull();
   });
 
   it('email: checks the address, saves, and Remove email empties the row', async () => {
@@ -316,6 +383,77 @@ describe('SCRUM-281 edit windows', () => {
     fireEvent.click(save);
     expect(api.updateProfile).toHaveBeenCalledTimes(1);
     await act(async () => finish({ ...KID }));
+  });
+});
+
+describe("SCRUM-281 full-screen bear (Peter's review)", () => {
+  const bearButton = () => button('Show my bear big');
+  const big = () => screen.getByRole('dialog');
+
+  it('the bear is a button (EN/SK name); a tap shows the bear full screen, X focused', () => {
+    show(KID, 'sk');
+    expect(button('Ukáž môjho medveďa naveľko')).toBeInTheDocument();
+    cleanup();
+    show();
+    // The Dress your bear link stays a separate button.
+    expect(button('Dress your bear')).not.toBe(bearButton());
+    expect(screen.queryByRole('img')).toBeNull();
+    fireEvent.click(bearButton());
+    const view = big();
+    const label = describeLook(t.look, KID.look);
+    expect(view).toHaveAccessibleName(label);
+    expect(within(view).getByRole('img', { name: label })).toHaveAttribute(
+      'data-look',
+      '2.0.3.0.0',
+    );
+    expect(within(view).getByRole('button', { name: 'Close' })).toHaveFocus();
+  });
+
+  it.each(['tap', 'tap on the bear', 'X', 'Escape'] as const)(
+    '%s closes it and focus returns to the bear button',
+    (how) => {
+      show();
+      fireEvent.click(bearButton());
+      settle();
+      const view = big();
+      const tap = (target: Element) => {
+        fireEvent.pointerDown(target);
+        fireEvent.mouseDown(target);
+        fireEvent.pointerUp(target);
+        fireEvent.click(target, { detail: 1 });
+      };
+      if (how === 'tap') tap(view);
+      if (how === 'tap on the bear') tap(within(view).getByRole('img'));
+      if (how === 'X')
+        fireEvent.click(within(view).getByRole('button', { name: 'Close' }), { detail: 1 });
+      if (how === 'Escape') fireEvent.keyDown(document.activeElement!, { key: 'Escape' });
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(bearButton()).toHaveFocus();
+    },
+  );
+
+  it('Tab stays on the X; keyboard Enter on the X closes at once', () => {
+    show();
+    fireEvent.click(bearButton());
+    const close = within(big()).getByRole('button', { name: 'Close' });
+    fireEvent.keyDown(close, { key: 'Tab' });
+    expect(close).toHaveFocus();
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true });
+    expect(close).toHaveFocus();
+    fireEvent.click(close, { detail: 0 }); // keyboard: no 600 ms wait
+    expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('the second tap of a double tap on the bear keeps it open', () => {
+    show();
+    fireEvent.click(bearButton());
+    now += 150;
+    const view = big();
+    fireEvent.pointerDown(view);
+    fireEvent.pointerUp(view);
+    fireEvent.click(view, { detail: 1 });
+    fireEvent.click(within(view).getByRole('button', { name: 'Close' }), { detail: 1 });
+    expect(big()).toBeInTheDocument();
   });
 });
 

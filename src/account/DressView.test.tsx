@@ -69,7 +69,10 @@ afterEach(() => {
 describe('dress your bear (profile)', () => {
   it('opens from the profile with one named radio group per part and a live, named preview', () => {
     const { onSubView } = show('profile');
-    expect(screen.getByRole('img', { name: 'Honey bear with a crown' })).toBeInTheDocument();
+    // The profile bear is a button (full screen); its look is the button's description.
+    expect(
+      screen.getByRole('button', { description: 'Honey bear with a crown' }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Dress your bear' }));
     expect(screen.getByRole('heading', { level: 2, name: 'Dress your bear' })).toHaveFocus();
     expect(onSubView).toHaveBeenLastCalledWith(expect.any(Function));
@@ -118,7 +121,10 @@ describe('dress your bear (profile)', () => {
       expect(screen.getByRole('button', { name: 'Dress your bear' })).toHaveFocus(),
     );
     expect(api.updateProfile).not.toHaveBeenCalled();
-    expect(screen.getByRole('img', { name: 'Honey bear with a crown' })).toBeInTheDocument();
+    // The profile bear is a button (full screen); its look is the button's description.
+    expect(
+      screen.getByRole('button', { description: 'Honey bear with a crown' }),
+    ).toBeInTheDocument();
   });
 
   it('a failed save stays on the screen with a message', async () => {
@@ -186,7 +192,10 @@ describe('dress your bear (profile)', () => {
 
   it('is in Slovak with Slovak item names', () => {
     show('profile', 'sk');
-    expect(screen.getByRole('img', { name: 'Medový medvedík s korunou' })).toBeInTheDocument();
+    // The profile bear is a button (full screen); its look is the button's description.
+    expect(
+      screen.getByRole('button', { description: 'Medový medvedík s korunou' }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Oblč medveďa' }));
     expect(groups().map((g) => g.querySelector('legend')!.textContent)).toEqual([
       'Srsť',

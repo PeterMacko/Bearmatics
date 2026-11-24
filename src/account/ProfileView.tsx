@@ -1,7 +1,8 @@
-import { useRef, useState, type RefObject } from 'react';
+import { useId, useRef, useState, type RefObject } from 'react';
 import Icon from '../Icon';
 import { fill } from '../i18n';
 import MenuHeading from '../MenuHeading';
+import { BearFullScreen } from './BearFullScreen';
 import BearIcon from './BearIcon';
 import { describeLook } from './bearLook';
 import { DressView, useDressing } from './DressView';
@@ -21,7 +22,8 @@ type ProfileWindowName = 'nickname' | 'email' | 'leaderboard' | 'password' | 'si
 /**
  * The profile (SCRUM-281): the bear beside the greeting, short read-only rows with a pencil each,
  * then Change password, Sign out and Delete account. Every change happens in a small window;
- * Sign out and Delete account first ask a grown-up question.
+ * Sign out and Delete account first ask a grown-up question. A tap on the bear shows it full
+ * screen.
  */
 export function ProfileView({
   t,
@@ -54,6 +56,9 @@ export function ProfileView({
   const passwordRef = useRef<HTMLButtonElement>(null);
   const signOutRef = useRef<HTMLButtonElement>(null);
   const deleteRef = useRef<HTMLButtonElement>(null);
+  const bearRef = useRef<HTMLButtonElement>(null);
+  const bearId = useId();
+  const [bigBear, setBigBear] = useState(false);
   const show = (name: ProfileWindowName) => {
     setNote('');
     setOpen(name);
@@ -96,7 +101,20 @@ export function ProfileView({
               headingRef={headingRef}
             />
             <div className="profile-bear">
-              <BearIcon look={account.look} size={72} label={describeLook(t.look, account.look)} />
+              <button
+                ref={bearRef}
+                type="button"
+                className="profile-bear-button"
+                aria-label={t.showBearBig}
+                aria-describedby={`${bearId}-look`}
+                title={t.showBearBig}
+                onClick={() => setBigBear(true)}
+              >
+                <BearIcon look={account.look} size={72} />
+              </button>
+              <span id={`${bearId}-look`} className="sr-only">
+                {describeLook(t.look, account.look)}
+              </span>
               <button
                 ref={dressOpener}
                 type="button"
@@ -150,6 +168,15 @@ export function ProfileView({
           />
         </section>
       </div>
+      {bigBear && (
+        <BearFullScreen
+          look={account.look}
+          label={describeLook(t.look, account.look)}
+          closeLabel={t.closeWindow}
+          triggerRef={bearRef}
+          onClose={() => setBigBear(false)}
+        />
+      )}
       {open === 'nickname' && <NicknameWindow {...edit} triggerRef={nicknameRef} />}
       {open === 'email' && <EmailWindow {...edit} triggerRef={emailRef} />}
       {open === 'leaderboard' && <LeaderboardWindow {...edit} triggerRef={leaderboardRef} />}
