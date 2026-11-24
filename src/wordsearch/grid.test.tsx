@@ -43,7 +43,7 @@ describe('word list', () => {
 });
 
 describe('grid checks (engine)', () => {
-  test('QA247-01: short crude words the nickname filter leaves out are rude in grids too', () => {
+  test('QA247-05 (Dev: QA247-01): short crude words the nickname filter leaves out are rude in grids too', () => {
     const plain = ['QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ'];
     for (const word of ['PEE', 'TIT', 'POO', 'BUM', 'CUM', 'PEDO', 'PRD', 'WTF']) {
       const forwards = [word.padEnd(6, 'Q'), ...plain.slice(1)];
