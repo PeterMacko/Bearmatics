@@ -543,6 +543,8 @@
   justify-content: center;
 }
 .wordsearch-practice .ws-actions-below .answer-button {
+  /* (Scrolled into view with a little room below it.) */
+  scroll-margin-bottom: 8px;
   width: auto;
   min-width: min(200px, 100%);
   max-width: 100%;

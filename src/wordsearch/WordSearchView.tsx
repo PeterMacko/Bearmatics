@@ -105,10 +105,12 @@ export default function WordSearchView({
       ? { below: nextBelow, setBelow: (below) => setBelowFor(below ? nextLabel : null) }
       : undefined,
   );
-  // Moving Next mounts a new button: it keeps the focus the old one had.
+  // Moving Next mounts a new button: it keeps the focus the old one had. Below the lesson it can
+  // be under the fold (very large text): the page scrolls just enough to show it.
   useLayoutEffect(() => {
     if (solved && (document.activeElement === document.body || !document.activeElement))
       nextRef.current?.focus({ preventScroll: true });
+    if (nextBelow) nextRef.current?.scrollIntoView?.({ block: 'nearest' });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- when Next moves only
   }, [nextBelow]);
 

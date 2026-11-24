@@ -217,7 +217,7 @@ for (const [width, height, text, lang] of [
     expect(m.chipOverflow, 'words fit their buttons').toBe(0);
     expect(m.nextOverBoard, 'Next does not cover the letters (QA247-02)').toBe(0);
     expect(m.cell).toBeGreaterThanOrEqual(48);
-    await next.scrollIntoViewIfNeeded();
+    // Below the lesson Next may be under the fold at 200% text: the page shows it by itself.
     await expect(next).toBeInViewport({ ratio: 1 });
     await expect(next).toBeFocused();
   });
