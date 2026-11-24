@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { COURSE_CHOICE_DEVICES } from './support/devices';
+import { ALL_DEVICES, COURSE_CHOICE_DEVICES } from './support/devices';
 import { setLanguage } from './support/language';
 
 // SCRUM-71: course choice and English home across devices, languages and input methods.
@@ -424,3 +424,55 @@ for (const lang of ['en', 'sk'])
     expect(large.sideScroll).toBeLessThanOrEqual(0);
     expect(Math.min(...large.cards.map((c) => c.height))).toBeGreaterThanOrEqual(48);
   });
+
+// SCRUM-241: five course cards, signed in (badge, points, frozen streak and a 12-character
+// nickname in the bar): every card is fully visible at every defined device and the menu
+// layout settles (it used to switch the compact heading on and off at 884x600, and cut a card
+// at 742x702 and 1280x520).
+for (const device of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    test(`signed in: five course cards visible and the layout settles at ${device.width}x${device.height} ${lang}`, async ({
+      page,
+    }) => {
+      await page.route('**/api/**', async (route) => {
+        const path = new URL(route.request().url()).pathname;
+        const json = (body: unknown) =>
+          route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+        if (path === '/api/me')
+          return json({
+            account: {
+              kind: 'password',
+              username: 'kid',
+              nickname: lang === 'en' ? 'Brave Cub' : 'Honeybear123',
+              look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+              email: null,
+              leaderboard: true,
+            },
+          });
+        if (path === '/api/progress')
+          return json({ points: 135, streak: 12, frozen: true, today: false });
+        return json({ available: false });
+      });
+      await page.setViewportSize({ width: device.width, height: device.height });
+      await page.goto('/');
+      await page.locator('.badge-button').waitFor();
+      if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
+      await page.waitForTimeout(300);
+      const changes = await page.evaluate(async () => {
+        const workspace = document.querySelector('.workspace')!;
+        let count = 0;
+        const observer = new MutationObserver((list) => (count += list.length));
+        observer.observe(workspace, { attributes: true });
+        await new Promise((done) => setTimeout(done, 800));
+        observer.disconnect();
+        return count;
+      });
+      expect(changes).toBe(0);
+      const cards = page.locator('.course-option');
+      await expect(cards).toHaveCount(5);
+      for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
+      const hidden = await page
+        .locator('.course-options')
+        .evaluate((list) => list.scrollHeight - list.clientHeight);
+      expect(hidden).toBeLessThanOrEqual(1);
+    });
