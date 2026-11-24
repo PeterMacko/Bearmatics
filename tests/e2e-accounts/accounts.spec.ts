@@ -145,9 +145,10 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
     .getByRole('radio', { name: 'Glasses', exact: true })
     .check();
   await page.getByRole('button', { name: 'Save', exact: true }).click();
-  await expect(
-    page.getByRole('img', { name: 'Honey bear with a crown and glasses' }),
-  ).toBeVisible();
+  // SCRUM-281 review: the profile bear is a button (full screen); its look is the description.
+  await expect(page.getByRole('button', { name: 'Show my bear big' })).toHaveAccessibleDescription(
+    'Honey bear with a crown and glasses',
+  );
   await expect(profileButton.locator('svg[data-look^="2."][data-look$=".3.0.1"]')).toBeVisible();
   // SCRUM-281: every change in its own window.
   await page.getByRole('button', { name: 'Change nickname' }).click();
@@ -423,7 +424,9 @@ test('Google: first sign-in asks for nickname, bear and parent; later sign-ins g
   await expect(profile.locator('svg[data-look^="4."][data-look$=".1.5.0"]')).toBeVisible();
   await profile.click();
   await expect(page.getByText('Signed in with Google')).toBeVisible();
-  await expect(page.getByRole('img', { name: 'Panda with a cap and a medal' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Show my bear big' })).toHaveAccessibleDescription(
+    'Panda with a cap and a medal',
+  );
   // SCRUM-281: no Email row and no Change password for Google accounts.
   await expect(page.getByRole('button', { name: 'Change email' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Change password' })).toHaveCount(0);

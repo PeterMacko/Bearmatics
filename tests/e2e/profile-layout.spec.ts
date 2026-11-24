@@ -264,7 +264,59 @@ for (const [width, height, big] of [
   });
 }
 
-test('AC3: a tap on the dark background does not close a window; typed text stays', async ({
+// Peter's review (reverses the approved "background tap does not close"): a tap on the dark
+// background outside closes every window like Cancel; a press that starts inside and ends
+// outside does not; the second tap of a double tap on the opener does not close it.
+const TYPED: Record<string, string> = {
+  'Change nickname': 'Typed',
+  'Change email': 'typed@example.com',
+  'Change password': 'typed-secret',
+  'Sign out': '38',
+  'Delete account': '38',
+};
+
+test('AC3 review: a tap on the dark background closes each window like Cancel; nothing saved', async ({
+  page,
+}) => {
+  await stubRandom(page);
+  const calls = await mock(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openProfile(page);
+  for (const [opener, title] of WINDOWS) {
+    const button = page.getByRole('button', { name: opener, exact: true });
+    await button.click();
+    const window = page.getByRole('dialog', { name: title });
+    await expect(window).toBeVisible();
+    const field = window.locator('input:not([type="checkbox"])').first();
+    if (TYPED[opener]) await field.fill(TYPED[opener]);
+    else await window.getByRole('checkbox').uncheck();
+    await page.waitForTimeout(650); // a deliberate tap, not the second tap of a double tap
+    for (const [x, y] of [
+      [4, 4],
+      [386, 840],
+    ] as const) {
+      // Both corners lie on the shade, outside the window.
+      const box = (await window.boundingBox())!;
+      expect(x < box.x || y < box.y || y > box.y + box.height, `${opener} corner`).toBe(true);
+    }
+    await page.mouse.click(4, 840);
+    await expect(window, opener).toHaveCount(0);
+    await expect(button, opener).toBeFocused();
+    expect(calls, opener).toEqual([]);
+    await expect(page.locator('.profile-note'), opener).toBeEmpty();
+    // Typed text is discarded: the window opens again with the saved value.
+    await page.waitForTimeout(650);
+    await button.click();
+    if (TYPED[opener]) await expect(field, opener).not.toHaveValue(TYPED[opener]);
+    else await expect(window.getByRole('checkbox')).toBeChecked();
+    await page.keyboard.press('Escape');
+    await expect(window).toHaveCount(0);
+  }
+  await expect(page.getByRole('heading', { name: `Hi, ${NICK}!` })).toBeVisible();
+  await expect(page.locator('.profile-row', { hasText: 'Leaderboard' })).toContainText('Yes');
+});
+
+test('AC3 review: a press inside the window released outside (or the other way) does not close', async ({
   page,
 }) => {
   await mock(page);
@@ -272,11 +324,306 @@ test('AC3: a tap on the dark background does not close a window; typed text stay
   await openProfile(page);
   await page.getByRole('button', { name: 'Change nickname' }).click();
   const window = page.getByRole('dialog', { name: 'Change nickname' });
-  await window.getByLabel('Nickname').fill('Typed');
-  await page.mouse.click(10, 10);
-  await page.mouse.click(195, 830);
+  const field = window.getByLabel('Nickname');
+  await field.fill('Typed');
+  await page.waitForTimeout(650);
+  const box = (await field.boundingBox())!;
+  // Selecting text in the field and letting go on the shade (QA265-01).
+  await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(4, 840, { steps: 4 });
+  await page.mouse.up();
   await expect(window).toBeVisible();
-  await expect(window.getByLabel('Nickname')).toHaveValue('Typed');
+  // A press that starts on the shade and is released inside.
+  await page.mouse.move(4, 840);
+  await page.mouse.down();
+  await page.mouse.move(box.x + 10, box.y + box.height / 2, { steps: 4 });
+  await page.mouse.up();
+  await expect(window).toBeVisible();
+  await expect(field).toHaveValue('Typed');
+});
+
+for (const [width, height] of [
+  [390, 844],
+  [320, 568],
+] as const) {
+  test(`AC3 review ${width}x${height}: the second tap of a double tap on a pencil or button presses nothing`, async ({
+    page,
+  }) => {
+    await stubRandom(page);
+    const calls = await mock(page);
+    await page.setViewportSize({ width, height });
+    await openProfile(page);
+    for (const [opener, title] of WINDOWS) {
+      const button = page.getByRole('button', { name: opener, exact: true });
+      // A real double tap on the opener: the second tap lands on the shade or on the window's
+      // X / Cancel / Keep my account / a field, whatever lies there.
+      await button.scrollIntoViewIfNeeded();
+      const box = (await button.boundingBox())!;
+      await page.mouse.dblclick(box.x + box.width / 2, box.y + box.height / 2);
+      const window = page.getByRole('dialog', { name: title });
+      await page.waitForTimeout(150);
+      await expect(window, opener).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(window).toHaveCount(0);
+      // The second tap surely on the shade, within the first 600 ms (done inside the page).
+      const quick = await page.evaluate(
+        async ([name, y]) => {
+          const frame = () => new Promise((done) => requestAnimationFrame(done));
+          const opener = [
+            ...document.querySelectorAll<HTMLButtonElement>('.profile-screen button'),
+          ].find((b) => (b.getAttribute('aria-label') ?? b.textContent) === name)!;
+          const opened = performance.now();
+          opener.click();
+          await frame();
+          const shade = document.querySelector<HTMLElement>('.modal-backdrop')!;
+          const at = { bubbles: true, cancelable: true, clientX: 4, clientY: y };
+          shade.dispatchEvent(new PointerEvent('pointerdown', at));
+          shade.dispatchEvent(new MouseEvent('mousedown', { ...at, detail: 2 }));
+          shade.dispatchEvent(new PointerEvent('pointerup', at));
+          shade.dispatchEvent(new MouseEvent('mouseup', { ...at, detail: 2 }));
+          shade.dispatchEvent(new MouseEvent('click', { ...at, detail: 2 }));
+          return performance.now() - opened;
+        },
+        [opener, height - 4] as const,
+      );
+      expect(quick, opener).toBeLessThan(600);
+      await page.waitForTimeout(100);
+      await expect(window, opener).toBeVisible();
+      // Later, a deliberate tap there closes.
+      await page.waitForTimeout(650);
+      await page.mouse.click(4, height - 4);
+      await expect(window, opener).toHaveCount(0);
+      await expect(button, opener).toBeFocused();
+      await page.waitForTimeout(650);
+    }
+    expect(calls).toEqual([]);
+  });
+}
+
+// Peter's review: a tap on the profile bear shows it full screen.
+const BEAR_BIG = { en: 'Show my bear big', sk: 'Ukáž môjho medveďa naveľko' } as const;
+const LOOK = 'Dark brown bear with a hat, a tie and glasses';
+
+/** Full-screen bear numbers: bear box, page scroll, the X and its overlap with the bear. */
+const bigBearLayout = (page: Page) =>
+  page.evaluate(() => {
+    const doc = document.documentElement;
+    const layer = document.querySelector<HTMLElement>('.bear-full')!;
+    const bear = layer.querySelector('svg.bear-icon')!.getBoundingClientRect();
+    const x = layer.querySelector('.bear-full-close')!.getBoundingClientRect();
+    const box = layer.getBoundingClientRect();
+    const w = doc.clientWidth,
+      h = doc.clientHeight;
+    const overlapW = Math.max(0, Math.min(bear.right, x.right) - Math.max(bear.left, x.left));
+    const overlapH = Math.max(0, Math.min(bear.bottom, x.bottom) - Math.max(bear.top, x.top));
+    // The face: the middle of the picture (head circle, viewBox 12..52 of 64).
+    const face = {
+      left: bear.left + (bear.width * 12) / 64,
+      right: bear.left + (bear.width * 52) / 64,
+      top: bear.top + (bear.height * 12) / 64,
+      bottom: bear.top + (bear.height * 56) / 64,
+    };
+    const onFace =
+      x.right > face.left && x.left < face.right && x.bottom > face.top && x.top < face.bottom;
+    return {
+      bear: Math.round(bear.width * 10) / 10,
+      square: Math.abs(bear.width - bear.height) < 0.5,
+      inside:
+        bear.left >= -0.5 && bear.top >= -0.5 && bear.right <= w + 0.5 && bear.bottom <= h + 0.5,
+      margin: Math.round(Math.min(bear.left, bear.top, w - bear.right, h - bear.bottom)),
+      covers: box.left <= 0.5 && box.top <= 0.5 && box.right >= w - 0.5 && box.bottom >= h - 0.5,
+      layerScroll: layer.scrollHeight - layer.clientHeight,
+      pageScroll: doc.scrollHeight - doc.clientHeight,
+      side: doc.scrollWidth - doc.clientWidth,
+      x: { left: Math.round(x.left), top: Math.round(x.top), w: x.width, h: x.height },
+      xInside: x.left >= 0 && x.top >= 0 && x.right <= w + 0.5 && x.bottom <= h + 0.5,
+      xOverBear: Math.round(overlapW * overlapH),
+      xOnFace: onFace,
+      fill: Math.round((bear.width / Math.min(w, h)) * 100),
+    };
+  });
+
+for (const [device, big] of [
+  ...DEVICES.map((d) => [d, false] as const),
+  [DEVICE.phone, true] as const,
+  [DEVICE.smallPhone, true] as const,
+]) {
+  test(`review: full-screen bear fits ${device.name} ${device.width}x${device.height}${big ? ' 200%' : ''}`, async ({
+    page,
+  }) => {
+    await page.emulateMedia({ reducedMotion: 'reduce' }); // measure without the zoom-in
+    await mock(page);
+    await page.setViewportSize({ width: device.width, height: device.height });
+    await openProfile(page);
+    if (big) await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+    await nextFrames(page);
+    const before = await page.evaluate(
+      () => document.documentElement.scrollHeight - document.documentElement.clientHeight,
+    );
+    await page.getByRole('button', { name: BEAR_BIG.en }).click();
+    await expect(page.getByRole('dialog', { name: LOOK })).toBeVisible();
+    await nextFrames(page);
+    const m = await bigBearLayout(page);
+    const where = `${device.name} ${device.width}x${device.height}${big ? ' 200%' : ''}`;
+    test
+      .info()
+      .annotations.push({ type: 'bear', description: JSON.stringify({ where, before, ...m }) });
+    expect(m.covers, `${where} covers the screen`).toBe(true);
+    expect(m.inside, `${where} bear inside`).toBe(true);
+    expect(m.square, where).toBe(true);
+    expect(m.margin, `${where} margin`).toBeGreaterThanOrEqual(7);
+    // As large as fits: the shorter side minus the margins (the X keeps room on near-square
+    // screens).
+    expect(m.bear, `${where} bear size`).toBeGreaterThanOrEqual(
+      Math.min(device.width, device.height, Math.max(device.width, device.height) - 112) - 16.5,
+    );
+    expect(m.layerScroll, where).toBeLessThanOrEqual(0);
+    expect(m.side, where).toBeLessThanOrEqual(0);
+    expect(m.pageScroll, `${where} no added page scroll`).toBeLessThanOrEqual(before);
+    expect(m.x.w, where).toBe(48);
+    expect(m.x.h, where).toBe(48);
+    expect(m.xInside, where).toBe(true);
+    expect(m.xOverBear, `${where} X over the bear`).toBe(0);
+    expect(m.xOnFace, where).toBe(false);
+  });
+}
+
+test('review: the bear button: 72 px, focus ring; tap, X, Escape and Enter open/close; focus back; Tab stays', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openProfile(page);
+  const bear = page.getByRole('button', { name: BEAR_BIG.en });
+  await expect(bear).toHaveAccessibleDescription(LOOK);
+  const size = await bear.evaluate((b) => [
+    (b as HTMLElement).offsetWidth,
+    (b as HTMLElement).offsetHeight,
+  ]);
+  expect(Math.min(...size)).toBeGreaterThanOrEqual(48);
+  // The Dress your bear link is a separate button below it.
+  const dress = page.getByRole('button', { name: 'Dress your bear' });
+  expect((await dress.boundingBox())!.y).toBeGreaterThanOrEqual(
+    (await bear.boundingBox())!.y + (await bear.boundingBox())!.height - 0.5,
+  );
+  // Keyboard: Tab from the heading reaches the bear; visible focus ring; Enter opens.
+  await page.keyboard.press('Tab');
+  await expect(bear).toBeFocused();
+  expect(
+    await bear.evaluate((b) => {
+      const s = getComputedStyle(b);
+      return `${s.outlineStyle} ${s.outlineWidth}`;
+    }),
+  ).toBe('solid 3px');
+  await page.keyboard.press('Enter');
+  const view = page.getByRole('dialog', { name: LOOK });
+  await expect(view).toBeVisible();
+  await expect(view.getByRole('img', { name: LOOK })).toHaveAttribute('data-look', '1.1.2.2.1');
+  const close = view.getByRole('button', { name: 'Close' });
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Shift+Tab');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(view).toHaveCount(0);
+  await expect(bear).toBeFocused();
+  // Enter on the X closes at once (keyboard, no 600 ms wait).
+  await page.keyboard.press('Enter');
+  await expect(close).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(view).toHaveCount(0);
+  await expect(bear).toBeFocused();
+  // Tap anywhere: the corner, the bear itself, the X.
+  for (const where of ['corner', 'bear', 'X'] as const) {
+    await page.waitForTimeout(650);
+    await bear.click();
+    await expect(view).toBeVisible();
+    await page.waitForTimeout(650);
+    if (where === 'corner') await page.mouse.click(4, 840);
+    if (where === 'bear') await view.getByRole('img').click();
+    if (where === 'X') await close.click();
+    await expect(view, where).toHaveCount(0);
+    await expect(bear, where).toBeFocused();
+  }
+});
+
+test('review: a double tap on the bear keeps it open; a double tap on the X presses nothing below', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openProfile(page);
+  const bear = page.getByRole('button', { name: BEAR_BIG.en });
+  await bear.dblclick();
+  const view = page.getByRole('dialog', { name: LOOK });
+  await expect(view).toBeVisible();
+  await page.waitForTimeout(100);
+  await expect(view).toBeVisible();
+  // The second tap surely on the layer within 600 ms (inside the page).
+  await page.keyboard.press('Escape');
+  const quick = await page.evaluate(async () => {
+    const frame = () => new Promise((done) => requestAnimationFrame(done));
+    const opened = performance.now();
+    document.querySelector<HTMLButtonElement>('.profile-bear-button')!.click();
+    await frame();
+    const layer = document.querySelector<HTMLElement>('.bear-full')!;
+    const at = { bubbles: true, cancelable: true, clientX: 195, clientY: 422 };
+    layer.dispatchEvent(new PointerEvent('pointerdown', at));
+    layer.dispatchEvent(new MouseEvent('mousedown', { ...at, detail: 2 }));
+    layer.dispatchEvent(new PointerEvent('pointerup', at));
+    layer.dispatchEvent(new MouseEvent('click', { ...at, detail: 2 }));
+    return performance.now() - opened;
+  });
+  expect(quick).toBeLessThan(600);
+  await page.waitForTimeout(100);
+  await expect(view).toBeVisible();
+  // A double tap on the X: closes; the second tap does not press what lies under the X.
+  await page.waitForTimeout(650);
+  const x = (await view.getByRole('button', { name: 'Close' }).boundingBox())!;
+  const under = await page.evaluate(
+    ([cx, cy]) => {
+      const layer = document.querySelector<HTMLElement>('.bear-full')!;
+      layer.style.visibility = 'hidden';
+      const below = document.elementFromPoint(cx, cy)?.closest('button, a')?.outerHTML ?? null;
+      layer.style.visibility = '';
+      const w = window as unknown as { pressed: string[] };
+      w.pressed = [];
+      document.addEventListener('click', (e) => {
+        const b = (e.target as Element).closest('button, a');
+        if (b) w.pressed.push(b.textContent ?? '');
+      });
+      return below;
+    },
+    [x.x + x.width / 2, x.y + x.height / 2],
+  );
+  expect(under, 'a button under the X').not.toBeNull();
+  await page.mouse.dblclick(x.x + x.width / 2, x.y + x.height / 2);
+  await expect(view).toHaveCount(0);
+  await expect(bear).toBeFocused();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.profile-screen')).toBeVisible();
+  expect(await page.evaluate(() => (window as unknown as { pressed: string[] }).pressed)).toEqual(
+    [],
+  );
+});
+
+test('review: full-screen bear in Slovak; short zoom-in, none with reduced motion', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await openProfile(page, 'sk');
+  const bear = page.getByRole('button', { name: BEAR_BIG.sk, exact: true });
+  await bear.click();
+  const view = page.getByRole('dialog');
+  await expect(view.getByRole('button', { name: 'Zavrieť' })).toBeFocused();
+  expect(await view.evaluate((el) => getComputedStyle(el).animationName)).toBe('bear-full-in');
+  await page.keyboard.press('Escape');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await bear.click();
+  expect(await view.evaluate((el) => getComputedStyle(el).animationName)).toBe('none');
 });
 
 test('AC3/4/7 keyboard only: pencil, type, Enter saves, focus back on the pencil, "Saved."', async ({
@@ -286,6 +633,8 @@ test('AC3/4/7 keyboard only: pencil, type, Enter saves, focus back on the pencil
   await page.setViewportSize({ width: 1366, height: 900 });
   await openProfile(page);
   await expect(page.getByRole('heading', { level: 2 })).toBeFocused();
+  await page.keyboard.press('Tab'); // the bear (full screen, Peter's review)
+  await expect(page.getByRole('button', { name: 'Show my bear big' })).toBeFocused();
   await page.keyboard.press('Tab'); // Dress your bear
   await expect(page.getByRole('button', { name: 'Dress your bear' })).toBeFocused();
   await page.keyboard.press('Tab');

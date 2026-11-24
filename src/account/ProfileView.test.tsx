@@ -291,12 +291,25 @@ describe('SCRUM-281 edit windows', () => {
     expect(field).toHaveValue('Typed');
   });
 
-  it('the second tap of a double tap on a pencil does not close the window it opened', () => {
+  it('the second tap of a double tap on a pencil presses nothing: shade, X, Cancel, Save', () => {
     show();
     fireEvent.click(button('Change email'));
     now += 150; // the second tap lands on the shade
     tapShade();
     expect(screen.getByRole('dialog', { name: 'Change email' })).toBeInTheDocument();
+    // ... or on the X, Cancel or Save under the finger: pressed nothing either.
+    for (const name of ['Close', 'Cancel', 'Save'])
+      fireEvent.click(within(dialog()).getByRole('button', { name }), { detail: 2 });
+    expect(screen.getByRole('dialog', { name: 'Change email' })).toBeInTheDocument();
+    expect(api.updateProfile).not.toHaveBeenCalled();
+    // A quick tap away from the pencil's spot is a deliberate one: Cancel closes.
+    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }), {
+      detail: 1,
+      clientX: 300,
+      clientY: 300,
+    });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(button('Change email'));
     settle();
     tapShade();
     expect(screen.queryByRole('dialog')).toBeNull();

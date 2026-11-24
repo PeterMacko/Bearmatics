@@ -1,6 +1,9 @@
-import { useLayoutEffect, useRef, type ReactNode, type RefObject } from 'react';
+import { useLayoutEffect, useRef, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { useModalFocus } from './useModalFocus';
 import { useShadeClose } from './useShadeClose';
+
+/** How far (px) from the opener a second tap still counts as part of a double tap on it. */
+const NEAR = 16;
 
 export default function HintDialog({
   title,
@@ -22,7 +25,7 @@ export default function HintDialog({
   titleId?: string;
   /** A tap on the shade outside the window closes it (leaderboard, badge details). */
   closeOnShade?: boolean;
-  /** Shade taps this soon after opening are ignored (a double tap on the opener, SCRUM-281). */
+  /** Taps this soon after opening (shade and window) are ignored: a double tap on the opener. */
   settleMs?: number;
   onClose: () => void;
   onNext?: () => void;
@@ -42,7 +45,29 @@ export default function HintDialog({
   }, [nextDisabled]);
   const onKeyDown = useModalFocus(dialogRef, { onEscape: onClose, restoreTo: triggerRef });
   // A tap on the shade closes (start and end on the shade; stray second taps swallowed).
-  const { shadeProps } = useShadeClose(onClose, { enabled: closeOnShade, settleMs });
+  const { shadeProps, settling } = useShadeClose(onClose, { enabled: closeOnShade, settleMs });
+  // With `settleMs`, the second tap of a double tap on the opener presses nothing in the window
+  // either (the X, Cancel or Save may lie where the opener was). Only taps on the opener's spot
+  // count; keyboard clicks (detail 0) pass.
+  const openerBox = useRef<DOMRect | null>(null);
+  useLayoutEffect(() => {
+    if (settleMs) openerBox.current = triggerRef.current?.getBoundingClientRect() ?? null;
+  }, [settleMs, triggerRef]);
+  const onClickCapture = settleMs
+    ? (event: MouseEvent) => {
+        const box = openerBox.current;
+        const onOpener =
+          !!box &&
+          event.clientX >= box.left - NEAR &&
+          event.clientX <= box.right + NEAR &&
+          event.clientY >= box.top - NEAR &&
+          event.clientY <= box.bottom + NEAR;
+        if (event.detail > 0 && onOpener && settling()) {
+          event.preventDefault();
+          event.stopPropagation();
+        }
+      }
+    : undefined;
   return (
     <div className="modal-backdrop hint-backdrop" {...shadeProps}>
       <div
@@ -52,7 +77,11 @@ export default function HintDialog({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
+        // A tap on the window's padding keeps focus in the window (not on body), so Escape and
+        // Tab still work (a double tap on a profile pencil can land there).
+        tabIndex={-1}
         onKeyDown={onKeyDown}
+        onClickCapture={onClickCapture}
       >
         <div className="hint-dialog-header">
           <h2 id={titleId}>{title}</h2>

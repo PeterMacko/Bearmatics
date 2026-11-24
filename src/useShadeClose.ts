@@ -45,8 +45,9 @@ export function releaseStrayTaps() {
  * - `anywhere`: the whole layer is the shade (a full-screen picture closes on any tap).
  * - `settleMs`: taps this soon after opening are ignored, so the second tap of a double tap on
  *   the opener does not close what it just opened (until the open time is known: too soon).
- * Returns the shade's event props and `close(event?)`, which closes like a shade tap (stray-tap
- * swallow for pointer clicks, the settle guard too) for an own close button.
+ * Returns the shade's event props, `close(event?)`, which closes like a shade tap (stray-tap
+ * swallow for pointer clicks, the settle guard too) for an own close button, and `settling()`,
+ * true while taps are still too soon.
  */
 export function useShadeClose(
   onClose: () => void,
@@ -96,5 +97,5 @@ export function useShadeClose(
         },
       }
     : {};
-  return { shadeProps, close };
+  return { shadeProps, close, settling: tooSoon };
 }

@@ -558,6 +558,7 @@
   place-items: center;
   height: 100dvh;
   overflow: hidden;
+  container-type: size;
   background: #302b49f2;
   cursor: zoom-out;
   overscroll-behavior: contain;
@@ -565,7 +566,8 @@
   animation: bear-full-in 160ms ease-out;
 }
 .bear-full .bear-icon {
-  --bear-full: min(calc(100vw - 16px), calc(100dvh - 16px), calc(max(100vw, 100dvh) - 128px));
+  /* The layer's size (a page scrollbar is not part of it). */
+  --bear-full: min(100cqw - 16px, 100cqh - 16px, max(100cqw, 100cqh) - 128px);
   display: block;
   width: var(--bear-full);
   height: var(--bear-full);
