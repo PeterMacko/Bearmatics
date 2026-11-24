@@ -343,17 +343,20 @@ test('AC3 review: a press inside the window released outside (or the other way) 
   await expect(field).toHaveValue('Typed');
 });
 
-for (const [width, height] of [
-  [390, 844],
-  [320, 568],
+for (const [width, height, big] of [
+  [390, 844, false],
+  [320, 568, false],
+  [390, 844, true],
+  [320, 568, true],
 ] as const) {
-  test(`AC3 review ${width}x${height}: the second tap of a double tap on a pencil or button presses nothing`, async ({
+  test(`AC3 review / QA287-01 ${width}x${height}${big ? ' 200%' : ''}: the second tap of a double tap on a pencil or button presses nothing`, async ({
     page,
   }) => {
     await stubRandom(page);
     const calls = await mock(page);
     await page.setViewportSize({ width, height });
     await openProfile(page);
+    if (big) await page.addStyleTag({ content: 'html{font-size:200% !important}' });
     for (const [opener, title] of WINDOWS) {
       const button = page.getByRole('button', { name: opener, exact: true });
       // A real double tap on the opener: the second tap lands on the shade or on the window's
@@ -722,6 +725,7 @@ for (const [language, names] of [
     await expect(window.locator('.grown-up-question')).toHaveText('3³ + 11 = ?');
     const field = window.getByRole('textbox', { name: names.said });
     await expect(field).toHaveAttribute('inputmode', 'numeric');
+    await page.waitForTimeout(650); // QA287-01: presses in the first 600 ms are ignored
     await window.getByRole('button', { name: names.keep }).click();
     await expect(window).toHaveCount(0);
     await expect(page.getByRole('button', { name: names.del })).toBeFocused();

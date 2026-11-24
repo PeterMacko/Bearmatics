@@ -302,14 +302,6 @@ describe('SCRUM-281 edit windows', () => {
       fireEvent.click(within(dialog()).getByRole('button', { name }), { detail: 2 });
     expect(screen.getByRole('dialog', { name: 'Change email' })).toBeInTheDocument();
     expect(api.updateProfile).not.toHaveBeenCalled();
-    // A quick tap away from the pencil's spot is a deliberate one: Cancel closes.
-    fireEvent.click(within(dialog()).getByRole('button', { name: 'Cancel' }), {
-      detail: 1,
-      clientX: 300,
-      clientY: 300,
-    });
-    expect(screen.queryByRole('dialog')).toBeNull();
-    fireEvent.click(button('Change email'));
     settle();
     tapShade();
     expect(screen.queryByRole('dialog')).toBeNull();
@@ -397,6 +389,49 @@ describe('SCRUM-281 edit windows', () => {
     expect(api.updateProfile).toHaveBeenCalledTimes(1);
     await act(async () => finish({ ...KID }));
   });
+});
+
+describe('QA287-01: a double tap on an opener presses nothing in its window', () => {
+  const far = { clientX: 200, clientY: 200 }; // away from the opener: only time and detail count
+  it.each([
+    ['Delete account', 'Delete account', ['Keep my account', 'Close']],
+    ['Sign out', 'Sign out', ['Cancel', 'Close']],
+    ['Change nickname', 'Change nickname', ['Cancel', 'Close', 'Save']],
+    ['Change email', 'Change email', ['Cancel', 'Close', 'Remove email']],
+  ] as const)(
+    '%s: second press (detail 2) and a press in the first 600 ms are ignored',
+    (opener, title, names) => {
+      show();
+      fireEvent.click(button(opener));
+      const window = () => screen.getByRole('dialog', { name: title });
+      for (const name of names) {
+        fireEvent.click(within(window()).getByRole('button', { name }), { ...far, detail: 2 });
+        fireEvent.click(within(window()).getByRole('button', { name }), { ...far, detail: 1 });
+      }
+      expect(window()).toBeInTheDocument();
+      settle();
+      // After 600 ms: a second press still counts as part of a double tap, also on the shade.
+      for (const name of names)
+        fireEvent.click(within(window()).getByRole('button', { name }), { ...far, detail: 2 });
+      const shade = document.querySelector('.modal-backdrop')!;
+      fireEvent.pointerDown(shade);
+      fireEvent.pointerUp(shade);
+      fireEvent.click(shade, { detail: 2 });
+      expect(window()).toBeInTheDocument();
+      for (const call of Object.values(api)) expect(call).not.toHaveBeenCalled();
+      // A deliberate tap closes.
+      fireEvent.click(within(window()).getByRole('button', { name: names[0] }), {
+        ...far,
+        detail: 1,
+      });
+      expect(screen.queryByRole('dialog')).toBeNull();
+      // Keyboard (detail 0) works at once.
+      fireEvent.click(button(opener));
+      fireEvent.click(within(window()).getByRole('button', { name: names[0] }), { detail: 0 });
+      expect(screen.queryByRole('dialog')).toBeNull();
+      expect(button(opener)).toHaveFocus();
+    },
+  );
 });
 
 describe("SCRUM-281 full-screen bear (Peter's review)", () => {

@@ -2,9 +2,6 @@ import { useLayoutEffect, useRef, type MouseEvent, type ReactNode, type RefObjec
 import { useModalFocus } from './useModalFocus';
 import { useShadeClose } from './useShadeClose';
 
-/** How far (px) from the opener a second tap still counts as part of a double tap on it. */
-const NEAR = 16;
-
 export default function HintDialog({
   title,
   closeLabel,
@@ -46,23 +43,13 @@ export default function HintDialog({
   const onKeyDown = useModalFocus(dialogRef, { onEscape: onClose, restoreTo: triggerRef });
   // A tap on the shade closes (start and end on the shade; stray second taps swallowed).
   const { shadeProps, settling } = useShadeClose(onClose, { enabled: closeOnShade, settleMs });
-  // With `settleMs`, the second tap of a double tap on the opener presses nothing in the window
-  // either (the X, Cancel or Save may lie where the opener was). Only taps on the opener's spot
-  // count; keyboard clicks (detail 0) pass.
-  const openerBox = useRef<DOMRect | null>(null);
-  useLayoutEffect(() => {
-    if (settleMs) openerBox.current = triggerRef.current?.getBoundingClientRect() ?? null;
-  }, [settleMs, triggerRef]);
+  // With `settleMs` (QA287-01): the second tap of a double tap on the opener presses no button
+  // in the window (X, Cancel, Keep my account, Save may lie under the finger): button clicks
+  // with detail > 1, or within the first `settleMs`, are ignored. Keyboard (detail 0) passes.
   const onClickCapture = settleMs
     ? (event: MouseEvent) => {
-        const box = openerBox.current;
-        const onOpener =
-          !!box &&
-          event.clientX >= box.left - NEAR &&
-          event.clientX <= box.right + NEAR &&
-          event.clientY >= box.top - NEAR &&
-          event.clientY <= box.bottom + NEAR;
-        if (event.detail > 0 && onOpener && settling()) {
+        if (!(event.target as Element).closest('button')) return;
+        if (event.detail > 1 || (event.detail > 0 && settling())) {
           event.preventDefault();
           event.stopPropagation();
         }

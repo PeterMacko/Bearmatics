@@ -155,6 +155,7 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   const window = page.getByRole('dialog');
   await expect(window.getByLabel('Nickname')).toBeFocused();
   await window.getByLabel('Nickname').fill('Honey Star');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await window.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(window).toHaveCount(0);
   await expect(page.getByText('Saved.', { exact: true })).toBeVisible();
@@ -162,12 +163,14 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await expect(page.getByRole('button', { name: 'Your profile: Honey Star' })).toBeVisible();
   await page.getByRole('button', { name: 'Change email' }).click();
   await window.getByLabel('Email (optional)').fill('parent@example.com');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await window.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(window).toHaveCount(0);
   await expect(page.locator('.profile-row', { hasText: 'Email' })).toContainText(
     'parent@example.com',
   );
   await page.getByRole('button', { name: 'Change email' }).click();
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await window.getByRole('button', { name: 'Remove email' }).click();
   await expect(page.getByText('Email removed.')).toBeVisible();
   await expect(page.locator('.profile-row', { hasText: 'Email' })).toContainText('No email saved.');
@@ -180,6 +183,7 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await window.getByLabel('Current password').fill('notMyPassword');
   await window.getByLabel('New password', { exact: true }).fill('newHoney42');
   await window.getByLabel('New password again').fill('newHoney42');
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await window.getByRole('button', { name: 'Save', exact: true }).click();
   await expect(window.getByText('The current password is not right.')).toBeVisible();
   await window.getByLabel('Current password').fill(PASSWORD);
@@ -200,6 +204,7 @@ test('create an account, stay signed in, edit the profile, sign out and in, dele
   await page.getByRole('button', { name: 'Your profile: Honey Star' }).click();
   await page.getByRole('button', { name: 'Delete account' }).click();
   await expect(page.getByRole('button', { name: 'Keep my account' })).toBeFocused();
+  await page.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await page.getByRole('button', { name: 'Keep my account' }).click();
   await expect(page.getByRole('button', { name: 'Delete account' })).toBeFocused();
   // A wrong answer deletes nothing and asks a new question.

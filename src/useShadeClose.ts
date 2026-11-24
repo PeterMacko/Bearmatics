@@ -43,8 +43,9 @@ export function releaseStrayTaps() {
  *   table) that starts inside the window and ends outside must not, and a press released inside
  *   still gets its click on the shade, the common ancestor (QA265-01).
  * - `anywhere`: the whole layer is the shade (a full-screen picture closes on any tap).
- * - `settleMs`: taps this soon after opening are ignored, so the second tap of a double tap on
- *   the opener does not close what it just opened (until the open time is known: too soon).
+ * - `settleMs`: taps this soon after opening, and second presses (click detail > 1), are
+ *   ignored, so the second tap of a double tap on the opener does not close what it just opened
+ *   (until the open time is known: too soon).
  * Returns the shade's event props, `close(event?)`, which closes like a shade tap (stray-tap
  * swallow for pointer clicks, the settle guard too) for an own close button, and `settling()`,
  * true while taps are still too soon.
@@ -65,6 +66,8 @@ export function useShadeClose(
   }, []);
   const onShade = (event: { target: EventTarget; currentTarget: EventTarget }) =>
     anywhere || event.target === event.currentTarget;
+  /** A second press (detail > 1) or one in the first `settleMs`: part of a double tap. */
+  const repeat = (event: ReactMouseEvent) => settleMs > 0 && event.detail > 1;
   const tooSoon = () => {
     if (settleMs <= 0) return false;
     const opened = openedAt.current;
@@ -72,7 +75,7 @@ export function useShadeClose(
   };
   const close = (event?: ReactMouseEvent) => {
     const pointer = !!event && event.detail > 0;
-    if (pointer && tooSoon()) return;
+    if (pointer && (repeat(event) || tooSoon())) return;
     if (pointer) swallowStrayTaps();
     onClose();
   };
@@ -91,7 +94,7 @@ export function useShadeClose(
         onClick: (event: ReactMouseEvent) => {
           if (!onShade(event) || !downOnShade.current || !upOnShade.current) return;
           downOnShade.current = false;
-          if (tooSoon()) return;
+          if (repeat(event) || tooSoon()) return;
           swallowStrayTaps();
           onClose();
         },

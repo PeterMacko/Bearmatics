@@ -3,6 +3,7 @@ import {
   createAccount as createPasswordAccount,
   leaveProfile,
   uniqueName,
+  WINDOW_SETTLE_MS,
 } from '../e2e/support/account';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 import { answerFor } from '../e2e/support/maths';
@@ -376,6 +377,7 @@ test('leaderboard: two players see each other; switch off hides me; window fits 
   await first.getByRole('button', { name: 'Your profile: Board One' }).click();
   await first.getByRole('button', { name: 'Change leaderboard' }).click();
   await first.getByRole('checkbox', { name: 'Show me on the leaderboard' }).uncheck();
+  await first.waitForTimeout(WINDOW_SETTLE_MS); // QA287-01: first 600 ms ignored
   await first.getByRole('dialog').getByRole('button', { name: 'Save', exact: true }).click();
   await expect(first.getByRole('dialog')).toHaveCount(0);
   await expect(first.locator('.profile-row', { hasText: 'Leaderboard' })).toContainText('No');

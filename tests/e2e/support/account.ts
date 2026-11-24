@@ -31,7 +31,7 @@ export async function createAccount(
   await expect(page.getByRole('button', { name: `Your profile: ${nickname}` })).toBeVisible();
 }
 
-/** SCRUM-281: the grown-up question's window guard ignores presses in its first 600 ms. */
+/** SCRUM-281 / QA287-01: the profile windows ignore button presses in their first 600 ms. */
 export const WINDOW_SETTLE_MS = 650;
 
 /** Reads the open grown-up question ("5³ + 21 = ?") and types its answer. */
