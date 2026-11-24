@@ -8,6 +8,7 @@ import { isRudeNickname } from '../../shared/rules';
 import { WORDS } from '../english/words';
 import { shuffled } from '../random';
 import { SESSION_SIZES } from '../session';
+import { GRID_RUDE_WORDS } from './gridRudeWords';
 
 export const GRID = 6;
 export const WORDS_PER_PUZZLE = 5;
@@ -108,7 +109,8 @@ export function countWord(rows: readonly string[], word: string, lines = gridLin
 
 /**
  * A rude word can be read somewhere in the grid: every run of 3 or more letters in every
- * direction goes through the shared nickname filter (2 letters would flag e.g. "AS").
+ * direction goes through the shared nickname filter (2 letters would flag e.g. "AS") and the
+ * grid-only list of short crude words (QA247-01).
  */
 export function hasRudeWord(rows: readonly string[], lines = gridLines(rows)): boolean {
   for (const line of lines)
@@ -124,7 +126,7 @@ function rude(run: string): boolean {
   let answer = rudeSeen.get(run);
   if (answer === undefined) {
     if (rudeSeen.size >= 200_000) rudeSeen.clear();
-    answer = isRudeNickname(run);
+    answer = GRID_RUDE_WORDS.has(run) || isRudeNickname(run);
     rudeSeen.set(run, answer);
   }
   return answer;

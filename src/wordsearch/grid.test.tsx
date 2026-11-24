@@ -5,6 +5,7 @@ import { gridProblems, SIMPLE_STEPS } from '../testing/wordSearchOracle';
 import {
   checkSelection,
   generateSearchLesson,
+  gridLetters,
   gridProblem,
   hasRudeWord,
   SEARCH_LEVELS,
@@ -13,6 +14,7 @@ import {
   type Puzzle,
   type SearchLevel,
 } from './grid';
+import { GRID_RUDE_WORDS } from './gridRudeWords';
 
 // The 10,000-grid acceptance runs are in grid.level{1,2,3}.test.tsx (parallel files).
 const expectGoodGrid = (puzzle: Puzzle, level: SearchLevel, words: readonly string[]) =>
@@ -41,6 +43,19 @@ describe('word list', () => {
 });
 
 describe('grid checks (engine)', () => {
+  test('QA247-01: short crude words the nickname filter leaves out are rude in grids too', () => {
+    const plain = ['QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ'];
+    for (const word of ['PEE', 'TIT', 'POO', 'BUM', 'CUM', 'PEDO', 'PRD', 'WTF']) {
+      const forwards = [word.padEnd(6, 'Q'), ...plain.slice(1)];
+      const backwards = [[...word].reverse().join('').padStart(6, 'Q'), ...plain.slice(1)];
+      expect(hasRudeWord(forwards), word).toBe(true);
+      expect(hasRudeWord(backwards), word).toBe(true);
+    }
+    // No puzzle word is itself on the list or contains one of its words.
+    for (const word of SEARCH_WORDS)
+      for (const bad of GRID_RUDE_WORDS) expect(gridLetters(word).includes(bad), word).toBe(false);
+  });
+
   test('a rude word is found in any direction, also backwards and diagonal', () => {
     const plain = ['QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ', 'QWQWQW', 'WQWQWQ'];
     expect(hasRudeWord(plain)).toBe(false);

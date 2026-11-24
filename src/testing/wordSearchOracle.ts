@@ -3,6 +3,7 @@
 // of the 8 (dr, dc) steps with its own bounds test, and sends every run of 3+ letters in every
 // direction through the shared SK/EN rude-word filter.
 import { isRudeNickname } from '../../shared/rules';
+import { GRID_RUDE_WORDS } from '../wordsearch/gridRudeWords';
 import {
   generatePuzzle,
   newStats,
@@ -57,7 +58,7 @@ export function runs(rows: readonly string[]): string[] {
 // The filter's answer per run, remembered (speed only; the filter itself decides).
 const rudeRuns = new Map<string, boolean>();
 const rudeRun = (run: string) => {
-  if (!rudeRuns.has(run)) rudeRuns.set(run, isRudeNickname(run));
+  if (!rudeRuns.has(run)) rudeRuns.set(run, GRID_RUDE_WORDS.has(run) || isRudeNickname(run));
   return rudeRuns.get(run)!;
 };
 
