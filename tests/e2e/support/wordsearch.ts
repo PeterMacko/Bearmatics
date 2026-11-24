@@ -122,6 +122,9 @@ export const searchLayout = (page: Page) =>
     const list = document.querySelector('.ws-words')!.getBoundingClientRect();
     const board = document.querySelector('.ws-board')!.getBoundingClientRect();
     const next = document.querySelector('.ws-actions .answer-button')?.getBoundingClientRect();
+    /** How far Next covers the letter grid (0 when they do not overlap). */
+    const across = next ? Math.min(next.right, board.right) - Math.max(next.left, board.left) : 0;
+    const down = next ? Math.min(next.bottom, board.bottom) - Math.max(next.top, board.top) : 0;
     return {
       pageScroll: d.scrollHeight - d.clientHeight,
       sideScroll: d.scrollWidth - d.clientWidth,
@@ -130,6 +133,7 @@ export const searchLayout = (page: Page) =>
       listBottom: Math.round(list.bottom),
       boardRight: Math.round(board.right),
       nextBottom: next ? Math.round(next.bottom) : null,
+      nextOverBoard: across > 0.5 && down > 0.5 ? Math.round(Math.min(across, down)) : 0,
       viewport: d.clientHeight,
       width: d.clientWidth,
       listVisible: list.bottom <= d.clientHeight + 0.5 && list.top >= 0,

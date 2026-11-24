@@ -35,6 +35,7 @@ function expectFit(m: Awaited<ReturnType<typeof searchLayout>>, where: string) {
   expect(m.target, `${where} smallest target`).toBeGreaterThanOrEqual(48);
   expect(m.listVisible, `${where} word list in view`).toBe(true);
   expect(m.chipOverflow, `${where} words fit their buttons`).toBe(0);
+  expect(m.nextOverBoard, `${where} Next does not cover the letters`).toBe(0);
 }
 
 const FIT_DEVICES = ALL_DEVICES.filter((d) => d !== DEVICE.phone369);
@@ -77,7 +78,7 @@ for (const level of [1, 2, 3] as const)
 // 200% text: cells and targets stay 48 px, nothing runs off sideways (the page may scroll).
 for (const d of [DEVICE.phone, DEVICE.smallPhone])
   for (const level of [1, 2] as const)
-    test(`200% text level ${level} at ${d.width}x${d.height}: 48 px cells, no sideways scroll`, async ({
+    test(`200% text level ${level} at ${d.width}x${d.height}: 48 px cells, no sideways scroll, Next off the letters`, async ({
       page,
     }) => {
       await page.setViewportSize({ width: d.width, height: d.height });
@@ -92,6 +93,13 @@ for (const d of [DEVICE.phone, DEVICE.smallPhone])
       expect(m.cell).toBeGreaterThanOrEqual(48);
       expect(m.target).toBeGreaterThanOrEqual(48);
       expect(m.boardRight).toBeLessThanOrEqual(d.width);
+      // Solved: Next appears and never covers the letters (QA247-02), nothing runs off sideways.
+      for (const w of words.slice(1)) await findWord(page, w);
+      await page.waitForTimeout(200);
+      const solved = await searchLayout(page);
+      expect(solved.sideScroll, 'solved sideways scroll').toBeLessThanOrEqual(0);
+      expect(solved.nextOverBoard, 'solved: Next does not cover the letters').toBe(0);
+      expect(solved.cell).toBeGreaterThanOrEqual(48);
     });
 
 test('level 1: tapping a listed word plays it; a found word plays again and is struck through', async ({
@@ -177,6 +185,7 @@ for (const [width, height, text, lang] of [
     expect(label.left, 'label inside on the left').toBeGreaterThanOrEqual(0);
     expect(label.right, 'label inside on the right').toBeGreaterThanOrEqual(0);
     expect(m.chipOverflow, 'words fit their buttons').toBe(0);
+    expect(m.nextOverBoard, 'Next does not cover the letters (QA247-02)').toBe(0);
     expect(m.cell).toBeGreaterThanOrEqual(48);
     await next.scrollIntoViewIfNeeded();
     await expect(next).toBeInViewport({ ratio: 1 });

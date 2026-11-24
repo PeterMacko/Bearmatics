@@ -534,7 +534,8 @@
 }
 
 /* Next does not fit its place (QA247-01: a word of its label sticks out, e.g. Slovak
-   "osemsmerovka" at 200% text, or it widens its column): useSearchFit moves it
+   "osemsmerovka" at 200% text, or it widens its column; QA247-02: it would cover the letters):
+   useSearchFit moves it
    below the whole lesson, centred, as wide as its label needs (never wider than the lesson). */
 .wordsearch-practice .ws-actions-below {
   margin-top: 10px;

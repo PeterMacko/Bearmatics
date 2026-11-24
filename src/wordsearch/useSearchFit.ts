@@ -17,8 +17,8 @@ export type NextPlace = { below: boolean; setBelow: (below: boolean) => void };
 
 /**
  * True when Next does not fit its usual place: a word of its label sticks out of the button
- * (QA247-01) or the button runs out of its column or the window. Rectangles are 0 in unit tests
- * (never misplaced there).
+ * (QA247-01), the button runs out of its column or the window, or it covers the letter grid
+ * (QA247-02). Rectangles are 0 in unit tests (never misplaced there).
  */
 export function nextMisplaced(section: HTMLElement): boolean {
   const button = section.querySelector<HTMLElement>('.ws-actions .answer-button');
@@ -29,7 +29,11 @@ export function nextMisplaced(section: HTMLElement): boolean {
   const width = document.documentElement.clientWidth || window.innerWidth;
   if (next.right > width + 0.5 || next.left < -0.5) return true;
   const holder = button.closest('.ws-side, .wordsearch-practice')!.getBoundingClientRect();
-  return next.right > holder.right + 0.5 || next.left < holder.left - 0.5;
+  if (next.right > holder.right + 0.5 || next.left < holder.left - 0.5) return true;
+  const grid = board.getBoundingClientRect();
+  const across = Math.min(next.right, grid.right) - Math.max(next.left, grid.left);
+  const down = Math.min(next.bottom, grid.bottom) - Math.max(next.top, grid.top);
+  return across > 0.5 && down > 0.5;
 }
 
 /**
