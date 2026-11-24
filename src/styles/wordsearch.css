@@ -523,9 +523,10 @@
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
+  /* Short words (TEN, RED) keep a 48 px wide button (QA247-03; two fit the 139 px column). */
   .compact-practice .ws-word {
     width: 100%;
-    min-width: 0;
+    min-width: var(--target);
     padding: 2px 4px;
     font-size: 0.78rem;
     letter-spacing: 0;

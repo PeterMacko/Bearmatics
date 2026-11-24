@@ -33,6 +33,7 @@ function expectFit(m: Awaited<ReturnType<typeof searchLayout>>, where: string) {
   expect(m.sideScroll, `${where} sideways scroll`).toBeLessThanOrEqual(0);
   expect(m.cell, `${where} cell`).toBeGreaterThanOrEqual(48);
   expect(m.target, `${where} smallest target`).toBeGreaterThanOrEqual(48);
+  expect(m.wordTarget, `${where} smallest word button`).toBeGreaterThanOrEqual(48);
   expect(m.listVisible, `${where} word list in view`).toBe(true);
   expect(m.chipOverflow, `${where} words fit their buttons`).toBe(0);
   expect(m.nextOverBoard, `${where} Next does not cover the letters`).toBe(0);
@@ -146,6 +147,35 @@ test('level 2: speakers play the words; a found word appears struck through besi
   await expect(page.locator('.ws-revealed')).toHaveText([spoken.toUpperCase()]);
   await expect(page.locator('.ws-revealed')).toHaveCSS('text-decoration-line', 'line-through');
 });
+
+// QA247-03: at 568x320 the words sit two per row in the narrow column; a grid of short words
+// (TEN, RED, DOG, BOY, BLUE, GIRL ...) made the buttons 44-47 px wide. Every word button keeps
+// 48 x 48 px, without new scroll. The words are set to short ones on screen, so the test does not
+// depend on the random grid.
+for (const lang of ['en', 'sk'] as const)
+  test(`568x320 ${lang.toUpperCase()}: short word buttons stay at least 48 x 48 px, no new scroll`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width: 568, height: 320 },
+      hasTouch: true,
+    });
+    const page = await context.newPage();
+    await startSearch(page, { level: 1, lang });
+    await page.evaluate(() =>
+      document
+        .querySelectorAll('.ws-word')
+        .forEach((b, i) => (b.textContent = ['TEN', 'RED', 'DOG', 'BOY', 'GIRL'][i])),
+    );
+    await page.waitForTimeout(200);
+    const m = await searchLayout(page);
+    console.log(`[ws-words] 568x320 ${lang} ` + JSON.stringify(m));
+    expect(m.wordTarget, 'smallest word button').toBeGreaterThanOrEqual(48);
+    expect(m.pageScroll).toBeLessThanOrEqual(1);
+    expect(m.sideScroll).toBeLessThanOrEqual(0);
+    expect(m.listVisible).toBe(true);
+    await context.close();
+  });
 
 // QA247-01: at 320x568 with 200% text the Slovak "Ďalšia osemsmerovka" did not fit the Next
 // button in the top-right corner (74 px of "osemsmerovka" stuck out, the page scrolled

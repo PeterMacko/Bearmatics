@@ -137,6 +137,15 @@ export const searchLayout = (page: Page) =>
       viewport: d.clientHeight,
       width: d.clientWidth,
       listVisible: list.bottom <= d.clientHeight + 0.5 && list.top >= 0,
+      /** The smallest side of a word or speaker button below the grid (unrounded, QA247-03). */
+      wordTarget: Math.min(
+        ...[...document.querySelectorAll<HTMLElement>('.ws-word, .ws-words .ws-speaker')]
+          .filter(visible)
+          .map((b) => {
+            const r = b.getBoundingClientRect();
+            return Math.round(Math.min(r.width, r.height) * 100) / 100;
+          }),
+      ),
       /** Word buttons whose text does not fit inside them. */
       chipOverflow: [...document.querySelectorAll<HTMLElement>('.ws-word')].filter(
         (b) => b.scrollWidth > b.clientWidth + 1,

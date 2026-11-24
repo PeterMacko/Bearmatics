@@ -88,6 +88,7 @@ test('signed in with a long nickname: the lesson fits every defined device befor
         expect(m.sideScroll, where).toBeLessThanOrEqual(0);
         expect(m.cell, where).toBeGreaterThanOrEqual(48);
         expect(m.target, where).toBeGreaterThanOrEqual(48);
+        expect(m.wordTarget, where).toBeGreaterThanOrEqual(48);
         expect(m.listVisible, where).toBe(true);
         expect(m.chipOverflow, where).toBe(0);
         expect(m.nextOverBoard, where).toBe(0);
