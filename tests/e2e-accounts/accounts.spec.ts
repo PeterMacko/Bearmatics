@@ -25,6 +25,9 @@ async function signIn(page: Page, username: string, password = PASSWORD) {
 
 test.describe('signed out', () => {
   test('course choice keeps its layout and offers Sign in at every device', async ({ browser }) => {
+    // One Firefox context per device took 29.5 of the default 30 s on main already; the fifth
+    // course card (SCRUM-241) tipped it over on macs4. The checks are unchanged.
+    test.setTimeout(60_000);
     for (const device of DEVICES) {
       const context = await browser.newContext({
         viewport: { width: device.width, height: device.height },
