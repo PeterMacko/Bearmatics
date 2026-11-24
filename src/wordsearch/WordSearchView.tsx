@@ -18,6 +18,8 @@ import useSearchFit from './useSearchFit';
 
 /** How long a wrong pair flashes before it clears (scope 3: a soft flash). */
 export const FLASH_MS = 650;
+/** A pointer tap on the marked letter this soon after the tap that marked it is ignored. */
+export const TAP_GUARD_MS = 500;
 
 const CELLS: readonly Cell[] = Array.from({ length: GRID * GRID }, (_, i) => ({
   row: Math.floor(i / GRID),
@@ -90,6 +92,8 @@ export default function WordSearchView({
   const [lettersMode, setLettersMode] = useState(false);
   const [chosen, setChosen] = useState('');
   const cellRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  /** The letter the last pointer tap marked, and when (the quick-second-tap guard). */
+  const markedAt = useRef<{ cell: Cell; at: number } | null>(null);
   const sectionRef = useSearchFit(lesson.index, found.length, lettersMode, solved, playFailed);
 
   // A wrong pair flashes softly, then clears (the selection is already cleared).
@@ -123,9 +127,17 @@ export default function WordSearchView({
   };
 
   const tap = (cell: Cell, e: MouseEvent) => {
-    // The second click of a double tap on the marked letter would cancel it: ignore it. A quick
-    // tap on a different letter is a real second tap and goes through.
-    if (e.detail > 1 && selected && sameCell(selected, cell)) return;
+    // The second click of a double tap on the marked letter would cancel it: ignore it. Firefox
+    // reports a quick second touch tap with detail 1, so a pointer tap on the same letter soon
+    // after the tap that marked it counts as part of that tap too. A quick tap on a different
+    // letter is a real second tap and goes through; keyboard (detail 0) is never ignored.
+    const now = Date.now();
+    if (selected && sameCell(selected, cell) && e.detail > 0) {
+      const marked = markedAt.current;
+      if (e.detail > 1 || (marked && sameCell(marked.cell, cell) && now - marked.at < TAP_GUARD_MS))
+        return;
+    }
+    markedAt.current = selected || e.detail === 0 ? null : { cell, at: now };
     setFocusCell(cell);
     onTap(cell);
   };

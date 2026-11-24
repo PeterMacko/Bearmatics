@@ -171,6 +171,49 @@ test('selection: first tap marks, wrong pair flashes and clears, double tap keep
   await expect(cell(page, words[0].first)).toHaveAttribute('data-word', /^[0-4]$/);
 });
 
+// QA247-04: Firefox reports a quick second touch tap with detail 1, which cancelled the mark.
+// Both clicks are sent with detail 1 here (checked), in a touch context, in both engines.
+test('selection: a quick second tap with detail 1 on the marked letter keeps it; a slow one cancels', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+  });
+  const page = await context.newPage();
+  await startSearch(page, { level: 1 });
+  await page.evaluate(() => {
+    const details: number[] = [];
+    (window as unknown as { details: number[] }).details = details;
+    document.addEventListener('click', (e) => details.push(e.detail), true);
+  });
+  const words = await gridWords(page);
+  const [a] = wrongPair(words);
+  const box = (await cell(page, a).boundingBox())!;
+  const x = box.x + box.width / 2;
+  const y = box.y + box.height / 2;
+  const singleClick = async () => {
+    await page.mouse.down({ clickCount: 1 });
+    await page.mouse.up({ clickCount: 1 });
+  };
+  await page.mouse.move(x, y);
+  await singleClick();
+  await singleClick();
+  expect(await page.evaluate(() => (window as unknown as { details: number[] }).details)).toEqual([
+    1, 1,
+  ]);
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'true');
+  // A touch tap right after it (Firefox: detail 1) keeps the mark too.
+  await page.waitForTimeout(100);
+  await cell(page, a).tap();
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'true');
+  // A slow, deliberate second tap cancels it.
+  await page.waitForTimeout(600);
+  await cell(page, a).tap();
+  await expect(cell(page, a)).toHaveAttribute('aria-pressed', 'false');
+  await context.close();
+});
+
 test('a lesson of 10 words is two grids; the summary shows found on the first try', async ({
   page,
 }) => {

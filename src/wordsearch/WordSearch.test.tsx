@@ -137,6 +137,8 @@ test('level 1: 36 letter buttons named by row, column and letter; the words belo
 
 test('first tap marks the letter (aria-pressed), a second tap on it cancels; double tap keeps it', async () => {
   await start();
+  let now = 1_000_000;
+  vi.spyOn(Date, 'now').mockImplementation(() => now);
   const [a, b] = wrongPair();
   tapCell(a);
   expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
@@ -144,16 +146,52 @@ test('first tap marks the letter (aria-pressed), a second tap on it cancels; dou
   // The second click of a double tap on the same letter is ignored...
   tapCell(a, 2);
   expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
-  // ...a deliberate second tap cancels.
+  // ...a deliberate (slower) second tap cancels.
+  now += 600;
   tapCell(a);
   expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'false');
   // A quick tap on a different letter right after is a real second tap.
+  now += 600;
   tapCell(a);
   tapCell(b, 2);
   expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'false');
   expect(screen.getByRole('status')).toHaveTextContent(
     'That is not a word from the list. Try again.',
   );
+});
+
+test('QA247-04: a quick second tap with detail 1 (Firefox touch) keeps the letter marked; a slow one cancels', async () => {
+  await start();
+  let now = 1_000_000;
+  vi.spyOn(Date, 'now').mockImplementation(() => now);
+  const [a, b] = wrongPair();
+  tapCell(a);
+  now += 150;
+  tapCell(a); // the second touch of a quick double tap, reported as detail 1
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
+  now += 340; // still within 500 ms of the tap that marked it
+  tapCell(a);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
+  now += 20; // 510 ms after the marking tap: a deliberate tap cancels
+  tapCell(a);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'false');
+  // Cancelled: the next quick tap marks it again (it is not swallowed by the guard).
+  now += 50;
+  tapCell(a);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
+  // A quick tap on a different letter always goes through.
+  now += 50;
+  tapCell(b);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'false');
+  expect(screen.getByRole('status')).toHaveTextContent(
+    'That is not a word from the list. Try again.',
+  );
+  // Keyboard (Enter/Space, detail 0): a second press right away still cancels.
+  now += 50;
+  tapCell(a, 0);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'true');
+  tapCell(a, 0);
+  expect(cellButton(a.row, a.col)).toHaveAttribute('aria-pressed', 'false');
 });
 
 test('a found word: coloured, struck through, a pop and the word plays again; no answer melody', async () => {
