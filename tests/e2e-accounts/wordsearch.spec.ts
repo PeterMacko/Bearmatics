@@ -12,8 +12,16 @@ const badge = (page: import('@playwright/test').Page) =>
 
 async function start(page: import('@playwright/test').Page, level: 1 | 2 | 3, size: 5 | 10) {
   await page.getByRole('button', { name: 'Word search', exact: true }).click();
-  await page.getByRole('radio', { name: new RegExp(`^Level ${level} `) }).check({ force: true });
-  await page.getByRole('radio', { name: `${size} exercises`, exact: true }).check({ force: true });
+  // Tap the visible cards and pills (Firefox can report the 1 px radios as covered).
+  await page
+    .locator('.wordsearch-home .level-option')
+    .nth(level - 1)
+    .click();
+  await page
+    .locator('.wordsearch-home .session-options label')
+    .filter({ hasText: new RegExp(`^${size}\\b`) })
+    .click();
+  await expect(page.getByRole('radio', { name: new RegExp(`^Level ${level} `) })).toBeChecked();
   await page.getByRole('button', { name: /Let’s search/ }).click();
   await expect(page.locator('.ws-board')).toBeVisible();
 }
@@ -81,6 +89,7 @@ test('signed in with a long nickname: the lesson fits every defined device befor
         expect(m.cell, where).toBeGreaterThanOrEqual(48);
         expect(m.target, where).toBeGreaterThanOrEqual(48);
         expect(m.listVisible, where).toBe(true);
+        expect(m.chipOverflow, where).toBe(0);
       }
       await expect(page.locator('.ws-actions .answer-button')).toBeInViewport({ ratio: 1 });
     }

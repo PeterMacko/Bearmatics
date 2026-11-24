@@ -34,6 +34,7 @@ function expectFit(m: Awaited<ReturnType<typeof searchLayout>>, where: string) {
   expect(m.cell, `${where} cell`).toBeGreaterThanOrEqual(48);
   expect(m.target, `${where} smallest target`).toBeGreaterThanOrEqual(48);
   expect(m.listVisible, `${where} word list in view`).toBe(true);
+  expect(m.chipOverflow, `${where} words fit their buttons`).toBe(0);
 }
 
 const FIT_DEVICES = ALL_DEVICES.filter((d) => d !== DEVICE.phone369);

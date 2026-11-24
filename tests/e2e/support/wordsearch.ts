@@ -96,10 +96,16 @@ export async function startSearch(
   if (lang === 'sk') await setLanguage(page, 'Slovenčina');
   await page.locator('.course-wordsearch').click();
   await expect(page.locator('.wordsearch-home')).toBeVisible();
-  await page.locator(`input[name="search-level"][value="${level}"]`).check({ force: true });
-  await page.locator('input[name="search-size"]').nth([5, 10, 20].indexOf(size)).check({
-    force: true,
-  });
+  // Tap the visible cards and pills (Firefox can report the 1 px radios as covered).
+  await page
+    .locator('.wordsearch-home .level-option')
+    .nth(level - 1)
+    .click();
+  await page
+    .locator('.wordsearch-home .session-options label')
+    .filter({ hasText: new RegExp(`^${size}\\b`) })
+    .click();
+  await expect(page.locator(`input[name="search-level"][value="${level}"]`)).toBeChecked();
   await page.locator('.wordsearch-home .start-button').click();
   await expect(page.locator('.ws-board')).toBeVisible();
 }
@@ -127,5 +133,9 @@ export const searchLayout = (page: Page) =>
       viewport: d.clientHeight,
       width: d.clientWidth,
       listVisible: list.bottom <= d.clientHeight + 0.5 && list.top >= 0,
+      /** Word buttons whose text does not fit inside them. */
+      chipOverflow: [...document.querySelectorAll<HTMLElement>('.ws-word')].filter(
+        (b) => b.scrollWidth > b.clientWidth + 1,
+      ).length,
     };
   });
