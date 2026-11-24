@@ -1,4 +1,5 @@
 import { useLayoutEffect, useRef } from 'react';
+import { flushSync } from 'react-dom';
 import { LAYOUT } from '../layoutSelectors';
 import { watchResize } from '../watchResize';
 import { GRID } from './grid';
@@ -10,18 +11,44 @@ export const MAX_CELL = { compact: 56, wide: 64 } as const;
 /** In the two-column layouts the words' column keeps at least this width. */
 const SIDE_MIN = 170;
 
+/** Where Next sits once every word is found: in its place (side column / top-right corner) or
+ *  below the whole lesson. `setBelow` must re-render the view with Next in the other place. */
+export type NextPlace = { below: boolean; setBelow: (below: boolean) => void };
+
+/**
+ * True when Next does not fit its usual place: a word of its label sticks out of the button
+ * (QA247-01) or the button runs out of its column or the window. Rectangles are 0 in unit tests
+ * (never misplaced there).
+ */
+export function nextMisplaced(section: HTMLElement): boolean {
+  const button = section.querySelector<HTMLElement>('.ws-actions .answer-button');
+  const board = section.querySelector<HTMLElement>('.ws-board');
+  if (!button || !board) return false;
+  if (button.scrollWidth > button.clientWidth + 0.5) return true;
+  const next = button.getBoundingClientRect();
+  const width = document.documentElement.clientWidth || window.innerWidth;
+  if (next.right > width + 0.5 || next.left < -0.5) return true;
+  const holder = button.closest('.ws-side, .wordsearch-practice')!.getBoundingClientRect();
+  return next.right > holder.right + 0.5 || next.left < holder.left - 0.5;
+}
+
 /**
  * Sizes the word search grid (`--cell` on the lesson section) like the logic board
  * (useBoardFit): the largest cell that fits the stage's width, then smaller by however much the
  * page overflows (the grid is 6 cells high), never below MIN_CELL (then the page may scroll,
  * e.g. very large text). Refits when the caller's keys change (found words can wrap the list).
+ * With `place` (solved grid) it then checks Next: when it does not fit its place it moves below
+ * the lesson (and the grid is fitted again); on a resize (window, text size) Next first goes back
+ * to its place and is checked again.
  */
-export default function useSearchFit(...keys: unknown[]) {
+export default function useSearchFit(keys: unknown[], place?: NextPlace) {
   const ref = useRef<HTMLElement>(null);
+  /** Window size and text size when Next last moved below. */
+  const movedAt = useRef('');
   useLayoutEffect(() => {
     const section = ref.current;
     if (!section || typeof window === 'undefined') return;
-    const fit = () => {
+    const fitCells = () => {
       const stage = section.querySelector<HTMLElement>('.ws-stage');
       const play = section.querySelector<HTMLElement>('.ws-play');
       if (!stage || !play) return;
@@ -45,7 +72,8 @@ export default function useSearchFit(...keys: unknown[]) {
       for (let i = 0; i < 3; i++) {
         // clientHeight is the layout viewport; innerHeight can grow while mobile browsers zoom out.
         const viewport = document.documentElement.clientHeight || window.innerHeight;
-        const bottoms = Array.from(play.querySelectorAll('.ws-board, .ws-side > *')).map(
+        const parts = section.querySelectorAll('.ws-board, .ws-side > *, .ws-actions');
+        const bottoms = Array.from(parts).map(
           (child) => child.getBoundingClientRect().bottom + window.scrollY,
         );
         const overflow = Math.max(
@@ -60,9 +88,25 @@ export default function useSearchFit(...keys: unknown[]) {
         set(cell);
       }
     };
+    // What can let Next fit its place again: the window and the text size (not the lesson's
+    // own height, which changes when Next moves, nor the observer's first call).
+    const room = () =>
+      `${window.innerWidth}x${window.innerHeight} ${getComputedStyle(section).fontSize}`;
+    const fit = () => {
+      fitCells();
+      // Next moves below; this effect runs again (place.below is a key) and refits the grid.
+      if (place && !place.below && nextMisplaced(section)) {
+        movedAt.current = room();
+        place.setBelow(true);
+      }
+    };
+    const resized = () => {
+      if (place?.below && room() !== movedAt.current) flushSync(() => place.setBelow(false));
+      else fit();
+    };
     fit();
-    return watchResize(fit, [section.parentElement], { frame: 'last', fonts: true });
+    return watchResize(resized, [section.parentElement], { frame: 'last', fonts: true });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- refit when the caller's keys change
-  }, keys);
+  }, [...keys, place?.below]);
   return ref;
 }

@@ -1,5 +1,6 @@
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -94,7 +95,22 @@ export default function WordSearchView({
   const cellRefs = useRef<(HTMLButtonElement | null)[]>([]);
   /** The letter the last pointer tap marked, and when (the quick-second-tap guard). */
   const markedAt = useRef<{ cell: Cell; at: number } | null>(null);
-  const sectionRef = useSearchFit(lesson.index, found.length, lettersMode, solved, playFailed);
+  // Next leaves its place (side column / top-right corner) when it does not fit there; the
+  // choice holds for this label only, so a language change checks the new label in place.
+  const [belowFor, setBelowFor] = useState<string | null>(null);
+  const nextBelow = solved && belowFor === nextLabel;
+  const sectionRef = useSearchFit(
+    [lesson.index, found.length, lettersMode, solved, playFailed, nextLabel],
+    solved
+      ? { below: nextBelow, setBelow: (below) => setBelowFor(below ? nextLabel : null) }
+      : undefined,
+  );
+  // Moving Next mounts a new button: it keeps the focus the old one had.
+  useLayoutEffect(() => {
+    if (solved && (document.activeElement === document.body || !document.activeElement))
+      nextRef.current?.focus({ preventScroll: true });
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- when Next moves only
+  }, [nextBelow]);
 
   // A wrong pair flashes softly, then clears (the selection is already cleared).
   const wrongSeq = event?.kind === 'wrong' ? event.seq : 0;
@@ -180,12 +196,30 @@ export default function WordSearchView({
           : t.searchReady;
   const feedbackKind = solved || event?.kind === 'found' ? 'correct' : 'ready';
 
+  const nextActions = (
+    <div className={`answer-actions ws-actions${nextBelow ? ' ws-actions-below' : ''}`}>
+      <button
+        ref={nextRef}
+        type="button"
+        className="primary answer-button"
+        data-state="correct"
+        onClick={(e: MouseEvent) => {
+          if (!ignoreRepeatClick(e)) onNext();
+        }}
+      >
+        {nextLabel}
+        <span aria-hidden="true"> →</span>
+      </button>
+    </div>
+  );
+
   return (
     <section
       ref={sectionRef}
       className="practice wordsearch-practice"
       data-level={level}
       data-solved={solved || undefined}
+      data-next-below={nextBelow || undefined}
     >
       <PracticeHeader t={t} level={level} position={position} />
       <h2>{t.searchTitles[level]}</h2>
@@ -325,24 +359,10 @@ export default function WordSearchView({
           >
             {message}
           </FeedbackLine>
-          {solved && (
-            <div className="answer-actions ws-actions">
-              <button
-                ref={nextRef}
-                type="button"
-                className="primary answer-button"
-                data-state="correct"
-                onClick={(e: MouseEvent) => {
-                  if (!ignoreRepeatClick(e)) onNext();
-                }}
-              >
-                {nextLabel}
-                <span aria-hidden="true"> →</span>
-              </button>
-            </div>
-          )}
+          {solved && !nextBelow && nextActions}
         </div>
       </div>
+      {nextBelow && nextActions}
       <p id="ws-keys" className="sr-only">
         {t.searchKeys}
       </p>

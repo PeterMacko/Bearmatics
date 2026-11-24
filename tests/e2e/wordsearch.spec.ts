@@ -139,6 +139,83 @@ test('level 2: speakers play the words; a found word appears struck through besi
   await expect(page.locator('.ws-revealed')).toHaveCSS('text-decoration-line', 'line-through');
 });
 
+// QA247-01: at 320x568 with 200% text the Slovak "Ďalšia osemsmerovka" did not fit the Next
+// button in the top-right corner (74 px of "osemsmerovka" stuck out, the page scrolled
+// sideways); at 742x702 the same word widened the narrow words' column by 47 px (19 px sideways
+// scroll). Every word of the label must sit inside the button and nothing may scroll sideways.
+for (const [width, height, text, lang] of [
+  [320, 568, 200, 'sk'],
+  [320, 568, 200, 'en'],
+  [742, 702, 100, 'sk'],
+] as const)
+  test(`${text}% text ${lang.toUpperCase()} ${width}x${height} solved: Next keeps its label inside, no sideways scroll`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await startSearch(page, { level: 1, size: 10, lang });
+    if (text === 200) await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+    await page.waitForTimeout(300);
+    for (const w of await gridWords(page)) await findWord(page, w);
+    const next = page.locator('.ws-actions .answer-button');
+    await expect(next).toHaveText(lang === 'sk' ? 'Ďalšia osemsmerovka →' : 'Next word search →');
+    await page.waitForTimeout(300);
+    const m = await searchLayout(page);
+    const label = await next.evaluate((button) => {
+      const range = document.createRange();
+      range.selectNodeContents(button);
+      const words = range.getBoundingClientRect();
+      const box = button.getBoundingClientRect();
+      return {
+        left: words.left - box.left,
+        right: box.right - words.right,
+        scroll: button.scrollWidth - button.clientWidth,
+      };
+    });
+    console.log(`[ws-next] ${width}x${height} ${text}% ${lang} ` + JSON.stringify({ ...m, label }));
+    expect(m.sideScroll, 'sideways scroll').toBeLessThanOrEqual(0);
+    expect(label.scroll, 'label overflow').toBeLessThanOrEqual(0);
+    expect(label.left, 'label inside on the left').toBeGreaterThanOrEqual(0);
+    expect(label.right, 'label inside on the right').toBeGreaterThanOrEqual(0);
+    expect(m.chipOverflow, 'words fit their buttons').toBe(0);
+    expect(m.cell).toBeGreaterThanOrEqual(48);
+    await next.scrollIntoViewIfNeeded();
+    await expect(next).toBeInViewport({ ratio: 1 });
+    await expect(next).toBeFocused();
+  });
+
+test('Next below the lesson goes back to its place when the language or the window changes', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 742, height: 702 });
+  await startSearch(page, { level: 1, size: 10, lang: 'sk' });
+  for (const w of await gridWords(page)) await findWord(page, w);
+  const section = page.locator('.wordsearch-practice');
+  const next = page.locator('.ws-actions .answer-button');
+  await expect(section).toHaveAttribute('data-next-below', 'true');
+  await expect(page.locator('.ws-side .ws-actions')).toHaveCount(0);
+  await expect(next).toBeFocused();
+  // English "Next word search" fits the words' column: back in place.
+  await page.locator('.settings-button').click();
+  await page.getByRole('button', { name: 'English', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(next).toHaveText('Next word search →');
+  await expect(section).not.toHaveAttribute('data-next-below');
+  await expect(page.locator('.ws-side .ws-actions')).toHaveCount(1);
+  // Slovak again: below; a wider window gives the column room: back in place.
+  await page.locator('.settings-button').click();
+  await page.getByRole('button', { name: 'Slovenčina', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(section).toHaveAttribute('data-next-below', 'true');
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await expect(section).not.toHaveAttribute('data-next-below');
+  await expect(page.locator('.ws-side .ws-actions')).toHaveCount(1);
+  const m = await searchLayout(page);
+  expect(m.sideScroll).toBeLessThanOrEqual(0);
+  await page.setViewportSize({ width: 742, height: 702 });
+  await expect(section).toHaveAttribute('data-next-below', 'true');
+  expect((await searchLayout(page)).sideScroll).toBeLessThanOrEqual(0);
+});
+
 test('selection: first tap marks, wrong pair flashes and clears, double tap keeps the mark', async ({
   page,
 }) => {
