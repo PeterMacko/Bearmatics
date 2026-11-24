@@ -54,6 +54,20 @@ const tab = (shiftKey = false) => {
 };
 
 describe('useModalFocus', () => {
+  it('SCRUM-298: the dialog itself takes focus from a click on its padding (tabindex -1), so Escape and Tab still work', () => {
+    const onEscape = vi.fn();
+    render(<Dialog onEscape={onEscape} restoreTo="opener" />);
+    const dialog = screen.getByRole('dialog');
+    expect(dialog).toHaveAttribute('tabindex', '-1');
+    dialog.focus(); // what a mouse click on the padding does to a focusable dialog
+    expect(dialog).toHaveFocus();
+    expect(tab()).toBe(true);
+    expect(screen.getByText('first')).toHaveFocus();
+    dialog.focus();
+    fireEvent.keyDown(dialog, { key: 'Escape' });
+    expect(onEscape).toHaveBeenCalledTimes(1);
+  });
+
   it('focuses the first button on open', () => {
     render(<Dialog onEscape={() => {}} restoreTo="opener" />);
     expect(screen.getByText('first')).toHaveFocus();
