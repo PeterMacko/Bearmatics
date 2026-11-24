@@ -203,3 +203,13 @@
 .menu-shell .workspace[data-menu-tight] .session-options label > span {
   padding-block: 6px;
 }
+/* SCRUM-289: the Logic menu has two levels and a long Slovak Start ("Poďme plánovať"). With
+   the heading compact it takes the tight padding at once, so Start stays beside 5/10/20 and one
+   whole level shows (568x320 SK Firefox, 200% text at 390x844); other menus are unchanged. */
+.menu-shell .workspace[data-menu-compact] .logic-home .start-button {
+  padding: 8px 12px;
+  gap: 6px;
+}
+.menu-shell .workspace[data-menu-compact] .logic-home .session-options label > span {
+  padding-block: 6px;
+}
