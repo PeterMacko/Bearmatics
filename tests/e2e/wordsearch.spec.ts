@@ -50,18 +50,25 @@ for (const level of [1, 2, 3] as const)
       const page = await context.newPage();
       await startSearch(page, { level, lang: level === 2 ? 'sk' : 'en' });
       await page.waitForTimeout(200);
-      expectFit(await searchLayout(page), 'start');
+      const start = await searchLayout(page);
+      expectFit(start, 'start');
       const words = await gridWords(page);
       // Longest words first: the level 2 list shows them, the largest growth.
       words.sort((a, b) => b.word.length - a.word.length);
       await findWord(page, words[0]);
       await findWord(page, words[1]);
       await page.waitForTimeout(200);
-      expectFit(await searchLayout(page), 'two found');
+      const two = await searchLayout(page);
+      expectFit(two, 'two found');
       for (const w of words.slice(2)) await findWord(page, w);
       await page.waitForTimeout(200);
       const solved = await searchLayout(page);
       expectFit(solved, 'solved');
+      // The numbers for the report (test output).
+      console.log(
+        `[ws-fit] ${d.width}x${d.height} L${level} ${level === 2 ? 'sk' : 'en'} ` +
+          JSON.stringify({ start, two, solved }),
+      );
       await expect(page.locator('.ws-actions .answer-button')).toBeInViewport({ ratio: 1 });
       await expect(page.locator('.ws-actions .answer-button')).toBeFocused();
       await context.close();
