@@ -183,7 +183,10 @@ export default function AboutPage({ language }: { language: Language }) {
             </li>
             <li>
               <strong>{t.logicCourse}</strong>, {a.logicLead}:
-              <ul>{level(1, t.logicLevels[1], a.logicDetail)}</ul>
+              <ul>
+                {level(1, t.logicLevels[1], a.logicDetail)}
+                {level(2, t.logicLevels[2], a.logicDetail2)}
+              </ul>
             </li>
             <li>
               <strong>{t.mathCourse}</strong>:

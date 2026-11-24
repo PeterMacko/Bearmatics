@@ -315,7 +315,3 @@ export function generateStoneSession(
       .map((layout) => pick(layoutPlacements(layout), rng)),
   );
 }
-
-/** A lesson of either level. */
-export const generateLogicSession = (level: LogicLevel, size: number, rng?: () => number) =>
-  level === 2 ? generateStoneSession(size, rng) : generateBearSession(size, rng);

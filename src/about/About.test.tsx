@@ -128,8 +128,24 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(items).toContain(`${t.level} ${value}: ${t.englishLevels[value]}`);
     // SCRUM-262: Logic, level 1.
     expect(items).toContain(`${t.level} 1: ${t.logicLevels[1]} (${a.logicDetail})`);
+    // SCRUM-289: Logic, level 2 (stones).
+    expect(items).toContain(`${t.level} 2: ${t.logicLevels[2]} (${a.logicDetail2})`);
     for (const course of [t.smallCourse, t.logicCourse, t.mathCourse, t.englishCourse])
       expect(screen.getByText(course, { selector: 'strong' })).toBeInTheDocument();
+  });
+
+  it('SCRUM-289: the privacy list says the device remembers the Logic demo was seen', () => {
+    render(<AboutPage language={language} />);
+    const list = document.querySelector<HTMLElement>('.privacy-list')!;
+    expect(
+      within(list)
+        .getAllByRole('listitem')
+        .map((li) => li.textContent),
+    ).toContain(
+      language === 'en'
+        ? 'On this device the app remembers that the Logic demo was seen; nothing is sent.'
+        : 'Na tomto zariadení si aplikácia pamätá, že ukážka v Logike už bola pozretá; nič sa neodosiela.',
+    );
   });
 
   it('names the age 5–9 (SCRUM-262)', () => {

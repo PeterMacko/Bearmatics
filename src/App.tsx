@@ -47,11 +47,15 @@ import {
 } from './english/write';
 import { useFeedbackAudio } from './useFeedbackAudio';
 import {
-  checkBearPath,
+  ARROW_LIMIT,
+  bearChecker,
   encodeArrows,
   generateBearSession,
+  generateStoneSession,
+  LOGIC_LEVELS,
   type Arrow,
   type BearPuzzle,
+  type LogicLevel,
 } from './logic/bearPath';
 import LogicPracticeView from './logic/LogicPracticeView';
 import { AccountButton } from './AccountButton';
@@ -122,6 +126,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // SCRUM-262: Logic course, level 1 (bear goes to the honey). The planned arrows are unsent
   // work (leave question); `demoRun` is non-zero while the picture demo shows.
   const [logicSize, setLogicSize] = useState(10);
+  // SCRUM-289: Level 2 "Around the stones". The lesson keeps the level it started with.
+  const [logicLevel, setLogicLevel] = useState<LogicLevel>(1);
+  const [logicLessonLevel, setLogicLessonLevel] = useState<LogicLevel>(1);
   const [logicSession, setLogicSession] = useState<Session<BearPuzzle> | null>(null);
   const [logicArrows, setLogicArrows] = useState<Arrow[]>([]);
   const [demoRun, setDemoRun] = useState(0);
@@ -375,10 +382,15 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     resetForNewSession();
     void activateSound();
     startLessonClock(logicSize);
-    beginLesson(logicSize, { course: 'logic', level: 1 });
+    beginLesson(logicSize, { course: 'logic', level: logicLevel });
+    setLogicLessonLevel(logicLevel);
     setLogicArrows([]);
     showDemo();
-    setLogicSession(createSession(generateBearSession(logicSize)));
+    setLogicSession(
+      createSession(
+        logicLevel === 2 ? generateStoneSession(logicSize) : generateBearSession(logicSize),
+      ),
+    );
   };
   const nextLogic = () => {
     void activateSound();
@@ -476,7 +488,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               key={presentation}
               t={t}
               puzzle={logicPuzzle}
-              level={1}
+              level={logicLessonLevel}
+              maxArrows={ARROW_LIMIT[logicLessonLevel]}
               position={positionText(t, logicSession, t.exercise)}
               reviewing={logicSession.reviewing}
               solved={logicSession.solved}
@@ -493,7 +506,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               onGo={() => void activateSound()}
               onWalked={(walked) =>
                 setLogicSession(
-                  (previous) => previous && submitAnswer(previous, walked, checkBearPath),
+                  (previous) =>
+                    previous && submitAnswer(previous, walked, bearChecker(logicLessonLevel)),
                 )
               }
               onNext={nextLogic}
@@ -799,17 +813,22 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
           <LevelMenu
             t={t}
             className="selection logic-home"
-            levels={[{ value: 1, shown: 1, title: t.logicLevels[1], detail: t.logicDetails[1] }]}
+            levels={LOGIC_LEVELS.map((value) => ({
+              value,
+              shown: value,
+              title: t.logicLevels[value],
+              detail: t.logicDetails[value],
+            }))}
             heading={{ eyebrow: t.logicTrail, title: t.logicChoose, intro: t.logicIntro }}
             startLabel={t.logicStart}
             startType="button"
             levelName="logic-level"
             sizeName="logic-size"
             headingRef={menuHeadingRef}
-            level={1}
+            level={logicLevel}
             size={logicSize}
             nextMultiplier={(shown) => nextMultiplier({ course: 'logic', level: shown })}
-            onLevelChange={() => {}}
+            onLevelChange={setLogicLevel}
             onSizeChange={setLogicSize}
             onStart={startLogic}
           />

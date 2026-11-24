@@ -7,7 +7,6 @@ import {
   decodeArrows,
   encodeArrows,
   generateBearSession,
-  generateLogicSession,
   generateStoneSession,
   layoutKey,
   MOVE_SHAPES,
@@ -409,10 +408,8 @@ describe('Logic level 2: lessons', () => {
         ).toBe('');
   });
 
-  test('unsupported lesson sizes are refused; the level picks the generator', () => {
+  test('unsupported lesson sizes are refused', () => {
     expect(() => generateStoneSession(7)).toThrow(RangeError);
-    expect(generateLogicSession(2, 5, seeded(3))).toEqual(generateStoneSession(5, seeded(3)));
-    expect(generateLogicSession(1, 5, seeded(3))).toEqual(generateBearSession(5, seeded(3)));
   });
 
   test('every tier layout can appear (pools are complete)', () => {

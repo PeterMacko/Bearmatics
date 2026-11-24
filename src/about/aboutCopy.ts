@@ -36,6 +36,7 @@ export const aboutCopy = {
     smallLead: 'with pictures for the youngest',
     logicLead: 'think ahead and plan the way',
     logicDetail: 'plan the way with arrows, up to 4 steps',
+    logicDetail2: 'stones stand in the way: find the free way, up to 6 steps',
     englishLead: '21 school words spoken in a British voice',
     levelDetails: {
       0: 'add up to 6',
@@ -54,7 +55,7 @@ export const aboutCopy = {
       'Choose a level and 5, 10 or 20 exercises.',
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
-      'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how; Show me plays it again.',
+      'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how at the first Logic lesson on a device; Show me plays it again any time.',
       'Exercises that needed more tries come back in a short review round.',
       'The summary shows how many were right on the first try without hints.',
       'It also shows how long the lesson took and about how long one exercise took. The time is not saved anywhere.',
@@ -90,8 +91,8 @@ export const aboutCopy = {
         alt: 'A take-away exercise: pictures in a basket, some of them taken out, and the number pad.',
       },
       logic: {
-        caption: 'Logic: guide the bear to the honey',
-        alt: 'A Logic exercise: a 4 by 4 grid with the bear and a honey pot, three planned arrows, the arrow buttons and Go.',
+        caption: 'Logic: guide the bear around the stones to the honey',
+        alt: 'A Logic level 2 exercise: a 4 by 4 grid with the bear, a honey pot and two stones, six planned arrows, the arrow buttons and Go.',
       },
       english: {
         caption: 'English: listen and choose',
@@ -123,6 +124,7 @@ export const aboutCopy = {
     smallLead: 's obrázkami pre najmenších',
     logicLead: 'mysli dopredu a naplánuj cestu',
     logicDetail: 'naplánuj cestu šípkami, najviac 4 kroky',
+    logicDetail2: 'v ceste stoja kamene: nájdi voľnú cestu, najviac 6 krokov',
     englishLead: '21 slov zo školy v britskej výslovnosti',
     levelDetails: {
       0: 'sčítanie s obrázkami do 6',
@@ -141,7 +143,7 @@ export const aboutCopy = {
       'Vyber úroveň a 5, 10 alebo 20 príkladov.',
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
-      'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako; tlačidlo Ukáž mi ju zopakuje.',
+      'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako pri prvej lekcii Logiky na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
       'Príklady, ktoré potrebovali viac pokusov, sa vrátia v krátkom opakovaní.',
       'Na konci vidíš, koľko príkladov bolo správne na prvý pokus bez pomôcky.',
       'Uvidíš aj, ako dlho lekcia trvala a koľko asi trval jeden príklad. Čas sa nikam neukladá.',
@@ -177,8 +179,8 @@ export const aboutCopy = {
         alt: 'Príklad na odoberanie: obrázky v košíku, niektoré vybrané, a číselník.',
       },
       logic: {
-        caption: 'Logika: priveď medveďa k medu',
-        alt: 'Príklad z Logiky: mriežka 4 krát 4 s medveďom a hrncom medu, tri naplánované šípky, tlačidlá so šípkami a Choď.',
+        caption: 'Logika: priveď medveďa okolo kameňov k medu',
+        alt: 'Príklad z Logiky, úroveň 2: mriežka 4 krát 4 s medveďom, hrncom medu a dvoma kameňmi, šesť naplánovaných šípok, tlačidlá so šípkami a Choď.',
       },
       english: {
         caption: 'Angličtina: počúvaj a vyber',

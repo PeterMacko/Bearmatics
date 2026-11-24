@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE } from './support/devices';
 import { setLanguage } from './support/language';
+import { mockApi } from './support/mockApi';
 
 // SCRUM-262: Logic course, level 1 "Bear goes to the honey" on the defined devices.
 
@@ -331,4 +332,205 @@ test('reduced motion: the demo is three still steps, then the puzzle', async ({ 
     await page.locator('.logic-bear').evaluate((el) => getComputedStyle(el).transitionDuration),
   ).toMatch(/^0s/);
   await context.close();
+});
+
+// ---------------------------------------------------------------------------------------------
+// SCRUM-289: Level 2 "Around the stones" (1-2 stones, up to 6 arrows).
+
+/** Bear, honey and stones (0-based) from the board's accessible name. */
+async function stonePuzzle(page: Page) {
+  const label = (await page.locator('.logic-board').getAttribute('aria-label'))!;
+  const [bearRow, bearCol, honeyRow, honeyCol, ...rest] = label
+    .match(/\d+/g)!
+    .map((n) => Number(n) - 1);
+  const stones: [number, number][] = [];
+  for (let i = 0; i < rest.length; i += 2) stones.push([rest[i], rest[i + 1]]);
+  return { bear: [bearRow, bearCol], honey: [honeyRow, honeyCol], stones };
+}
+
+const MOVES = { up: [-1, 0], down: [1, 0], left: [0, -1], right: [0, 1] } as const;
+
+/** Arrow selectors of the shortest way from the bear to `target` around the stones. */
+async function wayTo(page: Page, to: 'honey' | 'stone') {
+  const p = await stonePuzzle(page);
+  const key = ([r, c]: readonly number[]) => `${r},${c}`;
+  const stones = new Set(p.stones.map(key));
+  const goal = to === 'honey' ? [key(p.honey)] : p.stones.map(key);
+  const queue: [number[], string[]][] = [[p.bear, []]];
+  const seen = new Set([key(p.bear)]);
+  while (queue.length) {
+    const [cell, way] = queue.shift()!;
+    for (const [name, [dr, dc]] of Object.entries(MOVES)) {
+      const next = [cell[0] + dr, cell[1] + dc];
+      if (next.some((n) => n < 0 || n > 3) || seen.has(key(next))) continue;
+      // Into a stone: the end of a bump way; around the stones otherwise.
+      if (goal.includes(key(next))) return [...way, `.arrow-${name}`];
+      if (stones.has(key(next))) continue;
+      seen.add(key(next));
+      queue.push([next, [...way, `.arrow-${name}`]]);
+    }
+  }
+  throw new Error(`no way to the ${to}`);
+}
+
+/** Starts a Level 2 lesson whose first puzzle has `stones` stones (new lessons until it has). */
+async function startLevel2(page: Page, lang: 'en' | 'sk' = 'en', stones = 2) {
+  await openLogic(page, lang);
+  await page.locator('.logic-home .level-2').click();
+  for (let tries = 0; tries < 30; tries++) {
+    await page.locator('.logic-home .start-button').click();
+    await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+    if ((await page.locator('.logic-stone').count()) === stones) return;
+    await page.locator('.back-button').click();
+    await expect(page.locator('.logic-home')).toBeVisible();
+  }
+  throw new Error(`no first puzzle with ${stones} stones`);
+}
+
+for (const { name, width, height } of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    for (const account of ['signed out', 'signed in'] as const)
+      test(`Level 2 fits ${name} ${width}x${height} ${lang} ${account}: 2 stones, 6 arrows, Go on screen, no page scroll`, async ({
+        page,
+      }) => {
+        if (account === 'signed in')
+          await mockApi(page, {
+            nickname: 'Medvedík Bru',
+            points: 1234,
+            streak: 12,
+            frozen: false,
+            today: true,
+          });
+        await page.setViewportSize({ width, height });
+        await startLevel2(page, lang);
+        await expect(page.locator('.logic-stone')).toHaveCount(2);
+        await expect(page.locator('.arrow-slot')).toHaveCount(6);
+        for (const arrow of ['.arrow-right', '.arrow-down', '.arrow-left', '.arrow-up']
+          .flatMap((a) => [a, a])
+          .slice(0, 6))
+          await page.locator(arrow).click();
+        await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(6);
+        for (const state of ['plan', 'after Go']) {
+          if (state === 'after Go') {
+            await page.locator('.logic-go').click();
+            await expect(page.locator('#answer-feedback')).not.toHaveText('', { timeout: 6000 });
+            await expect(page.locator('.logic-practice')).not.toHaveAttribute('data-walking');
+            await expect
+              .poll(async () => (await lessonLayout(page)).pageScroll, { timeout: 2000 })
+              .toBeLessThanOrEqual(1);
+          }
+          const layout = await lessonLayout(page);
+          test.info().annotations.push({
+            type: 'fit',
+            description: JSON.stringify({ state, ...layout }),
+          });
+          expect(layout.pageScroll, `${state}: page scroll`).toBeLessThanOrEqual(1);
+          expect(layout.sideScroll, `${state}: side scroll`).toBeLessThanOrEqual(0);
+          expect(layout.inView, `${state}: board, slots, pad, Go/Next, Show me on screen`).toBe(
+            true,
+          );
+          expect(layout.cell, `${state}: grid cell`).toBeGreaterThanOrEqual(56);
+          expect(layout.smallestTarget, `${state}: smallest button`).toBeGreaterThanOrEqual(48);
+          // Every stone stays inside its cell.
+          const inside = await page.evaluate(() =>
+            [...document.querySelectorAll('.logic-stone svg')].every((svg) => {
+              const s = svg.getBoundingClientRect();
+              const c = svg.closest('.logic-cell')!.getBoundingClientRect();
+              return (
+                s.left >= c.left - 0.5 &&
+                s.right <= c.right + 0.5 &&
+                s.top >= c.top - 0.5 &&
+                s.bottom <= c.bottom + 0.5
+              );
+            }),
+          );
+          expect(inside, `${state}: stones inside their cells`).toBe(true);
+        }
+      });
+
+for (const { name, width, height } of [DEVICE.phone, DEVICE.smallPhone])
+  for (const lang of ['en', 'sk'] as const)
+    test(`Level 2, 200% text ${lang} at ${name} ${width}x${height}: 6 slots usable, no sideways scroll`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height });
+      await openLogic(page, lang);
+      await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+      await page.locator('.logic-home .level-2').click();
+      await page.locator('.logic-home .start-button').click();
+      await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+      for (const arrow of [
+        '.arrow-right',
+        '.arrow-down',
+        '.arrow-left',
+        '.arrow-up',
+        '.arrow-right',
+        '.arrow-down',
+      ])
+        await page.locator(arrow).click();
+      await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(6);
+      const layout = await lessonLayout(page);
+      expect(layout.sideScroll).toBeLessThanOrEqual(0);
+      expect(layout.cell).toBeGreaterThanOrEqual(56);
+      expect(layout.smallestTarget).toBeGreaterThanOrEqual(48);
+      // Same rule as Level 1: the phone fits; the smallest phone scrolls with Go reachable.
+      if (width >= 390) expect(layout.pageScroll).toBeLessThanOrEqual(1);
+      await page.locator('.logic-go').scrollIntoViewIfNeeded();
+      await expect(page.locator('.logic-go')).toBeInViewport({ ratio: 1 });
+    });
+
+test('Level 2: the right way round the stones finds the honey; a walk into a stone bumps (paw dots, back to start)', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await startLevel2(page, 'en', 2);
+  const p = await stonePuzzle(page);
+  const bump = await wayTo(page, 'stone');
+  for (const arrow of bump) await page.locator(arrow).click();
+  await page.locator('.logic-go').click();
+  await expect(page.locator('#answer-feedback')).toHaveText(
+    'The bear bumped into a stone. Fix the arrows and try again.',
+  );
+  await expect(page.locator('.logic-cell[data-paw]')).toHaveCount(bump.length - 1);
+  await expect(page.locator('.logic-bear')).toHaveAttribute(
+    'style',
+    new RegExp(`--row: ${p.bear[0]}; --col: ${p.bear[1]}`),
+  );
+  await expect(page.locator('.arrow-slot[data-filled]')).toHaveCount(bump.length);
+  for (let i = 0; i < bump.length; i++) await page.locator('.logic-remove').click();
+  for (const arrow of await wayTo(page, 'honey')) await page.locator(arrow).click();
+  await page.locator('.logic-go').click();
+  await expect(page.locator('#answer-feedback')).toHaveText('The bear found the honey! Well done.');
+  await expect(page.locator('.logic-bear')).toHaveAttribute(
+    'style',
+    new RegExp(`--row: ${p.honey[0]}; --col: ${p.honey[1]}`),
+  );
+});
+
+test('Level 2: a whole lesson of 5 (tiers easier first), first try counted on the summary', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1366, height: 900 });
+  await openLogic(page);
+  await page.locator('.logic-home .level-2').click();
+  await page.getByRole('radio', { name: '5 exercises' }).check({ force: true });
+  await page.locator('.logic-home .start-button').click();
+  await expect(page.locator('.logic-board')).toBeVisible({ timeout: DEMO_MS + 3000 });
+  const lengths: number[] = [];
+  for (let i = 0; i < 5; i++) {
+    await expect(page.getByText(`Exercise ${i + 1} of 5`)).toBeVisible();
+    const way = await wayTo(page, 'honey');
+    lengths.push(way.length);
+    for (const arrow of way) await page.locator(arrow).click();
+    await page.locator('.logic-go').click();
+    await expect(page.locator('#answer-feedback')).toHaveText(/found the honey/, {
+      timeout: 6000,
+    });
+    await page.getByRole('button', { name: i < 4 ? 'Next exercise' : 'See how you did' }).click();
+  }
+  // Tier A (2-3 moves), B (4-5), B, C (6), C.
+  expect(lengths[0]).toBeLessThanOrEqual(3);
+  expect(lengths.slice(1, 3).every((n) => n === 4 || n === 5)).toBe(true);
+  expect(lengths.slice(3)).toEqual([6, 6]);
+  await expect(page.getByText('5 / 5')).toBeVisible();
 });

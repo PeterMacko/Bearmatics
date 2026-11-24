@@ -15,14 +15,13 @@ import type { Feedback } from '../session';
 import {
   encodeArrows,
   GRID_SIZE,
-  MAX_ARROWS,
   sameCell,
   walkArrows,
   type Arrow,
   type BearPuzzle,
   type Cell,
 } from './bearPath';
-import { ArrowIcon, EyeIcon, GridBear, HoneyPot, Paw, RemoveIcon } from './LogicArt';
+import { ArrowIcon, EyeIcon, GridBear, HoneyPot, Paw, RemoveIcon, Stone } from './LogicArt';
 import LogicDemo from './LogicDemo';
 import useBoardFit from './useBoardFit';
 
@@ -52,8 +51,9 @@ const prefersReducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
- * Logic level 1 lesson (SCRUM-262): plan up to 4 arrows, then Go; the bear walks one cell per
- * arrow. A wrong walk leaves paw dots, the bear goes back to the start and the arrows stay.
+ * Logic lesson (SCRUM-262; Level 2 with stones SCRUM-289): plan up to `maxArrows` arrows, then
+ * Go; the bear walks one cell per arrow and stops at the edge or in front of a stone. A wrong
+ * walk leaves paw dots, the bear goes back to the start and the arrows stay.
  * The parent owns the arrows (they count as unsent work for the leave question) and the session;
  * this view owns the walk and the demo on screen. Mount it with a new `key` per presentation.
  */
@@ -61,6 +61,7 @@ export default function LogicPracticeView({
   t,
   puzzle,
   level,
+  maxArrows,
   position,
   reviewing,
   solved,
@@ -81,6 +82,8 @@ export default function LogicPracticeView({
   t: Copy;
   puzzle: BearPuzzle;
   level: number;
+  /** How many arrow slots (Level 1: 4, Level 2: 6). */
+  maxArrows: number;
   position: string;
   reviewing: boolean;
   solved: boolean;
@@ -108,7 +111,7 @@ export default function LogicPracticeView({
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
   const [bumped, setBumped] = useState<Arrow | null>(null);
   const [paws, setPaws] = useState<readonly Cell[]>([]);
-  const [outcome, setOutcome] = useState<'bumped' | 'missed' | null>(null);
+  const [outcome, setOutcome] = useState<'bumped' | 'stone' | 'missed' | null>(null);
   /** The bear jumps (no slide) back to the start: a new walk starts right after. */
   const [snap, setSnap] = useState(false);
   const [reduced] = useState(prefersReducedMotion);
@@ -156,7 +159,7 @@ export default function LogicPracticeView({
     onArrowsChange(next);
   };
   const add = (arrow: Arrow) => {
-    if (locked || solved || arrows.length >= MAX_ARROWS) return;
+    if (locked || solved || arrows.length >= maxArrows) return;
     change([...arrows, arrow]);
   };
   const removeLast = () => {
@@ -169,7 +172,7 @@ export default function LogicPracticeView({
     backToStart(true);
     onGo();
     const planned = [...arrows];
-    const walk = walkArrows(puzzle.bear, planned);
+    const walk = walkArrows(puzzle.bear, planned, puzzle.stones);
     const right = !walk.bumped && sameCell(walk.end, puzzle.honey);
     setWalking(true);
     setPaws([]);
@@ -183,7 +186,7 @@ export default function LogicPracticeView({
         return;
       }
       setPaws(walk.steps);
-      setOutcome(walk.bumped ? 'bumped' : 'missed');
+      setOutcome(walk.stone ? 'stone' : walk.bumped ? 'bumped' : 'missed');
       // Input opens with the result; the bear walks back meanwhile (or at once on new input).
       walkingRef.current = false;
       setWalking(false);
@@ -248,12 +251,21 @@ export default function LogicPracticeView({
   }, [keysActive]);
 
   const fromOne = (cell: Cell) => ({ row: cell.row + 1, col: cell.col + 1 });
-  const boardLabel = fill(t.logicBoard, {
-    bearRow: fromOne(puzzle.bear).row,
-    bearCol: fromOne(puzzle.bear).col,
-    honeyRow: fromOne(puzzle.honey).row,
-    honeyCol: fromOne(puzzle.honey).col,
-  });
+  const stones = puzzle.stones ?? [];
+  const boardLabel = [
+    fill(t.logicBoard, {
+      bearRow: fromOne(puzzle.bear).row,
+      bearCol: fromOne(puzzle.bear).col,
+      honeyRow: fromOne(puzzle.honey).row,
+      honeyCol: fromOne(puzzle.honey).col,
+    }),
+    stones.length > 0 &&
+      fill(stones.length === 1 ? t.logicStone : t.logicStones, {
+        cells: stones.map((stone) => fill(t.logicCell, fromOne(stone))).join(t.logicAnd),
+      }),
+  ]
+    .filter(Boolean)
+    .join(' ');
   const slotsLabel = fill(t.arrowSlots, {
     list: arrows.length ? arrows.map((a) => t.arrowWords[a]).join(', ') : t.noArrows,
   });
@@ -262,9 +274,11 @@ export default function LogicPracticeView({
     feedback === 'correct'
       ? t.logicCorrect
       : feedback === 'incorrect'
-        ? outcome === 'bumped'
-          ? t.logicBumped
-          : t.logicIncorrect
+        ? outcome === 'stone'
+          ? t.logicStoneBumped
+          : outcome === 'bumped'
+            ? t.logicBumped
+            : t.logicIncorrect
         : '';
 
   return (
@@ -273,6 +287,7 @@ export default function LogicPracticeView({
       className="practice logic-practice"
       data-walking={walking || undefined}
       data-solved={solved || undefined}
+      data-arrows={maxArrows}
     >
       <PracticeHeader t={t} level={level} position={position} />
       <h2>{reviewing ? t.logicReviewTitle : t.logicQuestion}</h2>
@@ -296,6 +311,11 @@ export default function LogicPracticeView({
                   data-dark={(cell.row + cell.col) % 2 === 1 || undefined}
                   data-paw={paws.some((p) => sameCell(p, cell)) || undefined}
                 >
+                  {stones.some((stone) => sameCell(stone, cell)) && (
+                    <span className="logic-stone">
+                      <Stone />
+                    </span>
+                  )}
                   {sameCell(cell, puzzle.honey) && (
                     <span className="logic-honey">
                       <HoneyPot />
@@ -321,7 +341,7 @@ export default function LogicPracticeView({
         </div>
         <div className="arrow-plan">
           <ol className="arrow-slots" aria-label={slotsLabel}>
-            {Array.from({ length: MAX_ARROWS }, (_, i) => (
+            {Array.from({ length: maxArrows }, (_, i) => (
               <li
                 key={i}
                 className="arrow-slot"
@@ -350,7 +370,7 @@ export default function LogicPracticeView({
               type="button"
               className={`arrow-button arrow-${arrow}`}
               aria-label={t.arrowNames[arrow]}
-              aria-disabled={locked || solved || arrows.length >= MAX_ARROWS}
+              aria-disabled={locked || solved || arrows.length >= maxArrows}
               onClick={() => add(arrow)}
             >
               <ArrowIcon arrow={arrow} />

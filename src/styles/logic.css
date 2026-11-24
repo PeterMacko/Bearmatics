@@ -74,6 +74,16 @@
   width: 100%;
   height: 100%;
 }
+/* SCRUM-289: Level 2 stones fill most of their cell. */
+.logic-stone {
+  position: absolute;
+  inset: 6%;
+}
+.logic-stone svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
 .logic-paw {
   position: absolute;
   left: 6%;
@@ -806,5 +816,68 @@
   }
   .logic-play .arrow-pad {
     justify-self: center;
+  }
+}
+
+/* SCRUM-289: Level 2 has 6 arrow slots. One row everywhere the plan has its own row (phones in
+   portrait): the slots shrink with the lesson's width (never above the Level 1 size). In the
+   two-column layouts the slots column is only three keys wide: two rows of three there, each
+   slot as big as a Level 1 slot (a quarter of the column), so the column grows by one slot row. */
+.logic-practice[data-arrows='6'] .arrow-slots {
+  gap: 4px;
+}
+.logic-practice[data-arrows='6'] .arrow-slot {
+  width: clamp(30px, calc((100cqw - var(--target) - 8px - 20px) / 6), 44px);
+  height: auto;
+  aspect-ratio: 1;
+}
+.logic-practice[data-arrows='6'] .arrow-slot .arrow-icon {
+  width: 60%;
+  height: 60%;
+}
+@container logic (min-width: 520px) {
+  .logic-practice[data-arrows='6'] .logic-play .arrow-slots {
+    display: grid;
+    grid-template-columns: repeat(3, calc((100% - 18px) / 4));
+    justify-content: center;
+    gap: 6px;
+  }
+  .logic-practice[data-arrows='6'] .logic-play .arrow-slot {
+    width: auto;
+  }
+}
+@media (min-width: 621px) and (max-height: 700px) {
+  @container logic (min-width: 440px) {
+    .logic-practice[data-arrows='6'] .logic-play .arrow-slots {
+      display: grid;
+      grid-template-columns: repeat(3, calc((100% - 18px) / 4));
+      justify-content: center;
+      gap: 6px;
+    }
+    .logic-practice[data-arrows='6'] .logic-play .arrow-slot {
+      width: auto;
+    }
+  }
+}
+/* Short wide windows (e.g. 1280x520): the second slot row costs height, so Level 2 uses the
+   48 px key size of short landscape phones there. */
+@media (max-height: 560px) {
+  .logic-practice[data-arrows='6'] .logic-play {
+    --key: var(--target);
+  }
+}
+/* Short landscape phones: smaller slots and gaps (the column must fit 320 px of height). */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .logic-practice[data-arrows='6'] .logic-play {
+    row-gap: 4px;
+  }
+  .compact-practice .logic-practice[data-arrows='6'] .logic-play .arrow-slots {
+    display: grid;
+    grid-template-columns: repeat(3, 30px);
+    justify-content: center;
+    gap: 4px;
+  }
+  .compact-practice .logic-practice[data-arrows='6'] .logic-play .arrow-slot {
+    width: auto;
   }
 }
