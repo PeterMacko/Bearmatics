@@ -206,8 +206,19 @@ export default function AboutPage({ language }: { language: Language }) {
                 ))}
               </ul>
             </li>
+            <li>
+              <strong>{t.searchCourse}</strong>, {a.searchLead}:
+              <ul>
+                {([1, 2, 3] as const).map((value) =>
+                  level(value, t.searchLevels[value], a.searchDetails[value]),
+                )}
+              </ul>
+            </li>
           </ul>
-          <Shots language={language} shots={['small-maths', 'take-away', 'logic', 'english']} />
+          <Shots
+            language={language}
+            shots={['small-maths', 'take-away', 'logic', 'english', 'wordsearch']}
+          />
         </section>
 
         <section aria-labelledby="about-lesson">

@@ -7,6 +7,7 @@ export const SHOTS = [
   'take-away',
   'logic',
   'english',
+  'wordsearch',
   'summary',
   'app-bar',
   'leaderboard',
@@ -38,6 +39,12 @@ export const aboutCopy = {
     logicDetail: 'plan the way with arrows, up to 4 steps',
     logicDetail2: 'stones stand in the way: find the free way, up to 6 steps',
     englishLead: '21 school words spoken in a British voice',
+    searchLead: 'find the English school words in a grid of letters',
+    searchDetails: {
+      1: 'the words are listed below the grid; they go left to right or top to bottom',
+      2: 'listen to the words, then find them',
+      3: 'words also go backwards and diagonally',
+    },
     levelDetails: {
       0: 'add up to 6',
       8: 'take pictures out of a basket, up to 6',
@@ -56,6 +63,7 @@ export const aboutCopy = {
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
       'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how at the first Logic lesson on a device; Show me plays it again any time.',
+      'In Word search, your child taps the first and then the last letter of a word. Each grid hides 5 words; a lesson of 5, 10 or 20 words has 1, 2 or 4 new grids. A word counts on the first try when no wrong pair was tapped before it.',
       'Exercises that needed more tries come back in a short review round.',
       'The summary shows how many were right on the first try without hints.',
       'It also shows how long the lesson took and about how long one exercise took. The time is not saved anywhere.',
@@ -65,7 +73,7 @@ export const aboutCopy = {
     signIn: [
       'Everything works without an account.',
       'Sign in with Google or a username and password to collect points: 1 point for each exercise right on the first try in a finished lesson.',
-      'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. Logic always gives whole points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
+      'An easy level played again on one day gives fewer points: from the 3rd play half, from the 5th play a quarter (rounded up). The first play of the day of a harder level (Maths levels 4–7, level 3 of Small maths and English) gives 1.5 times the points. Logic and Word search always give whole points. A small sign in the level menu shows this for the next play: ★, 1/2 or 1/4.',
       'Points grow your bear badge. Play every day to build a streak; missed days freeze it and points can unlock it.',
       'A leaderboard shows nickname, bear, bear badge, streak and points of players; you can hide yourself in the profile.',
       'The profile is only a nickname and a bear your child dresses from parts (fur, background, something for the head, neck and eyes); the bear look is stored as five numbers, no photo or real name. The account can be deleted any time.',
@@ -80,7 +88,7 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Choosing a course',
-        alt: 'Bearmatics on a phone: the bear and the four courses Small maths, Logic, Maths and English.',
+        alt: 'Bearmatics on a phone: the bear and the five courses Small maths, Logic, Maths, English and Word search.',
       },
       'small-maths': {
         caption: 'Small maths: count the pictures',
@@ -97,6 +105,10 @@ export const aboutCopy = {
       english: {
         caption: 'English: listen and choose',
         alt: 'An English listen-and-choose exercise: a speaker button and four word buttons.',
+      },
+      wordsearch: {
+        caption: 'Word search: find the words',
+        alt: 'A Word search exercise: a 6 by 6 grid of capital letters with two found words coloured, and the five words below it, two of them struck through.',
       },
       summary: {
         caption: 'Lesson summary',
@@ -126,6 +138,12 @@ export const aboutCopy = {
     logicDetail: 'naplánuj cestu šípkami, najviac 4 kroky',
     logicDetail2: 'v ceste stoja kamene: nájdi voľnú cestu, najviac 6 krokov',
     englishLead: '21 slov zo školy v britskej výslovnosti',
+    searchLead: 'nájdi anglické slová zo školy v mriežke písmen',
+    searchDetails: {
+      1: 'slová sú pod mriežkou; idú zľava doprava alebo zhora nadol',
+      2: 'vypočuj si slová a potom ich nájdi',
+      3: 'slová idú aj odzadu a šikmo',
+    },
     levelDetails: {
       0: 'sčítanie s obrázkami do 6',
       8: 'vyber obrázky z košíka, do 6',
@@ -144,6 +162,7 @@ export const aboutCopy = {
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
       'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako pri prvej lekcii Logiky na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
+      'V Osemsmerovke dieťa ťukne na prvé a potom na posledné písmeno slova. V každej mriežke je 5 slov; lekcia s 5, 10 alebo 20 slovami má 1, 2 alebo 4 nové mriežky. Slovo sa počíta na prvý pokus, keď pred ním nebola ťuknutá nesprávna dvojica.',
       'Príklady, ktoré potrebovali viac pokusov, sa vrátia v krátkom opakovaní.',
       'Na konci vidíš, koľko príkladov bolo správne na prvý pokus bez pomôcky.',
       'Uvidíš aj, ako dlho lekcia trvala a koľko asi trval jeden príklad. Čas sa nikam neukladá.',
@@ -153,7 +172,7 @@ export const aboutCopy = {
     signIn: [
       'Všetko funguje aj bez účtu.',
       'Prihlásenie cez Google alebo menom a heslom zbiera body: 1 bod za každý príklad správne na prvý pokus v dokončenej lekcii.',
-      'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Logika dáva vždy celé body. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
+      'Ľahká úroveň zahraná v jeden deň znova dáva menej bodov: od 3. hry polovicu, od 5. hry štvrtinu (zaokrúhlené nahor). Prvá hra dňa na ťažšej úrovni (Matematika úrovne 4–7, úroveň 3 v Malej matematike a Angličtine) dáva 1,5-násobok bodov. Logika a Osemsmerovka dávajú vždy celé body. Malá značka v ponuke úrovní to ukazuje pre ďalšiu hru: ★, 1/2 alebo 1/4.',
       'Body zväčšujú medvedí odznak. Hraj každý deň a buduj sériu; vynechané dni ju zmrazia a body ju môžu odomknúť.',
       'Rebríček ukazuje prezývku, medveďa, medvedí odznak, sériu a body hráčov; v profile sa môžeš skryť.',
       'Profil je len prezývka a medvedík, ktorého si dieťa oblečie z dielikov (srsť, pozadie, niečo na hlavu, krk a oči); vzhľad medvedíka sa ukladá ako päť čísel, žiadna fotka ani skutočné meno. Účet sa dá kedykoľvek zmazať.',
@@ -168,7 +187,7 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Výber kurzu',
-        alt: 'Bearmatics na mobile: medveď a štyri kurzy Malá matematika, Logika, Matematika a Angličtina.',
+        alt: 'Bearmatics na mobile: medveď a päť kurzov Malá matematika, Logika, Matematika, Angličtina a Osemsmerovka.',
       },
       'small-maths': {
         caption: 'Malá matematika: počítame obrázky',
@@ -185,6 +204,10 @@ export const aboutCopy = {
       english: {
         caption: 'Angličtina: počúvaj a vyber',
         alt: 'Úloha z angličtiny Počúvaj a vyber: tlačidlo reproduktora a štyri tlačidlá so slovami.',
+      },
+      wordsearch: {
+        caption: 'Osemsmerovka: nájdi slová',
+        alt: 'Úloha z Osemsmerovky: mriežka 6 krát 6 s veľkými písmenami, dve nájdené slová vyfarbené a pod ňou päť slov, dve z nich prečiarknuté.',
       },
       summary: {
         caption: 'Koniec lekcie',
