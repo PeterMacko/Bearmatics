@@ -105,12 +105,11 @@ export default function WordSearchView({
       ? { below: nextBelow, setBelow: (below) => setBelowFor(below ? nextLabel : null) }
       : undefined,
   );
-  // Moving Next mounts a new button: it keeps the focus the old one had. Below the lesson it can
-  // be under the fold (very large text): the page scrolls just enough to show it.
+  // Moving Next mounts a new button: it keeps the focus the old one had and is shown.
   useLayoutEffect(() => {
     if (solved && (document.activeElement === document.body || !document.activeElement))
       nextRef.current?.focus({ preventScroll: true });
-    if (nextBelow) nextRef.current?.scrollIntoView?.({ block: 'nearest' });
+    if (solved) nextRef.current?.scrollIntoView?.({ block: 'nearest' });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- when Next moves only
   }, [nextBelow]);
 
@@ -124,10 +123,13 @@ export default function WordSearchView({
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- once per wrong try
   }, [wrongSeq]);
 
-  // The first grid of a lesson and each new grid: focus the grid (its roving cell); solved: Next.
+  // The first grid of a lesson and each new grid: focus the grid (its roving cell); solved: Next,
+  // and with very large text the page scrolls just enough to show it.
   useEffect(() => {
-    if (solved) nextRef.current?.focus({ preventScroll: true });
-    else if (!lettersMode) cellRefs.current[0]?.focus({ preventScroll: true });
+    if (solved) {
+      nextRef.current?.focus({ preventScroll: true });
+      nextRef.current?.scrollIntoView?.({ block: 'nearest' });
+    } else if (!lettersMode) cellRefs.current[0]?.focus({ preventScroll: true });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- on mount and when solved only
   }, [solved]);
 
