@@ -59,6 +59,23 @@ import {
 } from './logic/bearPath';
 import LogicPracticeView from './logic/LogicPracticeView';
 import { logicDemoSeen, markLogicDemoSeen } from './logic/demoSeen';
+import {
+  generateSearchLesson,
+  SEARCH_LEVELS,
+  type Cell,
+  type SearchLevel,
+} from './wordsearch/grid';
+import {
+  asSession,
+  createSearchLesson,
+  currentPuzzle,
+  findWord,
+  nextPuzzle,
+  tapCell,
+  wrongTry,
+  type SearchLesson,
+} from './wordsearch/lesson';
+import WordSearchView from './wordsearch/WordSearchView';
 import { AccountButton } from './AccountButton';
 import AccountScreens from './account/AccountScreens';
 import { useAccount, useAccountLoad } from './account/useAccount';
@@ -135,8 +152,15 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const [demoRun, setDemoRun] = useState(0);
   const demoCount = useRef(0);
   const showDemo = () => setDemoRun(++demoCount.current);
+  // SCRUM-241: Word search. The lesson keeps its own state; `searchSession` is its Session shape
+  // for the bar, bear, leave question, summary and points.
+  const [searchLevel, setSearchLevel] = useState<SearchLevel>(1);
+  const [searchSize, setSearchSize] = useState(10);
+  const [searchLesson, setSearchLesson] = useState<SearchLesson | null>(null);
+  const searchSession = useMemo(() => searchLesson && asSession(searchLesson), [searchLesson]);
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
-  const active: Session<unknown> | null = session ?? englishSession ?? writeSession ?? logicSession;
+  const active: Session<unknown> | null =
+    session ?? englishSession ?? writeSession ?? logicSession ?? searchSession;
   // Set on every screen change: the new screen's heading takes focus (effect below).
   const focusMenuHeading = useRef(false);
   // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
@@ -221,7 +245,13 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     playPop,
     playStep,
     playGrowl,
-  } = useFeedbackAudio(active?.feedback, active?.attempts, active?.done);
+    // Word search plays a pop and the word for a found word, nothing for a wrong pair (scope 3),
+    // so its feedback does not start the answer melodies; the completion fanfare stays.
+  } = useFeedbackAudio(
+    searchLesson ? undefined : active?.feedback,
+    searchLesson ? undefined : active?.attempts,
+    active?.done,
+  );
   // SCRUM-148: the leaderboard window (from the points + bar button).
   const [boardOpen, setBoardOpen] = useState(false);
   const boardTrigger = useRef<HTMLButtonElement | null>(null);
@@ -280,6 +310,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setEnglishSession(null);
     setWriteSession(null);
     setLogicSession(null);
+    setSearchLesson(null);
     setDemoRun(0);
     resetAnswers();
   };
@@ -403,6 +434,44 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setLogicSession((previous) => previous && advance(previous));
   };
   const logicPuzzle = logicSession ? currentExercise(logicSession) : undefined;
+  // SCRUM-241: a word search lesson of 5/10/20 words = 1/2/4 new grids.
+  const startSearch = () => {
+    setPresentation((n) => n + 1);
+    resetForNewSession();
+    void activateSound();
+    words.stop();
+    startLessonClock(searchSize);
+    beginLesson(searchSize, { course: 'wordsearch', level: searchLevel });
+    setSearchLesson(createSearchLesson(searchLevel, generateSearchLesson(searchLevel, searchSize)));
+  };
+  /** A found word: a pop (follows Mute) and the word itself (always), from the tap's gesture. */
+  const afterSearch = (before: SearchLesson, after: SearchLesson) => {
+    setSearchLesson(after);
+    if (after.event === before.event || after.event?.kind !== 'found') return;
+    playPop();
+    setPlaySource('found');
+    void words.play(currentPuzzle(after).words[after.event.word].word);
+  };
+  const tapSearch = (cell: Cell) => {
+    if (!searchLesson) return;
+    void activateSound();
+    afterSearch(searchLesson, tapCell(searchLesson, cell));
+  };
+  const nextSearch = () => {
+    if (!searchLesson) return;
+    void activateSound();
+    words.stop();
+    setPresentation((n) => n + 1);
+    setSearchLesson(nextPuzzle(searchLesson));
+  };
+  const searchPuzzle = searchLesson && !searchLesson.done ? currentPuzzle(searchLesson) : null;
+  useEffect(() => {
+    if (searchPuzzle) words.preload(searchPuzzle.words.map((w) => w.word));
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- preload once per grid
+  }, [searchPuzzle]);
+  useEffect(() => {
+    if (searchLesson?.done) summaryRef.current?.focus();
+  }, [searchLesson?.done]);
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = () => {
     startLessonClock(englishSize);
@@ -479,169 +548,209 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
 
   const modalOpen = leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen;
   // The lesson on screen, whichever kind: one summary, one position text and one Next label.
-  const lessonKind: LessonKind | null = logicSession
-    ? {
-        session: logicSession,
-        answer: encodeArrows(logicArrows),
-        trail: t.logicTrail,
-        eyebrow: t.logicTrail,
-        onAgain: startLogic,
-        practice: () =>
-          logicPuzzle && (
-            <LogicPracticeView
-              key={presentation}
-              t={t}
-              puzzle={logicPuzzle}
-              level={logicLessonLevel}
-              maxArrows={ARROW_LIMIT[logicLessonLevel]}
-              first={logicSession.index === 0 && !logicSession.reviewing}
-              position={positionText(t, logicSession, t.exercise)}
-              reviewing={logicSession.reviewing}
-              solved={logicSession.solved}
-              feedback={logicSession.feedback}
-              arrows={logicArrows}
-              nextLabel={nextLabel(t, logicSession)}
-              keysActive={!modalOpen}
-              demoRun={demoRun}
-              nextRef={nextRef}
-              onArrowsChange={(next) => {
-                setLogicArrows(next);
-                setLogicSession((previous) => previous && clearFeedback(previous));
-              }}
-              onGo={() => void activateSound()}
-              onWalked={(walked) =>
-                setLogicSession(
-                  (previous) =>
-                    previous && submitAnswer(previous, walked, bearChecker(logicLessonLevel)),
-                )
-              }
-              onNext={nextLogic}
-              onShowMe={showDemo}
-              onDemoDone={() => {
-                // Played to its end (leaving earlier unmounts it without this call).
-                markLogicDemoSeen();
-                setDemoRun(0);
-              }}
-              onStep={playStep}
-            />
-          ),
-      }
-    : writeSession
+  const lessonKind: LessonKind | null =
+    searchLesson && searchSession
       ? {
-          session: writeSession,
-          answer: written,
-          trail: t.englishTrail,
-          eyebrow: t.englishTrail,
-          finishedLabel: t.writeFinished,
-          onAgain: startEnglish,
+          session: searchSession,
+          // A first letter tapped is unsent work (the leave question).
+          answer: searchLesson.selected ? 'selected' : '',
+          trail: t.searchTrail,
+          eyebrow: t.searchTrail,
+          finishedLabel: t.searchFinished,
+          onAgain: startSearch,
           practice: () =>
-            writeQuestion && (
-              <EnglishWriteView
+            searchPuzzle && (
+              <WordSearchView
+                key={presentation}
                 t={t}
-                question={writeQuestion}
-                position={positionText(t, writeSession, t.englishWord)}
-                reviewing={writeSession.reviewing}
-                solved={writeSession.solved}
-                feedback={writeSession.feedback}
-                attempts={writeSession.attempts}
-                wrongAnswer={wrongAnswer}
-                prompt={writeNote}
-                answer={written}
-                playing={!!words.playing && playSource === 'speaker'}
+                lesson={searchLesson}
+                position={`${t.searchPuzzle} ${searchLesson.index + 1} ${t.of} ${searchLesson.puzzles.length}`}
+                playing={words.playing ? playSource : null}
                 playFailed={words.failed}
-                nextLabel={nextLabel(t, writeSession, true)}
-                keyboard={keyboard}
-                speakerRef={speakerRef}
-                inputRef={writeInputRef}
-                onAnswerChange={(value) => {
-                  if (writeSession.solved) return;
-                  setWritten(value);
-                  setWriteNote(null);
-                  if (writeSession.feedback !== 'ready')
-                    setWriteSession((previous) => previous && clearFeedback(previous));
+                nextLabel={
+                  searchLesson.index === searchLesson.puzzles.length - 1 ? t.finish : t.searchNext
+                }
+                nextRef={nextRef}
+                onTap={tapSearch}
+                onPlay={(index, source) => {
+                  setPlaySource(source);
+                  void words.play(searchPuzzle.words[index].word);
                 }}
-                onReplay={() => {
-                  setPlaySource('speaker');
-                  void words.play(writeQuestion.target);
+                onFoundByLetters={(index) => {
+                  void activateSound();
+                  afterSearch(searchLesson, findWord(searchLesson, index));
                 }}
+                onWrongLetter={() => setSearchLesson(wrongTry(searchLesson))}
                 onRetryPlay={() => void words.retry()}
-                onCheck={checkWrite}
-                onNext={nextWrite}
+                onNext={nextSearch}
               />
             ),
         }
-      : englishSession
+      : logicSession
         ? {
-            session: englishSession,
-            answer: choice,
-            trail: t.englishTrail,
-            eyebrow: t.englishTrail,
-            finishedLabel: t.englishFinished,
-            onAgain: startEnglish,
+            session: logicSession,
+            answer: encodeArrows(logicArrows),
+            trail: t.logicTrail,
+            eyebrow: t.logicTrail,
+            onAgain: startLogic,
             practice: () =>
-              englishQuestion && (
-                <EnglishPracticeView
+              logicPuzzle && (
+                <LogicPracticeView
+                  key={presentation}
                   t={t}
-                  question={englishQuestion}
-                  position={positionText(t, englishSession, t.englishWord)}
-                  reviewing={englishSession.reviewing}
-                  solved={englishSession.solved}
-                  feedback={englishSession.feedback}
-                  choice={choice}
-                  playing={words.playing ? playSource : null}
-                  playFailed={words.failed}
-                  nextLabel={nextLabel(t, englishSession, true)}
-                  speakerRef={speakerRef}
+                  puzzle={logicPuzzle}
+                  level={logicLessonLevel}
+                  maxArrows={ARROW_LIMIT[logicLessonLevel]}
+                  first={logicSession.index === 0 && !logicSession.reviewing}
+                  position={positionText(t, logicSession, t.exercise)}
+                  reviewing={logicSession.reviewing}
+                  solved={logicSession.solved}
+                  feedback={logicSession.feedback}
+                  arrows={logicArrows}
+                  nextLabel={nextLabel(t, logicSession)}
+                  keysActive={!modalOpen}
+                  demoRun={demoRun}
                   nextRef={nextRef}
-                  onReplay={() => {
-                    setPlaySource('speaker');
-                    void words.play(englishQuestion.target);
+                  onArrowsChange={(next) => {
+                    setLogicArrows(next);
+                    setLogicSession((previous) => previous && clearFeedback(previous));
                   }}
-                  onRetryPlay={() => void words.retry()}
-                  onChoose={chooseWord}
-                  onCheck={checkChoice}
-                  onNext={nextWord}
+                  onGo={() => void activateSound()}
+                  onWalked={(walked) =>
+                    setLogicSession(
+                      (previous) =>
+                        previous && submitAnswer(previous, walked, bearChecker(logicLessonLevel)),
+                    )
+                  }
+                  onNext={nextLogic}
+                  onShowMe={showDemo}
+                  onDemoDone={() => {
+                    // Played to its end (leaving earlier unmounts it without this call).
+                    markLogicDemoSeen();
+                    setDemoRun(0);
+                  }}
+                  onStep={playStep}
                 />
               ),
           }
-        : session
+        : writeSession
           ? {
-              session,
-              answer,
-              trail: t.trail,
-              onAgain: start,
+              session: writeSession,
+              answer: written,
+              trail: t.englishTrail,
+              eyebrow: t.englishTrail,
+              finishedLabel: t.writeFinished,
+              onAgain: startEnglish,
               practice: () =>
-                current && (
-                  <PracticeView
+                writeQuestion && (
+                  <EnglishWriteView
                     t={t}
-                    level={course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level}
-                    current={current}
-                    pictureTheme={pictureTheme}
-                    presentation={presentation}
-                    onPop={playPop}
-                    position={positionText(t, session, t.exercise)}
-                    reviewing={session.reviewing}
-                    solved={session.solved}
-                    feedback={session.feedback}
-                    nextLabel={nextLabel(t, session)}
-                    answer={answer}
-                    padMode={padMode}
-                    touch={touch}
-                    hintOpen={hintOpen}
-                    inputRef={inputRef}
-                    nextRef={nextRef}
-                    hintRef={hintRef}
-                    onSubmit={submit}
-                    onAnswerChange={editAnswer}
-                    onAnswerKey={handleAnswerKey}
-                    onPadKey={padEdit}
-                    onNext={next}
-                    onOpenHint={openHint}
-                    onToggleInputMode={toggleInputMode}
+                    question={writeQuestion}
+                    position={positionText(t, writeSession, t.englishWord)}
+                    reviewing={writeSession.reviewing}
+                    solved={writeSession.solved}
+                    feedback={writeSession.feedback}
+                    attempts={writeSession.attempts}
+                    wrongAnswer={wrongAnswer}
+                    prompt={writeNote}
+                    answer={written}
+                    playing={!!words.playing && playSource === 'speaker'}
+                    playFailed={words.failed}
+                    nextLabel={nextLabel(t, writeSession, true)}
+                    keyboard={keyboard}
+                    speakerRef={speakerRef}
+                    inputRef={writeInputRef}
+                    onAnswerChange={(value) => {
+                      if (writeSession.solved) return;
+                      setWritten(value);
+                      setWriteNote(null);
+                      if (writeSession.feedback !== 'ready')
+                        setWriteSession((previous) => previous && clearFeedback(previous));
+                    }}
+                    onReplay={() => {
+                      setPlaySource('speaker');
+                      void words.play(writeQuestion.target);
+                    }}
+                    onRetryPlay={() => void words.retry()}
+                    onCheck={checkWrite}
+                    onNext={nextWrite}
                   />
                 ),
             }
-          : null;
+          : englishSession
+            ? {
+                session: englishSession,
+                answer: choice,
+                trail: t.englishTrail,
+                eyebrow: t.englishTrail,
+                finishedLabel: t.englishFinished,
+                onAgain: startEnglish,
+                practice: () =>
+                  englishQuestion && (
+                    <EnglishPracticeView
+                      t={t}
+                      question={englishQuestion}
+                      position={positionText(t, englishSession, t.englishWord)}
+                      reviewing={englishSession.reviewing}
+                      solved={englishSession.solved}
+                      feedback={englishSession.feedback}
+                      choice={choice}
+                      playing={words.playing ? playSource : null}
+                      playFailed={words.failed}
+                      nextLabel={nextLabel(t, englishSession, true)}
+                      speakerRef={speakerRef}
+                      nextRef={nextRef}
+                      onReplay={() => {
+                        setPlaySource('speaker');
+                        void words.play(englishQuestion.target);
+                      }}
+                      onRetryPlay={() => void words.retry()}
+                      onChoose={chooseWord}
+                      onCheck={checkChoice}
+                      onNext={nextWord}
+                    />
+                  ),
+              }
+            : session
+              ? {
+                  session,
+                  answer,
+                  trail: t.trail,
+                  onAgain: start,
+                  practice: () =>
+                    current && (
+                      <PracticeView
+                        t={t}
+                        level={
+                          course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level
+                        }
+                        current={current}
+                        pictureTheme={pictureTheme}
+                        presentation={presentation}
+                        onPop={playPop}
+                        position={positionText(t, session, t.exercise)}
+                        reviewing={session.reviewing}
+                        solved={session.solved}
+                        feedback={session.feedback}
+                        nextLabel={nextLabel(t, session)}
+                        answer={answer}
+                        padMode={padMode}
+                        touch={touch}
+                        hintOpen={hintOpen}
+                        inputRef={inputRef}
+                        nextRef={nextRef}
+                        hintRef={hintRef}
+                        onSubmit={submit}
+                        onAnswerChange={editAnswer}
+                        onAnswerKey={handleAnswerKey}
+                        onPadKey={padEdit}
+                        onNext={next}
+                        onOpenHint={openHint}
+                        onToggleInputMode={toggleInputMode}
+                      />
+                    ),
+                }
+              : null;
 
   // A lesson in progress (not its summary): the bar shows no profile, so a child cannot leave
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
@@ -840,6 +949,29 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             onLevelChange={setLogicLevel}
             onSizeChange={setLogicSize}
             onStart={startLogic}
+          />
+        ) : course === 'wordsearch' ? (
+          <LevelMenu
+            t={t}
+            className="selection wordsearch-home"
+            levels={SEARCH_LEVELS.map((value) => ({
+              value,
+              shown: value,
+              title: t.searchLevels[value],
+              detail: t.searchDetails[value],
+            }))}
+            heading={{ eyebrow: t.searchTrail, title: t.searchChoose, intro: t.searchIntro }}
+            startLabel={t.searchStart}
+            startType="button"
+            levelName="search-level"
+            sizeName="search-size"
+            headingRef={menuHeadingRef}
+            level={searchLevel}
+            size={searchSize}
+            nextMultiplier={(shown) => nextMultiplier({ course: 'wordsearch', level: shown })}
+            onLevelChange={setSearchLevel}
+            onSizeChange={setSearchSize}
+            onStart={startSearch}
           />
         ) : course === 'math' ? (
           <LevelMenu

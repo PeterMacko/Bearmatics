@@ -2,7 +2,7 @@ import type { RefObject } from 'react';
 import type { Copy } from './i18n';
 import MenuHeading from './MenuHeading';
 
-export type Course = 'small' | 'logic' | 'math' | 'english';
+export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
 
 function SmallMathIcon() {
   // A die face: count the dots.
@@ -77,9 +77,39 @@ function EnglishIcon() {
   );
 }
 
-const ICONS = { small: SmallMathIcon, logic: LogicIcon, math: MathIcon, english: EnglishIcon };
+function WordSearchIcon() {
+  // SCRUM-241: a small letter grid with one word marked (C-A-T).
+  const letters = ['C', 'A', 'T', 'O', 'B', 'E', 'D', 'U', 'S'];
+  return (
+    <svg viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <rect x="4" y="4" width="56" height="56" rx="14" fill="#ffd3b0" />
+      <rect x="9" y="11" width="46" height="15" rx="7.5" fill="#8cc5ef" />
+      {letters.map((letter, i) => (
+        <text
+          key={letter}
+          x={17 + (i % 3) * 15}
+          y={23 + Math.floor(i / 3) * 15}
+          fontSize="12"
+          fontWeight="700"
+          fill={i < 3 ? '#21466d' : '#7a4a2a'}
+          textAnchor="middle"
+        >
+          {letter}
+        </text>
+      ))}
+    </svg>
+  );
+}
 
-/** First screen: choose Small maths, Logic, Maths or English. */
+const ICONS = {
+  small: SmallMathIcon,
+  logic: LogicIcon,
+  math: MathIcon,
+  english: EnglishIcon,
+  wordsearch: WordSearchIcon,
+};
+
+/** First screen: choose Small maths, Logic, Maths, English or Word search (last, SCRUM-241). */
 export default function CourseChoice({
   t,
   headingRef,
@@ -94,6 +124,7 @@ export default function CourseChoice({
     { id: 'logic', title: t.logicCourse, detail: t.logicCourseDetail },
     { id: 'math', title: t.mathCourse, detail: t.mathCourseDetail },
     { id: 'english', title: t.englishCourse, detail: t.englishCourseDetail },
+    { id: 'wordsearch', title: t.searchCourse, detail: t.searchCourseDetail },
   ];
   return (
     <section className="selection course-choice">

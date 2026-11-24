@@ -1,0 +1,501 @@
+/* SCRUM-241: Word search (Osemsmerovka). Part of index.css; keep the import order (last, so
+   these rules win ties). The grid size (--cell) comes from useSearchFit: 48 px cells at least,
+   6 cells fit a 320 px phone. Own layout blocks (:has(.wordsearch-practice)); the picture and
+   logic lesson rules do not apply here. */
+.course-wordsearch .course-icon svg {
+  border-radius: 14px;
+}
+.wordsearch-practice {
+  --cell: 56px;
+  --cell-gap: 2px;
+  --board-pad: 3px;
+  container: wordsearch / inline-size;
+}
+.wordsearch-practice h2 {
+  font-size: clamp(1.25rem, 2.6vw, 1.9rem);
+}
+.ws-play {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  justify-items: center;
+  margin-top: 8px;
+}
+.ws-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.ws-board {
+  display: grid;
+  grid-template-columns: repeat(6, var(--cell));
+  grid-template-rows: repeat(6, var(--cell));
+  gap: var(--cell-gap);
+  padding: var(--board-pad);
+  border: 2px solid #e2cfa5;
+  border-radius: 16px;
+  background: #fff6e0;
+}
+.ws-cell {
+  display: grid;
+  place-items: center;
+  width: var(--cell);
+  height: var(--cell);
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  border: 2px solid #eadfc8;
+  border-radius: 10px;
+  background: #fffdf8;
+  color: var(--ink);
+  font-size: calc(var(--cell) * 0.5);
+  font-weight: 700;
+  line-height: 1;
+  touch-action: manipulation;
+  user-select: none;
+}
+.ws-cell:focus-visible {
+  position: relative;
+  z-index: 1;
+  outline: 3px solid var(--focus);
+  outline-offset: 1px;
+}
+/* The first tapped letter: a strong blue ring and fill (also aria-pressed). */
+.ws-cell[aria-pressed='true'] {
+  border-color: var(--blue);
+  background: #cfe3fb;
+  box-shadow: inset 0 0 0 2px var(--blue);
+}
+/* Found words: one soft colour each (the latest found word on a shared letter). */
+.ws-cell[data-word='0'] {
+  background: #ffd9a8;
+  border-color: #e9a95b;
+}
+.ws-cell[data-word='1'] {
+  background: #c9e8c0;
+  border-color: #7fb871;
+}
+.ws-cell[data-word='2'] {
+  background: #f8c9d4;
+  border-color: #d98599;
+}
+.ws-cell[data-word='3'] {
+  background: #d4d1f6;
+  border-color: #948ddb;
+}
+.ws-cell[data-word='4'] {
+  background: #fdeb9c;
+  border-color: #d6b93b;
+}
+/* A wrong pair: a soft flash, then it clears (FLASH_MS). */
+.ws-cell[data-flash] {
+  animation: ws-flash 0.65s ease-in-out;
+}
+@keyframes ws-flash {
+  0%,
+  100% {
+    background: #fffdf8;
+  }
+  35% {
+    background: #f6d3cf;
+    border-color: #d98b83;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws-cell[data-flash] {
+    animation: none;
+    background: #f6d3cf;
+    border-color: #d98b83;
+  }
+}
+
+.ws-side {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  width: 100%;
+  min-width: 0;
+}
+.ws-words {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ws-words li {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.ws-word {
+  min-width: var(--target);
+  min-height: var(--target);
+  margin: 0;
+  padding: 4px 12px;
+  border: 2px solid #c9d8ea;
+  border-radius: 999px;
+  background: #f2f7ff;
+  color: var(--blue-ink);
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.ws-word[data-playing],
+.ws-speaker[data-playing] {
+  border-color: var(--blue);
+  background: #d6e8ff;
+}
+/* A found word keeps its colour from the grid (and is struck through). */
+.ws-words li[data-found] .ws-word {
+  color: var(--ink);
+}
+.ws-words li[data-found][data-word='0'] .ws-word,
+.ws-words li[data-found][data-word='0'] .ws-revealed {
+  background: #ffd9a8;
+  border-color: #e9a95b;
+}
+.ws-words li[data-found][data-word='1'] .ws-word,
+.ws-words li[data-found][data-word='1'] .ws-revealed {
+  background: #c9e8c0;
+  border-color: #7fb871;
+}
+.ws-words li[data-found][data-word='2'] .ws-word,
+.ws-words li[data-found][data-word='2'] .ws-revealed {
+  background: #f8c9d4;
+  border-color: #d98599;
+}
+.ws-words li[data-found][data-word='3'] .ws-word,
+.ws-words li[data-found][data-word='3'] .ws-revealed {
+  background: #d4d1f6;
+  border-color: #948ddb;
+}
+.ws-words li[data-found][data-word='4'] .ws-word,
+.ws-words li[data-found][data-word='4'] .ws-revealed {
+  background: #fdeb9c;
+  border-color: #d6b93b;
+}
+.ws-word s,
+.ws-revealed {
+  text-decoration-thickness: 3px;
+}
+.ws-speaker {
+  display: grid;
+  place-items: center;
+  width: var(--target);
+  height: var(--target);
+  margin: 0;
+  padding: 0;
+  border: 2px solid #6489b3;
+  border-radius: 50%;
+  background: #e9f2ff;
+  color: var(--blue-ink);
+}
+.ws-speaker svg {
+  width: 30px;
+  height: 30px;
+}
+.ws-speaker[data-playing] .speaker-wave {
+  animation: speaker-wave 0.9s ease-in-out infinite;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ws-speaker[data-playing] .speaker-wave {
+    animation: none;
+  }
+}
+.ws-revealed {
+  padding: 0 6px;
+  border-radius: 6px;
+  color: var(--ink);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.ws-word:focus-visible,
+.ws-speaker:focus-visible,
+.ws-letter:focus-visible,
+.ws-letters-toggle:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+/* The screen-reader alternative: hidden until it gets keyboard focus or is switched on. */
+.ws-letters-toggle {
+  min-height: var(--target);
+  margin: 0;
+  padding: 4px 12px;
+  border: 2px solid #c9d8ea;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--blue-ink);
+  font-size: 0.9rem;
+}
+.ws-letters-toggle:not(:focus):not([data-on]) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+.ws-letters {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 6px 10px;
+  width: 100%;
+  max-width: 420px;
+  padding: 8px;
+  border: 2px solid #e2cfa5;
+  border-radius: 14px;
+  background: #fffdf8;
+}
+.ws-letters-word {
+  grid-column: 1 / -1;
+  font-weight: 700;
+}
+.ws-letters-chosen {
+  font-size: 0.9rem;
+  line-height: 1.3;
+}
+.ws-letter-buttons {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ws-letter {
+  width: var(--target);
+  height: var(--target);
+  margin: 0;
+  padding: 0;
+  border: 2px solid #eadfc8;
+  border-radius: 10px;
+  background: #fff;
+  color: var(--ink);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.wordsearch-practice .feedback {
+  width: 100%;
+  min-height: 2.6em;
+  padding: 0;
+  text-align: center;
+}
+.ws-actions {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+.ws-actions .answer-button {
+  min-width: 200px;
+  margin: 0;
+}
+
+/* Two columns when the lesson is wide: the grid on the left, the words, the feedback line and
+   Next on the right (DOM and tab order stay: grid, words, Next). */
+@container wordsearch (min-width: 560px) {
+  .ws-play {
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 20px;
+    align-items: start;
+    justify-items: stretch;
+  }
+  .ws-side {
+    justify-items: start;
+    align-content: start;
+  }
+  .ws-words {
+    justify-content: flex-start;
+  }
+  .wordsearch-practice .feedback {
+    text-align: left;
+  }
+  .ws-actions {
+    justify-content: flex-start;
+  }
+  .ws-actions .answer-button {
+    width: 100%;
+  }
+}
+
+/* Phones in portrait: a smaller bear beside the position line (the grid needs the height). */
+@media (orientation: portrait) {
+  .compact-practice:has(.wordsearch-practice) {
+    --practice-bear-size: 96px;
+  }
+  .compact-practice .ws-play {
+    gap: 6px;
+    margin-top: 4px;
+  }
+  .compact-practice .ws-word {
+    padding: 2px 10px;
+    font-size: 0.95rem;
+  }
+  .compact-practice .wordsearch-practice .feedback {
+    min-height: 2.5em;
+    font-size: 0.85rem;
+  }
+}
+@media (orientation: portrait) and (max-height: 759px) {
+  .compact-practice:has(.wordsearch-practice) {
+    --practice-bear-size: 64px;
+  }
+}
+/* Shorter phones: the position line sits beside the bear (not under it), and once every word
+   is found Next takes the free corner at the top right, so the screen keeps its height. */
+@media (orientation: portrait) and (max-height: 700px) {
+  .compact-practice .wordsearch-practice {
+    position: relative;
+  }
+  .compact-practice .wordsearch-practice .practice-header {
+    min-height: calc(var(--practice-bear-size) * 1.077 + 8px);
+    justify-content: flex-start;
+  }
+  .compact-practice .wordsearch-practice .exercise-position {
+    max-width: calc(50% - var(--practice-bear-size) / 2 - 8px);
+    min-width: 0;
+    justify-content: flex-start;
+    text-align: left;
+  }
+  .compact-practice .ws-actions {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: calc(50% - var(--practice-bear-size) / 2 - 8px);
+  }
+  .compact-practice .ws-actions .answer-button {
+    width: 100%;
+    min-width: 0;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+  .compact-practice .ws-play {
+    margin-top: 0;
+  }
+  .compact-practice .ws-play,
+  .compact-practice .ws-side {
+    gap: 3px;
+  }
+}
+@media (orientation: portrait) and (max-height: 600px) {
+  .compact-practice:has(.wordsearch-practice) {
+    --practice-bear-size: 48px;
+  }
+  /* The smallest phones: 1 px between the letters (the cells keep their borders). */
+  .compact-practice .wordsearch-practice {
+    --cell-gap: 1px;
+    --board-pad: 2px;
+  }
+}
+
+/* Phones (portrait and short landscape), level 2: the found word appears under its speaker
+   (small), in a line kept free from the start, so the list never wraps or grows when words are
+   found. */
+.compact-practice .ws-speakers li {
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 0;
+  min-width: var(--target);
+  min-height: calc(var(--target) + 1.1rem);
+}
+.compact-practice .ws-revealed {
+  padding: 0;
+  font-size: 0.72rem;
+  line-height: 1.1rem;
+  letter-spacing: 0;
+}
+
+/* Short wide windows (e.g. a foldable in a browser with tab and address bars, 884x600): two
+   columns already from a narrower lesson. */
+@media (min-width: 621px) and (max-height: 700px) {
+  @container wordsearch (min-width: 420px) {
+    .ws-play {
+      grid-template-columns: max-content minmax(0, 1fr);
+      column-gap: 16px;
+      align-items: start;
+      justify-items: stretch;
+    }
+    .ws-side {
+      justify-items: start;
+      align-content: start;
+    }
+    .ws-words {
+      justify-content: flex-start;
+    }
+    .wordsearch-practice .feedback {
+      text-align: left;
+    }
+    .ws-actions .answer-button {
+      width: 100%;
+      min-width: 0;
+    }
+  }
+}
+
+/* Short landscape phones: header and bear in the left column (shared compact rules), the grid
+   and the words side by side. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .wordsearch-practice {
+    --cell-gap: 1px;
+    --board-pad: 2px;
+  }
+  .compact-practice .ws-play {
+    margin-left: 110px;
+    margin-top: 2px;
+    grid-template-columns: max-content minmax(0, 1fr);
+    column-gap: 12px;
+    align-items: start;
+    justify-items: stretch;
+  }
+  .compact-practice .ws-side {
+    justify-items: start;
+    gap: 6px;
+  }
+  .compact-practice .ws-words {
+    justify-content: flex-start;
+    gap: 4px;
+  }
+  .compact-practice .ws-speakers {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, max-content));
+    column-gap: 8px;
+  }
+  .compact-practice .ws-word {
+    padding: 2px 8px;
+    font-size: 0.9rem;
+  }
+  .compact-practice .wordsearch-practice .feedback {
+    min-height: 1.3em;
+    font-size: 0.8rem;
+    line-height: 1.25;
+    text-align: left;
+  }
+  .compact-practice .ws-actions .answer-button {
+    min-width: 0;
+    width: 100%;
+  }
+}
+/* Short landscape phones, every word found: Next takes the feedback line's place on screen
+   (the line stays in the live region for screen readers). */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .wordsearch-practice[data-solved] .feedback {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    min-height: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+}

@@ -5,7 +5,7 @@ import App from './App';
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const heading = () => screen.getByRole('heading', { level: 2 });
 
-test('the app opens on the course choice with the four courses and nothing else to start', () => {
+test('the app opens on the course choice with the five courses and nothing else to start', () => {
   render(<App />);
   expect(heading()).toHaveTextContent('What shall we learn today?');
   expect(button('Maths')).toHaveAccessibleDescription('Count, add, subtract, multiply and share');
@@ -13,6 +13,11 @@ test('the app opens on the course choice with the four courses and nothing else 
     'Count pictures: add up to 12, take away up to 6',
   );
   expect(button('English')).toHaveAccessibleDescription('Listen to English words and learn them');
+  // SCRUM-241: Word search is the fifth and last card.
+  expect(button('Word search')).toHaveAccessibleDescription(
+    'Find English words hidden among the letters',
+  );
+  expect(screen.getAllByRole('listitem').at(-1)).toContainElement(button('Word search'));
   expect(screen.queryByRole('radio')).toBeNull();
   expect(screen.queryByRole('button', { name: /Back to courses/ })).toBeNull();
   expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
@@ -31,6 +36,9 @@ test('course choice is localized in Slovak', () => {
   );
   expect(button('Matematika')).toBeInTheDocument();
   expect(button('Angličtina')).toBeInTheDocument();
+  expect(button('Osemsmerovka')).toHaveAccessibleDescription(
+    'Nájdi anglické slová skryté medzi písmenami',
+  );
   expect(screen.getByRole('list', { name: 'Kurzy' })).toBeInTheDocument();
 });
 
