@@ -457,6 +457,17 @@ describe("SCRUM-281 full-screen bear (Peter's review)", () => {
     expect(within(view).getByRole('button', { name: 'Close' })).toHaveFocus();
   });
 
+  it('QA287-02: the page behind cannot scroll while the bear is shown; restored after closing', () => {
+    document.documentElement.style.overflow = 'auto';
+    show();
+    fireEvent.click(bearButton());
+    expect(document.documentElement.style.overflow).toBe('hidden');
+    fireEvent.keyDown(big(), { key: 'Escape' });
+    expect(screen.queryByRole('dialog')).toBeNull();
+    expect(document.documentElement.style.overflow).toBe('auto');
+    document.documentElement.style.overflow = '';
+  });
+
   it.each(['tap', 'tap on the bear', 'X', 'Escape'] as const)(
     '%s closes it and focus returns to the bear button',
     (how) => {

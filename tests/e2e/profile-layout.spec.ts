@@ -612,6 +612,32 @@ test('review: a double tap on the bear keeps it open; a double tap on the X pres
   );
 });
 
+test('QA287-02: wheel and keys do not scroll the page behind the full-screen bear', async ({
+  page,
+}) => {
+  await mock(page);
+  await page.setViewportSize({ width: 320, height: 568 });
+  await openProfile(page);
+  await nextFrames(page);
+  const scroll = () => page.evaluate(() => Math.round(window.scrollY));
+  expect(await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)).toBe(true);
+  const before = await scroll();
+  await page.getByRole('button', { name: BEAR_BIG.en }).click();
+  const view = page.getByRole('dialog', { name: LOOK });
+  await expect(view).toBeVisible();
+  await page.mouse.move(160, 284);
+  await page.mouse.wheel(0, 600);
+  for (const key of ['PageDown', 'End', 'ArrowDown', 'Space']) await page.keyboard.press(key);
+  await page.waitForTimeout(400);
+  expect(await scroll(), 'scrolled while open').toBe(before);
+  await page.keyboard.press('Escape');
+  await expect(view).toHaveCount(0);
+  expect(await scroll(), 'scrolled after closing').toBe(before);
+  // The page scrolls normally again.
+  await page.mouse.wheel(0, 200);
+  await expect.poll(scroll).toBeGreaterThan(before);
+});
+
 test('review: full-screen bear in Slovak; short zoom-in, none with reduced motion', async ({
   page,
 }) => {

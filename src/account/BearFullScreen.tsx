@@ -1,6 +1,6 @@
 // SCRUM-281 (Peter's review): a tap on the profile bear shows it full screen. Closes on a tap
 // anywhere, the X or Escape; uses the shared modal focus and shade-close code.
-import { useRef, type RefObject } from 'react';
+import { useEffect, useRef, type RefObject } from 'react';
 import type { BearLook } from '../../shared/bearLook';
 import { useModalFocus } from '../useModalFocus';
 import { STRAY_TAP_MS, useShadeClose } from '../useShadeClose';
@@ -21,6 +21,16 @@ export function BearFullScreen({
   onClose: () => void;
 }) {
   const ref = useRef<HTMLDivElement>(null);
+  // QA287-02: Firefox scrolls the page behind the layer with the wheel and PageDown/End/arrows,
+  // leaving it scrolled after closing. Lock the page's scrolling while the bear is shown.
+  useEffect(() => {
+    const root = document.documentElement;
+    const before = root.style.overflow;
+    root.style.overflow = 'hidden';
+    return () => {
+      root.style.overflow = before;
+    };
+  }, []);
   const onKeyDown = useModalFocus(ref, { onEscape: onClose, restoreTo: triggerRef });
   // Any tap closes; the second tap of a double tap on the bear button (within 600 ms) does not.
   const { shadeProps, close } = useShadeClose(onClose, { anywhere: true, settleMs: STRAY_TAP_MS });
