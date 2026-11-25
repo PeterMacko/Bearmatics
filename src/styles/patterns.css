@@ -481,3 +481,8 @@
     display: none;
   }
 }
+/* Show me waits while the demo plays (as in the bear game). */
+.pattern-show-me[aria-disabled='true'] {
+  cursor: default;
+  opacity: 0.45;
+}
