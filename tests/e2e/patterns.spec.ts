@@ -51,6 +51,23 @@ const patternLayout = (page: Page) =>
       place: Math.min(...places.map((p) => Math.min(p.offsetWidth, p.offsetHeight))),
       smallestChoice: Math.min(...choices.map((c) => Math.min(c.offsetWidth, c.offsetHeight))),
       smallestTarget: Math.min(...buttons.map((b) => Math.min(b.offsetWidth, b.offsetHeight))),
+      // The feedback text is never covered by a button or a choice.
+      feedbackCovered: (() => {
+        const line = document.getElementById('answer-feedback');
+        if (!line?.textContent) return false;
+        const range = document.createRange();
+        range.selectNodeContents(line);
+        const text = range.getBoundingClientRect();
+        return [...buttons, ...parts].some((el) => {
+          const r = el.getBoundingClientRect();
+          return (
+            r.left < text.right - 1 &&
+            r.right > text.left + 1 &&
+            r.top < text.bottom - 1 &&
+            r.bottom > text.top + 1
+          );
+        });
+      })(),
     };
   });
 
@@ -65,6 +82,7 @@ function checkLayout(layout: Layout, what: string, dice: boolean) {
   expect(layout.place, `${what}: picture place`).toBeGreaterThanOrEqual(dice ? 56 : 40);
   expect(layout.smallestChoice, `${what}: smallest choice`).toBeGreaterThanOrEqual(48);
   expect(layout.choiceLines, `${what}: choices on one line`).toBe(1);
+  expect(layout.feedbackCovered, `${what}: feedback text covered`).toBe(false);
   expect(layout.smallestTarget, `${what}: smallest button`).toBeGreaterThanOrEqual(48);
 }
 

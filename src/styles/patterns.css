@@ -190,6 +190,17 @@
 .pattern-practice:has(.pattern-demo) .pattern-choices {
   visibility: hidden;
 }
+/* The shared compact rules place .feedback / .answer-actions by row and column (grid-row 2/3):
+   the areas here are more specific and later, so they win on every layout. */
+.pattern-play > .pattern-choices {
+  grid-area: choices;
+}
+.pattern-play > .feedback {
+  grid-area: feedback;
+}
+.pattern-play > .pattern-actions {
+  grid-area: actions;
+}
 .pattern-practice .feedback {
   grid-area: feedback;
   width: 100%;
