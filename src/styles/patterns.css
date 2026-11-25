@@ -463,3 +463,21 @@
     margin-block: 0 4px;
   }
 }
+
+/* Large text on a phone (the lesson narrower than 16em: never at 100% text on the defined
+   devices): Show me leaves the top-right corner (it would grow over the position line) and gets
+   its own row under Next, like the bear game. */
+@container pattern (max-width: 16em) {
+  .pattern-play .pattern-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pattern-play .pattern-show-me {
+    position: static !important;
+    max-width: none !important;
+    width: 100%;
+    min-height: var(--target);
+  }
+  .pattern-play .pattern-next-room {
+    display: none;
+  }
+}

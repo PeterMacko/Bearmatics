@@ -200,6 +200,23 @@ for (const { name, width, height } of [DEVICE.phone, DEVICE.smallPhone])
           .locator('.app-bar > :not(.app-bar-end), .app-bar-end > *')
           .evaluateAll((els) => els.map((e) => e.getBoundingClientRect().top));
         expect(Math.max(...tops) - Math.min(...tops), 'app bar one row').toBeLessThanOrEqual(20);
+        // Show me never covers the position line ("Exercise 1 of 5") or the row.
+        const covers = await page.evaluate(() => {
+          const show = document.querySelector('.pattern-show-me')!.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(document.querySelector('.exercise-position')!);
+          return [
+            range.getBoundingClientRect(),
+            document.querySelector('.pattern-row')!.getBoundingClientRect(),
+          ].some(
+            (r) =>
+              show.left < r.right - 1 &&
+              show.right > r.left + 1 &&
+              show.top < r.bottom - 1 &&
+              show.bottom > r.top + 1,
+          );
+        });
+        expect(covers, 'Show me covers the position or the row').toBe(false);
         for (const state of ['before', 'after']) {
           if (state === 'after') await answerRight(page);
           const layout = await patternLayout(page);
