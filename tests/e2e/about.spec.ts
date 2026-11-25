@@ -154,7 +154,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
   const boxes = await page
     .locator('main figure img')
     .evaluateAll((images) => images.map((image) => image.getBoundingClientRect().toJSON()));
-  expect(boxes).toHaveLength(8);
+  expect(boxes).toHaveLength(9);
   for (const box of boxes) {
     expect(box.width).toBeGreaterThanOrEqual(260);
     expect(box.width).toBeLessThanOrEqual(300);
@@ -166,7 +166,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
 /** Scrolls every screenshot into view (they load lazily) and waits until each has loaded. */
 async function expectImagesLoaded(page: Page, lang: Lang) {
   const images = page.locator('main img');
-  await expect(images).toHaveCount(8);
+  await expect(images).toHaveCount(9);
   for (const image of await images.all()) {
     await image.scrollIntoViewIfNeeded();
     await expect
@@ -268,7 +268,7 @@ for (const lang of LANGS)
     await expect(home).toHaveAttribute('href', `/?lang=${lang}`);
     await home.click();
     // The app opens in the page's language and the parameter leaves the address.
-    await expect(page.locator('.course-option')).toHaveCount(4);
+    await expect(page.locator('.course-option')).toHaveCount(5);
     await expect(page).toHaveURL('/');
     await expect(page.locator('html')).toHaveAttribute('lang', lang);
     await expect(page.getByRole('button', { name: COPY[lang].appSettings })).toBeVisible();
@@ -296,7 +296,7 @@ for (const other of LANGS)
       .click();
     await expectAboutPage(page, other, `/about/${other}`);
     await page.getByRole('link', { name: 'Bearmatics', exact: true }).click();
-    await expect(page.locator('.course-option')).toHaveCount(4);
+    await expect(page.locator('.course-option')).toHaveCount(5);
     await expect(page).toHaveURL('/');
     await expect(page.locator('html')).toHaveAttribute('lang', other);
   });
@@ -382,9 +382,18 @@ for (const lang of LANGS)
     const links = await page
       .locator('a[href]')
       .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
-    // Bearmatics, Slovenčina, English, play (bar), the 8 full-size screenshots, What we store,
-    // e-mail.
-    const shots = ['course', 'small-maths', 'take-away', 'logic', 'english', 'summary', 'app-bar'];
+    // Bearmatics, Slovenčina, English, play (bar), the 9 full-size screenshots (SCRUM-241: Word
+    // search), What we store, e-mail.
+    const shots = [
+      'course',
+      'small-maths',
+      'take-away',
+      'logic',
+      'english',
+      'wordsearch',
+      'summary',
+      'app-bar',
+    ];
     expect(links).toEqual([
       `/?lang=${lang}`,
       '/about/sk',
@@ -392,9 +401,9 @@ for (const lang of LANGS)
       `/?lang=${lang}`,
       ...[...shots, 'leaderboard'].map((shot) => `/about/${lang}/${shot}.webp`),
       '#about-store',
-      links[13],
+      links[14],
     ]);
-    expect(links[13]).toMatch(/^mailto:/);
+    expect(links[14]).toMatch(/^mailto:/);
     const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {
@@ -448,7 +457,7 @@ for (const lang of LANGS)
 test('a screenshot opens its full-size file in a new tab (O1)', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/about/sk');
-  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(7);
+  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(8);
   await expect(link).toHaveAttribute('href', '/about/sk/leaderboard.webp');
   await link.scrollIntoViewIfNeeded();
   const [tab] = await Promise.all([context.waitForEvent('page'), link.click()]);

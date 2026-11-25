@@ -7,10 +7,10 @@ import { openMathematics, openSmallMaths } from './testing/openMathematics';
 const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const heading = () => screen.getByRole('heading', { level: 2 });
 
-test('course choice offers Small maths, Logic, Maths and English in this order', () => {
+test('course choice offers Small maths, Logic, Maths, English and Word search in this order', () => {
   render(<App />);
   const titles = [...document.querySelectorAll('.course-title')].map((e) => e.textContent);
-  expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English']);
+  expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English', 'Word search']);
 });
 
 test('Small maths menu: Levels 1-3 (SCRUM-156, SCRUM-164), Level 1 first, default size 10, own heading', () => {

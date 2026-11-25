@@ -62,10 +62,10 @@ function go() {
   wait(STEP_MS * 7 + BACK_MS + 200);
 }
 
-test('course choice: Small maths, Logic, Maths, English with the Logic card text (EN and SK)', () => {
+test('course choice: Small maths, Logic, Maths, English, Word search with the Logic card text (EN and SK)', () => {
   render(<App />);
   const titles = [...document.querySelectorAll('.course-title')].map((e) => e.textContent);
-  expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English']);
+  expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English', 'Word search']);
   expect(exact('Logic')).toHaveAccessibleDescription(
     'Think ahead: guide the bear to the honey with arrows',
   );

@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { COURSE_CHOICE_DEVICES } from './support/devices';
+import { ALL_DEVICES, COURSE_CHOICE_DEVICES } from './support/devices';
 import { setLanguage } from './support/language';
 
 // SCRUM-71: course choice and English home across devices, languages and input methods.
@@ -11,6 +11,8 @@ const COPY = {
     english: 'English',
     mathHeading: 'Where shall we explore?',
     englishHeading: 'Which level shall we try?',
+    search: 'Word search',
+    searchHeading: 'Which word search shall we try?',
     back: 'Back to courses',
     level3: /^Level 3 /,
   },
@@ -20,6 +22,8 @@ const COPY = {
     english: 'Angličtina',
     mathHeading: 'Kam sa vyberieme?',
     englishHeading: 'Ktorú úroveň skúsime?',
+    search: 'Osemsmerovka',
+    searchHeading: 'Ktorú osemsmerovku skúsime?',
     back: 'Späť na kurzy',
     level3: /^Úroveň 3 /,
   },
@@ -126,6 +130,14 @@ for (const size of SIZES)
       // All three English levels are playable: with level 3 selected the menu still fits.
       await page.getByRole('radio', { name: c.level3 }).click();
       await checkLayout(page);
+      // SCRUM-241: the Word search menu (three levels) fits the same way.
+      await page.getByRole('button', { name: c.back }).click();
+      await page.getByRole('button', { name: c.search, exact: true }).click();
+      await expect(page.getByRole('heading', { level: 2 })).toHaveText(c.searchHeading);
+      await expect(page.getByRole('heading', { level: 2 })).toBeFocused();
+      await checkLayout(page);
+      await page.getByRole('radio', { name: c.level3 }).click();
+      await checkLayout(page);
       await context.close();
     });
 
@@ -198,7 +210,7 @@ for (const size of [SIZES[0], SIZES[1], SIZES[2], SIZES[6]])
     const page = await context.newPage();
     await page.goto('/');
     await page.evaluate(() => (document.documentElement.style.fontSize = '200%'));
-    for (const course of ['Small maths', 'Maths', 'English', null]) {
+    for (const course of ['Small maths', 'Maths', 'English', 'Word search', null]) {
       if (course) {
         await page.getByRole('button', { name: course, exact: true }).click();
       }
@@ -280,7 +292,8 @@ test('tall window keeps the full heading with its intro', async ({ page }) => {
 });
 
 // SCRUM-77 QA D1/D2: while the menu is "contained", the page itself never scrolls
-// (course choice, Small maths, Logic, Maths and English), including the sizes that used to break.
+// (course choice, Small maths, Logic, Maths, English and Word search), including the sizes that
+// used to break.
 for (const [width, height] of [
   [1280, 520],
   [1280, 400],
@@ -295,7 +308,7 @@ for (const [width, height] of [
   }) => {
     await page.setViewportSize({ width, height });
     await page.goto('/');
-    for (const course of [null, 'Small maths', 'Logic', 'Maths', 'English']) {
+    for (const course of [null, 'Small maths', 'Logic', 'Maths', 'English', 'Word search']) {
       if (course) await page.getByRole('button', { name: course, exact: true }).click();
       const workspace = page.locator('.workspace');
       await expect(workspace).toHaveAttribute('data-menu-mode', /contained|flow/);
@@ -341,7 +354,7 @@ for (const [width, height, screens] of [
     }
   });
 
-// SCRUM-141 QA146-01: on short landscape phones all course cards (four since SCRUM-262) are
+// SCRUM-141 QA146-01: on short landscape phones all course cards (five since SCRUM-241) are
 // fully visible without scrolling the card list.
 for (const [width, height] of [
   [844, 390],
@@ -349,12 +362,12 @@ for (const [width, height] of [
   [733, 500],
 ] as const)
   for (const lang of ['en', 'sk'])
-    test(`all four course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
+    test(`all five course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
       if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
       const cards = page.locator('.course-option');
-      await expect(cards).toHaveCount(4);
+      await expect(cards).toHaveCount(5);
       for (const card of await cards.all()) {
         await expect(card).toBeInViewport({ ratio: 1 });
         expect((await card.boundingBox())!.height).toBeGreaterThanOrEqual(48);
@@ -366,8 +379,10 @@ for (const [width, height] of [
     });
 
 // QA271-03: at 200% text on the phone the course detail runs under the icon (full card width),
-// so the four cards are shorter: the card list hides at most 200 px (it hid 277-351 px before).
-// At normal text the cards keep the detail beside the icon.
+// so the cards are shorter: with four cards the list hid at most 200 px (277-351 px before the
+// fix). SCRUM-241 adds a fifth card (about 150 px at 200%): the list may hide that card more,
+// at most 200 px plus the fifth card's height and gap. At normal text the cards keep the detail
+// beside the icon.
 for (const lang of ['en', 'sk'])
   test(`200% text ${lang} at 390x844: course cards use the full width for the detail`, async ({
     page,
@@ -398,10 +413,66 @@ for (const lang of ['en', 'sk'])
     expect(normal.cards.every((c) => !c.detailUnderIcon)).toBe(true);
     await page.addStyleTag({ content: 'html{font-size:200% !important}' });
     await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
-    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200);
+    const fifth = await page
+      .locator('.course-option')
+      .nth(4)
+      .evaluate((card) => (card as HTMLElement).offsetHeight + 8);
+    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200 + fifth);
     const large = await layout();
     expect(large.cards.every((c) => c.detailUnderIcon && c.detailBelowTitle)).toBe(true);
     expect(large.pageScroll).toBeLessThanOrEqual(1);
     expect(large.sideScroll).toBeLessThanOrEqual(0);
     expect(Math.min(...large.cards.map((c) => c.height))).toBeGreaterThanOrEqual(48);
   });
+
+// SCRUM-241: five course cards, signed in (badge, points, frozen streak and a 12-character
+// nickname in the bar): every card is fully visible at every defined device and the menu
+// layout settles (it used to switch the compact heading on and off at 884x600, and cut a card
+// at 742x702 and 1280x520).
+for (const device of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    test(`signed in: five course cards visible and the layout settles at ${device.width}x${device.height} ${lang}`, async ({
+      page,
+    }) => {
+      await page.route('**/api/**', async (route) => {
+        const path = new URL(route.request().url()).pathname;
+        const json = (body: unknown) =>
+          route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
+        if (path === '/api/me')
+          return json({
+            account: {
+              kind: 'password',
+              username: 'kid',
+              nickname: lang === 'en' ? 'Brave Cub' : 'Honeybear123',
+              look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
+              email: null,
+              leaderboard: true,
+            },
+          });
+        if (path === '/api/progress')
+          return json({ points: 135, streak: 12, frozen: true, today: false });
+        return json({ available: false });
+      });
+      await page.setViewportSize({ width: device.width, height: device.height });
+      await page.goto('/');
+      await page.locator('.badge-button').waitFor();
+      if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
+      await page.waitForTimeout(300);
+      const changes = await page.evaluate(async () => {
+        const workspace = document.querySelector('.workspace')!;
+        let count = 0;
+        const observer = new MutationObserver((list) => (count += list.length));
+        observer.observe(workspace, { attributes: true });
+        await new Promise((done) => setTimeout(done, 800));
+        observer.disconnect();
+        return count;
+      });
+      expect(changes).toBe(0);
+      const cards = page.locator('.course-option');
+      await expect(cards).toHaveCount(5);
+      for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
+      const hidden = await page
+        .locator('.course-options')
+        .evaluate((list) => list.scrollHeight - list.clientHeight);
+      expect(hidden).toBeLessThanOrEqual(1);
+    });

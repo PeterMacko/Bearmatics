@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// SCRUM-222: phone screenshots for the About page (SCRUM-218), 8 per language (SCRUM-262: Logic;
-// SCRUM-289: Logic level 2).
+// SCRUM-222: phone screenshots for the About page (SCRUM-218), 9 per language (SCRUM-262: Logic;
+// SCRUM-289: Logic level 2; SCRUM-241: Word search).
 // Usage: npm run about:shots  (builds, then runs this script), or
 //        node scripts/about-screenshots.mjs [--dist dist] [--langs en,sk] [--shots course,leaderboard]
 // Renders the built app (dist/) in Chromium at 390 x 844 (phone, portrait, touch) with /api mocked
@@ -24,6 +24,7 @@ const SHOTS = [
   'take-away',
   'logic',
   'english',
+  'wordsearch',
   'summary',
   'app-bar',
   'leaderboard',
@@ -83,7 +84,7 @@ async function mockApi(page, { summary = false } = {}) {
   });
 }
 
-const COURSE = { small: 0, logic: 1, maths: 2, english: 3 };
+const COURSE = { small: 0, logic: 1, maths: 2, english: 3, wordsearch: 4 };
 
 async function home(page, lang) {
   await page.goto('/');
@@ -247,6 +248,32 @@ const STEPS = {
     await home(page, lang);
     await startLesson(page, 'english', 0, 10);
     await page.locator('.word-option').first().waitFor();
+  },
+  wordsearch: async (page, lang) => {
+    await home(page, lang);
+    // SCRUM-241: Level 1, two of the five listed words found (the first two of the list).
+    await startLesson(page, 'wordsearch', 0, 5);
+    await page.locator('.ws-board').waitFor();
+    const ends = await page.evaluate(() => {
+      const letters = [...document.querySelectorAll('.ws-cell')].map((c) => c.textContent);
+      const words = [...document.querySelectorAll('.ws-word')].map((b) => b.textContent);
+      const at = (r, c) => (r >= 0 && r < 6 && c >= 0 && c < 6 ? letters[r * 6 + c] : '');
+      return words.slice(0, 2).map((word) => {
+        for (let r = 0; r < 6; r++)
+          for (let c = 0; c < 6; c++)
+            for (const [dr, dc] of [
+              [0, 1],
+              [1, 0],
+            ])
+              if ([...word].every((ch, i) => at(r + i * dr, c + i * dc) === ch))
+                return [r * 6 + c, (r + (word.length - 1) * dr) * 6 + c + (word.length - 1) * dc];
+        throw new Error(`${word} not in the grid`);
+      });
+    });
+    for (const [first, last] of ends) {
+      await page.locator('.ws-cell').nth(first).click();
+      await page.locator('.ws-cell').nth(last).click();
+    }
   },
   summary: async (page, lang) => {
     await home(page, lang);
