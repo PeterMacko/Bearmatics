@@ -186,6 +186,9 @@ export default function AboutPage({ language }: { language: Language }) {
               <ul>
                 {level(1, t.logicLevels[1], a.logicDetail)}
                 {level(2, t.logicLevels[2], a.logicDetail2)}
+                {level(3, t.logicLevels[3], a.logicDetail3)}
+                {level(4, t.logicLevels[4], a.logicDetail4)}
+                {level(5, t.logicLevels[5], a.logicDetail5)}
               </ul>
             </li>
             <li>
@@ -217,7 +220,7 @@ export default function AboutPage({ language }: { language: Language }) {
           </ul>
           <Shots
             language={language}
-            shots={['small-maths', 'take-away', 'logic', 'english', 'wordsearch']}
+            shots={['small-maths', 'take-away', 'logic', 'patterns', 'english', 'wordsearch']}
           />
         </section>
 

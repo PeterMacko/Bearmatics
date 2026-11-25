@@ -84,12 +84,18 @@ test('Logic menu: Level 1, sizes 5/10/20 (10 first), heading focused; Back retur
   expect(document.activeElement).toBe(heading());
   const level = screen.getByRole('radio', { name: /^Level 1 · Bear goes to the honey/ });
   expect(level).toBeChecked();
-  // SCRUM-289: Level 2 "Around the stones" follows Level 1.
+  // SCRUM-289: Level 2 "Around the stones" follows Level 1; SCRUM-299: the picture patterns
+  // are Levels 3-5 after the bear levels.
   expect(
     screen.getAllByRole('radio', { name: /^Level / }).map((r) => r.closest('label')!.textContent),
   ).toEqual([
     expect.stringMatching(/^1.*Bear goes to the honey.*Plan the way with arrows, up to 4 steps/),
     expect.stringMatching(/^2.*Around the stones.*Find the free way, up to 6 steps/),
+    expect.stringMatching(/^3.*What comes next\?.*Two pictures take turns: pick the next one/),
+    expect.stringMatching(/^4.*What is missing\?.*Find the picture that belongs in the gap/),
+    expect.stringMatching(
+      /^5.*Growing and turning.*More, fewer or a turning arrow: pick the next one/,
+    ),
   ]);
   expect(screen.getByText('Plan the way with arrows, up to 4 steps')).toBeInTheDocument();
   expect(

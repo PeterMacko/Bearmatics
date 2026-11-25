@@ -20,7 +20,7 @@ interface PictureGroupProps {
   /** Localized count-neutral name; the only label used when count is null. */
   unknownLabel: string;
 }
-const dicePositions: readonly (readonly (readonly [number, number])[])[] = [
+export const dicePositions: readonly (readonly (readonly [number, number])[])[] = [
   [],
   [[1, 1]],
   [
