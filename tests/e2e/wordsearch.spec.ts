@@ -397,3 +397,51 @@ test('the app bar stays one row at 320x568 during the lesson', async ({ page }) 
     .evaluateAll((items) => items.map((b) => Math.round(b.getBoundingClientRect().top)));
   expect(new Set(tops).size).toBe(1);
 });
+
+// QA247-06: in mobile browsers (touch, isMobile) Next went back and forth between its
+// place and below the lesson ~40 times a second once a Slovak grid was solved at 742x702 and at
+// 320x568 with 200% text: the page could not be scrolled up and taps on Next were lost. The
+// place check now uses the layout viewport, which a mobile browser does not grow when it zooms
+// out over a sideways overflow.
+for (const [width, height, text] of [
+  [742, 702, 100],
+  [320, 568, 200],
+  [568, 320, 200],
+] as const)
+  test(`mobile ${width}x${height} ${text}% SK solved: Next stays put, the page scrolls up, a tap on Next works (QA247-06)`, async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({
+      viewport: { width, height },
+      hasTouch: true,
+      isMobile: true,
+    });
+    const page = await context.newPage();
+    await startSearch(page, { level: 1, size: 10, lang: 'sk' });
+    if (text === 200) await page.addStyleTag({ content: 'html{font-size:200% !important}' });
+    await page.waitForTimeout(300);
+    for (const w of await gridWords(page)) await findWord(page, w);
+    const section = page.locator('.wordsearch-practice');
+    await page.waitForTimeout(500);
+    const r = await page.evaluate(async () => {
+      let flips = 0;
+      const lesson = document.querySelector('.wordsearch-practice')!;
+      new MutationObserver(() => flips++).observe(lesson, {
+        attributes: true,
+        attributeFilter: ['data-next-below'],
+      });
+      await new Promise((done) => setTimeout(done, 1000));
+      const still = flips;
+      scrollTo(0, 0);
+      await new Promise((done) => setTimeout(done, 500));
+      return { flips: still, top: scrollY };
+    });
+    expect(r.flips, 'Next does not move back and forth').toBe(0);
+    expect(r.top, 'the page scrolls back up').toBe(0);
+    const next = page.locator('.ws-actions .answer-button');
+    await next.scrollIntoViewIfNeeded();
+    await next.tap();
+    await expect(section).not.toHaveAttribute('data-solved', 'true');
+    await expect(page.locator('.ws-words li[data-found]')).toHaveCount(0);
+    await context.close();
+  });

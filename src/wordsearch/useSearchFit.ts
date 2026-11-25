@@ -93,9 +93,14 @@ export default function useSearchFit(keys: unknown[], place?: NextPlace) {
       }
     };
     // What can let Next fit its place again: the window and the text size (not the lesson's
-    // own height, which changes when Next moves, nor the observer's first call).
-    const room = () =>
-      `${window.innerWidth}x${window.innerHeight} ${getComputedStyle(section).fontSize}`;
+    // own height, which changes when Next moves, nor the observer's first call). The layout
+    // viewport (clientWidth/clientHeight), not innerWidth/innerHeight: a mobile browser zooms
+    // out while Next in its place overflows sideways, so innerWidth grows, then shrinks once
+    // Next is below, and Next went back and forth ~40 times a second (QA247-06).
+    const room = () => {
+      const root = document.documentElement;
+      return `${root.clientWidth}x${root.clientHeight} ${getComputedStyle(section).fontSize}`;
+    };
     const fit = () => {
       fitCells();
       // Next moves below; this effect runs again (place.below is a key) and refits the grid.
