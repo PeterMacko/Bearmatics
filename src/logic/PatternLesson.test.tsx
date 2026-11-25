@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
 import App from '../App';
+import { FeedbackAudio } from '../audio';
 import { DEMO_KEYS } from '../demoSeen';
 import { multiplierFor } from '../progress/multipliers';
 import { fakeServer, reply } from '../testing/fakeServer';
@@ -247,6 +248,28 @@ describe('answering', () => {
     expect(feedback()).toHaveTextContent('Áno! Tento obrázok pasuje.');
     expect(row()).toHaveAccessibleName('2 medvede, 3 medvede, 4 medvede, 5 medveďov');
   });
+});
+
+test('sounds: retry cue on a wrong tap, correct cue on the right one; Mute stops them', async () => {
+  vi.spyOn(FeedbackAudio.prototype, 'setEnabled').mockResolvedValue(true);
+  const play = vi.spyOn(FeedbackAudio.prototype, 'play').mockReturnValue(true);
+  seen();
+  openLogic();
+  fireEvent.click(screen.getByRole('radio', { name: /^Level 3 ·/ }));
+  await act(async () => tap('Let’s plan'));
+  const cues = () => play.mock.calls.map(([cue]) => cue).filter((cue) => cue !== 'step');
+  expect(cues()).toEqual([]); // nothing plays before an answer
+  pick('Bear');
+  pick('Pirate');
+  expect(cues()).toEqual(['incorrect', 'correct']);
+  tap('Next exercise');
+  fireEvent.click(exact('Settings'));
+  fireEvent.click(exact('Sound on'));
+  fireEvent.click(exact('Close settings'));
+  await act(async () => {});
+  pick('Bear');
+  pick('Pirate');
+  expect(cues()).toEqual(['incorrect', 'correct']);
 });
 
 describe('demo once per device (shared helper, own key)', () => {

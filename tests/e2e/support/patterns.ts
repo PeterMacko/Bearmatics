@@ -22,11 +22,11 @@ export async function startPatternLesson(
 ) {
   if (goto) await page.goto('/');
   if (lang === 'sk') await setLanguage(page, 'Slovenčina');
-  await page.locator('.course-logic').click();
+  if (!(await page.locator('.logic-home').isVisible())) await page.locator('.course-logic').click();
   await expect(page.locator('.logic-home')).toBeVisible();
-  await page.locator(`input[name="logic-level"][value="${level}"]`).check({ force: true });
+  await page.locator(`.logic-home .level-${level}`).click();
   const sizes = { 5: 0, 10: 1, 20: 2 } as const;
-  await page.locator('input[name="logic-size"]').nth(sizes[size]).check({ force: true });
+  await page.locator('.logic-home .session-options label').nth(sizes[size]).click();
   await page.locator('.logic-home .start-button').click();
   await expect(page.locator('.pattern-practice')).toBeVisible();
 }
@@ -93,4 +93,12 @@ export async function answerRight(page: Page) {
     .nth(await rightChoice(page))
     .click();
   await expect(page.locator('.pattern-actions .answer-button')).toBeVisible();
+}
+
+/** Back to the Logic menu (through the leave question when the lesson has progress). */
+export async function leaveLesson(page: Page) {
+  await page.locator('.back-button').click();
+  const leave = page.locator('.leave-dialog .secondary');
+  if (await leave.isVisible()) await leave.click();
+  await expect(page.locator('.logic-home')).toBeVisible();
 }
