@@ -154,7 +154,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
   const boxes = await page
     .locator('main figure img')
     .evaluateAll((images) => images.map((image) => image.getBoundingClientRect().toJSON()));
-  expect(boxes).toHaveLength(9);
+  expect(boxes).toHaveLength(10);
   for (const box of boxes) {
     expect(box.width).toBeGreaterThanOrEqual(260);
     expect(box.width).toBeLessThanOrEqual(300);
@@ -382,13 +382,14 @@ for (const lang of LANGS)
     const links = await page
       .locator('a[href]')
       .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
-    // Bearmatics, Slovenčina, English, play (bar), the 9 full-size screenshots (SCRUM-241: Word
+    // Bearmatics, Slovenčina, English, play (bar), the 10 full-size screenshots (SCRUM-241: Word
     // search), What we store, e-mail.
     const shots = [
       'course',
       'small-maths',
       'take-away',
       'logic',
+      'patterns',
       'english',
       'wordsearch',
       'summary',
@@ -401,9 +402,9 @@ for (const lang of LANGS)
       `/?lang=${lang}`,
       ...[...shots, 'leaderboard'].map((shot) => `/about/${lang}/${shot}.webp`),
       '#about-store',
-      links[14],
+      links[15],
     ]);
-    expect(links[14]).toMatch(/^mailto:/);
+    expect(links[15]).toMatch(/^mailto:/);
     const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {

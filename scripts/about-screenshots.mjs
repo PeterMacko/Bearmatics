@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// SCRUM-222: phone screenshots for the About page (SCRUM-218), 9 per language (SCRUM-262: Logic;
-// SCRUM-289: Logic level 2; SCRUM-241: Word search).
+// SCRUM-222: phone screenshots for the About page (SCRUM-218), 10 per language (SCRUM-262: Logic;
+// SCRUM-289: Logic level 2; SCRUM-241: Word search; SCRUM-299: Logic level 3 patterns).
 // Usage: npm run about:shots  (builds, then runs this script), or
 //        node scripts/about-screenshots.mjs [--dist dist] [--langs en,sk] [--shots course,leaderboard]
 // Renders the built app (dist/) in Chromium at 390 x 844 (phone, portrait, touch) with /api mocked
@@ -23,6 +23,7 @@ const SHOTS = [
   'small-maths',
   'take-away',
   'logic',
+  'patterns',
   'english',
   'wordsearch',
   'summary',
@@ -243,6 +244,14 @@ const STEPS = {
       await page.locator('.logic-actions .answer-button').click();
     }
     for (const arrow of await path()) await page.locator(`.arrow-${arrow}`).click();
+  },
+  patterns: async (page, lang) => {
+    await home(page, lang);
+    // SCRUM-299: Logic level 3 "What comes next?", the first row of a lesson (after the demo).
+    await startLesson(page, 'logic', 2, 5);
+    await page.clock.runFor(6_000); // the demo (reduced motion: still steps)
+    await page.locator('.pattern-row').waitFor();
+    await page.evaluate(() => document.activeElement?.blur?.());
   },
   english: async (page, lang) => {
     await home(page, lang);

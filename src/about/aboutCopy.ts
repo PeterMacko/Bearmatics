@@ -6,6 +6,7 @@ export const SHOTS = [
   'small-maths',
   'take-away',
   'logic',
+  'patterns',
   'english',
   'wordsearch',
   'summary',
@@ -35,9 +36,14 @@ export const aboutCopy = {
     opensFull: '(full size, opens in a new tab)',
     coursesTitle: 'Courses',
     smallLead: 'with pictures for the youngest',
-    logicLead: 'think ahead and plan the way',
+    logicLead: 'think ahead, plan the way and find what comes next',
     logicDetail: 'plan the way with arrows, up to 4 steps',
     logicDetail2: 'stones stand in the way: find the free way, up to 6 steps',
+    logicDetail3: 'two pictures take turns: pick the picture that comes next',
+    logicDetail4:
+      'a row of 2 or 3 pictures with a gap at the end or inside: pick the missing picture',
+    logicDetail5:
+      'groups that grow or shrink by one, or an arrow that turns a quarter turn: pick what comes next',
     englishLead: '21 school words spoken in a British voice',
     searchLead: 'find the English school words in a grid of letters',
     searchDetails: {
@@ -63,6 +69,7 @@ export const aboutCopy = {
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
       'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how at the first Logic lesson on a device; Show me plays it again any time.',
+      'In Logic levels 3–5, your child looks at a row of pictures and taps the picture that belongs in the “?” place. A wrong picture gets a red mark and another one can be tried. A short picture demo shows how at the first such lesson on a device; Show me plays it again any time.',
       'In Word search, your child taps the first and then the last letter of a word. Each grid hides 5 words; a lesson of 5, 10 or 20 words has 1, 2 or 4 new grids. A word counts on the first try when no wrong pair was tapped before it.',
       'Exercises that needed more tries come back in a short review round.',
       'The summary shows how many were right on the first try without hints.',
@@ -102,6 +109,10 @@ export const aboutCopy = {
         caption: 'Logic: guide the bear around the stones to the honey',
         alt: 'A Logic level 2 exercise: a 4 by 4 grid with the bear, a honey pot and two stones, six planned arrows, the arrow buttons and Go.',
       },
+      patterns: {
+        caption: 'Logic: what comes next?',
+        alt: 'A Logic level 3 exercise: a row of two pictures taking turns, a dashed question mark place at the end and three pictures to choose from.',
+      },
       english: {
         caption: 'English: listen and choose',
         alt: 'An English listen-and-choose exercise: a speaker button and four word buttons.',
@@ -134,9 +145,14 @@ export const aboutCopy = {
     opensFull: '(plná veľkosť, otvorí sa na novej karte)',
     coursesTitle: 'Kurzy',
     smallLead: 's obrázkami pre najmenších',
-    logicLead: 'mysli dopredu a naplánuj cestu',
+    logicLead: 'mysli dopredu, naplánuj cestu a nájdi, čo príde ďalej',
     logicDetail: 'naplánuj cestu šípkami, najviac 4 kroky',
     logicDetail2: 'v ceste stoja kamene: nájdi voľnú cestu, najviac 6 krokov',
+    logicDetail3: 'dva obrázky sa striedajú: vyber obrázok, ktorý príde ďalej',
+    logicDetail4:
+      'rad 2 alebo 3 obrázkov s medzerou na konci alebo vnútri: vyber obrázok, ktorý chýba',
+    logicDetail5:
+      'skupiny, ktoré rastú alebo sa zmenšujú o jeden, alebo šípka, ktorá sa otočí o štvrť otáčky: vyber, čo príde ďalej',
     englishLead: '21 slov zo školy v britskej výslovnosti',
     searchLead: 'nájdi anglické slová zo školy v mriežke písmen',
     searchDetails: {
@@ -162,6 +178,7 @@ export const aboutCopy = {
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
       'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako pri prvej lekcii Logiky na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
+      'V Logike na úrovniach 3–5 si dieťa pozrie rad obrázkov a ťukne na obrázok, ktorý patrí na miesto „?“. Nesprávny obrázok dostane červenú značku a dá sa skúsiť iný. Krátka obrázková ukážka ukáže ako pri prvej takej lekcii na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
       'V Osemsmerovke dieťa ťukne na prvé a potom na posledné písmeno slova. V každej mriežke je 5 slov; lekcia s 5, 10 alebo 20 slovami má 1, 2 alebo 4 nové mriežky. Slovo sa počíta na prvý pokus, keď pred ním nebola ťuknutá nesprávna dvojica.',
       'Príklady, ktoré potrebovali viac pokusov, sa vrátia v krátkom opakovaní.',
       'Na konci vidíš, koľko príkladov bolo správne na prvý pokus bez pomôcky.',
@@ -200,6 +217,10 @@ export const aboutCopy = {
       logic: {
         caption: 'Logika: priveď medveďa okolo kameňov k medu',
         alt: 'Príklad z Logiky, úroveň 2: mriežka 4 krát 4 s medveďom, hrncom medu a dvoma kameňmi, šesť naplánovaných šípok, tlačidlá so šípkami a Choď.',
+      },
+      patterns: {
+        caption: 'Logika: čo príde ďalej?',
+        alt: 'Príklad z Logiky, úroveň 3: rad dvoch striedajúcich sa obrázkov, na konci prerušovaný rámček s otáznikom a tri obrázky na výber.',
       },
       english: {
         caption: 'Angličtina: počúvaj a vyber',

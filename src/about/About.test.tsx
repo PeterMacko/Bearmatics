@@ -69,7 +69,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(screen.getByRole('main')).toHaveTextContent(a.intro);
   });
 
-  it('shows the nine screenshots of its language (SCRUM-241: Word search), lazily, sized and with alt text', () => {
+  it('shows the ten screenshots of its language (SCRUM-241: Word search; SCRUM-299: Logic patterns), lazily, sized and with alt text', () => {
     render(<AboutPage language={language} />);
     const images = screen.getAllByRole('img');
     expect(images.map((image) => image.getAttribute('src'))).toEqual(
@@ -78,6 +78,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         'small-maths',
         'take-away',
         'logic',
+        'patterns',
         'english',
         'wordsearch',
         'summary',
@@ -85,7 +86,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         'leaderboard',
       ].map((shot) => `/about/${language}/${shot}.webp`),
     );
-    expect(SHOTS).toHaveLength(9);
+    expect(SHOTS).toHaveLength(10);
     for (const [index, image] of images.entries()) {
       expect(image).toHaveAttribute('loading', 'lazy');
       expect(image).toHaveAttribute('width', '390');
@@ -93,7 +94,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(image).toHaveAccessibleName(a.shots[SHOTS[index]].alt);
       expect(a.shots[SHOTS[index]].alt.length).toBeGreaterThan(30);
     }
-    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(9);
+    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(10);
   });
 
   it('links every screenshot to its full-size file in a new tab (O1)', () => {
@@ -131,6 +132,10 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(items).toContain(`${t.level} 1: ${t.logicLevels[1]} (${a.logicDetail})`);
     // SCRUM-289: Logic, level 2 (stones).
     expect(items).toContain(`${t.level} 2: ${t.logicLevels[2]} (${a.logicDetail2})`);
+    // SCRUM-299: Logic, levels 3-5 (picture patterns).
+    expect(items).toContain(`${t.level} 3: ${t.logicLevels[3]} (${a.logicDetail3})`);
+    expect(items).toContain(`${t.level} 4: ${t.logicLevels[4]} (${a.logicDetail4})`);
+    expect(items).toContain(`${t.level} 5: ${t.logicLevels[5]} (${a.logicDetail5})`);
     // SCRUM-241: Word search, levels 1-3 with their About details.
     for (const value of [1, 2, 3] as const)
       expect(items).toContain(
@@ -146,7 +151,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(screen.getByText(course, { selector: 'strong' })).toBeInTheDocument();
   });
 
-  it('SCRUM-289: the privacy list says the device remembers the Logic demo was seen', () => {
+  it('SCRUM-289 / SCRUM-299: the privacy list says the device remembers the Logic demos were seen', () => {
     render(<AboutPage language={language} />);
     const list = document.querySelector<HTMLElement>('.privacy-list')!;
     expect(
@@ -155,8 +160,8 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         .map((li) => li.textContent),
     ).toContain(
       language === 'en'
-        ? 'On this device the app remembers that the Logic demo was seen; nothing is sent.'
-        : 'Na tomto zariadení si aplikácia pamätá, že ukážka v Logike už bola pozretá; nič sa neodosiela.',
+        ? 'On this device the app remembers that the Logic demos (the bear’s way and the picture rows) were seen; nothing is sent.'
+        : 'Na tomto zariadení si aplikácia pamätá, že ukážky v Logike (cesta medveďa a rady obrázkov) už boli pozreté; nič sa neodosiela.',
     );
   });
 
