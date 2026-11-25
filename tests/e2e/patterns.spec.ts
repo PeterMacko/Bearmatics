@@ -32,6 +32,7 @@ const patternLayout = (page: Page) =>
     const row = document.querySelector('.pattern-row')!.getBoundingClientRect();
     const places = visible('.pattern-place');
     const tops = new Set(places.map((p) => Math.round(p.getBoundingClientRect().top)));
+    const choiceTops = new Set(choices.map((c) => Math.round(c.getBoundingClientRect().top)));
     return {
       pageScroll: d.scrollHeight - d.clientHeight,
       sideScroll: d.scrollWidth - d.clientWidth,
@@ -46,6 +47,7 @@ const patternLayout = (page: Page) =>
       }),
       rowFits: row.left >= 0 && row.right <= d.clientWidth,
       rowLines: tops.size,
+      choiceLines: choiceTops.size,
       place: Math.min(...places.map((p) => Math.min(p.offsetWidth, p.offsetHeight))),
       smallestChoice: Math.min(...choices.map((c) => Math.min(c.offsetWidth, c.offsetHeight))),
       smallestTarget: Math.min(...buttons.map((b) => Math.min(b.offsetWidth, b.offsetHeight))),
@@ -62,6 +64,7 @@ function checkLayout(layout: Layout, what: string, dice: boolean) {
   expect(layout.rowFits, `${what}: row inside the window`).toBe(true);
   expect(layout.place, `${what}: picture place`).toBeGreaterThanOrEqual(dice ? 56 : 40);
   expect(layout.smallestChoice, `${what}: smallest choice`).toBeGreaterThanOrEqual(48);
+  expect(layout.choiceLines, `${what}: choices on one line`).toBe(1);
   expect(layout.smallestTarget, `${what}: smallest button`).toBeGreaterThanOrEqual(48);
 }
 
@@ -244,7 +247,9 @@ test('a tap answers at once: wrong = red mark and retry with every choice; right
   expect(fits(names, gap, filled[gap])).toBe(true);
   await expect(next(page)).toBeFocused();
   // A tap after the right one changes nothing.
-  await choices.nth(wrong).click({ force: true });
+  const untouched = 3 - right - wrong;
+  await choices.nth(untouched).click({ force: true });
+  await expect(choices.nth(untouched)).not.toHaveAttribute('data-state');
   await expect(choices.nth(wrong)).toHaveAttribute('data-state', 'incorrect');
   await expect(page.locator('#answer-feedback')).toHaveText('Yes! That picture fits.');
 });

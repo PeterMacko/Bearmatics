@@ -172,9 +172,10 @@ describe('answering', () => {
     pick('Bear');
     pick('Bear', 2); // the second click of a double tap
     pick('Pirate');
-    pick('Bear'); // after right: nothing
+    pick('Lollipop'); // after right: nothing
     pick('Pirate');
     expect(choice('Bear')).toHaveAttribute('data-state', 'incorrect');
+    expect(choice('Lollipop')).not.toHaveAttribute('data-state');
     expect(choice('Pirate')).toHaveAttribute('data-state', 'correct');
     expect(feedback()).toHaveTextContent('Yes! That picture fits.');
     // Next: the second click of a double tap on Next does not skip a row.
@@ -260,6 +261,7 @@ test('sounds: retry cue on a wrong tap, correct cue on the right one; Mute stops
   const cues = () => play.mock.calls.map(([cue]) => cue).filter((cue) => cue !== 'step');
   expect(cues()).toEqual([]); // nothing plays before an answer
   pick('Bear');
+  pick('Bear', 2); // the second click of a double tap: no second try, no second cue
   pick('Pirate');
   expect(cues()).toEqual(['incorrect', 'correct']);
   tap('Next exercise');
