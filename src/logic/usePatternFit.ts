@@ -4,20 +4,18 @@ import { watchResize } from '../watchResize';
 
 /** Gap between the places of a row (narrower where 7 places would drop under 40 px). */
 export const PLACE_GAP = { wide: 6, narrow: 3 } as const;
-/** Smallest place: 7 places x 40 px fit a 320 px phone; dice groups (Level 5) stay larger. */
-export const MIN_PLACE = { pictures: 40, dice: 56 } as const;
+/** Smallest place: 7 places x 40 px fit a 320 px phone; dice groups (Level 5) stay larger.
+ *  Level 4's 8 places stay on one line on phones too (Peter, SCRUM-307), so they may get smaller. */
+export const MIN_PLACE = { pictures: 40, eight: 28, dice: 56 } as const;
 /** Largest place on phones (compact lessons) and larger windows. */
 export const MAX_PLACE = {
   pictures: { compact: 76, wide: 84 },
   dice: { compact: 96, wide: 120 },
 } as const;
-/** Level 4 (8 places) goes to two rows of 4 when one row would make places smaller than this. */
-export const ONE_ROW_MIN = 48;
 
 /**
  * Sizes the pattern row (`--place`, `--cols` on the lesson section) to the room the screen has:
- * the largest place that fits the stage's width (8 places in two rows of 4 where one row would be
- * too small), then shrink by however much the page overflows, never below the minimum (then the
+ * the largest place that fits the stage's width (always one line, also Level 4's 8 places), then shrink by however much the page overflows, never below the minimum (then the
  * page may scroll, e.g. very large text). The choices follow the place size in CSS (>= 56 px).
  * Same approach as useBoardFit / useWordGrid.
  */
@@ -34,13 +32,12 @@ export default function usePatternFit(...keys: unknown[]) {
       const kind = section.dataset.dice ? 'dice' : 'pictures';
       const compact = section.closest(LAYOUT.compactPractice) !== null;
       const max = MAX_PLACE[kind][compact ? 'compact' : 'wide'];
-      const min = MIN_PLACE[kind];
+      const min = kind === 'pictures' && places === 8 ? MIN_PLACE.eight : MIN_PLACE[kind];
       const width = stage.clientWidth - 4;
       if (!(width > 0)) return; // no layout (unit tests)
       let gap: number = PLACE_GAP.wide;
       const across = (cols: number) => Math.floor((width - (cols - 1) * gap) / cols);
-      let cols = places;
-      if (places === 8 && across(8) < ONE_ROW_MIN) cols = 4;
+      const cols = places;
       if (across(cols) < min) gap = PLACE_GAP.narrow;
       const lines = Math.ceil(places / cols);
       const byWidth = across(cols);
