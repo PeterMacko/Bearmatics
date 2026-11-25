@@ -166,7 +166,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
 /** Scrolls every screenshot into view (they load lazily) and waits until each has loaded. */
 async function expectImagesLoaded(page: Page, lang: Lang) {
   const images = page.locator('main img');
-  await expect(images).toHaveCount(9);
+  await expect(images).toHaveCount(10);
   for (const image of await images.all()) {
     await image.scrollIntoViewIfNeeded();
     await expect
@@ -458,7 +458,7 @@ for (const lang of LANGS)
 test('a screenshot opens its full-size file in a new tab (O1)', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/about/sk');
-  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(8);
+  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(9);
   await expect(link).toHaveAttribute('href', '/about/sk/leaderboard.webp');
   await link.scrollIntoViewIfNeeded();
   const [tab] = await Promise.all([context.waitForEvent('page'), link.click()]);
