@@ -5,7 +5,9 @@ import App from '../App';
 import { tap } from '../testing/ui';
 import * as bearPath from './bearPath';
 import type { BearPuzzle } from './bearPath';
-import { DEMO_SEEN_KEY } from './demoSeen';
+import { DEMO_KEYS } from '../demoSeen';
+
+const DEMO_SEEN_KEY = DEMO_KEYS['bear-path'];
 import { DEMO_MS } from './LogicDemo';
 import { BACK_MS, STEP_MS } from './LogicPracticeView';
 import {

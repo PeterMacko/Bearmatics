@@ -58,7 +58,7 @@ import {
   type LogicLevel,
 } from './logic/bearPath';
 import LogicPracticeView from './logic/LogicPracticeView';
-import { logicDemoSeen, markLogicDemoSeen } from './logic/demoSeen';
+import { demoSeen, markDemoSeen } from './demoSeen';
 import {
   generateSearchLesson,
   SEARCH_LEVELS,
@@ -426,7 +426,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setLogicLessonLevel(logicLevel);
     setLogicArrows([]);
     // SCRUM-289: the demo plays until it has been seen to the end once on this device.
-    if (logicDemoSeen()) setDemoRun(0);
+    if (demoSeen('bear-path')) setDemoRun(0);
     else showDemo();
     setLogicSession(
       createSession(
@@ -642,7 +642,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                   onShowMe={showDemo}
                   onDemoDone={() => {
                     // Played to its end (leaving earlier unmounts it without this call).
-                    markLogicDemoSeen();
+                    markDemoSeen('bear-path');
                     setDemoRun(0);
                   }}
                   onStep={playStep}
