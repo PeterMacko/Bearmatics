@@ -79,7 +79,9 @@ function checkLayout(layout: Layout, what: string, dice: boolean) {
   expect(layout.sideScroll, `${what}: side scroll`).toBeLessThanOrEqual(0);
   expect(layout.inView, `${what}: row, choices, Next and Show me on screen`).toBe(true);
   expect(layout.rowFits, `${what}: row inside the window`).toBe(true);
-  expect(layout.place, `${what}: picture place`).toBeGreaterThanOrEqual(dice ? 56 : 40);
+  expect(layout.place, `${what}: picture place`).toBeGreaterThanOrEqual(
+    dice ? 56 : what.startsWith('Level 4') ? 28 : 40,
+  );
   expect(layout.smallestChoice, `${what}: smallest choice`).toBeGreaterThanOrEqual(48);
   expect(layout.choiceLines, `${what}: choices on one line`).toBe(1);
   expect(layout.feedbackCovered, `${what}: feedback text covered`).toBe(false);
@@ -98,8 +100,6 @@ async function fitRow(page: Page, what: string, dice: boolean) {
   checkLayout(after, `${what} after`, dice);
   return after;
 }
-
-const phonePortrait = (width: number, height: number) => width <= 420 && height > width;
 
 for (const { name, width, height } of ALL_DEVICES)
   for (const lang of ['en', 'sk'] as const)
@@ -123,8 +123,8 @@ for (const { name, width, height } of ALL_DEVICES)
         for (const level of [3, 4, 5] as const) {
           await startPatternLesson(page, level, { goto: false });
           const after = await fitRow(page, `Level ${level}`, level === 5);
-          // Level 4 (8 places) is two rows of 4 on phones in portrait, one row elsewhere.
-          if (level === 4) expect(after.rowLines).toBe(phonePortrait(width, height) ? 2 : 1);
+          // SCRUM-307: Level 4 (8 places) is one row everywhere, phones too (smaller pictures).
+          if (level === 4) expect(after.rowLines, 'Level 4 row on one line').toBe(1);
           if (level === 5) {
             // Counts come first; answer through to the first arrow row (row 4 of 5).
             for (let i = 1; i < 3; i++) {
