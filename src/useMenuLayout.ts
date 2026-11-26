@@ -6,7 +6,11 @@ import { watchResize } from './watchResize';
 /** Menu-only intrinsic feasibility check. No application/selection state lives here. */
 export function useMenuLayout(active: boolean, language: string, level: number, view = '') {
   const ref = useRef<HTMLElement>(null);
+  /** The page's scroll position, kept by a run's cleanup for the next run's first measure. */
+  const scrolled = useRef<[number, number] | null>(null);
   useLayoutEffect(() => {
+    let saved = scrolled.current;
+    scrolled.current = null;
     const menu = ref.current;
     if (!active || !menu || typeof ResizeObserver === 'undefined') return;
     const list = menu.querySelector<HTMLElement>(LAYOUT.levelList)!;
@@ -22,6 +26,11 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
       else if (box.bottom > bounds.bottom - 8) list.scrollTop += box.bottom - bounds.bottom + 8;
     };
     const measure = () => {
+      // SCRUM-308: the probe below shortens a flowing page for a moment, and the browser then
+      // clamps its scroll position (at 200% text, choosing a level low on the page jumped the
+      // page up and away from the tapped row). Put it back when the menu still flows.
+      const [x, y] = saved ?? [window.scrollX, window.scrollY];
+      saved = null;
       // Always measure the SAME constrained geometry. Temporarily probing it in
       // this synchronous task prevents scrollbar-width/fallback hysteresis. RO
       // sees only the final sizes, never the intermediate probe (no RO writes).
@@ -77,6 +86,8 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
           list.querySelector<HTMLInputElement>('input:checked')?.closest(LAYOUT.levelCard) ??
           null,
       );
+      if (menu.dataset.menuMode === 'flow' && (window.scrollX !== x || window.scrollY !== y))
+        window.scrollTo(x, y);
     };
     const focus = (event: FocusEvent) =>
       reveal(
@@ -92,6 +103,7 @@ export function useMenuLayout(active: boolean, language: string, level: number, 
     });
     list.addEventListener('focusin', focus);
     return () => {
+      scrolled.current = [window.scrollX, window.scrollY];
       stopWatching();
       list.removeEventListener('focusin', focus);
       delete menu.dataset.menuMode;
