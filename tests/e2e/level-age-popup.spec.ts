@@ -214,6 +214,17 @@ test.describe('closing', () => {
     await expect(popup).toHaveCount(0);
   });
 
+  test('the tap area reaches beyond the small pill (left and below it)', async ({ page }) => {
+    await page.goto('/?lang=sk');
+    await openMenu(page, 'english');
+    const row = page.locator('.level-option.level-2');
+    const b = (await row.locator('.level-age').boundingBox())!;
+    // 10 px left of the pill and 10 px below it: still the badge (its invisible tap area).
+    await page.touchscreen.tap(b.x - 10, b.y + b.height + 10);
+    await expect(page.locator('.level-age-popup')).toHaveText(['Odporúčané pre vek 5–9 rokov']);
+    await expect(row.locator('input')).toBeChecked();
+  });
+
   test('follows the list when it scrolls and closes when its badge leaves the list (320x568)', async ({
     page,
   }) => {

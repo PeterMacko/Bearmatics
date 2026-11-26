@@ -815,13 +815,13 @@
   background: #f3ebe4;
   color: #6f5b55;
 }
-/* A larger invisible tap area around the small pill, down and to the left, inside the row's
-   padding box (from the row's top and right inner edges), so it never reaches a neighbouring
-   row and adds no scrollable overflow. */
+/* A larger invisible tap area around the small pill, up to the row's top inner edge, to the
+   left and down, so it never reaches a neighbouring row. Not to the right: the pill's own width
+   (scrollWidth) stays as it was. */
 .level-age::before {
   content: '';
   position: absolute;
-  inset: -3px -4px -12px -12px;
+  inset: -3px 0 -12px -12px;
 }
 
 /* SCRUM-308 round 2: the age popup ("Recommended for ages 5–7"), a small speech bubble under
