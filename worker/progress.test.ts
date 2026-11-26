@@ -88,11 +88,11 @@ describe('points (SCRUM-117)', () => {
     const cookie = await newPlayer();
     const id = await lesson(cookie, 5);
     for (const body of [
-      { lessonId: id, size: 5, points: 9 },
+      { lessonId: id, size: 5, points: 13 },
       { lessonId: id, size: 5, points: -1 },
       { lessonId: id, size: 5, points: 2.5 },
       { lessonId: id, size: 5, points: '5' },
-      { lessonId: id, size: 10, points: 9 },
+      { lessonId: id, size: 10, points: 4 },
       { lessonId: id, size: 7, points: 1 },
       { lessonId: 'nope', size: 5, points: 1 },
     ])
@@ -105,14 +105,31 @@ describe('points (SCRUM-117)', () => {
     expect(await total(cookie)).toBe(0);
   });
 
-  // SCRUM-202: the app multiplies first-try points (x0.25 ... x1.5, rounded up), so a lesson can
-  // give up to ceil(1.5 x size): 8 / 15 / 30.
-  it('accepts up to ceil(1.5 x size) points and rejects one more', async () => {
+  // SCRUM-202: the app multiplies first-try points (x0.25 ... x1.5, rounded up), so a normal
+  // lesson gives up to ceil(1.5 x size): 8 / 15 / 30 (SCRUM-309 raised the limit, below).
+  it('accepts the normal maximum ceil(1.5 x size) points', async () => {
     const cookie = await newPlayer();
     for (const [size, most] of [
       [5, 8],
       [10, 15],
       [20, 30],
+    ] as const) {
+      const id = await lesson(cookie, size);
+      const ok = await finish(cookie, { lessonId: id, size, points: most });
+      expect(ok.status, `${size}: ${most}`).toBe(200);
+      expect(await read(ok)).toMatchObject({ added: most });
+    }
+    expect(await total(cookie)).toBe(8 + 15 + 30);
+  });
+
+  // SCRUM-309: "Bear picks a game" gives x1.5 on top of the table (up to x1.5 x 1.5 = 9/4), so a
+  // lesson can give up to ceil(9/4 x size): 12 / 23 / 45.
+  it('accepts up to ceil(9/4 x size) points (12 / 23 / 45) and rejects 13 / 24 / 46', async () => {
+    const cookie = await newPlayer();
+    for (const [size, most] of [
+      [5, 12],
+      [10, 23],
+      [20, 45],
     ] as const) {
       const id = await lesson(cookie, size);
       const tooMany = await finish(cookie, { lessonId: id, size, points: most + 1 });
@@ -121,7 +138,7 @@ describe('points (SCRUM-117)', () => {
       expect(ok.status, `${size}: ${most}`).toBe(200);
       expect(await read(ok)).toMatchObject({ added: most });
     }
-    expect(await total(cookie)).toBe(8 + 15 + 30);
+    expect(await total(cookie)).toBe(12 + 23 + 45);
   });
 
   it('tells the app the Slovak day (SCRUM-202 play counts change at Slovak midnight)', async () => {

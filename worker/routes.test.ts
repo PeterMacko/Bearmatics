@@ -323,7 +323,7 @@ describe('other answers of signed-in routes', () => {
     const answers = [await finish('cd'.repeat(16))];
     const lesson = await start();
     answers.push(await finish(lesson, 5));
-    answers.push(await finish(lesson, 10, 16)); // SCRUM-202: at most ceil(1.5 x 10) = 15
+    answers.push(await finish(lesson, 10, 24)); // SCRUM-309: at most ceil(9/4 x 10) = 23
     answers.push(await finish(lesson));
     answers.push(await finish(lesson));
     // Next lesson after a 3-day break: an unlock offer.

@@ -1,8 +1,8 @@
 // SCRUM-117: points for finished lessons of signed-in players. The app counts the lesson's
 // first-try answers; the server only stores one total and checks the limits:
 // a lesson must be started while signed in, it counts once, and it gives at most
-// ceil(1.5 x its size) (SCRUM-202: the app's daily multipliers go up to x1.5; the server
-// cannot check which multiplier applied).
+// ceil(9/4 x its size) (SCRUM-202: the app's daily multipliers go up to x1.5; SCRUM-309: a
+// "Bear picks a game" lesson gives x1.5 on top; the server cannot check either).
 import type { Offer } from '../shared/api-types';
 import { notSignedIn, Renewed, type AccountEnv, type SessionHandler } from './accounts';
 import { randomHex } from './crypto';
@@ -46,8 +46,8 @@ function progressBody(row: Row, today: string) {
   return { points: row.points, ...streakView(row.state, today, row.points), day: today };
 }
 
-/** Most points one lesson can give: x1.5 rounded up (8 / 15 / 30). */
-const mostPoints = (size: number) => Math.ceil((size * 3) / 2);
+/** Most points one lesson can give: x1.5 x1.5 = 9/4 rounded up (12 / 23 / 45). */
+const mostPoints = (size: number) => Math.ceil((size * 9) / 4);
 
 /**
  * Writes a new streak state (and points) only if the row is still as read: two lessons
