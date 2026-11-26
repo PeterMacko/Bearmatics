@@ -1,5 +1,6 @@
 import type { RefObject } from 'react';
 import type { Copy } from './i18n';
+import { ignoreRepeatClick } from './ignoreRepeatClick';
 import MenuHeading from './MenuHeading';
 
 export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
@@ -101,7 +102,8 @@ function WordSearchIcon() {
   );
 }
 
-const ICONS = {
+/** The course pictures (also on the "Bear picks a game" screen, SCRUM-309). */
+export const COURSE_ICONS = {
   small: SmallMathIcon,
   logic: LogicIcon,
   math: MathIcon,
@@ -114,10 +116,13 @@ export default function CourseChoice({
   t,
   headingRef,
   onChoose,
+  onBearPicks,
 }: {
   t: Copy;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onChoose: (course: Course) => void;
+  /** SCRUM-309: the "Bear picks a game" mode. */
+  onBearPicks: () => void;
 }) {
   const courses: { id: Course; title: string; detail: string }[] = [
     { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
@@ -134,9 +139,43 @@ export default function CourseChoice({
         intro={t.courseIntro}
         headingRef={headingRef}
       />
+      {/* SCRUM-309: above the course cards. In the menu's controls row, so the shared menu
+          layout counts it (useMenuLayout: heading, list, controls). */}
+      <div className="menu-controls bear-picks-controls">
+        <button
+          type="button"
+          className="primary bear-picks-button"
+          aria-labelledby="bear-picks-title"
+          aria-describedby="bear-picks-detail"
+          onClick={(event) => {
+            // Stop on the next-game screen leads here: its double tap must not start again.
+            if (!ignoreRepeatClick(event)) onBearPicks();
+          }}
+        >
+          <svg className="bear-picks-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="6" cy="6.5" r="3.2" />
+            <circle cx="18" cy="6.5" r="3.2" />
+            <circle cx="12" cy="13" r="8.5" />
+            <circle cx="9" cy="11.5" r="1.2" className="bear-picks-eye" />
+            <circle cx="15" cy="11.5" r="1.2" className="bear-picks-eye" />
+            <ellipse cx="12" cy="16" rx="3" ry="2.2" className="bear-picks-eye" />
+          </svg>
+          <span className="bear-picks-text">
+            <span id="bear-picks-title" className="bear-picks-title">
+              {t.bearPicks.button}
+            </span>
+            <span id="bear-picks-detail" className="bear-picks-detail">
+              {t.bearPicks.buttonDetail}
+            </span>
+          </span>
+          <span className="bear-picks-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
+      </div>
       <ul className="level-options course-options" aria-label={t.courses}>
         {courses.map(({ id, title, detail }) => {
-          const Icon = ICONS[id];
+          const Icon = COURSE_ICONS[id];
           return (
             <li key={id}>
               <button

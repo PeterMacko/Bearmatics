@@ -16,6 +16,8 @@ export type LessonSave =
       /** SCRUM-202: first-try answers and the multiplier applied to them. */
       firstTry: number;
       multiplier: Multiplier;
+      /** SCRUM-309: a "Bear picks a game" lesson (x1.5 on top of the multiplier). */
+      bearPicks?: boolean;
     };
 
 /**
@@ -52,9 +54,31 @@ export default function SummaryPoints({
         </button>
       </div>
     );
+  const table = save.multiplier === 1 ? null : multiplierName(save.multiplier);
   return (
     <div className="summary-points">
-      {save.multiplier === 1 ? (
+      {save.bearPicks ? (
+        // SCRUM-309: the mode's x1.5 on its own line, then the calculation with both factors,
+        // e.g. "10 × 1/2 × 1.5 = 8 points" (only the x1.5 at table x1).
+        <>
+          <p className="points-bear-picks" aria-hidden="true">
+            {t.bearPicks}
+          </p>
+          <p className="points-added points-multiplied" role="status">
+            <span className="sr-only">
+              {table && `${t.multiplierSaid[table]}, `}
+              {t.bearPicks}:{' '}
+            </span>
+            {fill(t.multiplied, {
+              firstTry: save.firstTry,
+              multiplier: table
+                ? `${t.multiplierShown[table]} × ${t.bearPicksFactor}`
+                : t.bearPicksFactor,
+              points: pointsText(t.units, save.added),
+            })}
+          </p>
+        </>
+      ) : save.multiplier === 1 ? (
         <p className="points-added" role="status">
           {fill(t.added, { points: pointsText(t.units, save.added) })}
         </p>

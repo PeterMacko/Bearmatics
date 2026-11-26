@@ -9,12 +9,15 @@ import {
   type Streak,
 } from './api';
 import { pointsFrames, reducedMotion, staticFrame, usePointsAnimation } from './animation';
-import { multipliedPoints, multiplierFor, type Multiplier, type PointsCourse } from './multipliers';
+import { lessonPoints, multiplierFor, type Multiplier, type PointsCourse } from './multipliers';
 import { addPlay, dayShift, playDay, playsAccountKey, playsToday } from './playCounts';
 import type { LessonSave } from './SummaryPoints';
 
-/** Where a lesson is played: course and level as shown in its menu (SCRUM-202). */
-export type LessonPlace = { course: PointsCourse; level: number };
+/**
+ * Where a lesson is played: course and level as shown in its menu (SCRUM-202). `bearPicks`:
+ * played in "Bear picks a game" (SCRUM-309, x1.5 on top of the table's multiplier).
+ */
+export type LessonPlace = { course: PointsCourse; level: number; bearPicks?: boolean };
 
 // The running lesson. Its server ID is requested at Start when the player is signed in; a
 // lesson started before the account has loaded asks for it as soon as the account is known.
@@ -150,7 +153,11 @@ export function useLessonPoints({
               playsToday(playsKey, day, current.place.course, current.place.level) + 1,
             )
           : 1;
-      current.earned = multipliedPoints(current.firstTry, current.multiplier);
+      current.earned = lessonPoints(
+        current.firstTry,
+        current.multiplier,
+        !!current.place?.bearPicks,
+      );
     }
     setLessonSave({ state: 'saving' });
     let sent = false;
@@ -187,6 +194,7 @@ export function useLessonPoints({
         after: result.points,
         firstTry: current.firstTry,
         multiplier: current.multiplier ?? 1,
+        ...(current.place?.bearPicks && { bearPicks: true }),
       });
     } catch {
       if (sent) current.retried = true;

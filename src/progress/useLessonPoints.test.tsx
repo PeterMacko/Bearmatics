@@ -231,7 +231,7 @@ describe('useLessonPoints', () => {
 });
 
 describe('daily multipliers (SCRUM-202)', () => {
-  type Place = { course: 'small' | 'math' | 'english'; level: number };
+  type Place = { course: 'small' | 'math' | 'english'; level: number; bearPicks?: boolean };
   const DAY = '2026-11-20';
   const withDay = (points: number, added: number, day = DAY): Finished => ({
     ...finished(points, added),
@@ -412,5 +412,48 @@ describe('daily multipliers (SCRUM-202)', () => {
       'password:kid': { day: DAY, counts: { 'math:2': 2 } },
     });
     expect(hook.result.current.nextMultiplier(math2)).toBe(0.5);
+  });
+
+  // SCRUM-309: "Bear picks a game" lessons give x1.5 on top of the table and count as plays.
+  it('Bear picks a game: x1.5 on top of the table, and the lesson counts as a play of its level', async () => {
+    const hook = await start();
+    const picked = (place: Place) => ({ ...place, bearPicks: true });
+    // Maths 2, plays 1-2 x1: 10 x 1.5 = 15; plays 3-4 half: 10 x 1/2 x 1.5 = 7.5 -> 8.
+    expect(await play(hook, picked(math2), 10)).toBe(15);
+    expect(hook.result.current.lessonSave).toBeNull();
+    expect(await play(hook, math2, 10)).toBe(10); // a normal play in between: unchanged
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.5); // two plays counted
+    expect(await play(hook, picked(math2), 10)).toBe(8);
+    expect(await play(hook, picked(math2), 10)).toBe(8);
+    expect(hook.result.current.nextMultiplier(math2)).toBe(0.25);
+    expect(await play(hook, picked(math2), 10)).toBe(4); // quarter: 10 x 1/4 x 1.5 = 3.75 -> 4
+    // Top level, first play of the day: 10 x 1.5 x 1.5 = 22.5 -> 23; then x1: 15.
+    expect(await play(hook, picked({ course: 'math', level: 7 }), 10)).toBe(23);
+    expect(await play(hook, picked({ course: 'math', level: 7 }), 10)).toBe(15);
+    expect(JSON.parse(localStorage.getItem('bearmatics-plays')!)).toEqual({
+      'password:kid': { day: DAY, counts: { 'math:2': 5, 'math:7': 2 } },
+    });
+  });
+
+  it('Bear picks a game: the summary gets the mode flag with the multiplier; signed out saves nothing', async () => {
+    const hook = await start();
+    await play(hook, math2, 9);
+    await play(hook, math2, 9);
+    act(() => hook.result.current.beginLesson(10, { ...math2, bearPicks: true }));
+    hook.rerender({ account: KID, accountKnown: true, finishedFirstTry: 9 });
+    await waitFor(() => expect(hook.result.current.lessonSave?.state).toBe('saved'));
+    expect(hook.result.current.lessonSave).toEqual({
+      state: 'saved',
+      added: 7, // 9 x 1/2 x 1.5 = 6.75 -> 7
+      before: 40,
+      after: 47,
+      firstTry: 9,
+      multiplier: 0.5,
+      bearPicks: true,
+    });
+    hook.rerender({ account: KID, accountKnown: true, finishedFirstTry: null });
+    act(() => hook.result.current.endLesson());
+    hook.rerender({ account: null, accountKnown: true, finishedFirstTry: null });
+    expect(await play(hook, { ...math2, bearPicks: true }, 9, null)).toBeNull();
   });
 });
