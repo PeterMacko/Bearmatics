@@ -1,5 +1,6 @@
-import type { RefObject } from 'react';
+import { useState, type RefObject } from 'react';
 import { fill, type Copy } from './i18n';
+import LevelAgePopup from './LevelAgePopup';
 import { ageRange } from './levelAges';
 import MenuHeading from './MenuHeading';
 import { multiplierName, type Multiplier, type PointsCourse } from './progress/multipliers';
@@ -60,6 +61,10 @@ export default function LevelMenu<L extends number>({
    */
   nextMultiplier?: (shown: number) => Multiplier | null;
 }) {
+  // SCRUM-308 round 2: the open age popup (one at a time): its badge, text and opening time.
+  const [popup, setPopup] = useState<{ anchor: HTMLElement; text: string; at: number } | null>(
+    null,
+  );
   return (
     <section className={className}>
       <MenuHeading {...heading} headingRef={headingRef} />
@@ -95,7 +100,24 @@ export default function LevelMenu<L extends number>({
                 {sign && <span className="sr-only">{t.points.nextPlay[sign]}</span>}
               </span>
               {ages && (
-                <span className="level-age" aria-hidden="true">
+                // A tap on the badge also chooses its level (the badge sits in the row's label).
+                <span
+                  className="level-age"
+                  aria-hidden="true"
+                  onClick={(e) => {
+                    const anchor = e.currentTarget;
+                    // Choose the row as a tap on it would, but focus its radio without scrolling:
+                    // the label's own focus scrolls (Firefox at 200% text even jumps the page),
+                    // which would carry the badge away from its popup.
+                    e.preventDefault();
+                    const radio = anchor.closest('label')?.querySelector('input');
+                    radio?.focus({ preventScroll: true });
+                    radio?.click();
+                    const text = fill(t.levelAgesPopup, ages);
+                    // A new `at` on every tap restarts the popup's closing time.
+                    setPopup((open) => ({ anchor, text, at: (open?.at ?? 0) + 1 }));
+                  }}
+                >
                   {ages.from}–{ages.to}
                 </span>
               )}
@@ -121,11 +143,26 @@ export default function LevelMenu<L extends number>({
             </label>
           ))}
         </fieldset>
-        <button type={startType} className="primary start-button" onClick={onStart}>
+        <button
+          type={startType}
+          className="primary start-button"
+          onClick={() => {
+            setPopup(null);
+            onStart();
+          }}
+        >
           {startLabel}
           <span aria-hidden="true"> →</span>
         </button>
       </div>
+      {popup && (
+        <LevelAgePopup
+          anchor={popup.anchor}
+          text={popup.text}
+          openedAt={popup.at}
+          onClose={() => setPopup(null)}
+        />
+      )}
     </section>
   );
 }

@@ -32,6 +32,8 @@ export const copy = {
     level: 'Level',
     // SCRUM-308: screen-reader text of the suggested age on each level row (badge "5–7").
     levelAges: 'Ages {from} to {to}',
+    // SCRUM-308 round 2: the small popup a tap on the age badge opens (aria-hidden duplicate).
+    levelAgesPopup: 'Recommended for ages {from}–{to}',
     levels: {
       0: 'Count the pictures',
       1: 'Hello, addition!',
@@ -544,6 +546,7 @@ export const copy = {
     intro: 'Vyber si cestu. Budeme počítať krok za krokom.',
     level: 'Úroveň',
     levelAges: 'Vek {from} až {to} rokov',
+    levelAgesPopup: 'Odporúčané pre vek {from}–{to} rokov',
     levels: {
       0: 'Počítame obrázky',
       1: 'Ahoj, sčítanie!',
