@@ -66,6 +66,8 @@ export const aboutCopy = {
     lessonTitle: 'How a lesson works',
     lesson: [
       'Choose a level and 5, 10 or 20 exercises.',
+      // SCRUM-308: the age badge in the level menus.
+      'Every level in the level menu shows a suggested age, for example 5–7. It is only a guide: every level can always be chosen.',
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
       'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how at the first Logic lesson on a device; Show me plays it again any time.',
@@ -127,7 +129,7 @@ export const aboutCopy = {
       },
       'app-bar': {
         caption: 'Bear badge, points and streak',
-        alt: 'The Maths levels; at the top the bear badge with the points and the streak of a test player.',
+        alt: 'The Maths levels, each with its suggested age; at the top the bear badge with the points and the streak of a test player.',
       },
       leaderboard: {
         caption: 'Leaderboard',
@@ -175,6 +177,7 @@ export const aboutCopy = {
     lessonTitle: 'Ako prebieha lekcia',
     lesson: [
       'Vyber úroveň a 5, 10 alebo 20 príkladov.',
+      'Každá úroveň v ponuke úrovní ukazuje odporúčaný vek, napríklad 5–7. Je to len pomôcka: vybrať sa dá vždy každá úroveň.',
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
       'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako pri prvej lekcii Logiky na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
@@ -236,7 +239,7 @@ export const aboutCopy = {
       },
       'app-bar': {
         caption: 'Medvedí odznak, body a séria',
-        alt: 'Úrovne Matematiky; hore medvedí odznak s bodmi a séria testovacieho hráča.',
+        alt: 'Úrovne Matematiky, každá s odporúčaným vekom; hore medvedí odznak s bodmi a séria testovacieho hráča.',
       },
       leaderboard: {
         caption: 'Rebríček',
