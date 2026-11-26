@@ -150,6 +150,9 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   await expect(page.getByRole('button', { name: 'Sign in' })).toBeFocused();
   await page.keyboard.press('Tab'); // settings gear
   await page.keyboard.press('Tab');
+  // SCRUM-309: "Bear picks a game" above the cards comes first.
+  await expect(page.getByRole('button', { name: 'Bear picks a game' })).toBeFocused();
+  await page.keyboard.press('Tab');
   // SCRUM-141: Small maths comes first, then (SCRUM-262) Logic, then Maths.
   await expect(page.getByRole('button', { name: 'Small maths', exact: true })).toBeFocused();
   await page.keyboard.press('Tab');
@@ -171,7 +174,7 @@ test('keyboard opens each course, Back returns, and focus is visible on cards', 
   await expect(page.getByRole('button', { name: 'Back to courses' })).toBeFocused();
   await page.keyboard.press('Space');
   await expect(page.getByRole('heading', { name: 'What shall we learn today?' })).toBeFocused();
-  for (let i = 0; i < 4; i++) await page.keyboard.press('Tab');
+  for (let i = 0; i < 5; i++) await page.keyboard.press('Tab');
   await expect(page.getByRole('button', { name: 'English', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('heading', { name: 'Which level shall we try?' })).toBeFocused();
@@ -381,8 +384,9 @@ for (const [width, height] of [
 // QA271-03: at 200% text on the phone the course detail runs under the icon (full card width),
 // so the cards are shorter: with four cards the list hid at most 200 px (277-351 px before the
 // fix). SCRUM-241 adds a fifth card (about 150 px at 200%): the list may hide that card more,
-// at most 200 px plus the fifth card's height and gap. At normal text the cards keep the detail
-// beside the icon.
+// at most 200 px plus the fifth card's height and gap. SCRUM-309 puts the "Bear picks a game"
+// button above the list: it may hide that button's height and gap more. At normal text the
+// cards keep the detail beside the icon.
 for (const lang of ['en', 'sk'])
   test(`200% text ${lang} at 390x844: course cards use the full width for the detail`, async ({
     page,
@@ -417,7 +421,10 @@ for (const lang of ['en', 'sk'])
       .locator('.course-option')
       .nth(4)
       .evaluate((card) => (card as HTMLElement).offsetHeight + 8);
-    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200 + fifth);
+    const pick = await page
+      .locator('.bear-picks-button')
+      .evaluate((button) => (button as HTMLElement).offsetHeight + 8);
+    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200 + fifth + pick);
     const large = await layout();
     expect(large.cards.every((c) => c.detailUnderIcon && c.detailBelowTitle)).toBe(true);
     expect(large.pageScroll).toBeLessThanOrEqual(1);
@@ -428,7 +435,9 @@ for (const lang of ['en', 'sk'])
 // SCRUM-241: five course cards, signed in (badge, points, frozen streak and a 12-character
 // nickname in the bar): every card is fully visible at every defined device and the menu
 // layout settles (it used to switch the compact heading on and off at 884x600, and cut a card
-// at 742x702 and 1280x520).
+// at 742x702 and 1280x520). SCRUM-309: at 320x568 the "Bear picks a game" button above the
+// cards takes the room of the last card: there the list scrolls inside by at most the button's
+// height and gap (no page scroll); every other device still shows all five cards.
 for (const device of ALL_DEVICES)
   for (const lang of ['en', 'sk'] as const)
     test(`signed in: five course cards visible and the layout settles at ${device.width}x${device.height} ${lang}`, async ({
@@ -470,9 +479,22 @@ for (const device of ALL_DEVICES)
       expect(changes).toBe(0);
       const cards = page.locator('.course-option');
       await expect(cards).toHaveCount(5);
-      for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
       const hidden = await page
         .locator('.course-options')
         .evaluate((list) => list.scrollHeight - list.clientHeight);
+      await expect(page.locator('.bear-picks-button')).toBeInViewport({ ratio: 1 });
+      expect(
+        await page.evaluate(() => document.documentElement.scrollHeight - innerHeight),
+      ).toBeLessThanOrEqual(0);
+      if (device.width === 320 && device.height === 568) {
+        const pick = await page
+          .locator('.bear-picks-button')
+          .evaluate((button) => (button as HTMLElement).offsetHeight + 8);
+        expect(hidden).toBeLessThanOrEqual(pick);
+        for (const card of (await cards.all()).slice(0, 4))
+          await expect(card).toBeInViewport({ ratio: 1 });
+        return;
+      }
+      for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
       expect(hidden).toBeLessThanOrEqual(1);
     });

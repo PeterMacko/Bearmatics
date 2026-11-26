@@ -18,6 +18,40 @@
     grid-template-rows: auto auto minmax(0, max-content);
   }
 }
+/* Short landscape phones (568x320): the cards already need every pixel (QA146-01: all five
+   fully visible), so the button sits in the heading row, right of the title, which wraps
+   beside it; the row is as tall as the bear anyway. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 620px) {
+  .menu-shell .workspace:has(> .course-choice),
+  .menu-shell .workspace:not([data-menu-compact]):has(> .course-choice) {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .menu-shell .workspace:has(> .course-choice) .bear-picks-controls {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+    align-self: end;
+    width: 13.5em;
+    padding: 0;
+  }
+  .menu-shell .workspace:has(> .course-choice) .menu-heading {
+    padding-inline-end: 14em;
+  }
+  .menu-shell .workspace:has(> .course-choice) .course-options {
+    grid-row: 2;
+  }
+  .menu-shell .course-choice .bear-picks-button {
+    padding-inline: 10px;
+    column-gap: 8px;
+  }
+}
+/* Narrow phones: a little less side padding keeps the title on one line at 320 px. */
+@media (max-width: 360px) {
+  .bear-picks-button {
+    padding-inline: 10px;
+    column-gap: 8px;
+  }
+}
 /* Wide windows up to 760 px high put the heading above the bear and the cards beside them
    (courses.css): the button goes under the heading, above a slightly smaller bear, so the card
    column keeps its full height. */
@@ -124,14 +158,42 @@
     grid-column: 2;
   }
 }
+/* Wide windows up to 760 px high: like the course choice, the heading sits above the bear and
+   the panel uses the whole right column. */
+@media (min-width: 621px) and (max-height: 760px) {
+  .menu-shell .workspace:has(> .pick-screen) {
+    grid-template-rows: auto minmax(0, 1fr);
+  }
+  .menu-shell .workspace:has(> .pick-screen) .menu-heading {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .menu-shell .workspace:has(> .pick-screen) .companion {
+    grid-row: 2;
+    align-self: start;
+  }
+  .menu-shell .workspace:has(> .pick-screen) .companion .bear-scene {
+    width: min(100%, 340px, calc((100dvh - 160px) * 1.05));
+  }
+  .menu-shell .workspace:has(> .pick-screen) .pick-panel {
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+}
 .pick-ages {
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
+@media (max-width: 360px) {
+  .pick-ages {
+    gap: 4px;
+  }
+}
+/* Five in one row down to 320 px phones; at very large text they wrap. */
 .pick-age-button {
-  flex: 1 1 56px;
-  min-width: 56px;
+  flex: 1 1 48px;
+  min-width: 48px;
   min-height: 64px;
   padding: 4px 8px;
   border: 1.5px solid var(--line);
@@ -257,23 +319,18 @@
     margin-bottom: 6px;
   }
 }
-/* Short landscape windows: Play, Choose another, Stop and Change age in one row, and no
-   gear-height row above the eyebrow (the app bar is a side column there). */
+/* Short landscape windows: no gear-height row above the eyebrow (the app bar is a side column
+   there), and Play, Choose another, Stop and Change age in two rows of two, or in one row when
+   the panel is wide enough (container query below). */
 @media (max-height: 500px) and (min-width: 480px) {
   .menu-shell .pick-screen .menu-heading .eyebrow {
     min-height: 0;
-  }
-  .pick-actions {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr) minmax(0, 0.9fr) minmax(0, 1.25fr);
   }
   .pick-actions .pick-play,
   .pick-actions .pick-change-age {
     grid-column: auto;
     justify-self: stretch;
     min-height: var(--target);
-  }
-  .pick-actions button {
-    padding-inline: 8px;
   }
   .menu-shell .pick-panel {
     gap: 6px;
@@ -283,6 +340,21 @@
   }
   .pick-age-button {
     min-height: 56px;
+  }
+}
+.menu-shell .pick-panel {
+  container-type: inline-size;
+}
+@media (max-height: 500px) and (min-width: 480px) {
+  @container (min-width: 25em) {
+    /* Columns follow their words (no break inside a word, e.g. "Skončiť"). */
+    .pick-actions {
+      grid-template-columns: repeat(4, auto);
+    }
+    .pick-actions button {
+      padding-inline: 8px;
+      overflow-wrap: normal;
+    }
   }
 }
 

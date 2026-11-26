@@ -27,10 +27,11 @@ export const SCREEN_SETTLE_MS = 600;
 
 /**
  * Guard for buttons that appear under the finger: the repeat click of a double tap
- * (`detail > 1`) and any click right after the screen changed are ignored.
+ * (`detail > 1`) and any tap right after the screen changed are ignored. Keyboard activation
+ * (detail 0) always works.
  */
 const guard = (event: MouseEvent, shownAt: number) =>
-  ignoreRepeatClick(event, performance.now() - shownAt < SCREEN_SETTLE_MS);
+  ignoreRepeatClick(event, event.detail > 0 && performance.now() - shownAt < SCREEN_SETTLE_MS);
 
 const AGES = Array.from({ length: MAX_AGE - MIN_AGE + 1 }, (_, i) => MIN_AGE + i) as (
   5 | 6 | 7 | 8 | 9
