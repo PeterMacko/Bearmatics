@@ -234,6 +234,23 @@ test.describe('closing', () => {
   });
 });
 
+test('reduced motion: the popup appears without a fade', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/?lang=en');
+  await openMenu(page, 'logic');
+  await tapBadge(page, page.locator('.level-option.level-1'), false);
+  expect(
+    await page.locator('.level-age-popup').evaluate((p) => getComputedStyle(p).animationName),
+  ).toBe('none');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await closeWithEscape(page);
+  await tapBadge(page, page.locator('.level-option.level-2'), false);
+  expect(
+    await page.locator('.level-age-popup').evaluate((p) => getComputedStyle(p).animationName),
+  ).toBe('level-age-popup-in');
+});
+
 /**
  * Rows to try per menu: the top-right-most row, the row cut by the bottom of the list's visible
  * part (or the window) whose badge is still visible, and the last row scrolled to the bottom.
