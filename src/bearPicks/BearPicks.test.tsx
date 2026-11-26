@@ -1,6 +1,7 @@
 import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../App';
+import { aboutCopy } from '../about/aboutCopy';
 import { copy } from '../i18n';
 import { LEVEL_AGES } from '../levelAges';
 import * as math from '../math/engine';
@@ -337,6 +338,15 @@ describe('copy', () => {
       expect(copy[lang].points.bearPicksFactor).toMatch(/^1[.,]5$/);
     }
     expect(copy.sk.bearPicks.button).toBe('Medveď vyberie hru');
+    // The privacy list names the device-only entry (age and last count), SK and EN.
+    expect(copy.en.account.privacy.filter((l) => l.includes('Bear picks a game'))).toHaveLength(1);
+    expect(copy.sk.account.privacy.filter((l) => l.includes('Medveď vyberie hru'))).toHaveLength(1);
+    expect(copy.en.account.privacy.length).toBe(copy.sk.account.privacy.length);
+    // About page: the mode in "How a lesson works", right after the suggested ages; its picture.
+    expect(aboutCopy.en.lesson[2]).toMatch(/^Or let the bear choose: “Bear picks a game”/);
+    expect(aboutCopy.sk.lesson[2]).toMatch(/^Alebo nech vyberie medveď: „Medveď vyberie hru“/);
+    expect(aboutCopy.en.shots['bear-picks'].caption).toBe('Bear picks a game');
+    expect(aboutCopy.sk.shots['bear-picks'].caption).toBe('Medveď vyberie hru');
     expect(copy.en.bearPicks.button).toBe('Bear picks a game');
   });
 });

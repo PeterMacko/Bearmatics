@@ -20,6 +20,7 @@ const root = resolve(import.meta.dirname, '..');
 const demo = JSON.parse(readFileSync(join(root, 'scripts', 'about-demo.json'), 'utf8'));
 const SHOTS = [
   'course',
+  'bear-picks',
   'small-maths',
   'take-away',
   'logic',
@@ -176,6 +177,19 @@ async function solve(page) {
 /** How each screenshot is reached with real controls (selectors work in both languages). */
 const STEPS = {
   course: home,
+  // SCRUM-309: "Bear picks a game", age 7, a game with the table's sign (★ or 1/2) next to x1.5.
+  'bear-picks': async (page, lang) => {
+    await home(page, lang);
+    await page.locator('.bear-picks-button').click();
+    await page.locator('.pick-age').waitFor();
+    await page.clock.runFor(1_000); // the screen ignores taps in its first 600 ms
+    await page.locator('.pick-age-button').nth(2).click();
+    await page.locator('.pick-next').waitFor();
+    await page.clock.runFor(1_000);
+    for (let tries = 0; tries < 50 && !(await page.locator('.pick-tag-table').count()); tries++)
+      await page.locator('.pick-another').click();
+    await page.locator('.pick-tag-table').waitFor();
+  },
   'small-maths': async (page, lang) => {
     await home(page, lang);
     // Two groups of pictures, the result to find.

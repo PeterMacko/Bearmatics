@@ -231,7 +231,7 @@ export default function AboutPage({ language }: { language: Language }) {
               <li key={line}>{line}</li>
             ))}
           </ul>
-          <Shots language={language} shots={['summary']} />
+          <Shots language={language} shots={['bear-picks', 'summary']} />
         </section>
 
         <section aria-labelledby="about-sign-in">
