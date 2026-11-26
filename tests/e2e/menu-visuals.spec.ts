@@ -120,6 +120,8 @@ for (const language of ['en', 'sk'])
             const bad: string[] = [];
             while (walker.nextNode()) {
               if (!walker.currentNode.textContent?.trim()) continue;
+              // Screen-reader-only text (SCRUM-308 "Ages 5 to 7") is clipped away, never shown.
+              if (walker.currentNode.parentElement?.closest('.sr-only')) continue;
               const r = document.createRange();
               r.selectNodeContents(walker.currentNode);
               for (const t of r.getClientRects())

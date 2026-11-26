@@ -331,3 +331,22 @@ test('SCRUM-281: the About page says Sign out and Delete account ask a grown-up 
     unmount();
   }
 });
+
+test.each([
+  [
+    'en',
+    'Every level in the level menu shows a suggested age, for example 5–7. It is only a guide: every level can always be chosen.',
+  ],
+  [
+    'sk',
+    'Každá úroveň v ponuke úrovní ukazuje odporúčaný vek, napríklad 5–7. Je to len pomôcka: vybrať sa dá vždy každá úroveň.',
+  ],
+] as const)(
+  'SCRUM-308: the %s About page says every level shows a suggested age',
+  (language, sentence) => {
+    render(<AboutPage language={language} />);
+    expect(screen.getByText(sentence)).toBeInTheDocument();
+    // Right after "Choose a level ...", in "How a lesson works".
+    expect(aboutCopy[language].lesson.indexOf(sentence)).toBe(1);
+  },
+);

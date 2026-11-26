@@ -1000,6 +1000,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={smallLevel}
             size={smallSize}
+            course="small"
             nextMultiplier={(shown) => nextMultiplier({ course: 'small', level: shown })}
             onLevelChange={setSmallLevel}
             onSizeChange={setSmallSize}
@@ -1023,6 +1024,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={logicLevel}
             size={logicSize}
+            course="logic"
             nextMultiplier={(shown) => nextMultiplier({ course: 'logic', level: shown })}
             onLevelChange={setLogicLevel}
             onSizeChange={setLogicSize}
@@ -1046,6 +1048,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={searchLevel}
             size={searchSize}
+            course="wordsearch"
             nextMultiplier={(shown) => nextMultiplier({ course: 'wordsearch', level: shown })}
             onLevelChange={setSearchLevel}
             onSizeChange={setSearchSize}
@@ -1060,6 +1063,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             level={level}
             size={size}
+            course="math"
             nextMultiplier={(shown) => nextMultiplier({ course: 'math', level: shown })}
             onLevelChange={setLevel}
             onSizeChange={setSize}
