@@ -84,7 +84,7 @@ async function start({
   await act(async () => fireEvent.click(button(sk ? /Poďme hľadať/ : /Let’s search/)));
 }
 
-test('menu: three levels with their names and details, sizes 5/10/20, heading focused (EN/SK)', () => {
+test('menu: three levels with their names, details and ages (SCRUM-308), sizes 5/10/20, heading focused (EN/SK)', () => {
   render(<App />);
   fireEvent.click(exact('Word search'));
   expect(heading()).toHaveTextContent('Which word search shall we try?');
@@ -93,9 +93,9 @@ test('menu: three levels with their names and details, sizes 5/10/20, heading fo
     .getAllByRole('radio', { name: /^Level / })
     .map((r) => r.closest('label')!.textContent);
   expect(levels).toEqual([
-    '1Level 1 · Find the wordsRead the words, then find them left to right or top to bottom',
-    '2Level 2 · Listen and findListen to each word, then find it',
-    '3Level 3 · All directionsWords can also go backwards and diagonally',
+    '1Level 1 · Find the wordsRead the words, then find them left to right or top to bottomAges 5 to 95–9',
+    '2Level 2 · Listen and findListen to each word, then find itAges 7 to 97–9',
+    '3Level 3 · All directionsWords can also go backwards and diagonallyAges 8 to 98–9',
   ]);
   expect(screen.getByRole('radio', { name: /^Level 1 / })).toBeChecked();
   expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
@@ -108,9 +108,9 @@ test('menu: three levels with their names and details, sizes 5/10/20, heading fo
   expect(
     screen.getAllByRole('radio', { name: /^Úroveň / }).map((r) => r.closest('label')!.textContent),
   ).toEqual([
-    '1Úroveň 1 · Nájdi slováPrečítaj si slová a nájdi ich zľava doprava alebo zhora nadol',
-    '2Úroveň 2 · Počúvaj a nájdiVypočuj si každé slovo a potom ho nájdi',
-    '3Úroveň 3 · Všetky smerySlová môžu ísť aj odzadu a šikmo',
+    '1Úroveň 1 · Nájdi slováPrečítaj si slová a nájdi ich zľava doprava alebo zhora nadolVek 5 až 9 rokov5–9',
+    '2Úroveň 2 · Počúvaj a nájdiVypočuj si každé slovo a potom ho nájdiVek 7 až 9 rokov7–9',
+    '3Úroveň 3 · Všetky smerySlová môžu ísť aj odzadu a šikmoVek 8 až 9 rokov8–9',
   ]);
 });
 

@@ -30,6 +30,8 @@ export const copy = {
     choose: 'Where shall we explore?',
     intro: 'Pick your trail. We’ll take it one number at a time.',
     level: 'Level',
+    // SCRUM-308: screen-reader text of the suggested age on each level row (badge "5–7").
+    levelAges: 'Ages {from} to {to}',
     levels: {
       0: 'Count the pictures',
       1: 'Hello, addition!',
@@ -541,6 +543,7 @@ export const copy = {
     choose: 'Kam sa vyberieme?',
     intro: 'Vyber si cestu. Budeme počítať krok za krokom.',
     level: 'Úroveň',
+    levelAges: 'Vek {from} až {to} rokov',
     levels: {
       0: 'Počítame obrázky',
       1: 'Ahoj, sčítanie!',

@@ -34,6 +34,7 @@ export default function EnglishHome({
   return (
     <LevelMenu
       t={t}
+      course="english"
       className="selection english-home"
       heading={{ eyebrow: t.englishTrail, title: t.englishChoose, intro: t.englishIntro }}
       levels={ENGLISH_LEVELS.map((n) => ({ value: n, shown: n, title: t.englishLevels[n] }))}

@@ -1,7 +1,8 @@
 import type { RefObject } from 'react';
-import type { Copy } from './i18n';
+import { fill, type Copy } from './i18n';
+import { ageRange } from './levelAges';
 import MenuHeading from './MenuHeading';
-import { multiplierName, type Multiplier } from './progress/multipliers';
+import { multiplierName, type Multiplier, type PointsCourse } from './progress/multipliers';
 import { SESSION_SIZES } from './session';
 
 /** One level in a menu: its value, the number the child sees, its name and optional detail. */
@@ -18,6 +19,7 @@ export type MenuLevel<L extends number> = {
  */
 export default function LevelMenu<L extends number>({
   t,
+  course,
   className = 'selection',
   heading,
   levels,
@@ -34,6 +36,8 @@ export default function LevelMenu<L extends number>({
   nextMultiplier,
 }: {
   t: Copy;
+  /** SCRUM-308: the course, for each level's suggested age (src/levelAges.ts). */
+  course: PointsCourse;
   className?: string;
   heading: { eyebrow: string; title: string; intro: string };
   levels: readonly MenuLevel<L>[];
@@ -64,6 +68,7 @@ export default function LevelMenu<L extends number>({
         {levels.map(({ value, shown, title, detail }) => {
           const next = nextMultiplier?.(shown);
           const sign = next && next !== 1 ? multiplierName(next) : null;
+          const ages = ageRange(course, shown);
           return (
             <label className={`level-option level-${shown}`} key={value}>
               <input
@@ -86,8 +91,14 @@ export default function LevelMenu<L extends number>({
                   {t.level} {shown} · {title}
                 </span>
                 {detail !== undefined && <span className="level-detail">{detail}</span>}
+                {ages && <span className="sr-only">{fill(t.levelAges, ages)}</span>}
                 {sign && <span className="sr-only">{t.points.nextPlay[sign]}</span>}
               </span>
+              {ages && (
+                <span className="level-age" aria-hidden="true">
+                  {ages.from}–{ages.to}
+                </span>
+              )}
               <span className="selection-dot" aria-hidden="true" />
             </label>
           );
