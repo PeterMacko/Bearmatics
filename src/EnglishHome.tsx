@@ -5,7 +5,7 @@ import type { Multiplier } from './progress/multipliers';
 
 /** English course level: 1-2 listen and choose (english/words.ts ListenLevel), 3 listen and write. */
 export type EnglishLevel = 1 | 2 | 3;
-const LEVELS: readonly EnglishLevel[] = [1, 2, 3];
+export const ENGLISH_LEVELS: readonly EnglishLevel[] = [1, 2, 3];
 
 /**
  * English course home: levels and exercise count in the same menu layout as Mathematics.
@@ -36,7 +36,7 @@ export default function EnglishHome({
       t={t}
       className="selection english-home"
       heading={{ eyebrow: t.englishTrail, title: t.englishChoose, intro: t.englishIntro }}
-      levels={LEVELS.map((n) => ({ value: n, shown: n, title: t.englishLevels[n] }))}
+      levels={ENGLISH_LEVELS.map((n) => ({ value: n, shown: n, title: t.englishLevels[n] }))}
       level={level}
       size={size}
       levelName="english-level"
