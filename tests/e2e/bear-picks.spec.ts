@@ -156,14 +156,17 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   await expect(page.getByRole('button', { name: 'Play again' })).toHaveCount(0);
   // Double tap on Next game: the second press lands on the new screen's Play (detail 2) and a
   // quick fresh tap on Stop (detail 1) follows; both are ignored.
-  const nextBox = (await next.boundingBox())!;
-  await page.mouse.click(nextBox.x + nextBox.width / 2, nextBox.y + nextBox.height / 2);
-  await expect(heading(page)).toHaveText('The bear picked this game');
-  const playBox = (await page.getByRole('button', { name: 'Play' }).boundingBox())!;
-  await page.mouse.move(playBox.x + playBox.width / 2, playBox.y + playBox.height / 2);
-  await page.mouse.down({ clickCount: 2 });
-  await page.mouse.up({ clickCount: 2 });
-  await page.getByRole('button', { name: 'Stop' }).click();
+  // Dispatched in one go, so a slow engine cannot stretch the taps past the 600 ms guard (React
+  // renders the new screen synchronously inside the first click).
+  await next.evaluate((el) => {
+    const click = (target: Element | null | undefined, detail: number) =>
+      target?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail }));
+    click(el, 1);
+    const find = (name: string) =>
+      [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === name);
+    click(find('Play'), 2);
+    click(find('Stop'), 1);
+  });
   await expect(heading(page)).toHaveText('The bear picked this game');
   await expect(page.getByRole('textbox')).toHaveCount(0);
   expect(await game(page)).not.toBe(played);
@@ -395,19 +398,19 @@ test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () 
     await page.touchscreen.tap(stop.x, stop.y);
     await expect(heading(page)).not.toHaveText('What shall we learn today?');
   });
+});
 
-  test('summary Stop: a double click opens no course menu', async ({ page }) => {
-    await page.setViewportSize({ width: 390, height: 844 });
-    await page.addInitScript(() =>
-      localStorage.setItem('bearmatics-bear-picks', JSON.stringify({ age: 9, size: 5 })),
-    );
-    await page.goto('/');
-    await openMode(page);
-    await until(page, /^Maths\|/);
-    await page.getByRole('button', { name: 'Play' }).click();
-    await solveAll(page);
-    await page.getByRole('button', { name: 'Stop' }).dblclick();
-    await page.waitForTimeout(300);
-    await expect(heading(page)).toHaveText('What shall we learn today?');
-  });
+test('QA321-01: summary Stop: a double click opens no course menu', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() =>
+    localStorage.setItem('bearmatics-bear-picks', JSON.stringify({ age: 9, size: 5 })),
+  );
+  await page.goto('/');
+  await openMode(page);
+  await until(page, /^Maths\|/);
+  await page.getByRole('button', { name: 'Play' }).click();
+  await solveAll(page);
+  await page.getByRole('button', { name: 'Stop' }).dblclick();
+  await page.waitForTimeout(300);
+  await expect(heading(page)).toHaveText('What shall we learn today?');
 });

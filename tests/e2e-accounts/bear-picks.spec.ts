@@ -85,6 +85,7 @@ test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points a
   // Stop: the Maths menu no longer shows the star on that level (x1 now), others still do.
   await page.getByRole('button', { name: 'Stop' }).click();
   await expect(page.getByRole('heading', { name: 'What shall we learn today?' })).toBeFocused();
+  await page.waitForTimeout(650); // taps right after Stop are its rest (QA321-01)
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   await expect(page.locator(`.level-option.level-${level} .next-play`)).toHaveCount(0);
   const other = level === 7 ? 6 : 7;
