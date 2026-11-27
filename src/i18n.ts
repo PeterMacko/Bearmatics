@@ -208,7 +208,7 @@ export const copy = {
     writeShown: 'The word is',
     // SCRUM-262: Logic course, level 1 "Bear goes to the honey".
     logicCourse: 'Logic',
-    logicCourseDetail: 'Think ahead: guide the bear to the honey with arrows',
+    logicCourseDetail: 'Think ahead: guide the bear to the honey, find the pairs',
     logicTrail: 'Your logic course',
     logicChoose: 'Which puzzle shall we try?',
     logicIntro: 'Plan the way first, then let the bear walk.',
@@ -787,7 +787,7 @@ export const copy = {
     writeWrongHint: 'Slovo je {word}. Napíš ho.',
     writeShown: 'Slovo je',
     logicCourse: 'Logika',
-    logicCourseDetail: 'Mysli dopredu: priveď medveďa šípkami k medu',
+    logicCourseDetail: 'Mysli dopredu: priveď medveďa k medu, nájdi dvojice',
     logicTrail: 'Tvoj kurz logiky',
     logicChoose: 'Ktorú hádanku skúsime?',
     logicIntro: 'Najprv naplánuj cestu, potom nechaj medveďa ísť.',

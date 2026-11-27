@@ -66,15 +66,16 @@ test('course choice: Small maths, Logic, Maths, English, Word search with the Lo
   render(<App />);
   const titles = [...document.querySelectorAll('.course-title')].map((e) => e.textContent);
   expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English', 'Word search']);
+  // SCRUM-324: the card text also mentions the pairs (Pexeso, Levels 6-8).
   expect(exact('Logic')).toHaveAccessibleDescription(
-    'Think ahead: guide the bear to the honey with arrows',
+    'Think ahead: guide the bear to the honey, find the pairs',
   );
   expect(document.querySelector('.course-logic .course-icon svg')).not.toBeNull();
   fireEvent.click(button('Settings'));
   fireEvent.click(button('Slovenčina'));
   fireEvent.click(button('Zavrieť nastavenia'));
   expect(exact('Logika')).toHaveAccessibleDescription(
-    'Mysli dopredu: priveď medveďa šípkami k medu',
+    'Mysli dopredu: priveď medveďa k medu, nájdi dvojice',
   );
 });
 

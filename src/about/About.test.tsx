@@ -69,7 +69,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(screen.getByRole('main')).toHaveTextContent(a.intro);
   });
 
-  it('shows the eleven screenshots of its language (SCRUM-241: Word search; SCRUM-299: Logic patterns; SCRUM-309: Bear picks a game), lazily, sized and with alt text', () => {
+  it('shows the thirteen screenshots of its language (SCRUM-241: Word search; SCRUM-299: Logic patterns; SCRUM-309: Bear picks a game; SCRUM-324: Logic menu and Pexeso), lazily, sized and with alt text', () => {
     render(<AboutPage language={language} />);
     const images = screen.getAllByRole('img');
     expect(images.map((image) => image.getAttribute('src'))).toEqual(
@@ -79,6 +79,8 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         'take-away',
         'logic',
         'patterns',
+        'logic-menu',
+        'pexeso',
         'english',
         'wordsearch',
         'bear-picks',
@@ -87,7 +89,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         'leaderboard',
       ].map((shot) => `/about/${language}/${shot}.webp`),
     );
-    expect(SHOTS).toHaveLength(11);
+    expect(SHOTS).toHaveLength(13);
     for (const [index, image] of images.entries()) {
       expect(image).toHaveAttribute('loading', 'lazy');
       expect(image).toHaveAttribute('width', '390');
@@ -95,7 +97,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(image).toHaveAccessibleName(a.shots[SHOTS[index]].alt);
       expect(a.shots[SHOTS[index]].alt.length).toBeGreaterThan(30);
     }
-    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(11);
+    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(13);
   });
 
   it('links every screenshot to its full-size file in a new tab (O1)', () => {
@@ -137,6 +139,11 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(items).toContain(`${t.level} 3: ${t.logicLevels[3]} (${a.logicDetail3})`);
     expect(items).toContain(`${t.level} 4: ${t.logicLevels[4]} (${a.logicDetail4})`);
     expect(items).toContain(`${t.level} 5: ${t.logicLevels[5]} (${a.logicDetail5})`);
+    // SCRUM-324: Logic, levels 6-8 (Pexeso / Matching pairs).
+    for (const shown of [6, 7, 8] as const)
+      expect(items).toContain(
+        `${t.level} ${shown}: ${t.logicLevels[shown]} (${a.pexesoDetails[shown]})`,
+      );
     // SCRUM-241: Word search, levels 1-3 with their About details.
     for (const value of [1, 2, 3] as const)
       expect(items).toContain(

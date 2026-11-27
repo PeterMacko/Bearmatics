@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // SCRUM-222: phone screenshots for the About page (SCRUM-218), 10 per language (SCRUM-262: Logic;
-// SCRUM-289: Logic level 2; SCRUM-241: Word search; SCRUM-299: Logic level 3 patterns).
+// SCRUM-289: Logic level 2; SCRUM-241: Word search; SCRUM-299: Logic level 3 patterns;
+// SCRUM-324: the Logic menu with Levels 6-8 and a Pexeso board).
 // Usage: npm run about:shots  (builds, then runs this script), or
 //        node scripts/about-screenshots.mjs [--dist dist] [--langs en,sk] [--shots course,leaderboard]
 // Renders the built app (dist/) in Chromium at 390 x 844 (phone, portrait, touch) with /api mocked
@@ -25,6 +26,8 @@ const SHOTS = [
   'take-away',
   'logic',
   'patterns',
+  'logic-menu',
+  'pexeso',
   'english',
   'wordsearch',
   'summary',
@@ -265,6 +268,59 @@ const STEPS = {
     await startLesson(page, 'logic', 2, 5);
     await page.clock.runFor(6_000); // the demo (reduced motion: still steps)
     await page.locator('.pattern-row').waitFor();
+    await page.evaluate(() => document.activeElement?.blur?.());
+  },
+  // SCRUM-324: the Logic menu scrolled to Levels 6-8, Level 7 chosen (no exercise count).
+  'logic-menu': async (page, lang) => {
+    await home(page, lang);
+    await openCourse(page, 'logic');
+    await page.locator('.level-option').nth(6).click();
+    await page
+      .locator('.level-option')
+      .nth(7)
+      .evaluate((row) => row.scrollIntoView({ block: 'end' }));
+    await page.evaluate(() => document.activeElement?.blur?.());
+  },
+  // SCRUM-324: a Pexeso board (Level 6) in the middle of a game: two pairs found from memory,
+  // then two cards of a miss still open (the clock holds them).
+  pexeso: async (page, lang) => {
+    await home(page, lang);
+    await openCourse(page, 'logic');
+    await page.locator('.level-option').nth(5).click();
+    await page.locator('.start-button').click();
+    await page.locator('.pexeso-card').first().waitFor();
+    await page.clock.runFor(1_000); // the board ignores taps for its first 600 ms
+    const names = () =>
+      page
+        .locator('.pexeso-card')
+        .evaluateAll((cards) => cards.map((c) => c.getAttribute('aria-label')));
+    // "Card 3, apple" / "Karta 3, jablko" when open, "apple, found" once its pair is found.
+    const picture = (name) => /^\S+ \d+, (.*)$/.exec(name)?.[1] ?? name.split(', ')[0];
+    const open = async (i) => {
+      await page.locator('.pexeso-card').nth(i).click();
+      await page.clock.runFor(400); // taps closer than 300 ms are ignored
+      return picture((await names())[i]);
+    };
+    // Played from memory (never a forgotten miss, so the points stay full). Two pairs, then one
+    // miss left open.
+    const known = new Map(); // index -> picture of a seen card not found yet
+    const partner = (i) =>
+      [...known].find(([j, p]) => j !== i && p !== null && p === known.get(i))?.[0];
+    const next = () => Array.from({ length: 12 }, (_, i) => i).find((i) => !known.has(i));
+    let pairs = 0;
+    for (let turn = 0; turn < 12; turn++) {
+      // A pair already seen (both cards) first, else a new card and then its partner or a new one.
+      const seenPair = [...known.keys()].find((i) => partner(i) !== undefined);
+      const a = seenPair ?? next();
+      known.set(a, await open(a));
+      const b = partner(a) ?? next();
+      known.set(b, await open(b));
+      if (known.get(a) === known.get(b)) {
+        known.set(a, null).set(b, null); // found: never opened again
+        pairs++;
+      } else if (pairs >= 2) break; // the miss stays open (the clock is held)
+      await page.clock.runFor(2_000); // a miss closes after 1.5 s
+    }
     await page.evaluate(() => document.activeElement?.blur?.());
   },
   english: async (page, lang) => {
