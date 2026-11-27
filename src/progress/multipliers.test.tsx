@@ -63,12 +63,27 @@ describe('multiplier rows (SCRUM-202)', () => {
         [1, 2, 3, 4, 5, 6, 50].map((play) => multiplierFor(course, level, play)),
         `${course} ${level}`,
       ).toEqual([1.5, 1, 1, 1, 1, 1, 1]);
-    expect(MULTIPLIER_ROWS).toHaveLength(9);
+    expect(MULTIPLIER_ROWS).toHaveLength(11);
   });
   it('levels outside the table stay x1', () => {
     expect(multiplierFor('small', 4, 9)).toBe(1);
     expect(multiplierFor('math', 8, 1)).toBe(1);
     expect(multiplierFor('english', 4, 1)).toBe(1);
+  });
+  // SCRUM-324: Pexeso (Logic 6-8) gets the repeat penalty, counted per level; Logic 1-5 stay
+  // x1 and there is no first-play bonus.
+  it('Logic 6-8 (Pexeso): 1, 1, 1/2, 1/2, then 1/4; Logic 1-5 always x1', () => {
+    for (const level of [6, 7, 8])
+      expect(
+        [1, 2, 3, 4, 5, 6, 30].map((play) => multiplierFor('logic', level, play)),
+        `logic ${level}`,
+      ).toEqual([1, 1, 0.5, 0.5, 0.25, 0.25, 0.25]);
+    for (const level of [1, 2, 3, 4, 5])
+      expect(
+        [1, 2, 3, 4, 5, 30].map((play) => multiplierFor('logic', level, play)),
+        `logic ${level}`,
+      ).toEqual([1, 1, 1, 1, 1, 1]);
+    expect(multiplierFor('logic', 9, 5)).toBe(1);
   });
 });
 

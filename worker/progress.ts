@@ -16,7 +16,8 @@ import {
   type StreakState,
 } from './streak';
 
-const LESSON_SIZES = [5, 10, 20] as const;
+// SCRUM-324: Pexeso saves its pair count (6 / 10 / 15) as the size.
+const LESSON_SIZES = [5, 6, 10, 15, 20] as const;
 const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
 const now = () => Date.now();
 
@@ -46,7 +47,7 @@ function progressBody(row: Row, today: string) {
   return { points: row.points, ...streakView(row.state, today, row.points), day: today };
 }
 
-/** Most points one lesson can give: x1.5 x1.5 = 9/4 rounded up (12 / 23 / 45). */
+/** Most points one lesson can give: x1.5 x1.5 = 9/4 rounded up (5: 12, 6: 14, 10: 23, 15: 34, 20: 45). */
 const mostPoints = (size: number) => Math.ceil((size * 9) / 4);
 
 /**

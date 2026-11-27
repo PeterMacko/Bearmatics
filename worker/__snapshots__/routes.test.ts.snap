@@ -272,7 +272,7 @@ exports[`every /api route in every session state > GET google start: valid 1`] =
 
 exports[`every /api route in every session state > GET health: expired 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"6"}",
+  "body": "{"status":"ok","database":"ok","schema":"7"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -285,7 +285,7 @@ exports[`every /api route in every session state > GET health: expired 1`] = `
 
 exports[`every /api route in every session state > GET health: malformed token 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"6"}",
+  "body": "{"status":"ok","database":"ok","schema":"7"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -298,7 +298,7 @@ exports[`every /api route in every session state > GET health: malformed token 1
 
 exports[`every /api route in every session state > GET health: signed out 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"6"}",
+  "body": "{"status":"ok","database":"ok","schema":"7"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -311,7 +311,7 @@ exports[`every /api route in every session state > GET health: signed out 1`] = 
 
 exports[`every /api route in every session state > GET health: unknown token 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"6"}",
+  "body": "{"status":"ok","database":"ok","schema":"7"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
@@ -324,7 +324,7 @@ exports[`every /api route in every session state > GET health: unknown token 1`]
 
 exports[`every /api route in every session state > GET health: valid 1`] = `
 {
-  "body": "{"status":"ok","database":"ok","schema":"6"}",
+  "body": "{"status":"ok","database":"ok","schema":"7"}",
   "headers": {
     "cache-control": "no-store",
     "content-type": "application/json; charset=utf-8",
