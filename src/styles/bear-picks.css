@@ -364,3 +364,15 @@
   font-weight: 800;
   color: var(--blue-ink);
 }
+
+/* Very large text (the panel narrower than 16em, e.g. 200% text on phones; never at normal text
+   sizes): one button per row, so no word breaks inside ("Choose another"). */
+@container (max-width: 16em) {
+  .pick-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .pick-actions > button {
+    grid-column: 1 / -1;
+    justify-self: stretch;
+  }
+}
