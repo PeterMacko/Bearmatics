@@ -21,11 +21,18 @@ async function openMode(page: Page) {
   await page.getByRole('button', { name: 'Bear picks a game' }).click();
   await page.waitForTimeout(SETTLE);
 }
-/** Choose another until the shown game's course and level text match. */
+/**
+ * Choose another until the shown game's course and level text match. By keyboard (Enter is
+ * never held back); every new game restarts the 600 ms tap guard, so wait it out at the end.
+ */
 async function until(page: Page, match: RegExp) {
-  for (let i = 0; i < 200 && !match.test(await game(page)); i++)
-    await page.getByRole('button', { name: 'Choose another' }).click();
+  let pressed = false;
+  for (let i = 0; i < 200 && !match.test(await game(page)); i++) {
+    await page.getByRole('button', { name: 'Choose another' }).press('Enter');
+    pressed = true;
+  }
   expect(await game(page)).toMatch(match);
+  if (pressed) await page.waitForTimeout(SETTLE);
 }
 /** Answers a maths lesson to its summary, all first try. */
 async function solveAll(page: Page) {
@@ -60,6 +67,7 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
     const before = await game(page);
     await page.getByRole('button', { name: 'Choose another' }).click();
     expect(await game(page)).not.toBe(before);
+    await page.waitForTimeout(SETTLE);
   }
   // Next time the mode opens: no age question, the count from last time.
   await page.reload();
@@ -82,6 +90,7 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   await page.getByRole('button', { name: 'Stop' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
   await expect(heading(page)).toBeFocused();
+  await page.waitForTimeout(SETTLE);
   await openMode(page);
   await page.getByRole('button', { name: 'Back to courses' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
@@ -341,3 +350,64 @@ for (const signed of ['out', 'in'] as const)
       }
       test.info().annotations.push({ type: 'fit', description: JSON.stringify(results) });
     });
+
+test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () => {
+  test.use({ hasTouch: true });
+  test('Stop: the course choice only, no course card opened; Choose another picks once', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() =>
+      localStorage.setItem('bearmatics-bear-picks', JSON.stringify({ age: 9, size: 5 })),
+    );
+    await page.goto('/');
+    const centre = async (name: string) => {
+      const box = (await page.getByRole('button', { name, exact: true }).boundingBox())!;
+      return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
+    };
+    await page.getByRole('button', { name: 'Bear picks a game' }).tap();
+    await page.waitForTimeout(SETTLE);
+    // Choose another: two taps 150 ms apart give one new game.
+    const before = await game(page);
+    const another = await centre('Choose another');
+    await page.touchscreen.tap(another.x, another.y);
+    const once = await game(page);
+    expect(once).not.toBe(before);
+    await page.waitForTimeout(150);
+    await page.touchscreen.tap(another.x, another.y);
+    expect(await game(page)).toBe(once);
+    await page.waitForTimeout(SETTLE);
+    // Stop: the second tap lands where a course card now is and does nothing.
+    const stop = await centre('Stop');
+    await page.touchscreen.tap(stop.x, stop.y);
+    await expect(heading(page)).toHaveText('What shall we learn today?');
+    const under = await page.evaluate(
+      ({ x, y }) => document.elementFromPoint(x, y)?.closest('button')?.className ?? '',
+      stop,
+    );
+    expect(under).toMatch(/course-option|bear-picks-button/);
+    await page.waitForTimeout(150);
+    await page.touchscreen.tap(stop.x, stop.y);
+    await page.waitForTimeout(300);
+    await expect(heading(page)).toHaveText('What shall we learn today?');
+    // A deliberate tap later opens the card as before.
+    await page.waitForTimeout(SETTLE);
+    await page.touchscreen.tap(stop.x, stop.y);
+    await expect(heading(page)).not.toHaveText('What shall we learn today?');
+  });
+
+  test('summary Stop: a double click opens no course menu', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.addInitScript(() =>
+      localStorage.setItem('bearmatics-bear-picks', JSON.stringify({ age: 9, size: 5 })),
+    );
+    await page.goto('/');
+    await openMode(page);
+    await until(page, /^Maths\|/);
+    await page.getByRole('button', { name: 'Play' }).click();
+    await solveAll(page);
+    await page.getByRole('button', { name: 'Stop' }).dblclick();
+    await page.waitForTimeout(300);
+    await expect(heading(page)).toHaveText('What shall we learn today?');
+  });
+});

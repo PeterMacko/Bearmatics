@@ -1,6 +1,6 @@
 import type { RefObject } from 'react';
 import type { Copy } from './i18n';
-import { ignoreRepeatClick } from './ignoreRepeatClick';
+import { ignoreRepeatClick, SCREEN_SETTLE_MS } from './ignoreRepeatClick';
 import MenuHeading from './MenuHeading';
 
 export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
@@ -117,13 +117,20 @@ export default function CourseChoice({
   headingRef,
   onChoose,
   onBearPicks,
+  settleSince = null,
 }: {
   t: Copy;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onChoose: (course: Course) => void;
   /** SCRUM-309: the "Bear picks a game" mode. */
   onBearPicks: () => void;
+  /** When "Bear picks a game" Stop led here: taps within SCREEN_SETTLE_MS are its rest. */
+  settleSince?: number | null;
 }) {
+  // QA321-01: Stop's double tap must not open the card (or the mode) now under the finger.
+  // Keyboard activation (detail 0) always works.
+  const tooSoon = (event: { detail: number }) =>
+    event.detail > 0 && settleSince !== null && performance.now() - settleSince < SCREEN_SETTLE_MS;
   const courses: { id: Course; title: string; detail: string }[] = [
     { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
     { id: 'logic', title: t.logicCourse, detail: t.logicCourseDetail },
@@ -149,7 +156,7 @@ export default function CourseChoice({
           aria-describedby="bear-picks-detail"
           onClick={(event) => {
             // Stop on the next-game screen leads here: its double tap must not start again.
-            if (!ignoreRepeatClick(event)) onBearPicks();
+            if (!ignoreRepeatClick(event, tooSoon(event))) onBearPicks();
           }}
         >
           <svg className="bear-picks-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -183,7 +190,9 @@ export default function CourseChoice({
                 className={`level-option course-option course-${id}`}
                 aria-labelledby={`course-${id}-title`}
                 aria-describedby={`course-${id}-detail`}
-                onClick={() => onChoose(id)}
+                onClick={(event) => {
+                  if (!ignoreRepeatClick(event, tooSoon(event))) onChoose(id);
+                }}
               >
                 <span className="course-icon">
                   <Icon />

@@ -45,7 +45,10 @@ const open = () => {
 };
 /** Choose another until a Maths game is shown (age 9 has four of them). */
 const untilMaths = () => {
-  for (let i = 0; i < 200 && !shownGame().startsWith('Maths|'); i++) tap('Choose another');
+  for (let i = 0; i < 200 && !shownGame().startsWith('Maths|'); i++) {
+    tap('Choose another');
+    settle();
+  }
   expect(shownGame()).toMatch(/^Maths\|/);
 };
 
@@ -143,6 +146,7 @@ describe('age screen and next-game screen', () => {
     settle();
     tap('Choose another');
     expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
+    settle();
     tap('Stop');
     expect(heading()).toHaveTextContent('What shall we learn today?');
     expect(heading()).toHaveFocus();
@@ -163,12 +167,23 @@ describe('age screen and next-game screen', () => {
       seen.add(before);
       tap('Choose another');
       expect(shownGame()).not.toBe(before);
+      settle();
     }
     // Age 9 has 11 games: they all come up.
     expect(seen.size).toBe(LEVEL_AGES.filter((r) => r.to >= 9).length);
     const before = shownGame();
     fireEvent.click(button('Choose another'), { detail: 2 });
     expect(shownGame()).toBe(before);
+    // QA321-04: Firefox touch reports a double tap as two detail-1 clicks: picks once.
+    tap('Choose another');
+    const once = shownGame();
+    expect(once).not.toBe(before);
+    now += 200;
+    tap('Choose another');
+    expect(shownGame()).toBe(once);
+    // ...and a tap right after a new game cannot start it.
+    tap('Play');
+    expect(heading()).toHaveTextContent('The bear picked this game');
     // The game card is announced when it changes.
     expect(document.querySelector('.pick-game')).toHaveAttribute('aria-live', 'polite');
   });
@@ -247,6 +262,35 @@ describe('the mode chain', () => {
     tap('Stop');
     expect(heading()).toHaveTextContent('What shall we learn today?');
     expect(heading()).toHaveFocus();
+  });
+
+  it('QA321-01: the rest of a double tap on Stop opens no course card (next-game screen and summary)', () => {
+    vi.spyOn(math, 'generateSession').mockReturnValue(fixture);
+    localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 9, size: 5 }));
+    render(<App />);
+    const card = () => button(/^Maths/);
+    open();
+    tap('Stop');
+    // Firefox touch: the second tap is another detail-1 click; Chromium: detail 2.
+    fireEvent.click(card(), { detail: 1 });
+    fireEvent.click(card(), { detail: 2 });
+    fireEvent.click(button('Bear picks a game'), { detail: 1 });
+    expect(heading()).toHaveTextContent('What shall we learn today?');
+    // The keyboard is never held back; a later tap opens the card as usual.
+    fireEvent.click(card(), { detail: 0 });
+    expect(heading()).toHaveTextContent('Where shall we explore?');
+    tap('Back to courses');
+    settle();
+    open();
+    untilMaths();
+    tap('Play');
+    playToSummary();
+    tap('Stop');
+    fireEvent.click(card(), { detail: 1 });
+    expect(heading()).toHaveTextContent('What shall we learn today?');
+    settle();
+    tap(/^Maths/);
+    expect(heading()).toHaveTextContent('Where shall we explore?');
   });
 
   it('Next game never repeats the game just played (also with repeated rounds)', () => {

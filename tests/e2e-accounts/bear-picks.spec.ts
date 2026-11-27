@@ -35,7 +35,9 @@ async function until(page: Page, match: RegExp) {
     !match.test(`${await page.locator('.pick-game-course').textContent()}|${await game(page)}`);
     i++
   )
-    await page.getByRole('button', { name: /Choose another|Vyber inú/ }).click();
+    await page.getByRole('button', { name: /Choose another|Vyber inú/ }).press('Enter');
+  // Every new game restarts the 600 ms tap guard (QA321-04).
+  await page.waitForTimeout(650);
 }
 async function solveAll(page: Page) {
   while (!(await page.locator('.summary').isVisible())) {

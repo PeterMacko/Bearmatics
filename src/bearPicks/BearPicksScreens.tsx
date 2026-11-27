@@ -3,7 +3,7 @@ import { COURSE_ICONS } from '../CourseChoice';
 import { SMALL_MATH_LEVELS } from '../courses';
 import { fill, type Copy } from '../i18n';
 import Icon from '../Icon';
-import { ignoreRepeatClick } from '../ignoreRepeatClick';
+import { ignoreRepeatClick, SCREEN_SETTLE_MS } from '../ignoreRepeatClick';
 import { ageRange, MAX_AGE, MIN_AGE } from '../levelAges';
 import { multiplierName, type Multiplier } from '../progress/multipliers';
 import { SESSION_SIZES } from '../session';
@@ -21,9 +21,6 @@ export function gameNames(t: Copy, game: Game): { course: string; level: string 
   if (course === 'english') return { course: t.englishCourse, level: t.englishLevels[shown as 1] };
   return { course: t.searchCourse, level: t.searchLevels[shown as 1] };
 }
-
-/** Taps within this time after a screen change are the rest of the tap that changed it. */
-export const SCREEN_SETTLE_MS = 600;
 
 /**
  * Guard for buttons that appear under the finger: the repeat click of a double tap

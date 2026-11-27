@@ -152,6 +152,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const [pickSize, setPickSize] = useState<PickSize>(5);
   const [pickLesson, setPickLesson] = useState<Game | null>(null);
   const pickLast = useRef<Game | null>(null);
+  // When Stop led to the course choice (QA321-01): the rest of its double tap must not open
+  // the course card that sits where Stop was.
+  const [courseSettleAt, setCourseSettleAt] = useState<number | null>(null);
   // The maths lesson's level as shown in its course menu (Small maths or Maths).
   const [mathShown, setMathShown] = useState(1);
   const [englishLevel, setEnglishLevel] = useState<EnglishLevel>(1);
@@ -660,12 +663,23 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   };
   const chooseAnother = () => {
     if (!pick?.game || pickAge === null) return;
-    // Same screen (no new heading focus or guard time): only the game changes.
-    setPick({ ...pick, game: pickAnother(pickAge, pick.game, pickLast.current, Math.random) });
+    // Same screen (no new heading focus), but a new game under the finger: the guard time
+    // restarts, so a double tap picks once in every engine (QA321-04) and cannot start Play.
+    setPick({
+      ...pick,
+      game: pickAnother(pickAge, pick.game, pickLast.current, Math.random),
+      shownAt: performance.now(),
+    });
   };
   const stopPick = () => {
     focusMenuHeading.current = true;
     setPick(null);
+    setCourseSettleAt(performance.now());
+  };
+  /** Summary "Stop" in the mode: the course choice, guarded like Stop on the next-game screen. */
+  const stopPickSummary = () => {
+    endPractice();
+    setCourseSettleAt(performance.now());
   };
   const playPick = () => {
     const game = pick?.game;
@@ -1086,7 +1100,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               footer={summaryFooter}
               streak={summaryStreak}
               onAgain={pickLesson ? nextPickGame : lessonKind.onAgain}
-              onBack={endPractice}
+              onBack={pickLesson ? stopPickSummary : endPractice}
               againLabel={pickLesson ? t.bearPicks.nextGame : undefined}
               backLabel={pickLesson ? t.bearPicks.stop : undefined}
             />
@@ -1225,6 +1239,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             headingRef={menuHeadingRef}
             onChoose={navigate}
             onBearPicks={openBearPicks}
+            settleSince={courseSettleAt}
           />
         )}
       </main>
