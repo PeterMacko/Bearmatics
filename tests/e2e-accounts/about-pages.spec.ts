@@ -21,7 +21,7 @@ test('the About page opens from the real server and its screenshots are served',
     .evaluateAll((images) =>
       images.map((image) => (image as HTMLImageElement).getAttribute('src')!),
     );
-  expect(sources).toHaveLength(11); // SCRUM-309: Bear picks a game
+  expect(sources).toHaveLength(13); // SCRUM-309: Bear picks a game; SCRUM-324: Logic menu, Pexeso
   for (const source of sources) {
     const response = await page.request.get(source);
     expect(response.status(), source).toBe(200);
