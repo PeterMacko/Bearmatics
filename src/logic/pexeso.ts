@@ -4,6 +4,7 @@
 // already been seen open in an earlier turn); the first 1 / 2 / 3 forgotten misses are free.
 // Pure functions; the random source is passed in (seeded in tests).
 import { shuffled } from '../random';
+import type { Session } from '../session';
 
 export type PexesoLevel = 6 | 7 | 8;
 export const PEXESO_LEVELS: readonly PexesoLevel[] = [6, 7, 8];
@@ -166,4 +167,26 @@ export const heartsLeft = (game: PexesoGame) => Math.max(0, game.free - game.for
 export function boardShape(pairs: PexesoPairs, landscape: boolean): { cols: number; rows: number } {
   const [a, b] = pairs === 6 ? [3, 4] : pairs === 10 ? [4, 5] : [5, 6];
   return landscape ? { cols: b, rows: a } : { cols: a, rows: b };
+}
+
+/**
+ * The game in the shape of a lesson Session (the bar, progress, leave question, summary and
+ * points read it): one "exercise" per pair; `firstTry` is the game's points before the daily
+ * and Bear picks multipliers; feedback 'correct' right after a pair (the correct cue).
+ */
+export function asSession(game: PexesoGame): Session<PexesoPicture> {
+  const done = isFinished(game);
+  const pictures = [...new Set(game.cards)];
+  return {
+    exercises: pictures,
+    index: game.foundPairs,
+    firstTry: gamePoints(game),
+    attempts: game.turns,
+    solved: false,
+    done,
+    feedback: !done && game.last?.kind === 'pair' && game.open.length === 0 ? 'correct' : 'ready',
+    hintStage: 0,
+    reviewing: false,
+    reviewQueue: [],
+  };
 }

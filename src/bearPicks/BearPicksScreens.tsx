@@ -97,6 +97,7 @@ export function PickNextScreen({
   onChangeAge,
   signedIn,
   signedOut,
+  showSizes = true,
 }: {
   t: Copy;
   game: Game;
@@ -115,6 +116,8 @@ export function PickNextScreen({
   signedIn: boolean;
   /** Known to be signed out: a note that signing in collects points. */
   signedOut: boolean;
+  /** SCRUM-324: false for Pexeso (no exercise count; the remembered count stays). */
+  showSizes?: boolean;
 }) {
   const c = t.bearPicks;
   const names = gameNames(t, game);
@@ -173,22 +176,24 @@ export function PickNextScreen({
           </span>
         </div>
         {signedOut && <p className="pick-note">{t.signInNote}</p>}
-        <fieldset className="session-options pick-sizes">
-          <legend>{t.count}</legend>
-          {SESSION_SIZES.map((n) => (
-            <label key={n}>
-              <input
-                type="radio"
-                name="pick-size"
-                checked={size === n}
-                onChange={() => onSize(n)}
-              />
-              <span>
-                {n} <span>{t.exercises}</span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
+        {showSizes && (
+          <fieldset className="session-options pick-sizes">
+            <legend>{t.count}</legend>
+            {SESSION_SIZES.map((n) => (
+              <label key={n}>
+                <input
+                  type="radio"
+                  name="pick-size"
+                  checked={size === n}
+                  onChange={() => onSize(n)}
+                />
+                <span>
+                  {n} <span>{t.exercises}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         <div className="pick-actions">
           <button
             type="button"

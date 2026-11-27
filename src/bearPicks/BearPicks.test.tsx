@@ -8,15 +8,30 @@ import * as math from '../math/engine';
 import SummaryPoints from '../progress/SummaryPoints';
 import { staticFrame } from '../progress/animation';
 import { fakeServer, reply } from '../testing/fakeServer';
+import * as picker from './picker';
 import { BEAR_PICKS_KEY } from './storage';
 
 // SCRUM-309 "Bear picks a game": course-choice button, age screen, next-game screen, the mode
 // chain through lesson and summary, storage, double-tap guards and copy.
 
 let now = 1000;
+// SCRUM-324: Pexeso games (Logic 6-8) have no exercise count, so the tests about the count
+// choice pick only from the other games; Pexeso in the mode has its own tests (end of file).
+const realPickGame = picker.pickGame;
+const realPickAnother = picker.pickAnother;
+const NO_PEXESO = LEVEL_AGES.filter((r) => !(r.course === 'logic' && r.shown >= 6));
+const withoutPexeso = () => {
+  vi.spyOn(picker, 'pickGame').mockImplementation((age, exclude, rng) =>
+    realPickGame(age, exclude, rng, NO_PEXESO),
+  );
+  vi.spyOn(picker, 'pickAnother').mockImplementation((age, shown, last, rng) =>
+    realPickAnother(age, shown, last, rng, NO_PEXESO),
+  );
+};
 beforeEach(() => {
   now = 1000;
   vi.spyOn(performance, 'now').mockImplementation(() => now);
+  withoutPexeso();
 });
 afterEach(() => vi.restoreAllMocks());
 /** Time passes beyond the 600 ms after a screen change. */
@@ -160,6 +175,9 @@ describe('age screen and next-game screen', () => {
   });
 
   it('Choose another always shows a different game, pressed again and again; a double tap picks once', () => {
+    // Every game of the age, Pexeso included (SCRUM-324).
+    vi.mocked(picker.pickGame).mockRestore();
+    vi.mocked(picker.pickAnother).mockRestore();
     localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 9, size: 5 }));
     render(<App />);
     open();
@@ -171,7 +189,7 @@ describe('age screen and next-game screen', () => {
       expect(shownGame()).not.toBe(before);
       settle();
     }
-    // Age 9 has 11 games: they all come up.
+    // Age 9 has 14 games (SCRUM-324: with Logic 6-8): they all come up.
     expect(seen.size).toBe(LEVEL_AGES.filter((r) => r.to >= 9).length);
     const before = shownGame();
     fireEvent.click(button('Choose another'), { detail: 2 });

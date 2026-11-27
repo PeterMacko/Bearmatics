@@ -35,6 +35,7 @@ export default function LevelMenu<L extends number>({
   onStart,
   headingRef,
   nextMultiplier,
+  withoutSize,
 }: {
   t: Copy;
   /** SCRUM-308: the course, for each level's suggested age (src/levelAges.ts). */
@@ -60,6 +61,8 @@ export default function LevelMenu<L extends number>({
    * sign shows it (star x1.5, 1/2, 1/4; nothing at x1) with a screen-reader text.
    */
   nextMultiplier?: (shown: number) => Multiplier | null;
+  /** SCRUM-324: levels without an exercise-count choice (Pexeso): the count fieldset hides. */
+  withoutSize?: (level: L) => boolean;
 }) {
   // SCRUM-308 round 2: the open age popup (one at a time): its badge, text and opening time.
   const [popup, setPopup] = useState<{ anchor: HTMLElement; text: string; at: number } | null>(
@@ -127,22 +130,24 @@ export default function LevelMenu<L extends number>({
         })}
       </fieldset>
       <div className="menu-controls">
-        <fieldset className="session-options">
-          <legend>{t.count}</legend>
-          {SESSION_SIZES.map((n) => (
-            <label key={n}>
-              <input
-                type="radio"
-                name={sizeName}
-                checked={size === n}
-                onChange={() => onSizeChange(n)}
-              />
-              <span>
-                {n} <span>{t.exercises}</span>
-              </span>
-            </label>
-          ))}
-        </fieldset>
+        {!withoutSize?.(level) && (
+          <fieldset className="session-options">
+            <legend>{t.count}</legend>
+            {SESSION_SIZES.map((n) => (
+              <label key={n}>
+                <input
+                  type="radio"
+                  name={sizeName}
+                  checked={size === n}
+                  onChange={() => onSizeChange(n)}
+                />
+                <span>
+                  {n} <span>{t.exercises}</span>
+                </span>
+              </label>
+            ))}
+          </fieldset>
+        )}
         <button
           type={startType}
           className="primary start-button"

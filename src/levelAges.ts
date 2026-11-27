@@ -25,7 +25,7 @@ const row = (course: PointsCourse, shown: number, from: number, to: number): Age
   to,
 });
 
-/** The approved table (Jira SCRUM-308): one row per menu level, 21 rows. */
+/** The approved table (Jira SCRUM-308): one row per menu level, 24 rows (SCRUM-324: Logic 6-8). */
 export const LEVEL_AGES: readonly AgeRow[] = [
   row('small', 1, 5, 6), // Count the pictures
   row('small', 2, 5, 7), // Take away
@@ -42,6 +42,9 @@ export const LEVEL_AGES: readonly AgeRow[] = [
   row('logic', 3, 5, 6), // What comes next?
   row('logic', 4, 5, 7), // What is missing?
   row('logic', 5, 5, 8), // Growing and turning
+  row('logic', 6, 5, 9), // Pexeso / Matching pairs, 6 pictures (SCRUM-324)
+  row('logic', 7, 5, 9), // Pexeso / Matching pairs, 10 pictures
+  row('logic', 8, 5, 9), // Pexeso / Matching pairs, 15 pictures
   row('english', 1, 5, 9), // Listen and choose
   row('english', 2, 5, 9), // Listen and choose: similar-sounding words
   row('english', 3, 8, 9), // Listen and write

@@ -96,7 +96,7 @@ const seen = () => localStorage.setItem(DEMO_KEYS.patterns, '1');
 const back = () => fireEvent.click(exact('Choose level'));
 
 describe('menu', () => {
-  test('Slovak: Levels 3-5 after the bear levels with their detail lines', () => {
+  test('Slovak: Levels 3-5 after the bear levels with their detail lines, then Pexeso 6-8', () => {
     openLogic('sk');
     expect(
       screen
@@ -108,6 +108,10 @@ describe('menu', () => {
       expect.stringMatching(/^3.*Čo príde ďalej\?.*Dva obrázky sa striedajú: vyber ďalší/),
       expect.stringMatching(/^4.*Čo chýba\?.*Nájdi obrázok, ktorý patrí do medzery/),
       expect.stringMatching(/^5.*Rastie a otáča sa.*Viac, menej alebo otáčanie šípky: vyber ďalší/),
+      // SCRUM-324: Pexeso as Levels 6-8.
+      expect.stringMatching(/^6.*Pexeso.*6 obrázkov: otoč dve karty a nájdi dvojice/),
+      expect.stringMatching(/^7.*Pexeso.*10 obrázkov: otoč dve karty a nájdi dvojice/),
+      expect.stringMatching(/^8.*Pexeso.*15 obrázkov: otoč dve karty a nájdi dvojice/),
     ]);
   });
 
