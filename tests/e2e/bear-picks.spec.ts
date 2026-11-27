@@ -157,13 +157,15 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   // Double tap on Next game: the second press lands on the new screen's Play (detail 2) and a
   // quick fresh tap on Stop (detail 1) follows; both are ignored.
   // Dispatched in one go, so a slow engine cannot stretch the taps past the 600 ms guard (React
-  // renders the new screen synchronously inside the first click).
-  await next.evaluate((el) => {
+  // commits the new screen right after the first click, within a task).
+  await next.evaluate(async (el) => {
     const click = (target: Element | null | undefined, detail: number) =>
       target?.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true, detail }));
     click(el, 1);
+    await new Promise((resolve) => setTimeout(resolve, 0)); // React commits the new screen
     const find = (name: string) =>
       [...document.querySelectorAll('button')].find((b) => b.textContent?.trim() === name);
+    if (!find('Choose another')) throw new Error('the next-game screen is not shown yet');
     click(find('Play'), 2);
     click(find('Stop'), 1);
   });
