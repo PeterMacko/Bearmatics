@@ -277,7 +277,7 @@ test('negative controls: the fit check sees small cards, overlaps, cut cards and
     const tag = await page.addStyleTag({ content: css });
     await page.waitForTimeout(100);
     expect(caught(await boardFit(page)), css).toBe(true);
-    await tag.evaluate((el) => el.remove());
+    await tag.evaluate((el) => (el as Element).remove());
   }
   await context.close();
 });
@@ -302,7 +302,7 @@ test.describe('turns (AC 4, 11)', () => {
     await page.goto('/');
     await startPexeso(page, 8);
     const names = () => cardNames(page);
-    const openCount = async () => (await names()).filter((n) => !/face down$/.test(n)).length;
+    const openCount = async () => (await names()).filter((n) => !n.endsWith('face down')).length;
     // A double tap on one card opens just that card.
     await page.locator('.pexeso-card').nth(0).dblclick();
     expect(await openCount()).toBe(1);
@@ -312,26 +312,26 @@ test.describe('turns (AC 4, 11)', () => {
     let second = 1;
     await tapCard(page, second);
     let shown = await names();
-    if (/found$/.test(shown[0])) {
+    if (shown[0].endsWith('found')) {
       // It was the pair: open two new cards for the miss.
       await tapCard(page, 2);
       second = 3;
       await tapCard(page, second);
       shown = await names();
     }
-    if (/found$/.test(shown[second])) test.skip(true, 'two pairs in a row on a random board');
+    if (shown[second].endsWith('found')) test.skip(true, 'two pairs in a row on a random board');
     expect(await openCount()).toBeGreaterThanOrEqual(2);
     await expect(page.locator('.pexeso-message')).toHaveText('Not a pair');
     const openBefore = (await names()).filter((n) => /^Card \d+, (?!face down)/.test(n));
     expect(openBefore).toHaveLength(2);
     // Fast double tap on a third card during the 1.5 s: the miss closes, one card opens.
-    const third = (await names()).findIndex((n, i) => i > second && /face down$/.test(n));
+    const third = (await names()).findIndex((n, i) => i > second && n.endsWith('face down'));
     await page.waitForTimeout(320);
     await page.locator('.pexeso-card').nth(third).dblclick();
     const after = (await names()).filter((n) => /^Card \d+, (?!face down)/.test(n));
     expect(after).toEqual([expect.stringMatching(new RegExp(`^Card ${third + 1}, `))]);
     // Second card of a new miss: both close by themselves after 1.5 s.
-    const fourth = (await names()).findIndex((n, i) => i > third && /face down$/.test(n));
+    const fourth = (await names()).findIndex((n, i) => i > third && n.endsWith('face down'));
     await tapCard(page, fourth);
     const pairNow = (await names())[fourth].endsWith('found');
     if (!pairNow) {
