@@ -194,6 +194,10 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   await page.getByRole('button', { name: 'Choose a new trail' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
   await expect(heading(page)).toBeFocused();
+  // QA321-06: a tap on a card right after leaving is the rest of the double tap: ignored.
+  await page.getByRole('button', { name: 'Small maths' }).click();
+  await expect(heading(page)).toHaveText('What shall we learn today?');
+  await page.waitForTimeout(SETTLE);
   // Normal menus keep their own count (10), untouched by the mode's choice.
   await page.getByRole('button', { name: 'Small maths' }).click();
   await expect(page.getByRole('radio', { name: '10 exercises' })).toBeChecked();
@@ -423,3 +427,23 @@ test('QA321-01: summary Stop: a double click opens no course menu', async ({ pag
   await page.waitForTimeout(300);
   await expect(heading(page)).toHaveText('What shall we learn today?');
 });
+
+for (const [width, height] of [
+  [390, 844],
+  [320, 568],
+  [820, 1180],
+  [1366, 900],
+]) {
+  test(`Peter: the Bear picks button ends where the course cards end (${width}x${height})`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height });
+    await page.goto('/');
+    const card = page.locator('.course-option').first();
+    await card.waitFor();
+    const button = (await page.locator('.bear-picks-button').boundingBox())!;
+    const box = (await card.boundingBox())!;
+    expect(Math.abs(button.x - box.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(button.x + button.width - (box.x + box.width))).toBeLessThanOrEqual(1);
+  });
+}

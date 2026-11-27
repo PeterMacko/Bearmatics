@@ -1,7 +1,8 @@
-import type { RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import type { Copy } from './i18n';
 import { ignoreRepeatClick, SCREEN_SETTLE_MS } from './ignoreRepeatClick';
 import MenuHeading from './MenuHeading';
+import { watchResize } from './watchResize';
 
 export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
 
@@ -134,6 +135,25 @@ export default function CourseChoice({
   // Keyboard activation (detail 0) always works.
   const tooSoon = (event: { detail: number }) =>
     event.detail > 0 && settleSince !== null && performance.now() - settleSince < SCREEN_SETTLE_MS;
+  // Peter: the Bear picks button ends where the course cards end. The card list keeps room for
+  // its scrollbar (Chromium: 15 px, overlay scrollbars: 0), so the button gets the same room.
+  const sectionRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const list = section?.querySelector<HTMLElement>('.course-options');
+    if (!section || !list) return;
+    const measure = () => {
+      const style = getComputedStyle(list);
+      const gutter =
+        list.offsetWidth -
+        list.clientWidth -
+        parseFloat(style.borderLeftWidth) -
+        parseFloat(style.borderRightWidth);
+      section.style.setProperty('--course-gutter', `${Math.max(0, gutter)}px`);
+    };
+    measure();
+    return watchResize(measure, [list], { frame: 'next' });
+  }, []);
   const courses: { id: Course; title: string; detail: string }[] = [
     { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
     { id: 'logic', title: t.logicCourse, detail: t.logicCourseDetail },
@@ -142,7 +162,10 @@ export default function CourseChoice({
     { id: 'wordsearch', title: t.searchCourse, detail: t.searchCourseDetail },
   ];
   return (
-    <section className={`selection course-choice${signedOut ? ' signed-out' : ''}`}>
+    <section
+      ref={sectionRef}
+      className={`selection course-choice${signedOut ? ' signed-out' : ''}`}
+    >
       <MenuHeading
         eyebrow={t.courseEyebrow}
         title={t.courseChoose}

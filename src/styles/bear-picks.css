@@ -8,7 +8,9 @@
 }
 .menu-shell .course-choice .bear-picks-controls {
   grid-row: 2;
-  padding: 0 8px;
+  /* The cards' list padding plus its scrollbar room (--course-gutter, CourseChoice): the button
+     ends where the cards end. */
+  padding: 0 calc(8px + var(--course-gutter, 0px)) 0 8px;
 }
 .menu-shell .course-choice .level-options {
   grid-row: 3;

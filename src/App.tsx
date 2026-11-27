@@ -1316,6 +1316,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
           }}
           onLeave={() => {
             setLeaveOpen(false);
+            // QA321-06: leaving a Bear picks lesson shows the course choice; the rest of a double
+            // tap on "Choose a new trail" must not open the card under it.
+            if (pickLesson) setCourseSettleAt(performance.now());
             endPractice();
             afterLeave.current?.();
             afterLeave.current = null;

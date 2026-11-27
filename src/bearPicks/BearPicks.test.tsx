@@ -323,6 +323,10 @@ describe('the mode chain', () => {
     tap('Back to courses');
     tap('Choose a new trail');
     expect(heading()).toHaveTextContent('What shall we learn today?');
+    // QA321-06: the rest of a double tap on "Choose a new trail" opens no course card.
+    fireEvent.click(button(/^Maths/), { detail: 1 });
+    expect(heading()).toHaveTextContent('What shall we learn today?');
+    settle();
     // The Maths menu still has its own count (10), untouched by the mode's 20.
     tap('Maths');
     expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
