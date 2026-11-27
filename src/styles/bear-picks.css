@@ -280,6 +280,13 @@
 .menu-shell .pick-sizes {
   margin: 0;
 }
+/* Signed out: signing in collects points (instead of the × 1.5). */
+.pick-note {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
 .pick-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -54,6 +54,11 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   await expect(heading(page)).toBeFocused();
   expect(await store(page)).toEqual({ age: 7, size: 5 });
   await expect(page.getByRole('radio', { name: '5 exercises' })).toBeChecked();
+  // Signed out: the sign-in note above the exercise count instead of the × 1.5.
+  await expect(page.locator('.pick-note')).toHaveText(
+    'When you sign in, you can collect points and compare with other players.',
+  );
+  await expect(page.locator('.pick-tag-mode')).toHaveCount(0);
   // Age badge of the shown game contains 7.
   const [from, to] = ((await page.locator('.pick-tag-age').textContent()) ?? '')
     .split('–')
@@ -100,7 +105,11 @@ test('keyboard: Tab order, Enter and Space work at once; Slovak copy', async ({ 
   await page.setViewportSize({ width: 1366, height: 900 });
   await page.goto('/?lang=sk');
   const pick = page.getByRole('button', { name: 'Medveď vyberie hru' });
-  await expect(pick).toHaveAccessibleDescription('Hry pre tvoj vek, body × 1,5');
+  // Signed out: no points, so no × 1,5; the intro invites to sign in.
+  await expect(pick).toHaveAccessibleDescription('Hry pre tvoj vek');
+  await expect(page.locator('.course-choice .intro')).toHaveText(
+    'Keď sa prihlásiš, môžeš zbierať body a porovnať sa s ostatnými hráčmi.',
+  );
   await pick.focus();
   await page.keyboard.press('Enter');
   await expect(heading(page)).toHaveText('Koľko máš rokov?');

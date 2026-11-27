@@ -128,11 +128,15 @@ export const copy = {
     courseEyebrow: 'Bearmatics',
     courseChoose: 'What shall we learn today?',
     courseIntro: 'Pick a course to start.',
+    /** Signed out: the course choice's intro and the note on the next-game screen (Peter). */
+    signInNote: 'When you sign in, you can collect points and compare with other players.',
     courses: 'Courses',
     /** SCRUM-309: "Bear picks a game" (random games that suit the child's age, x1.5 points). */
     bearPicks: {
       button: 'Bear picks a game',
       buttonDetail: 'Games for your age, points × 1.5',
+      /** Signed out: no points, so no × 1.5. */
+      buttonDetailOut: 'Games for your age',
       eyebrow: 'Bear picks a game',
       ageTitle: 'How old are you?',
       ageIntro: 'The bear picks games that suit your age.',
@@ -661,10 +665,12 @@ export const copy = {
     courseEyebrow: 'Bearmatics',
     courseChoose: 'Čo sa dnes naučíme?',
     courseIntro: 'Vyber si kurz a môžeme začať.',
+    signInNote: 'Keď sa prihlásiš, môžeš zbierať body a porovnať sa s ostatnými hráčmi.',
     courses: 'Kurzy',
     bearPicks: {
       button: 'Medveď vyberie hru',
       buttonDetail: 'Hry pre tvoj vek, body × 1,5',
+      buttonDetailOut: 'Hry pre tvoj vek',
       eyebrow: 'Medveď vyberie hru',
       ageTitle: 'Koľko máš rokov?',
       ageIntro: 'Medveď ti vyberie hry, ktoré sa hodia k tvojmu veku.',

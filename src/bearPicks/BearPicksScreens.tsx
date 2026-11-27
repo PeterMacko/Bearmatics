@@ -95,6 +95,8 @@ export function PickNextScreen({
   onAnother,
   onStop,
   onChangeAge,
+  signedIn,
+  signedOut,
 }: {
   t: Copy;
   game: Game;
@@ -109,6 +111,10 @@ export function PickNextScreen({
   onAnother: () => void;
   onStop: () => void;
   onChangeAge: () => void;
+  /** Only signed in lessons save points, so only then the mode's × 1.5 is shown. */
+  signedIn: boolean;
+  /** Known to be signed out: a note that signing in collects points. */
+  signedOut: boolean;
 }) {
   const c = t.bearPicks;
   const names = gameNames(t, game);
@@ -152,16 +158,21 @@ export function PickNextScreen({
                   <span className="sr-only">{t.points.nextPlay[sign]}</span>
                 </>
               )}
-              <span className="pick-tag pick-tag-mode" aria-hidden="true">
-                {c.modeSign}
-              </span>
-              <span className="sr-only">{c.modeSaid}</span>
+              {signedIn && (
+                <>
+                  <span className="pick-tag pick-tag-mode" aria-hidden="true">
+                    {c.modeSign}
+                  </span>
+                  <span className="sr-only">{c.modeSaid}</span>
+                </>
+              )}
             </span>
             <span className="pick-game-level">
               {t.level} {game.shown} · {names.level}
             </span>
           </span>
         </div>
+        {signedOut && <p className="pick-note">{t.signInNote}</p>}
         <fieldset className="session-options pick-sizes">
           <legend>{t.count}</legend>
           {SESSION_SIZES.map((n) => (

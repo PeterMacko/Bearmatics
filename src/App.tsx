@@ -1134,6 +1134,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               onAnother={chooseAnother}
               onStop={stopPick}
               onChangeAge={() => showPick('age', null)}
+              signedIn={!!account}
+              signedOut={accountKnown && !account}
             />
           ) : (
             <PickAgeScreen
@@ -1240,6 +1242,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             onChoose={navigate}
             onBearPicks={openBearPicks}
             settleSince={courseSettleAt}
+            signedOut={accountKnown && !account}
           />
         )}
       </main>

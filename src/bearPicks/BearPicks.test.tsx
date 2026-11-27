@@ -7,6 +7,7 @@ import { LEVEL_AGES } from '../levelAges';
 import * as math from '../math/engine';
 import SummaryPoints from '../progress/SummaryPoints';
 import { staticFrame } from '../progress/animation';
+import { fakeServer, reply } from '../testing/fakeServer';
 import { BEAR_PICKS_KEY } from './storage';
 
 // SCRUM-309 "Bear picks a game": course-choice button, age screen, next-game screen, the mode
@@ -93,8 +94,8 @@ describe('age screen and next-game screen', () => {
     const { from, to } = shownAges();
     expect(from <= 7 && 7 <= to).toBe(true);
     expect(button('Change age (7)')).toBeInTheDocument();
-    // The mode's x1.5 is always there (spoken text), signed out too; no table sign signed out.
-    expect(document.querySelector('.pick-tag-mode')).toHaveTextContent('× 1.5');
+    // Not signed in: no points, so neither the mode's x1.5 nor a table sign.
+    expect(document.querySelector('.pick-tag-mode')).toBeNull();
     expect(document.querySelector('.pick-tag-table')).toBeNull();
     fireEvent.click(screen.getByRole('radio', { name: '20 exercises' }));
     expect(stored()).toEqual({ age: 7, size: 20 });
@@ -325,6 +326,79 @@ describe('the mode chain', () => {
     // The Maths menu still has its own count (10), untouched by the mode's 20.
     tap('Maths');
     expect(screen.getByRole('radio', { name: '10 exercises' })).toBeChecked();
+  });
+});
+
+describe('signed out vs signed in (Peter: no x1.5 without points)', () => {
+  afterEach(() => vi.unstubAllGlobals());
+  const account = {
+    kind: 'password',
+    username: 'kid',
+    nickname: 'Kid',
+    look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
+    email: null,
+  };
+  const serve = (signedIn: boolean) =>
+    fakeServer(({ path }) => {
+      if (path === '/api/me') return reply({ account: signedIn ? account : null });
+      if (path === '/api/auth/google') return reply({ available: false });
+      if (path === '/api/progress') return reply({ points: 0 });
+      return reply({ error: 'not_found' }, 404);
+    });
+  const note = 'When you sign in, you can collect points and compare with other players.';
+
+  it('signed out: the sign-in note under the course heading and on the next-game screen, no x1.5', async () => {
+    serve(false);
+    localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 7, size: 5 }));
+    render(<App />);
+    expect(await screen.findByText(note)).toHaveClass('intro');
+    expect(screen.queryByText('Pick a course to start.')).toBeNull();
+    expect(button('Bear picks a game')).toHaveAccessibleDescription('Games for your age');
+    open();
+    expect(document.querySelector('.pick-note')).toHaveTextContent(note);
+    // Above the exercise count.
+    const count = screen.getByRole('group', { name: 'How many exercises?' });
+    expect(
+      document.querySelector('.pick-note')!.compareDocumentPosition(count) &
+        Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(document.querySelector('.pick-tag-mode')).toBeNull();
+    expect(document.querySelector('.pick-game')).not.toHaveTextContent('one and a half');
+  });
+
+  it('signed in: the course intro and the x1.5 stay as before, no note', async () => {
+    serve(true);
+    localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 7, size: 5 }));
+    render(<App />);
+    expect(
+      await screen.findByRole('button', { name: /^Bear badge|^No bear badge/ }),
+    ).toBeInTheDocument();
+    expect(screen.getByText('Pick a course to start.')).toBeInTheDocument();
+    expect(screen.queryByText(note)).toBeNull();
+    expect(button('Bear picks a game')).toHaveAccessibleDescription(
+      'Games for your age, points × 1.5',
+    );
+    open();
+    expect(document.querySelector('.pick-tag-mode')).toHaveTextContent('× 1.5');
+    expect(document.querySelector('.pick-game')).toHaveTextContent(
+      'Bear picks a game: one and a half times the points',
+    );
+    expect(document.querySelector('.pick-note')).toBeNull();
+  });
+
+  it('Slovak note', async () => {
+    serve(false);
+    render(<App />);
+    await screen.findByText(note);
+    tap('Settings');
+    tap('Slovenčina');
+    tap('Zavrieť nastavenia');
+    expect(
+      await screen.findByText(
+        'Keď sa prihlásiš, môžeš zbierať body a porovnať sa s ostatnými hráčmi.',
+      ),
+    ).toBeInTheDocument();
+    expect(button('Medveď vyberie hru')).toHaveAccessibleDescription('Hry pre tvoj vek');
   });
 });
 

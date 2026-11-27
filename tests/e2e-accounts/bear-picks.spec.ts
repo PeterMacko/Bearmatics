@@ -57,8 +57,14 @@ test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points a
   await page.goto('/');
   await createAccount(page, uniqueName('pick'), { nickname: 'Abcdefghijkl' });
   await hideFromLeaderboard(page);
+  // Signed in: the course intro and the button's × 1.5 as before, no sign-in note.
+  await expect(page.locator('.course-choice .intro')).toHaveText('Pick a course to start.');
+  await expect(page.getByRole('button', { name: 'Bear picks a game' })).toHaveAccessibleDescription(
+    'Games for your age, points × 1.5',
+  );
   await page.getByRole('button', { name: 'Bear picks a game' }).click();
   await page.waitForTimeout(650);
+  await expect(page.locator('.pick-note')).toHaveCount(0);
   await until(page, /^Maths\|/);
   const shown = (await game(page))!;
   const level = Number(/Level (\d)/.exec(shown)![1]);

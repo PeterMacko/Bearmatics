@@ -118,6 +118,7 @@ export default function CourseChoice({
   onChoose,
   onBearPicks,
   settleSince = null,
+  signedOut = false,
 }: {
   t: Copy;
   headingRef: RefObject<HTMLHeadingElement | null>;
@@ -126,6 +127,8 @@ export default function CourseChoice({
   onBearPicks: () => void;
   /** When "Bear picks a game" Stop led here: taps within SCREEN_SETTLE_MS are its rest. */
   settleSince?: number | null;
+  /** Known to be signed out: the intro invites to sign in and the mode shows no × 1.5. */
+  signedOut?: boolean;
 }) {
   // QA321-01: Stop's double tap must not open the card (or the mode) now under the finger.
   // Keyboard activation (detail 0) always works.
@@ -143,7 +146,7 @@ export default function CourseChoice({
       <MenuHeading
         eyebrow={t.courseEyebrow}
         title={t.courseChoose}
-        intro={t.courseIntro}
+        intro={signedOut ? t.signInNote : t.courseIntro}
         headingRef={headingRef}
       />
       {/* SCRUM-309: above the course cards. In the menu's controls row, so the shared menu
@@ -172,7 +175,7 @@ export default function CourseChoice({
               {t.bearPicks.button}
             </span>
             <span id="bear-picks-detail" className="bear-picks-detail">
-              {t.bearPicks.buttonDetail}
+              {signedOut ? t.bearPicks.buttonDetailOut : t.bearPicks.buttonDetail}
             </span>
           </span>
           <span className="bear-picks-arrow" aria-hidden="true">
