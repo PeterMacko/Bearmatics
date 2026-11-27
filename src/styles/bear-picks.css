@@ -72,6 +72,11 @@
        than before and stays clear of the floating bar (1280x520). */
     width: calc(min(100%, 340px, (100dvh - 140px) * 1.05) - 64px);
   }
+  /* Signed out the intro is the longer sign-in note (two lines here): a bear one line smaller
+     keeps the page from scrolling (820x460). */
+  .menu-shell .workspace:has(> .course-choice.signed-out) .companion .bear-scene {
+    width: calc(min(100%, 340px, (100dvh - 140px) * 1.05) - 88px);
+  }
   .menu-shell .workspace:has(> .course-choice) .course-options {
     grid-row: 1 / -1;
   }
@@ -349,6 +354,16 @@
   }
   .pick-age-button {
     min-height: 56px;
+  }
+  /* Signed out: the sign-in note takes the line of "How many exercises?" (the radios say
+     "5 exercises"; the legend stays for screen readers), so the screen still fits (568x320). */
+  .menu-shell .pick-note + .pick-sizes legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 }
 .menu-shell .pick-panel {

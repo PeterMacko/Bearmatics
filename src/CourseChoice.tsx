@@ -142,7 +142,7 @@ export default function CourseChoice({
     { id: 'wordsearch', title: t.searchCourse, detail: t.searchCourseDetail },
   ];
   return (
-    <section className="selection course-choice">
+    <section className={`selection course-choice${signedOut ? ' signed-out' : ''}`}>
       <MenuHeading
         eyebrow={t.courseEyebrow}
         title={t.courseChoose}
