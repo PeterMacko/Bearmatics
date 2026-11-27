@@ -56,7 +56,7 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   await expect(page.getByRole('radio', { name: '5 exercises' })).toBeChecked();
   // Signed out: the sign-in note above the exercise count instead of the × 1.5.
   await expect(page.locator('.pick-note')).toHaveText(
-    'When you sign in, you can collect points and compare with other players.',
+    'Sign in to collect points and compare with other players.',
   );
   await expect(page.locator('.pick-tag-mode')).toHaveCount(0);
   // Age badge of the shown game contains 7.
@@ -108,7 +108,7 @@ test('keyboard: Tab order, Enter and Space work at once; Slovak copy', async ({ 
   // Signed out: no points, so no × 1,5; the intro invites to sign in.
   await expect(pick).toHaveAccessibleDescription('Hry pre tvoj vek');
   await expect(page.locator('.course-choice .intro')).toHaveText(
-    'Keď sa prihlásiš, môžeš zbierať body a porovnať sa s ostatnými hráčmi.',
+    'Prihlás sa, zbieraj body a porovnaj sa s ostatnými hráčmi.',
   );
   await pick.focus();
   await page.keyboard.press('Enter');
@@ -137,10 +137,11 @@ test('keyboard: Tab order, Enter and Space work at once; Slovak copy', async ({ 
   await page.keyboard.press('Enter');
   expect(await game(page)).not.toBe(before);
   await expect(page.locator('.pick-game')).toHaveAttribute('aria-live', 'polite');
-  // Screen-reader texts on the game: age range and the mode's x1.5.
+  // Screen-reader texts on the game: the age range; signed out no x1.5, the sign-in note instead.
   await expect(page.locator('.pick-game .sr-only').first()).toHaveText(/^Vek \d až \d rokov$/);
-  await expect(page.locator('.pick-game')).toContainText(
-    'Medveď vyberie hru: jeden a pol násobok bodov',
+  await expect(page.locator('.pick-game')).not.toContainText('jeden a pol násobok bodov');
+  await expect(page.locator('.pick-note')).toHaveText(
+    'Prihlás sa, zbieraj body a porovnaj sa s ostatnými hráčmi.',
   );
 });
 
@@ -391,23 +392,20 @@ test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () 
     await page.touchscreen.tap(another.x, another.y);
     expect(await game(page)).toBe(once);
     await page.waitForTimeout(SETTLE);
-    // Stop: the second tap lands where a course card now is and does nothing.
+    // Stop, then the rest of the double tap on a course card (wherever the layout puts it
+    // under the finger): nothing opens.
     const stop = await centre('Stop');
     await page.touchscreen.tap(stop.x, stop.y);
     await expect(heading(page)).toHaveText('What shall we learn today?');
-    const under = await page.evaluate(
-      ({ x, y }) => document.elementFromPoint(x, y)?.closest('button')?.className ?? '',
-      stop,
-    );
-    expect(under).toMatch(/course-option|bear-picks-button/);
+    const card = await centre('Maths');
     await page.waitForTimeout(150);
-    await page.touchscreen.tap(stop.x, stop.y);
+    await page.touchscreen.tap(card.x, card.y);
     await page.waitForTimeout(300);
     await expect(heading(page)).toHaveText('What shall we learn today?');
     // A deliberate tap later opens the card as before.
     await page.waitForTimeout(SETTLE);
-    await page.touchscreen.tap(stop.x, stop.y);
-    await expect(heading(page)).not.toHaveText('What shall we learn today?');
+    await page.touchscreen.tap(card.x, card.y);
+    await expect(heading(page)).toHaveText('Where shall we explore?');
   });
 });
 

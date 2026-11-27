@@ -345,7 +345,7 @@ describe('signed out vs signed in (Peter: no x1.5 without points)', () => {
       if (path === '/api/progress') return reply({ points: 0 });
       return reply({ error: 'not_found' }, 404);
     });
-  const note = 'When you sign in, you can collect points and compare with other players.';
+  const note = 'Sign in to collect points and compare with other players.';
 
   it('signed out: the sign-in note under the course heading and on the next-game screen, no x1.5', async () => {
     serve(false);
@@ -394,9 +394,7 @@ describe('signed out vs signed in (Peter: no x1.5 without points)', () => {
     tap('Slovenčina');
     tap('Zavrieť nastavenia');
     expect(
-      await screen.findByText(
-        'Keď sa prihlásiš, môžeš zbierať body a porovnať sa s ostatnými hráčmi.',
-      ),
+      await screen.findByText('Prihlás sa, zbieraj body a porovnaj sa s ostatnými hráčmi.'),
     ).toBeInTheDocument();
     expect(button('Medveď vyberie hru')).toHaveAccessibleDescription('Hry pre tvoj vek');
   });
