@@ -120,6 +120,7 @@ export default function CourseChoice({
   onBearPicks,
   settleSince = null,
   signedOut = false,
+  signedIn = false,
 }: {
   t: Copy;
   headingRef: RefObject<HTMLHeadingElement | null>;
@@ -130,6 +131,8 @@ export default function CourseChoice({
   settleSince?: number | null;
   /** Known to be signed out: the intro invites to sign in and the mode shows no × 1.5. */
   signedOut?: boolean;
+  /** Signed in: only then the mode's "points × 1.5" (not while the account is loading). */
+  signedIn?: boolean;
 }) {
   // QA321-01: Stop's double tap must not open the card (or the mode) now under the finger.
   // Keyboard activation (detail 0) always works.
@@ -198,7 +201,7 @@ export default function CourseChoice({
               {t.bearPicks.button}
             </span>
             <span id="bear-picks-detail" className="bear-picks-detail">
-              {signedOut ? t.bearPicks.buttonDetailOut : t.bearPicks.buttonDetail}
+              {signedIn ? t.bearPicks.buttonDetail : t.bearPicks.buttonDetailOut}
             </span>
           </span>
           <span className="bear-picks-arrow" aria-hidden="true">

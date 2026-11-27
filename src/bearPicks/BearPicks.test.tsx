@@ -57,7 +57,8 @@ describe('course choice button', () => {
   it('sits above the course cards, describes the mode and opens the age screen first', () => {
     render(<App />);
     const pick = button('Bear picks a game');
-    expect(pick).toHaveAccessibleDescription('Games for your age, points × 1.5');
+    // No account known: no "points × 1.5" (only signed in).
+    expect(pick).toHaveAccessibleDescription('Games for your age');
     const list = screen.getByRole('list', { name: 'Courses' });
     expect(pick.compareDocumentPosition(list) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     // The repeat click of a double tap (e.g. Stop on the screen before) does nothing.

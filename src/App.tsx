@@ -1243,6 +1243,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             onBearPicks={openBearPicks}
             settleSince={courseSettleAt}
             signedOut={accountKnown && !account}
+            signedIn={!!account}
           />
         )}
       </main>
