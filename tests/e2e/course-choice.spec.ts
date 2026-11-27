@@ -29,6 +29,28 @@ const COPY = {
   },
 };
 
+/** SCRUM-333: the course intro (signed out: the sign-in note) stays fully visible, and every
+ * course card can be scrolled fully into view inside the card list (the page itself never
+ * scrolls). Returns how much of the list is hidden. */
+async function cardsReachable(page: Page) {
+  await expect(page.locator('.course-choice .menu-heading .intro')).toBeInViewport({ ratio: 1 });
+  const cards = page.locator('.course-option');
+  await expect(cards).toHaveCount(5);
+  const hidden = await page
+    .locator('.course-options')
+    .evaluate((list) => list.scrollHeight - list.clientHeight);
+  for (const card of await cards.all()) {
+    await card.evaluate((c) => c.scrollIntoView({ block: 'nearest' }));
+    await expect(card).toBeInViewport({ ratio: 1 });
+    expect((await card.boundingBox())!.height).toBeGreaterThanOrEqual(48);
+  }
+  expect(
+    await page.evaluate(() => document.documentElement.scrollHeight - innerHeight),
+  ).toBeLessThanOrEqual(1);
+  await page.locator('.course-options').evaluate((list) => (list.scrollTop = 0));
+  return hidden;
+}
+
 /** Layout invariants for the current menu screen. */
 async function checkLayout(page: Page) {
   const r = await page.evaluate(() => {
@@ -357,28 +379,23 @@ for (const [width, height, screens] of [
     }
   });
 
-// SCRUM-141 QA146-01: on short landscape phones all course cards (five since SCRUM-241) are
-// fully visible without scrolling the card list.
+// SCRUM-141 QA146-01: on short landscape phones all course cards (five since SCRUM-241) were
+// fully visible without scrolling the card list. SCRUM-333 (Peter): the intro line (signed out:
+// the sign-in note) now stays visible there too, and the cards may scroll inside their list:
+// every card is reachable in full, the page never scrolls.
 for (const [width, height] of [
   [844, 390],
   [568, 320],
   [733, 500],
 ] as const)
   for (const lang of ['en', 'sk'])
-    test(`all five course cards visible at ${width}x${height} ${lang}`, async ({ page }) => {
+    test(`intro visible and all five course cards reachable at ${width}x${height} ${lang}`, async ({
+      page,
+    }) => {
       await page.setViewportSize({ width, height });
       await page.goto('/');
       if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
-      const cards = page.locator('.course-option');
-      await expect(cards).toHaveCount(5);
-      for (const card of await cards.all()) {
-        await expect(card).toBeInViewport({ ratio: 1 });
-        expect((await card.boundingBox())!.height).toBeGreaterThanOrEqual(48);
-      }
-      const list = await page
-        .locator('.course-options')
-        .evaluate((l) => ({ hidden: l.scrollHeight - l.clientHeight, top: l.scrollTop }));
-      expect(list.hidden).toBeLessThanOrEqual(1);
+      await cardsReachable(page);
     });
 
 // QA271-03: at 200% text on the phone the course detail runs under the icon (full card width),
@@ -424,7 +441,13 @@ for (const lang of ['en', 'sk'])
     const pick = await page
       .locator('.bear-picks-button')
       .evaluate((button) => (button as HTMLElement).offsetHeight + 8);
-    await expect.poll(async () => (await layout()).hidden).toBeLessThanOrEqual(200 + fifth + pick);
+    // SCRUM-333: the intro stays visible: the list may hide its height and margins more.
+    const intro = await page
+      .locator('.course-choice .menu-heading .intro')
+      .evaluate((p) => (p as HTMLElement).offsetHeight + 16);
+    await expect
+      .poll(async () => (await layout()).hidden)
+      .toBeLessThanOrEqual(200 + fifth + pick + intro);
     const large = await layout();
     expect(large.cards.every((c) => c.detailUnderIcon && c.detailBelowTitle)).toBe(true);
     expect(large.pageScroll).toBeLessThanOrEqual(1);
@@ -437,7 +460,9 @@ for (const lang of ['en', 'sk'])
 // layout settles (it used to switch the compact heading on and off at 884x600, and cut a card
 // at 742x702 and 1280x520). SCRUM-309: at 320x568 the "Bear picks a game" button above the
 // cards takes the room of the last card: there the list scrolls inside by at most the button's
-// height and gap (no page scroll); every other device still shows all five cards.
+// height and gap (no page scroll); every other device still shows all five cards. SCRUM-333:
+// windows up to 568 px high keep the intro and their cards may scroll inside the list (every
+// card reachable in full, no page scroll); taller devices still show all five cards.
 for (const device of ALL_DEVICES)
   for (const lang of ['en', 'sk'] as const)
     test(`signed in: five course cards visible and the layout settles at ${device.width}x${device.height} ${lang}`, async ({
@@ -486,15 +511,39 @@ for (const device of ALL_DEVICES)
       expect(
         await page.evaluate(() => document.documentElement.scrollHeight - innerHeight),
       ).toBeLessThanOrEqual(0);
-      if (device.width === 320 && device.height === 568) {
-        const pick = await page
-          .locator('.bear-picks-button')
-          .evaluate((button) => (button as HTMLElement).offsetHeight + 8);
-        expect(hidden).toBeLessThanOrEqual(pick);
-        for (const card of (await cards.all()).slice(0, 4))
-          await expect(card).toBeInViewport({ ratio: 1 });
+      if (device.height <= 568) {
+        await cardsReachable(page);
         return;
       }
       for (const card of await cards.all()) await expect(card).toBeInViewport({ ratio: 1 });
       expect(hidden).toBeLessThanOrEqual(1);
+    });
+
+// SCRUM-333 (Peter): signed out, the sign-in note under the heading is visible on every defined
+// device (it used to be hidden on short windows), and every course card stays reachable.
+for (const device of ALL_DEVICES)
+  for (const lang of ['en', 'sk'] as const)
+    test(`signed out: sign-in note visible at ${device.width}x${device.height} ${lang}`, async ({
+      page,
+    }) => {
+      await page.route('**/api/**', (route) =>
+        route.fulfill({
+          contentType: 'application/json',
+          body: JSON.stringify(
+            new URL(route.request().url()).pathname === '/api/me'
+              ? { account: null }
+              : { available: false },
+          ),
+        }),
+      );
+      await page.setViewportSize({ width: device.width, height: device.height });
+      await page.goto('/');
+      if (lang === 'sk') await setLanguage(page, 'Slovenčina', { gear: 'name', close: 'button' });
+      await expect(page.locator('.course-choice .menu-heading .intro')).toHaveText(
+        lang === 'en'
+          ? 'Sign in to collect points and compare with other players.'
+          : 'Prihlás sa, zbieraj body a porovnaj sa s ostatnými hráčmi.',
+      );
+      await cardsReachable(page);
+      await expect(page.locator('.bear-picks-button')).toBeInViewport({ ratio: 1 });
     });
