@@ -489,3 +489,29 @@ describe('copy', () => {
     expect(copy.en.bearPicks.button).toBe('Bear picks a game');
   });
 });
+
+// SCRUM-324 (AC 10): the bear can pick Pexeso (Logic 6-8). Its count choice is hidden for that
+// game, Play starts the board (lesson size = pairs) and the remembered count stays.
+describe('Pexeso in Bear picks a game', () => {
+  it('no count choice for Pexeso; Play starts the board; the remembered count is unchanged', () => {
+    vi.mocked(picker.pickGame).mockReturnValue({ course: 'logic', shown: 7 });
+    localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 6, size: 20 }));
+    render(<App />);
+    open();
+    expect(shownGame()).toBe('Logic|Level 7 · Matching pairs');
+    expect(document.querySelector('.pick-sizes')).toBeNull();
+    expect(screen.queryByRole('radio', { name: /exercises$/ })).toBeNull();
+    settle();
+    tap('Play');
+    const board = screen.getByRole('group', { name: 'Cards' });
+    expect(within(board).getAllByRole('button')).toHaveLength(20);
+    expect(document.querySelector('.level-pill')).toHaveTextContent('Level 7');
+    expect(stored()).toEqual({ age: 6, size: 20 });
+    // Back to the mode: another (non-Pexeso) game shows the remembered count again.
+    vi.mocked(picker.pickGame).mockReturnValue({ course: 'math', shown: 4 });
+    fireEvent.click(button('Back to courses'));
+    settle();
+    open();
+    expect(screen.getByRole('radio', { name: '20 exercises' })).toBeChecked();
+  });
+});
