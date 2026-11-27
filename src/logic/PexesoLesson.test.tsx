@@ -191,6 +191,7 @@ describe('signed out (AC 8, decision 4)', () => {
     const summary = document.querySelector<HTMLElement>('.summary')!;
     expect(summary).toHaveTextContent('Pairs found: 6');
     expect(summary).toHaveTextContent('Turns: 7');
+    expect(summary).toHaveTextContent(/Time \d+:\d\d · about \d+ s per pair/);
     expect(summary).not.toHaveTextContent(/first try/i);
     expect(screen.getByRole('heading', { level: 2 })).toHaveFocus();
     expect(calls.filter((c) => c.path.startsWith('/api/progress'))).toEqual([]);

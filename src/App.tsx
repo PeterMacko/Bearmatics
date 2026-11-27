@@ -1231,7 +1231,15 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                 ) : undefined
               }
               headingRef={summaryRef}
-              time={lessonTime && lessonTimeText(t.lessonTime, lessonTime)}
+              time={
+                lessonTime &&
+                lessonTimeText(
+                  pexeso
+                    ? { ...t.lessonTime, line: t.pexeso.timeLine, spoken: t.pexeso.timeSpoken }
+                    : t.lessonTime,
+                  lessonTime,
+                )
+              }
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}

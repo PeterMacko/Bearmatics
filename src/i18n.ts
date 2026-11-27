@@ -329,6 +329,9 @@ export const copy = {
       helpPicture: 'Two cards with the same apple make a pair',
       summaryPairs: 'Pairs found: {pairs}',
       summaryTurns: 'Turns: {turns}',
+      // The lesson time line of the summary, per pair instead of per exercise.
+      timeLine: 'Time {time} · about {average} per pair',
+      timeSpoken: 'Time {time}, about {average} per pair',
     },
     // SCRUM-241: Word search (Osemsmerovka) with the English words.
     searchCourse: 'Word search',
@@ -909,6 +912,8 @@ export const copy = {
       helpPicture: 'Dve karty s rovnakým jablkom sú dvojica',
       summaryPairs: 'Nájdené dvojice: {pairs}',
       summaryTurns: 'Ťahy: {turns}',
+      timeLine: 'Čas {time} · asi {average} na dvojicu',
+      timeSpoken: 'Čas {time}, asi {average} na dvojicu',
     },
     // SCRUM-241: Osemsmerovka s anglickými slovami.
     searchCourse: 'Osemsmerovka',
