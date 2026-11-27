@@ -76,13 +76,19 @@ function solve(pairs: number) {
 describe('menu (AC 1)', () => {
   test('Levels 6-8 have no exercise-count choice; other Logic levels keep it', () => {
     openLogic();
-    const count = () => document.querySelector('.selection .session-options');
+    // The count keeps its room (invisible, aria-hidden, inert) so the menu does not move.
+    const count = () =>
+      document.querySelector('.selection .session-options:not(.session-options-off)');
+    const radios = () => screen.queryAllByRole('radio', { name: /exercises$/ });
+    expect(radios()).toHaveLength(3);
     expect(count()).not.toBeNull();
     for (const level of [6, 7, 8]) {
       fireEvent.click(
         screen.getByRole('radio', { name: new RegExp(`^Level ${level} · Matching pairs`) }),
       );
       expect(count(), `level ${level}`).toBeNull();
+      expect(radios(), `level ${level}`).toHaveLength(0);
+      expect(document.querySelector('.session-options-off')).toHaveAttribute('inert');
     }
     fireEvent.click(screen.getByRole('radio', { name: /^Level 5 ·/ }));
     expect(count()).not.toBeNull();

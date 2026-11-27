@@ -130,24 +130,29 @@ export default function LevelMenu<L extends number>({
         })}
       </fieldset>
       <div className="menu-controls">
-        {!withoutSize?.(level) && (
-          <fieldset className="session-options">
-            <legend>{t.count}</legend>
-            {SESSION_SIZES.map((n) => (
-              <label key={n}>
-                <input
-                  type="radio"
-                  name={sizeName}
-                  checked={size === n}
-                  onChange={() => onSizeChange(n)}
-                />
-                <span>
-                  {n} <span>{t.exercises}</span>
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        )}
+        {/* SCRUM-324: levels without a count (Pexeso) keep the fieldset's room, invisible and
+            out of reach, so the menu does not reflow and Start does not move when a level is
+            chosen. */}
+        <fieldset
+          className={`session-options${withoutSize?.(level) ? ' session-options-off' : ''}`}
+          aria-hidden={withoutSize?.(level) || undefined}
+          inert={withoutSize?.(level) || undefined}
+        >
+          <legend>{t.count}</legend>
+          {SESSION_SIZES.map((n) => (
+            <label key={n}>
+              <input
+                type="radio"
+                name={sizeName}
+                checked={size === n}
+                onChange={() => onSizeChange(n)}
+              />
+              <span>
+                {n} <span>{t.exercises}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
         <button
           type={startType}
           className="primary start-button"

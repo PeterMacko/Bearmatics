@@ -1,6 +1,10 @@
 /* SCRUM-324: Logic Levels 6-8 Pexeso (memory game). Part of index.css (after patterns.css).
    The card size (--card) and the board shape (--cols x --rows) come from usePexesoFit; cards
    never go below 48 px (then the page may scroll). Own layout blocks (:has(.pexeso-practice)). */
+/* Levels without an exercise count (Pexeso): the count keeps its room, invisible. */
+.session-options.session-options-off {
+  visibility: hidden;
+}
 .pexeso-practice {
   --card: 64px;
   --card-gap: 6px;
@@ -98,7 +102,8 @@
   min-height: var(--target);
   margin: 0;
   padding: 4px;
-  font-size: 1.3rem;
+  /* The round "i" keeps its size at large text (its name is the button's label). */
+  font-size: 20px;
 }
 .pexeso-title {
   margin: 4px 0 0;

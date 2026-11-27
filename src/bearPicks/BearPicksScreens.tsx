@@ -176,24 +176,28 @@ export function PickNextScreen({
           </span>
         </div>
         {signedOut && <p className="pick-note">{t.signInNote}</p>}
-        {showSizes && (
-          <fieldset className="session-options pick-sizes">
-            <legend>{t.count}</legend>
-            {SESSION_SIZES.map((n) => (
-              <label key={n}>
-                <input
-                  type="radio"
-                  name="pick-size"
-                  checked={size === n}
-                  onChange={() => onSize(n)}
-                />
-                <span>
-                  {n} <span>{t.exercises}</span>
-                </span>
-              </label>
-            ))}
-          </fieldset>
-        )}
+        {/* SCRUM-324: Pexeso has no count: the fieldset keeps its room (invisible, out of reach),
+            so Play, Choose another and Stop never move under the finger between games. */}
+        <fieldset
+          className={`session-options pick-sizes${showSizes ? '' : ' session-options-off'}`}
+          aria-hidden={!showSizes || undefined}
+          inert={!showSizes || undefined}
+        >
+          <legend>{t.count}</legend>
+          {SESSION_SIZES.map((n) => (
+            <label key={n}>
+              <input
+                type="radio"
+                name="pick-size"
+                checked={size === n}
+                onChange={() => onSize(n)}
+              />
+              <span>
+                {n} <span>{t.exercises}</span>
+              </span>
+            </label>
+          ))}
+        </fieldset>
         <div className="pick-actions">
           <button
             type="button"

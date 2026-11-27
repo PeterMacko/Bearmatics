@@ -499,7 +499,9 @@ describe('Pexeso in Bear picks a game', () => {
     render(<App />);
     open();
     expect(shownGame()).toBe('Logic|Level 7 · Matching pairs');
-    expect(document.querySelector('.pick-sizes')).toBeNull();
+    // The count keeps its room (invisible, aria-hidden, inert): the buttons do not move.
+    expect(document.querySelector('.pick-sizes')).toHaveClass('session-options-off');
+    expect(document.querySelector('.pick-sizes')).toHaveAttribute('aria-hidden', 'true');
     expect(screen.queryByRole('radio', { name: /exercises$/ })).toBeNull();
     settle();
     tap('Play');

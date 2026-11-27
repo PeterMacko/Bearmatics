@@ -34,6 +34,8 @@ async function until(page: Page, match: RegExp) {
   expect(await game(page)).toMatch(match);
   if (pressed) await page.waitForTimeout(SETTLE);
 }
+/** SCRUM-324: any game but Pexeso (Logic 6-8 have no exercise count on this screen). */
+const NOT_PEXESO = /^(?!Logic\|Level [678] )/;
 /** Answers a maths lesson to its summary, all first try. */
 async function solveAll(page: Page) {
   while (!(await page.locator('.summary').isVisible())) {
@@ -53,6 +55,7 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   await expect(heading(page)).toHaveText('The bear picked this game');
   await expect(heading(page)).toBeFocused();
   expect(await store(page)).toEqual({ age: 7, size: 5 });
+  await until(page, NOT_PEXESO);
   await expect(page.getByRole('radio', { name: '5 exercises' })).toBeChecked();
   // Signed out: the sign-in note above the exercise count instead of the × 1.5.
   await expect(page.locator('.pick-note')).toHaveText(
@@ -78,6 +81,7 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   await page.reload();
   await openMode(page);
   await expect(heading(page)).toHaveText('The bear picked this game');
+  await until(page, NOT_PEXESO);
   await expect(page.getByRole('radio', { name: '10 exercises' })).toBeChecked();
   await page.getByRole('button', { name: 'Change age (7)' }).click();
   await expect(heading(page)).toHaveText('How old are you?');
@@ -183,6 +187,7 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   await expect(page.getByRole('textbox')).toHaveCount(0);
   expect(await game(page)).not.toBe(played);
   await page.waitForTimeout(SETTLE);
+  await until(page, NOT_PEXESO);
   await page.locator('.pick-sizes label').nth(1).click();
   await until(page, /^Maths\|/);
   await page.getByRole('button', { name: 'Play' }).click();

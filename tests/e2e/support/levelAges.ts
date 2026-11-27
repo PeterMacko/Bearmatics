@@ -6,7 +6,7 @@ import { expect, type Page } from '@playwright/test';
 export const AGES: Record<string, string[]> = {
   small: ['5–6', '5–7', '5–7'],
   math: ['6–7', '6–8', '7–8', '7–9', '8–9', '8–9', '8–9'],
-  logic: ['5–7', '5–9', '5–6', '5–7', '5–8'],
+  logic: ['5–7', '5–9', '5–6', '5–7', '5–8', '5–9', '5–9', '5–9'], // SCRUM-324: + Pexeso 6-8
   english: ['5–9', '5–9', '8–9'],
   wordsearch: ['5–9', '7–9', '8–9'],
 };
