@@ -332,6 +332,16 @@
   .menu-shell .pick-sizes legend {
     margin-bottom: 6px;
   }
+  /* Signed out: the sign-in note takes the line of "How many exercises?" (the radios say
+     "5 exercises"; the legend stays for screen readers), so the screen still fits (320x568, 568x320). */
+  .menu-shell .pick-note + .pick-sizes legend {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 }
 /* Short landscape windows: no gear-height row above the eyebrow (the app bar is a side column
    there), and Play, Choose another, Stop and Change age in two rows of two, or in one row when
@@ -354,16 +364,6 @@
   }
   .pick-age-button {
     min-height: 56px;
-  }
-  /* Signed out: the sign-in note takes the line of "How many exercises?" (the radios say
-     "5 exercises"; the legend stays for screen readers), so the screen still fits (568x320). */
-  .menu-shell .pick-note + .pick-sizes legend {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
   }
 }
 .menu-shell .pick-panel {
