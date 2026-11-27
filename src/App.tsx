@@ -84,6 +84,9 @@ import {
   type SearchLesson,
 } from './wordsearch/lesson';
 import WordSearchView from './wordsearch/WordSearchView';
+import { PickAgeScreen, PickNextScreen } from './bearPicks/BearPicksScreens';
+import { pickAnother, pickGame, type Game } from './bearPicks/picker';
+import { readBearPicks, writeBearPicks, type PickSize } from './bearPicks/storage';
 import { AccountButton } from './AccountButton';
 import AccountScreens from './account/AccountScreens';
 import { useAccount, useAccountLoad } from './account/useAccount';
@@ -123,6 +126,9 @@ type LessonKind = {
   practice: () => ReactNode;
 };
 
+/** SCRUM-309: a lesson started by "Bear picks a game" (its level and exercise count). */
+type PickStart = { level: number; size: number };
+
 /** `startLanguage`: the language the app opens in (`/?lang=sk|en` from the About page, SCRUM-218). */
 export default function App({ startLanguage = 'en' }: { startLanguage?: Language } = {}) {
   const [language, setLanguage] = useState<Language>(startLanguage);
@@ -134,6 +140,23 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const [session, setSession] = useState<Session | null>(null);
   // Course screen state: null is the course choice. Nothing is stored between visits.
   const [course, setCourse] = useState<Course | null>(null);
+  // SCRUM-309 "Bear picks a game": the mode's screen (age or next game) with the game shown and
+  // when the screen appeared (double-tap guard); the child's age and exercise count (device
+  // storage); the game of the lesson running in the mode, and the last finished one.
+  const [pick, setPick] = useState<{
+    screen: 'age' | 'next';
+    game: Game | null;
+    shownAt: number;
+  } | null>(null);
+  const [pickAge, setPickAge] = useState<number | null>(null);
+  const [pickSize, setPickSize] = useState<PickSize>(5);
+  const [pickLesson, setPickLesson] = useState<Game | null>(null);
+  const pickLast = useRef<Game | null>(null);
+  // When Stop led to the course choice (QA321-01): the rest of its double tap must not open
+  // the course card that sits where Stop was.
+  const [courseSettleAt, setCourseSettleAt] = useState<number | null>(null);
+  // The maths lesson's level as shown in its course menu (Small maths or Maths).
+  const [mathShown, setMathShown] = useState(1);
   const [englishLevel, setEnglishLevel] = useState<EnglishLevel>(1);
   const [englishSize, setEnglishSize] = useState(10);
   const [englishSession, setEnglishSession] = useState<Session<WordQuestion> | null>(null);
@@ -194,7 +217,12 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     googleReady,
     openAccount,
   } = accountState;
-  const menuRef = useMenuLayout(!active && !accountScreen, language, level, course ?? 'choice');
+  const menuRef = useMenuLayout(
+    !active && !accountScreen && !pick,
+    language,
+    level,
+    course ?? 'choice',
+  );
   const menuHeadingRef = useRef<HTMLHeadingElement>(null);
   // SCRUM-249: the dress screen open over an account form; Back closes it.
   const [closeSubView, setCloseSubView] = useState<(() => void) | null>(null);
@@ -211,7 +239,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     focusMenuHeading.current = false;
     window.scrollTo(0, 0);
     menuHeadingRef.current?.focus({ preventScroll: true });
-  }, [course, accountScreen, practising]);
+  }, [course, accountScreen, practising, pick?.screen, pick?.shownAt]);
   useAccountLoad(accountState);
   const [answer, setAnswer] = useState('');
   const compact = useCompactPractice();
@@ -331,6 +359,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setSearchLesson(null);
     setDemoRun(0);
     resetAnswers();
+    // SCRUM-309: leaving a lesson or its summary ends "Bear picks a game" (Next game opens it
+    // again right after this).
+    setPick(null);
+    setPickLesson(null);
   };
   // What to open after leaving a lesson (the profile button asks like Back, then opens it).
   const afterLeave = useRef<(() => void) | null>(null);
@@ -392,24 +424,25 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     session && current
       ? PICTURE_THEMES[session.exercises.indexOf(current) % PICTURE_THEMES.length]
       : PICTURE_THEMES[0];
-  const start = () => {
+  // `pick`: started by "Bear picks a game" with its own level and size (SCRUM-309).
+  const start = (pick?: PickStart & { small: boolean }) => {
+    const small = pick ? pick.small : course === 'small';
+    const lessonLevel = pick ? (pick.level as Level) : small ? smallLevel : level;
+    const lessonSize = pick ? pick.size : small ? smallSize : size;
+    const shown = shownLevel(small ? SMALL_MATH_LEVELS : MATH_LEVELS, lessonLevel);
     setPresentation((n) => n + 1);
     resetForNewSession();
     void activateSound();
     setAnswer('');
     // SCRUM-211: the first example appears with this tap; a new lesson overwrites the start.
-    startLessonClock(course === 'small' ? smallSize : size);
-    beginLesson(
-      course === 'small' ? smallSize : size,
-      course === 'small'
-        ? { course: 'small', level: shownLevel(SMALL_MATH_LEVELS, smallLevel) }
-        : { course: 'math', level: shownLevel(MATH_LEVELS, level) },
-    );
-    setSession(
-      createSession(
-        course === 'small' ? generateSession(smallLevel, smallSize) : generateSession(level, size),
-      ),
-    );
+    startLessonClock(lessonSize);
+    beginLesson(lessonSize, {
+      course: small ? 'small' : 'math',
+      level: shown,
+      ...(pick && { bearPicks: true }),
+    });
+    setMathShown(shown);
+    setSession(createSession(generateSession(lessonLevel, lessonSize)));
   };
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -431,27 +464,33 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const showHint = () => setSession((previous) => previous && nextHintStage(previous));
   // SCRUM-262: a Logic lesson starts with the picture demo (SCRUM-289: only until it has been
   // seen once on this device), then the first puzzle.
-  const startLogic = () => {
+  const startLogic = (pick?: PickStart) => {
+    const lessonLevel = pick ? (pick.level as LogicLevel | PatternLevel) : logicLevel;
+    const lessonSize = pick ? pick.size : logicSize;
     setPresentation((n) => n + 1);
     resetForNewSession();
     void activateSound();
-    startLessonClock(logicSize);
-    beginLesson(logicSize, { course: 'logic', level: logicLevel });
+    startLessonClock(lessonSize);
+    beginLesson(lessonSize, {
+      course: 'logic',
+      level: lessonLevel,
+      ...(pick && { bearPicks: true }),
+    });
     setLogicArrows([]);
     // SCRUM-289 / SCRUM-299: each game's demo plays until it has been seen to the end once on
     // this device (one shared helper, one flag per game).
-    if (demoSeen(logicLevel >= 3 ? 'patterns' : 'bear-path')) setDemoRun(0);
+    if (demoSeen(lessonLevel >= 3 ? 'patterns' : 'bear-path')) setDemoRun(0);
     else showDemo();
-    if (logicLevel >= 3) {
+    if (lessonLevel >= 3) {
       setPatternSession(
-        createSession(generatePatternSession(logicLevel as PatternLevel, logicSize)),
+        createSession(generatePatternSession(lessonLevel as PatternLevel, lessonSize)),
       );
       return;
     }
-    setLogicLessonLevel(logicLevel as LogicLevel);
+    setLogicLessonLevel(lessonLevel as LogicLevel);
     setLogicSession(
       createSession(
-        logicLevel === 2 ? generateStoneSession(logicSize) : generateBearSession(logicSize),
+        lessonLevel === 2 ? generateStoneSession(lessonSize) : generateBearSession(lessonSize),
       ),
     );
   };
@@ -473,14 +512,20 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setPatternSession((previous) => previous && advance(previous));
   };
   // SCRUM-241: a word search lesson of 5/10/20 words = 1/2/4 new grids.
-  const startSearch = () => {
+  const startSearch = (pick?: PickStart) => {
+    const lessonLevel = pick ? (pick.level as SearchLevel) : searchLevel;
+    const lessonSize = pick ? pick.size : searchSize;
     setPresentation((n) => n + 1);
     resetForNewSession();
     void activateSound();
     words.stop();
-    startLessonClock(searchSize);
-    beginLesson(searchSize, { course: 'wordsearch', level: searchLevel });
-    setSearchLesson(createSearchLesson(searchLevel, generateSearchLesson(searchLevel, searchSize)));
+    startLessonClock(lessonSize);
+    beginLesson(lessonSize, {
+      course: 'wordsearch',
+      level: lessonLevel,
+      ...(pick && { bearPicks: true }),
+    });
+    setSearchLesson(createSearchLesson(lessonLevel, generateSearchLesson(lessonLevel, lessonSize)));
   };
   /** A found word: a pop (follows Mute) and the word itself (always), from the tap's gesture. */
   const afterSearch = (before: SearchLesson, after: SearchLesson) => {
@@ -514,22 +559,28 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     if (searchLesson?.done) summaryRef.current?.focus();
   }, [searchLesson?.done]);
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
-  const startEnglish = () => {
-    startLessonClock(englishSize);
-    beginLesson(englishSize, { course: 'english', level: englishLevel });
+  const startEnglish = (pick?: PickStart) => {
+    const lessonLevel = pick ? (pick.level as EnglishLevel) : englishLevel;
+    const lessonSize = pick ? pick.size : englishSize;
+    startLessonClock(lessonSize);
+    beginLesson(lessonSize, {
+      course: 'english',
+      level: lessonLevel,
+      ...(pick && { bearPicks: true }),
+    });
     resetForNewSession();
     void activateSound();
     let first: string;
-    if (englishLevel === 3) {
+    if (lessonLevel === 3) {
       setWritten('');
       setWriteNote(null);
       setWrongAnswer(null);
-      const created = createSession(generateWriteSession(englishSize));
+      const created = createSession(generateWriteSession(lessonSize));
       setWriteSession(created);
       first = created.exercises[0].target;
     } else {
       setChoice('');
-      const created = createSession(generateWordSession(englishLevel, englishSize));
+      const created = createSession(generateWordSession(lessonLevel, lessonSize));
       setEnglishSession(created);
       first = created.exercises[0].target;
     }
@@ -585,6 +636,76 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setEnglishSession(following);
     setChoice('');
     playFollowing(following);
+  };
+
+  // SCRUM-309 "Bear picks a game": random games that suit the child's age, one after another.
+  const showPick = (screen: 'age' | 'next', game: Game | null) => {
+    focusMenuHeading.current = true;
+    setPick({ screen, game, shownAt: performance.now() });
+  };
+  const openBearPicks = () => {
+    // A fresh run: the age and count from the device (blocked storage: ask, start at 5).
+    const stored = readBearPicks();
+    setPickAge(stored.age);
+    setPickSize(stored.size);
+    pickLast.current = null;
+    if (stored.age === null) showPick('age', null);
+    else showPick('next', pickGame(stored.age, [], Math.random));
+  };
+  const choosePickAge = (age: number) => {
+    setPickAge(age);
+    writeBearPicks({ age, size: pickSize });
+    showPick('next', pickGame(age, [pickLast.current], Math.random));
+  };
+  const choosePickSize = (n: number) => {
+    setPickSize(n as PickSize);
+    writeBearPicks({ age: pickAge, size: n as PickSize });
+  };
+  const chooseAnother = () => {
+    if (!pick?.game || pickAge === null) return;
+    // Same screen (no new heading focus), but a new game under the finger: the guard time
+    // restarts, so a double tap picks once in every engine (QA321-04) and cannot start Play.
+    setPick({
+      ...pick,
+      game: pickAnother(pickAge, pick.game, pickLast.current, Math.random),
+      shownAt: performance.now(),
+    });
+  };
+  const stopPick = () => {
+    focusMenuHeading.current = true;
+    setPick(null);
+    setCourseSettleAt(performance.now());
+  };
+  /** Summary "Stop" in the mode: the course choice, guarded like Stop on the next-game screen. */
+  const stopPickSummary = () => {
+    endPractice();
+    setCourseSettleAt(performance.now());
+  };
+  const playPick = () => {
+    const game = pick?.game;
+    if (!game) return;
+    const at = { level: game.shown, size: pickSize };
+    setPick(null);
+    setPickLesson(game);
+    // Started from this tap (the English word plays from it, as from Start).
+    if (game.course === 'small')
+      start({
+        ...at,
+        small: true,
+        level: SMALL_MATH_LEVELS.find((l) => l.shown === game.shown)!.value,
+      });
+    else if (game.course === 'math') start({ ...at, small: false });
+    else if (game.course === 'logic') startLogic(at);
+    else if (game.course === 'english') startEnglish(at);
+    else startSearch(at);
+  };
+  /** Summary "Next game": the finished game is the last one and stays out of the next pick. */
+  const nextPickGame = () => {
+    const last = pickLesson;
+    endPractice();
+    pickLast.current = last;
+    if (pickAge === null) showPick('age', null);
+    else showPick('next', pickGame(pickAge, [last], Math.random));
   };
 
   const modalOpen = leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen;
@@ -799,9 +920,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                       current && (
                         <PracticeView
                           t={t}
-                          level={
-                            course === 'small' ? shownLevel(SMALL_MATH_LEVELS, smallLevel) : level
-                          }
+                          level={mathShown}
                           current={current}
                           pictureTheme={pictureTheme}
                           presentation={presentation}
@@ -834,7 +953,11 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
   const inLesson = !!active && !active.done;
   const back: BarBack | null = active
-    ? { label: t.back, onClick: active.done ? endPractice : () => requestLeave() }
+    ? {
+        // SCRUM-309: a "Bear picks a game" lesson goes back to the course choice.
+        label: pickLesson ? t.backToCourses : t.back,
+        onClick: active.done ? endPractice : () => requestLeave(),
+      }
     : accountScreen
       ? {
           label: t.account.back,
@@ -850,9 +973,11 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                       : null,
                 ),
         }
-      : course
-        ? { label: t.backToCourses, onClick: () => navigate(null) }
-        : null;
+      : pick
+        ? { label: t.backToCourses, onClick: stopPick }
+        : course
+          ? { label: t.backToCourses, onClick: () => navigate(null) }
+          : null;
 
   const summaryPoints =
     account && shownFrame ? (
@@ -899,7 +1024,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
         label={t.appBar}
         back={back}
         inert={modalOpen}
-        layoutKey={`${language}:${course}:${accountScreen}:${!!active}:${account?.nickname}`}
+        layoutKey={`${language}:${course}:${pick?.screen}:${accountScreen}:${!!active}:${account?.nickname}`}
       >
         {account && points !== null && shownFrame && (
           <BadgeButton
@@ -922,6 +1047,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             if (inLesson) requestLeave(open);
             else {
               if (active) endPractice(); // the summary: nothing left to lose
+              setPick(null); // the profile ends "Bear picks a game" like Stop
               open();
             }
           }}
@@ -973,8 +1099,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}
-              onAgain={lessonKind.onAgain}
-              onBack={endPractice}
+              onAgain={pickLesson ? nextPickGame : lessonKind.onAgain}
+              onBack={pickLesson ? stopPickSummary : endPractice}
+              againLabel={pickLesson ? t.bearPicks.nextGame : undefined}
+              backLabel={pickLesson ? t.bearPicks.stop : undefined}
             />
           ) : (
             lessonKind.practice()
@@ -991,6 +1119,33 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             onOpen={openAccount}
             onSubView={onSubView}
           />
+        ) : pick ? (
+          pick.screen === 'next' && pick.game && pickAge !== null ? (
+            <PickNextScreen
+              t={t}
+              game={pick.game}
+              age={pickAge}
+              size={pickSize}
+              multiplier={nextMultiplier({ course: pick.game.course, level: pick.game.shown })}
+              shownAt={pick.shownAt}
+              headingRef={menuHeadingRef}
+              onSize={choosePickSize}
+              onPlay={playPick}
+              onAnother={chooseAnother}
+              onStop={stopPick}
+              onChangeAge={() => showPick('age', null)}
+              signedIn={!!account}
+              signedOut={accountKnown && !account}
+            />
+          ) : (
+            <PickAgeScreen
+              t={t}
+              age={pickAge}
+              shownAt={pick.shownAt}
+              headingRef={menuHeadingRef}
+              onAge={choosePickAge}
+            />
+          )
         ) : course === 'small' ? (
           <LevelMenu
             t={t}
@@ -1081,7 +1236,15 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             onStart={startEnglish}
           />
         ) : (
-          <CourseChoice t={t} headingRef={menuHeadingRef} onChoose={navigate} />
+          <CourseChoice
+            t={t}
+            headingRef={menuHeadingRef}
+            onChoose={navigate}
+            onBearPicks={openBearPicks}
+            settleSince={courseSettleAt}
+            signedOut={accountKnown && !account}
+            signedIn={!!account}
+          />
         )}
       </main>
       {boardOpen && account && (
@@ -1154,6 +1317,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
           }}
           onLeave={() => {
             setLeaveOpen(false);
+            // QA321-06: leaving a Bear picks lesson shows the course choice; the rest of a double
+            // tap on "Choose a new trail" must not open the card under it.
+            if (pickLesson) setCourseSettleAt(performance.now());
             endPractice();
             afterLeave.current?.();
             afterLeave.current = null;

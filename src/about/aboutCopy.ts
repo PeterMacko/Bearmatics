@@ -9,6 +9,8 @@ export const SHOTS = [
   'patterns',
   'english',
   'wordsearch',
+  // SCRUM-309: the next-game screen of "Bear picks a game" (in "How a lesson works").
+  'bear-picks',
   'summary',
   'app-bar',
   'leaderboard',
@@ -68,6 +70,8 @@ export const aboutCopy = {
       'Choose a level and 5, 10 or 20 exercises.',
       // SCRUM-308: the age badge in the level menus.
       'Every level in the level menu shows a suggested age, for example 5–7. It is only a guide: every level can always be chosen.',
+      // SCRUM-309
+      'Or let the bear choose: “Bear picks a game” asks your child’s age once (5, 6, 7, 8 or 9+) and then offers one random game for that age after another, never the same game twice in a row. “Choose another” shows a different game; there your child also picks 5, 10 or 20 exercises. Signed in, these lessons give 1.5 times the points, on top of the daily rule below.',
       'Answer with the on-screen number pad or the keyboard. A wrong answer can simply be tried again.',
       'In Maths, hints show the problem in smaller steps.',
       'In Logic, your child plans the bear’s way to the honey with arrows and then presses Go. A short picture demo shows how at the first Logic lesson on a device; Show me plays it again any time.',
@@ -97,7 +101,11 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Choosing a course',
-        alt: 'Bearmatics on a phone: the bear and the five courses Small maths, Logic, Maths, English and Word search.',
+        alt: 'Bearmatics on a phone: the bear, the Bear picks a game button and the five courses Small maths, Logic, Maths, English and Word search.',
+      },
+      'bear-picks': {
+        caption: 'Bear picks a game',
+        alt: 'The game the bear picked for a 7-year-old: Maths level 4, Find the missing number, ages 7–9, the star for one and a half times the points and × 1.5, the choice of 5, 10 or 20 exercises and the buttons Play, Choose another, Stop and Change age (7).',
       },
       'small-maths': {
         caption: 'Small maths: count the pictures',
@@ -178,6 +186,7 @@ export const aboutCopy = {
     lesson: [
       'Vyber úroveň a 5, 10 alebo 20 príkladov.',
       'Každá úroveň v ponuke úrovní ukazuje odporúčaný vek, napríklad 5–7. Je to len pomôcka: vybrať sa dá vždy každá úroveň.',
+      'Alebo nech vyberie medveď: „Medveď vyberie hru“ sa raz opýta na vek dieťaťa (5, 6, 7, 8 alebo 9+) a potom ponúka jednu náhodnú hru pre tento vek za druhou, nikdy nie tú istú dvakrát po sebe. „Vyber inú“ ukáže inú hru; tam si dieťa vyberie aj 5, 10 alebo 20 príkladov. S prihlásením dávajú tieto lekcie 1,5-násobok bodov, navyše k dennému pravidlu nižšie.',
       'Odpoveď napíš číselníkom na obrazovke alebo klávesnicou. Nesprávnu odpoveď môžeš skúsiť znova.',
       'V Matematike pomôcky ukážu príklad v menších krokoch.',
       'V Logike dieťa naplánuje šípkami cestu medveďa k medu a potom stlačí Choď. Krátka obrázková ukážka ukáže ako pri prvej lekcii Logiky na zariadení; tlačidlo Ukáž mi ju kedykoľvek zopakuje.',
@@ -207,7 +216,11 @@ export const aboutCopy = {
     shots: {
       course: {
         caption: 'Výber kurzu',
-        alt: 'Bearmatics na mobile: medveď a päť kurzov Malá matematika, Logika, Matematika, Angličtina a Osemsmerovka.',
+        alt: 'Bearmatics na mobile: medveď, tlačidlo Medveď vyberie hru a päť kurzov Malá matematika, Logika, Matematika, Angličtina a Osemsmerovka.',
+      },
+      'bear-picks': {
+        caption: 'Medveď vyberie hru',
+        alt: 'Hra, ktorú medveď vybral pre 7-ročné dieťa: Matematika, úroveň 4, Hľadáme chýbajúce číslo, vek 7–9, hviezdička za jeden a pol násobok bodov a × 1,5, výber 5, 10 alebo 20 príkladov a tlačidlá Hrať, Vyber inú, Skončiť a Zmeniť vek (7).',
       },
       'small-maths': {
         caption: 'Malá matematika: počítame obrázky',

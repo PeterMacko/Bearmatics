@@ -1,3 +1,6 @@
+/** Taps within this time after a screen change are the rest of the tap that changed it. */
+export const SCREEN_SETTLE_MS = 600;
+
 /** The click event fields the guard reads (React and DOM mouse events both have them). */
 type Click = { detail: number; preventDefault: () => void };
 

@@ -1,6 +1,8 @@
-import type { RefObject } from 'react';
+import { useLayoutEffect, useRef, type RefObject } from 'react';
 import type { Copy } from './i18n';
+import { ignoreRepeatClick, SCREEN_SETTLE_MS } from './ignoreRepeatClick';
 import MenuHeading from './MenuHeading';
+import { watchResize } from './watchResize';
 
 export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
 
@@ -101,7 +103,8 @@ function WordSearchIcon() {
   );
 }
 
-const ICONS = {
+/** The course pictures (also on the "Bear picks a game" screen, SCRUM-309). */
+export const COURSE_ICONS = {
   small: SmallMathIcon,
   logic: LogicIcon,
   math: MathIcon,
@@ -114,11 +117,46 @@ export default function CourseChoice({
   t,
   headingRef,
   onChoose,
+  onBearPicks,
+  settleSince = null,
+  signedOut = false,
+  signedIn = false,
 }: {
   t: Copy;
   headingRef: RefObject<HTMLHeadingElement | null>;
   onChoose: (course: Course) => void;
+  /** SCRUM-309: the "Bear picks a game" mode. */
+  onBearPicks: () => void;
+  /** When "Bear picks a game" Stop led here: taps within SCREEN_SETTLE_MS are its rest. */
+  settleSince?: number | null;
+  /** Known to be signed out: the intro invites to sign in and the mode shows no × 1.5. */
+  signedOut?: boolean;
+  /** Signed in: only then the mode's "points × 1.5" (not while the account is loading). */
+  signedIn?: boolean;
 }) {
+  // QA321-01: Stop's double tap must not open the card (or the mode) now under the finger.
+  // Keyboard activation (detail 0) always works.
+  const tooSoon = (event: { detail: number }) =>
+    event.detail > 0 && settleSince !== null && performance.now() - settleSince < SCREEN_SETTLE_MS;
+  // Peter: the Bear picks button ends where the course cards end. The card list keeps room for
+  // its scrollbar (Chromium: 15 px, overlay scrollbars: 0), so the button gets the same room.
+  const sectionRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const section = sectionRef.current;
+    const list = section?.querySelector<HTMLElement>('.course-options');
+    if (!section || !list) return;
+    const measure = () => {
+      const style = getComputedStyle(list);
+      const gutter =
+        list.offsetWidth -
+        list.clientWidth -
+        parseFloat(style.borderLeftWidth) -
+        parseFloat(style.borderRightWidth);
+      section.style.setProperty('--course-gutter', `${Math.max(0, gutter)}px`);
+    };
+    measure();
+    return watchResize(measure, [list], { frame: 'next' });
+  }, []);
   const courses: { id: Course; title: string; detail: string }[] = [
     { id: 'small', title: t.smallCourse, detail: t.smallCourseDetail },
     { id: 'logic', title: t.logicCourse, detail: t.logicCourseDetail },
@@ -127,16 +165,53 @@ export default function CourseChoice({
     { id: 'wordsearch', title: t.searchCourse, detail: t.searchCourseDetail },
   ];
   return (
-    <section className="selection course-choice">
+    <section
+      ref={sectionRef}
+      className={`selection course-choice${signedOut ? ' signed-out' : ''}`}
+    >
       <MenuHeading
         eyebrow={t.courseEyebrow}
         title={t.courseChoose}
-        intro={t.courseIntro}
+        intro={signedOut ? t.signInNote : t.courseIntro}
         headingRef={headingRef}
       />
+      {/* SCRUM-309: above the course cards. In the menu's controls row, so the shared menu
+          layout counts it (useMenuLayout: heading, list, controls). */}
+      <div className="menu-controls bear-picks-controls">
+        <button
+          type="button"
+          className="primary bear-picks-button"
+          aria-labelledby="bear-picks-title"
+          aria-describedby="bear-picks-detail"
+          onClick={(event) => {
+            // Stop on the next-game screen leads here: its double tap must not start again.
+            if (!ignoreRepeatClick(event, tooSoon(event))) onBearPicks();
+          }}
+        >
+          <svg className="bear-picks-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <circle cx="6" cy="6.5" r="3.2" />
+            <circle cx="18" cy="6.5" r="3.2" />
+            <circle cx="12" cy="13" r="8.5" />
+            <circle cx="9" cy="11.5" r="1.2" className="bear-picks-eye" />
+            <circle cx="15" cy="11.5" r="1.2" className="bear-picks-eye" />
+            <ellipse cx="12" cy="16" rx="3" ry="2.2" className="bear-picks-eye" />
+          </svg>
+          <span className="bear-picks-text">
+            <span id="bear-picks-title" className="bear-picks-title">
+              {t.bearPicks.button}
+            </span>
+            <span id="bear-picks-detail" className="bear-picks-detail">
+              {signedIn ? t.bearPicks.buttonDetail : t.bearPicks.buttonDetailOut}
+            </span>
+          </span>
+          <span className="bear-picks-arrow" aria-hidden="true">
+            →
+          </span>
+        </button>
+      </div>
       <ul className="level-options course-options" aria-label={t.courses}>
         {courses.map(({ id, title, detail }) => {
-          const Icon = ICONS[id];
+          const Icon = COURSE_ICONS[id];
           return (
             <li key={id}>
               <button
@@ -144,7 +219,9 @@ export default function CourseChoice({
                 className={`level-option course-option course-${id}`}
                 aria-labelledby={`course-${id}-title`}
                 aria-describedby={`course-${id}-detail`}
-                onClick={() => onChoose(id)}
+                onClick={(event) => {
+                  if (!ignoreRepeatClick(event, tooSoon(event))) onChoose(id);
+                }}
               >
                 <span className="course-icon">
                   <Icon />

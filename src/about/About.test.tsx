@@ -69,7 +69,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
     expect(screen.getByRole('main')).toHaveTextContent(a.intro);
   });
 
-  it('shows the ten screenshots of its language (SCRUM-241: Word search; SCRUM-299: Logic patterns), lazily, sized and with alt text', () => {
+  it('shows the eleven screenshots of its language (SCRUM-241: Word search; SCRUM-299: Logic patterns; SCRUM-309: Bear picks a game), lazily, sized and with alt text', () => {
     render(<AboutPage language={language} />);
     const images = screen.getAllByRole('img');
     expect(images.map((image) => image.getAttribute('src'))).toEqual(
@@ -81,12 +81,13 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
         'patterns',
         'english',
         'wordsearch',
+        'bear-picks',
         'summary',
         'app-bar',
         'leaderboard',
       ].map((shot) => `/about/${language}/${shot}.webp`),
     );
-    expect(SHOTS).toHaveLength(10);
+    expect(SHOTS).toHaveLength(11);
     for (const [index, image] of images.entries()) {
       expect(image).toHaveAttribute('loading', 'lazy');
       expect(image).toHaveAttribute('width', '390');
@@ -94,7 +95,7 @@ describe.each(['en', 'sk'] as const)('About page in %s', (language) => {
       expect(image).toHaveAccessibleName(a.shots[SHOTS[index]].alt);
       expect(a.shots[SHOTS[index]].alt.length).toBeGreaterThan(30);
     }
-    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(10);
+    expect(new Set(images.map((image) => image.getAttribute('alt'))).size).toBe(11);
   });
 
   it('links every screenshot to its full-size file in a new tab (O1)', () => {

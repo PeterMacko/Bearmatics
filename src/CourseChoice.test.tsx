@@ -18,6 +18,12 @@ test('the app opens on the course choice with the five courses and nothing else 
     'Find English words hidden among the letters',
   );
   expect(screen.getAllByRole('listitem').at(-1)).toContainElement(button('Word search'));
+  // SCRUM-309: "Bear picks a game" above the course cards (the only other start button);
+  // "points × 1.5" only once signed in (the account is not known here).
+  expect(button('Bear picks a game')).toHaveAccessibleDescription('Games for your age');
+  expect(screen.getByRole('list', { name: 'Courses' })).not.toContainElement(
+    button('Bear picks a game'),
+  );
   expect(screen.queryByRole('radio')).toBeNull();
   expect(screen.queryByRole('button', { name: /Back to courses/ })).toBeNull();
   expect(screen.getAllByRole('heading', { level: 2 })).toHaveLength(1);
@@ -35,6 +41,7 @@ test('course choice is localized in Slovak', () => {
     'Počítaj obrázky: sčítaj do 12, odoberaj do 6',
   );
   expect(button('Matematika')).toBeInTheDocument();
+  expect(button('Medveď vyberie hru')).toHaveAccessibleDescription('Hry pre tvoj vek');
   expect(button('Angličtina')).toBeInTheDocument();
   expect(button('Osemsmerovka')).toHaveAccessibleDescription(
     'Nájdi anglické slová skryté medzi písmenami',

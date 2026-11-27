@@ -17,6 +17,8 @@ export default function SummaryView({
   footer,
   onAgain,
   onBack,
+  againLabel,
+  backLabel,
 }: {
   t: Copy;
   eyebrow?: string;
@@ -34,6 +36,9 @@ export default function SummaryView({
   footer?: ReactNode;
   onAgain: () => void;
   onBack: () => void;
+  /** SCRUM-309, "Bear picks a game": "Next game" and "Stop" instead of Play again / Choose level. */
+  againLabel?: string;
+  backLabel?: string;
 }) {
   return (
     <section className="summary">
@@ -72,8 +77,8 @@ export default function SummaryView({
           if (!ignoreRepeatClick(event)) onAgain();
         }}
       >
-        <Icon name="replay" />
-        {t.again}
+        <Icon name={againLabel ? 'play' : 'replay'} />
+        {againLabel ?? t.again}
       </button>
       <button
         className="secondary"
@@ -82,8 +87,8 @@ export default function SummaryView({
           if (!ignoreRepeatClick(event)) onBack();
         }}
       >
-        <Icon name="list" />
-        {t.back}
+        <Icon name={backLabel ? 'door' : 'list'} />
+        {backLabel ?? t.back}
       </button>
       {footer}
     </section>

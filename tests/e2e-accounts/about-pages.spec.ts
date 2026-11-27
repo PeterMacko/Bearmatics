@@ -21,7 +21,7 @@ test('the About page opens from the real server and its screenshots are served',
     .evaluateAll((images) =>
       images.map((image) => (image as HTMLImageElement).getAttribute('src')!),
     );
-  expect(sources).toHaveLength(10);
+  expect(sources).toHaveLength(11); // SCRUM-309: Bear picks a game
   for (const source of sources) {
     const response = await page.request.get(source);
     expect(response.status(), source).toBe(200);

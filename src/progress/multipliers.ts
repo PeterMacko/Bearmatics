@@ -76,6 +76,21 @@ export function multipliedPoints(firstTry: number, multiplier: Multiplier): numb
   return Math.ceil((firstTry * quarters) / 4);
 }
 
+/**
+ * SCRUM-309: a lesson played in "Bear picks a game" gives one and a half times the table's
+ * points: ceil(firstTry * q * 3 / 8) with q the table multiplier in quarters (integers only,
+ * one rounding at the end). The table multiplier still applies (x1.5 bonus, half, quarter).
+ */
+export function bearPicksPoints(firstTry: number, multiplier: Multiplier): number {
+  const quarters = Math.round(multiplier * 4);
+  return Math.ceil((firstTry * quarters * 3) / 8);
+}
+
+/** The lesson's points: the table's, and x1.5 more in "Bear picks a game" (SCRUM-309). */
+export function lessonPoints(firstTry: number, multiplier: Multiplier, bearPicks: boolean) {
+  return bearPicks ? bearPicksPoints(firstTry, multiplier) : multipliedPoints(firstTry, multiplier);
+}
+
 /** Names of the multipliers other than x1, for copy keys and CSS classes. */
 export type MultiplierName = 'half' | 'quarter' | 'bonus';
 
