@@ -236,7 +236,41 @@ async function fit(page: Page) {
         return b.left < -1 || b.right > doc.clientWidth + 1 || b.bottom > doc.scrollHeight + 1;
       })
       .map((e) => e.textContent);
+    // App bar buttons over the screen's text or controls (text measured on its Range boxes, as
+    // in app-bar.spec).
+    const visible = (e: Element) => {
+      const r = e.getBoundingClientRect();
+      return r.width > 1 && r.height > 1 && getComputedStyle(e).visibility !== 'hidden';
+    };
+    const items = [...document.querySelectorAll('.app-bar button')].filter(visible);
+    const content = [
+      ...main.querySelectorAll('h2, p, label, legend, button, .pick-game, .course-option'),
+    ].filter(visible);
+    const barOverlaps: string[] = [];
+    for (const item of items) {
+      const a = item.getBoundingClientRect();
+      for (const c of content) {
+        let boxes = [c.getBoundingClientRect()];
+        if (/^(P|H2|LABEL|LEGEND)$/.test(c.tagName)) {
+          const range = document.createRange();
+          range.selectNodeContents(c);
+          boxes = [...range.getClientRects()];
+        }
+        if (
+          boxes.some(
+            (r) =>
+              r.width > 0 &&
+              a.left < r.right - 0.5 &&
+              r.left < a.right - 0.5 &&
+              a.top < r.bottom - 0.5 &&
+              r.top < a.bottom - 0.5,
+          )
+        )
+          barOverlaps.push(`${item.getAttribute('aria-label')} / ${c.tagName}.${c.className}`);
+      }
+    }
     return {
+      barOverlaps,
       mode: main.dataset.menuMode ?? null,
       pageScroll: doc.scrollHeight - doc.clientHeight,
       sideScroll: Math.max(doc.scrollWidth - doc.clientWidth, 0, ...inner),
@@ -296,6 +330,10 @@ for (const signed of ['out', 'in'] as const)
           expect(choice.mode, `${where}: course choice mode`).toBe('contained');
         }
         if (!big) {
+          // (At 200% text on phones the floating bar meets the eyebrow on every menu with Back,
+          // as on main; recorded in the annotation only.)
+          for (const [screen, m] of Object.entries({ choice, age, next }))
+            expect(m.barOverlaps, `${where} ${screen}: app bar overlaps`).toEqual([]);
           expect(age.pageScroll, `${where}: age page scroll`).toBeLessThanOrEqual(0);
           expect(next.pageScroll, `${where}: next-game page scroll`).toBeLessThanOrEqual(0);
         }

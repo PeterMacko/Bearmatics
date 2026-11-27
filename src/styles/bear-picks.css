@@ -68,7 +68,9 @@
     grid-row: 3;
   }
   .menu-shell .workspace:has(> .course-choice) .companion .bear-scene {
-    width: min(100%, 340px, calc((100dvh - 210px) * 1.05));
+    /* The courses.css size minus about the button row (48 px + gap), so the menu is no taller
+       than before and stays clear of the floating bar (1280x520). */
+    width: calc(min(100%, 340px, (100dvh - 140px) * 1.05) - 64px);
   }
   .menu-shell .workspace:has(> .course-choice) .course-options {
     grid-row: 1 / -1;
