@@ -215,12 +215,9 @@
     line-height: 1.2;
   }
 }
-/* Short landscape phones: the course choice drops its intro line (Firefox's taller lines need
-   the room too), and the shortest windows use slightly smaller card text (above). */
+/* Short landscape phones: the course choice keeps its intro small (SCRUM-333, rule in
+   courses.css; the cards scroll), and the shortest windows use slightly smaller card text. */
 @media (max-height: 420px) {
-  .menu-shell .course-choice .menu-heading .intro {
-    display: none;
-  }
   /* One title line in both engines (Firefox wrapped it at 568x320). */
   .menu-shell .course-choice .menu-heading h2 {
     font-size: 1.5rem;
