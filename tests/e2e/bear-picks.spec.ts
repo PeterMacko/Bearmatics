@@ -34,6 +34,11 @@ async function until(page: Page, match: RegExp) {
   expect(await game(page)).toMatch(match);
   if (pressed) await page.waitForTimeout(SETTLE);
 }
+/** SCRUM-324: Math.random always returns `value` (a fixed Bear picks choice). */
+const rngAlways = (page: Page, value: number) =>
+  page.addInitScript((v) => {
+    Math.random = () => v;
+  }, value);
 /** SCRUM-324: any game but Pexeso (Logic 6-8 have no exercise count on this screen). */
 const NOT_PEXESO = /^(?!Logic\|Level [678] )/;
 /** Answers a maths lesson to its summary, all first try. */
@@ -107,6 +112,10 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
 
 test('keyboard: Tab order, Enter and Space work at once; Slovak copy', async ({ page }) => {
   await page.setViewportSize({ width: 1366, height: 900 });
+  // SCRUM-324: a fixed pick (Math.random always 0: the first course and level of the age's
+  // pool, Maths Level 2 at 8; Choose another then Maths Level 3), so the bear never shows a
+  // Pexeso game here, which has no exercise count to Tab to (its own test is below).
+  await rngAlways(page, 0);
   await page.goto('/?lang=sk');
   const pick = page.getByRole('button', { name: 'Medveď vyberie hru' });
   // Signed out: no points, so no × 1,5; the intro invites to sign in.
@@ -206,6 +215,47 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   // Normal menus keep their own count (10), untouched by the mode's choice.
   await page.getByRole('button', { name: 'Small maths' }).click();
   await expect(page.getByRole('radio', { name: '10 exercises' })).toBeChecked();
+});
+
+test('SCRUM-324 AC10: a Pexeso pick has no exercise count, keeps the remembered count and plays its own board', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.addInitScript(() =>
+    localStorage.setItem('bearmatics-bear-picks', JSON.stringify({ age: 8, size: 20 })),
+  );
+  // Math.random always 0.45: at 8 the courses are Maths, Logic, English, Word search -> Logic
+  // (index 1 of 4); its levels 2, 5, 6, 7, 8 -> Level 6 (index 2 of 5), a Pexeso. Choose
+  // another then leaves 2, 5, 7, 8 -> Level 5; once more 2, 6, 7, 8 -> Level 6 again.
+  await rngAlways(page, 0.45);
+  await page.goto('/');
+  await openMode(page);
+  await expect(heading(page)).toHaveText('The bear picked this game');
+  await expect(heading(page)).toBeFocused();
+  expect(await game(page)).toBe('Logic|Level 6 · Matching pairs');
+  // No exercise count: no radio for screen readers or the keyboard, and Tab goes from the
+  // heading straight to Play.
+  await expect(page.getByRole('radio')).toHaveCount(0);
+  await expect(page.locator('.pick-sizes')).toHaveAttribute('aria-hidden', 'true');
+  await expect(page.locator('.pick-sizes')).toHaveAttribute('inert', '');
+  const names = [];
+  for (let i = 0; i < 4; i++) {
+    await page.keyboard.press('Tab');
+    names.push(await page.evaluate(() => document.activeElement?.textContent?.trim()));
+  }
+  expect(names).toEqual(['Play', 'Choose another', 'Stop', 'Change age (8)']);
+  expect(await store(page)).toEqual({ age: 8, size: 20 });
+  // A game with a count: the remembered 20 is still chosen.
+  await page.getByRole('button', { name: 'Choose another' }).press('Enter');
+  expect(await game(page)).toBe('Logic|Level 5 · Growing and turning');
+  await expect(page.getByRole('radio', { name: '20 exercises' })).toBeChecked();
+  await expect(page.getByRole('radio')).toHaveCount(3);
+  // Back to the Pexeso and play it: 12 cards (6 pictures), whatever the remembered count.
+  await page.getByRole('button', { name: 'Choose another' }).press('Enter');
+  expect(await game(page)).toBe('Logic|Level 6 · Matching pairs');
+  await page.getByRole('button', { name: 'Play' }).press('Enter');
+  await expect(page.locator('.pexeso-card')).toHaveCount(12);
+  expect(await store(page)).toEqual({ age: 8, size: 20 });
 });
 
 test('English listen: the first word plays from the Play tap', async ({ page }) => {

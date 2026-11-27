@@ -6,7 +6,10 @@ export async function startPexeso(page: Page, level: 6 | 7 | 8, sk = false) {
     .getByRole('button', { name: sk ? /^Logika/ : /^Logic/ })
     .first()
     .click();
-  await page.locator(`input[name="logic-level"][value="${level}"]`).check({ force: true });
+  // The row (a label), like the other Logic levels: a forced click on the hidden radio can land
+  // beside it when the list is scrolled (seen once on macs4 at 844x390).
+  await page.locator(`.logic-home .level-${level}`).click();
+  await expect(page.locator(`input[name="logic-level"][value="${level}"]`)).toBeChecked();
   await page.locator('.start-button').click();
   await expect(page.locator('.pexeso-card').first()).toBeVisible();
   // The board ignores taps for its first 600 ms (the rest of the Start tap).
