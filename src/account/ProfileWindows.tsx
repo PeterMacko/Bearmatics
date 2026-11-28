@@ -12,7 +12,7 @@ import {
 import HintDialog from '../HintDialog';
 import Icon from '../Icon';
 import { fill } from '../i18n';
-import { ignoreRepeatClick } from '../ignoreRepeatClick';
+import { ignoreSettlingTap, SCREEN_SETTLE_MS } from '../tapGuard';
 import * as api from './api';
 import type { Account } from './api';
 import { CheckRow, Field, Message, useAction, type T } from './fields';
@@ -36,7 +36,6 @@ type EditProps = WindowProps & {
 };
 
 /** A press counts only after the window has been open this long (double-tap guard). */
-const SETTLE_MS = 600;
 
 /**
  * iPhone and iPad keep the page and cover it with the on-screen keyboard (only the visual
@@ -106,7 +105,7 @@ function ProfileWindow({
       onClose={onClose}
       triggerRef={triggerRef}
       closeOnShade
-      settleMs={SETTLE_MS}
+      settleMs={SCREEN_SETTLE_MS}
     >
       <form
         ref={form}
@@ -413,9 +412,8 @@ export function GrownUpWindow({
       className={deleting ? 'danger-button' : 'primary'}
       aria-disabled={leave.busy || undefined}
       onClick={(event) => {
-        const opened = openedAt.current;
-        if (ignoreRepeatClick(event, opened === null || performance.now() - opened < SETTLE_MS))
-          return;
+        // The keyboard waits too (Enter right after opening is the opener's Enter).
+        if (ignoreSettlingTap(event, openedAt.current, 'wait')) return;
       }}
     >
       <Icon name={deleting ? 'bin' : 'door'} />
