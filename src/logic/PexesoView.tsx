@@ -12,13 +12,13 @@ import { gamePoints, heartsLeft, type PexesoGame } from './pexeso';
 import usePexesoFit from './usePexesoFit';
 
 /** A deliberate next card tap comes at least this long after the previous accepted one. */
-export const CARD_TAP_MS = 300;
+const CARD_TAP_MS = 300;
 
 const counted = (forms: readonly string[], n: number) =>
   fill(n === 1 ? forms[0] : n >= 2 && n <= 4 ? forms[1] : forms[2], { n });
 
 /** The polite message after a turn ("Pair found: apple, 3 of 6" / "Not a pair"). */
-export function turnMessage(t: Copy, game: PexesoGame): string {
+function turnMessage(t: Copy, game: PexesoGame): string {
   const last = game.last;
   if (!last) return '';
   if (last.kind === 'pair')
@@ -31,7 +31,7 @@ export function turnMessage(t: Copy, game: PexesoGame): string {
 }
 
 /** A card's accessible name: "Card 4, face down" / "Card 4, apple" / "apple, found". */
-export function cardName(t: Copy, game: PexesoGame, index: number): string {
+function cardName(t: Copy, game: PexesoGame, index: number): string {
   const name = t.pexeso.names[game.cards[index]];
   if (game.found[index]) return fill(t.pexeso.cardFound, { name });
   if (game.open.includes(index)) return fill(t.pexeso.cardUp, { n: index + 1, name });

@@ -1,6 +1,6 @@
 import type { AnswerResult } from '../math/engine';
-import { shuffled } from '../random';
-import { SESSION_SIZES } from './listen';
+import { shuffled } from '../../shared/random';
+import { assertSessionSize } from '../session';
 import { WORDS } from './words';
 
 /** One listen-and-write question (English level 3): only the sound is given. */
@@ -41,8 +41,7 @@ export function generateWriteSession(
   size: number,
   rng: () => number = Math.random,
 ): readonly WriteQuestion[] {
-  if (!(SESSION_SIZES as readonly number[]).includes(size))
-    throw new RangeError('Unsupported session size');
+  assertSessionSize(size);
   return shuffled(WORDS, rng)
     .slice(0, size)
     .map((entry) => ({ level: 3 as const, target: entry.word }));

@@ -3,8 +3,10 @@
 // sent (no ids, no usernames).
 import type { BearLook, Leaderboard, LeaderboardRow } from '../shared/api-types';
 import { isRudeNickname } from '../shared/rules';
-import { Renewed, type SessionHandler } from './accounts';
-import { slovakDay, streakView } from './streak';
+import { slovakDay } from '../shared/slovakDay';
+import { lookOf, Renewed, type LookColumns, type SessionHandler } from './accounts';
+import { streakView } from './streak';
+import { now } from './time';
 
 const TOP = 10;
 
@@ -53,37 +55,28 @@ export function leaderboardRows(players: Player[], meId: string | null): Leaderb
 }
 
 export const getLeaderboard: SessionHandler = async (_request, env, session) => {
-  const today = slovakDay(Date.now());
+  const today = slovakDay(now());
   const { results } = await env.DB.prepare(
     `SELECT a.id, a.nickname, a.bear_fur, a.bear_bg, a.bear_head, a.bear_neck, a.bear_eyes, p.points, p.streak, p.last_day, p.offer_day
      FROM progress p JOIN accounts a ON a.id = p.account_id
      WHERE p.points >= 1 AND a.leaderboard = 1`,
-  ).all<{
-    id: string;
-    nickname: string;
-    bear_fur: number;
-    bear_bg: number;
-    bear_head: number;
-    bear_neck: number;
-    bear_eyes: number;
-    points: number;
-    streak: number;
-    last_day: string | null;
-    offer_day: string | null;
-  }>();
+  ).all<
+    {
+      id: string;
+      nickname: string;
+      points: number;
+      streak: number;
+      last_day: string | null;
+      offer_day: string | null;
+    } & LookColumns
+  >();
   const players: Player[] = results
     // Nicknames from before the filter that fail it stay hidden until changed (scope 4).
     .filter((row) => !isRudeNickname(row.nickname))
     .map((row) => ({
       id: row.id,
       nickname: row.nickname,
-      look: {
-        fur: row.bear_fur,
-        background: row.bear_bg,
-        head: row.bear_head,
-        neck: row.bear_neck,
-        eyes: row.bear_eyes,
-      },
+      look: lookOf(row),
       points: row.points,
       ...streakView(
         { streak: row.streak, lastDay: row.last_day, offerDay: row.offer_day },

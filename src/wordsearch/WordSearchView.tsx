@@ -8,24 +8,23 @@ import {
   type MouseEvent,
   type RefObject,
 } from 'react';
+import { shuffled } from '../../shared/random';
+import { boardCells, sameCell, type Cell } from '../cell';
 import { fill, type Copy } from '../i18n';
 import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import FeedbackLine from '../lesson/FeedbackLine';
 import PracticeHeader from '../lesson/PracticeHeader';
 import SpeakerIcon from '../english/SpeakerIcon';
-import { GRID, gridLetters, sameCell, type Cell } from './grid';
+import { GRID, gridLetters } from './grid';
 import { currentPuzzle, puzzleSolved, type SearchLesson } from './lesson';
 import useSearchFit from './useSearchFit';
 
 /** How long a wrong pair flashes before it clears (scope 3: a soft flash). */
-export const FLASH_MS = 650;
+const FLASH_MS = 650;
 /** A pointer tap on the marked letter this soon after the tap that marked it is ignored. */
-export const TAP_GUARD_MS = 500;
+const TAP_GUARD_MS = 500;
 
-const CELLS: readonly Cell[] = Array.from({ length: GRID * GRID }, (_, i) => ({
-  row: Math.floor(i / GRID),
-  col: i % GRID,
-}));
+const CELLS: readonly Cell[] = boardCells(GRID);
 const KEY_STEPS: Record<string, [number, number]> = {
   ArrowUp: [-1, 0],
   ArrowDown: [1, 0],
@@ -40,11 +39,7 @@ function letterChoices(word: string): string[] {
   const others = [...ALPHABET].filter((letter) => !letters.includes(letter));
   for (let i = 0; i < 2; i++)
     letters.push(others.splice(Math.floor(Math.random() * others.length), 1)[0]);
-  for (let i = letters.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [letters[i], letters[j]] = [letters[j], letters[i]];
-  }
-  return letters;
+  return shuffled(letters, Math.random);
 }
 
 /**

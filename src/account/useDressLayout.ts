@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef } from 'react';
 import { watchResize } from '../watchResize';
 
 /** Classes the dress-screen layout looks up inside its section (see DressView). */
-export const DRESS = {
+const DRESS = {
   heading: '.menu-heading',
   preview: '.dress-preview',
   pane: '.dress-choices',

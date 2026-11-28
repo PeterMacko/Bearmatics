@@ -2,7 +2,9 @@
 // never sent to the server). A play is a lesson finished to its summary whose points were
 // saved. One record per account holds today's counts per course and level; records of older
 // days are removed whenever counts are written.
+import { DAY_MS, dayStartUtc, slovakDay } from '../../shared/slovakDay';
 import type { Account } from '../account/api';
+import { readJson, writeJson } from '../deviceStore';
 import type { PointsCourse } from './multipliers';
 
 export const PLAYS_KEY = 'bearmatics-plays';
@@ -19,23 +21,13 @@ export function playsAccountKey(account: Pick<Account, 'kind' | 'username' | 'ni
   return `${account.kind}:${account.kind === 'password' ? account.username : account.nickname}`;
 }
 
-const DAY_FORMAT = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Europe/Bratislava',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
 /** The device's calendar date in Slovakia ('YYYY-MM-DD'), used when the server's is unknown. */
 export function deviceSlovakDay(ms: number): string {
-  return DAY_FORMAT.format(new Date(ms));
+  return slovakDay(ms);
 }
 
-const dayNumber = (day: string) => {
-  const [y, m, d] = day.split('-').map(Number);
-  return Date.UTC(y, m - 1, d) / 86_400_000;
-};
-const dayFromNumber = (n: number) => new Date(n * 86_400_000).toISOString().slice(0, 10);
+const dayNumber = (day: string) => dayStartUtc(day) / DAY_MS;
+const dayFromNumber = (n: number) => new Date(n * DAY_MS).toISOString().slice(0, 10);
 
 /**
  * Today's Slovak day. The server's day (from the last progress answer) wins over the device
@@ -53,12 +45,8 @@ export function dayShift(ms: number, serverDay: string): number {
 }
 
 function readStore(): Store {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(PLAYS_KEY) ?? '{}');
-    return parsed && typeof parsed === 'object' ? (parsed as Store) : {};
-  } catch {
-    return {};
-  }
+  const parsed = readJson(() => localStorage, PLAYS_KEY);
+  return parsed && typeof parsed === 'object' ? (parsed as Store) : {};
 }
 
 const levelKey = (course: PointsCourse, level: number) => `${course}:${level}`;
@@ -80,9 +68,6 @@ export function addPlay(account: string, day: string, course: PointsCourse, leve
   const counts = store[account]?.day === day ? { ...store[account].counts } : {};
   counts[levelKey(course, level)] = playsToday(account, day, course, level) + 1;
   kept[account] = { day, counts };
-  try {
-    localStorage.setItem(PLAYS_KEY, JSON.stringify(kept));
-  } catch {
-    // Storage full or blocked: the play simply is not counted on this device.
-  }
+  // Storage full or blocked: the play simply is not counted on this device.
+  writeJson(() => localStorage, PLAYS_KEY, kept);
 }

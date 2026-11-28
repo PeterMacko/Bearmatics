@@ -2,7 +2,7 @@
 import type { BearLook } from '../../shared/bearLook';
 import type { Copy } from '../i18n';
 
-export type LookCopy = Copy['account']['look'];
+type LookCopy = Copy['account']['look'];
 
 /** "<bear> with A", "<bear> with A and B", "<bear> with A, B and C" (Slovak: s/so + instrumental). */
 export function describeLook(t: LookCopy, look: BearLook): string {

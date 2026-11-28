@@ -1,7 +1,7 @@
 import type { Language } from '../i18n';
 
 /** The About page (SCRUM-218) for this address, or null for the app. */
-export type AboutRoute = {
+type AboutRoute = {
   language: Language;
   /** The address names the language (/about/sk, /about/en); bare /about follows the browser. */
   explicit: boolean;

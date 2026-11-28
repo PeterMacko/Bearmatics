@@ -2,9 +2,10 @@
 // on one day gives fewer points; the first play of the day of the harder levels (Maths 4-7,
 // level 3 of Small maths and English) gives more. The rows below are the whole configuration
 // (code only, no settings screen).
+import type { Course } from '../courses';
 
 /** The courses as the app names them (CourseChoice). */
-export type PointsCourse = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
+export type PointsCourse = Course;
 
 /** Allowed multipliers: whole points, half, quarter, one and a half. */
 export type Multiplier = 1 | 0.5 | 0.25 | 1.5;
@@ -93,7 +94,7 @@ export function lessonPoints(firstTry: number, multiplier: Multiplier, bearPicks
 }
 
 /** Names of the multipliers other than x1, for copy keys and CSS classes. */
-export type MultiplierName = 'half' | 'quarter' | 'bonus';
+type MultiplierName = 'half' | 'quarter' | 'bonus';
 
 export function multiplierName(multiplier: Exclude<Multiplier, 1>): MultiplierName {
   return multiplier === 0.5 ? 'half' : multiplier === 0.25 ? 'quarter' : 'bonus';

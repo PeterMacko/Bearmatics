@@ -19,7 +19,8 @@ import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import LeaveDialog from './LeaveDialog';
-import CourseChoice, { type Course } from './CourseChoice';
+import type { Cell } from './cell';
+import CourseChoice from './CourseChoice';
 import EnglishHome, { type EnglishLevel } from './EnglishHome';
 import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
@@ -34,7 +35,7 @@ import {
 } from './lessonTime';
 import { nextLabel, positionText } from './lesson/lessonText';
 import { useMenuLayout } from './useMenuLayout';
-import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
+import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel, type Course } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
 import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
 import { useWordPlayer } from './english/wordPlayer';
@@ -67,6 +68,7 @@ import {
   closeMiss,
   isPexesoLevel,
   newGame,
+  PEXESO_CLOSE_MS,
   PEXESO_LEVELS,
   PEXESO_PAIRS,
   tapCard,
@@ -81,12 +83,7 @@ import {
   type PatternRow,
 } from './logic/patterns';
 import { demoSeen, markDemoSeen } from './demoSeen';
-import {
-  generateSearchLesson,
-  SEARCH_LEVELS,
-  type Cell,
-  type SearchLevel,
-} from './wordsearch/grid';
+import { generateSearchLesson, SEARCH_LEVELS, type SearchLevel } from './wordsearch/grid';
 import {
   asSession,
   createSearchLesson,
@@ -566,7 +563,6 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setPexesoLevel(shown);
     setPexeso(newGame(pairs, Math.random));
   };
-  const PEXESO_CLOSE_MS = 1500;
   const tapPexeso = (index: number) => {
     const before = pexesoRef.current;
     if (!before) return;

@@ -7,20 +7,13 @@ import {
   type RefObject,
 } from 'react';
 import { fill, type Copy } from '../i18n';
+import { boardCells, sameCell, type Cell } from '../cell';
 import Icon from '../Icon';
 import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import FeedbackLine from '../lesson/FeedbackLine';
 import PracticeHeader from '../lesson/PracticeHeader';
 import type { Feedback } from '../session';
-import {
-  encodeArrows,
-  GRID_SIZE,
-  sameCell,
-  walkArrows,
-  type Arrow,
-  type BearPuzzle,
-  type Cell,
-} from './bearPath';
+import { encodeArrows, GRID_SIZE, walkArrows, type Arrow, type BearPuzzle } from './bearPath';
 import {
   ArrowIcon,
   EyeIcon,
@@ -52,10 +45,7 @@ const KEY_ARROWS: Record<string, Arrow> = {
 };
 /** Arrow pad order: a cross reads naturally on one row too (up, left, down, right). */
 const PAD: readonly Arrow[] = ['up', 'left', 'down', 'right'];
-const CELLS = Array.from({ length: GRID_SIZE * GRID_SIZE }, (_, i) => ({
-  row: Math.floor(i / GRID_SIZE),
-  col: i % GRID_SIZE,
-}));
+const CELLS = boardCells(GRID_SIZE);
 
 const prefersReducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;

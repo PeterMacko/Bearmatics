@@ -4,7 +4,7 @@ import { useMenuWink } from './useMenuWink';
 
 /** Original SVG artwork and expressions created for Bearmatics. */
 /** SCRUM-324: 'thinking' = a kind "hmm" (Pexeso miss): eyes look up, no frown. */
-export type BearMood = 'neutral' | 'happy' | 'sad' | 'thinking';
+type BearMood = 'neutral' | 'happy' | 'sad' | 'thinking';
 export default function Bear({
   mood = 'neutral',
   idleWink = false,

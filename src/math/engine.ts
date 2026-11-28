@@ -1,3 +1,5 @@
+import { isSessionSize } from '../../shared/lessonSizes';
+
 /**
  * 0-7 as before; 8 = Small maths "Take away" (SCRUM-156): a - b with a 1-6, result only;
  * 9 = Small maths "Up to 12" (SCRUM-164): a + b with a, b 1-6 and results 7-12, result only.
@@ -28,7 +30,7 @@ export function generateSession(
   size: number = 10,
   rng: () => number = Math.random,
 ): readonly Exercise[] {
-  if (![0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(level) || ![5, 10, 20].includes(size))
+  if (![0, 1, 2, 3, 4, 5, 6, 7, 8, 9].includes(level) || !isSessionSize(size))
     throw new RangeError('Unsupported session settings');
   let pool = pools.get(level);
   if (!pool) {

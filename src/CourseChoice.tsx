@@ -1,10 +1,9 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
+import type { Course } from './courses';
 import type { Copy } from './i18n';
 import { ignoreRepeatClick, SCREEN_SETTLE_MS } from './ignoreRepeatClick';
 import MenuHeading from './MenuHeading';
 import { watchResize } from './watchResize';
-
-export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
 
 function SmallMathIcon() {
   // A die face: count the dots.

@@ -2,9 +2,9 @@
  * SCRUM-281: the grown-up question before Sign out and Delete account: a³ + b with a = 3–6 and
  * b = 11–49 (answers 38–265). Nothing is stored; `rng` is injectable so tests know the question.
  */
-export type GrownUpQuestion = { a: number; b: number; answer: number };
+type GrownUpQuestion = { a: number; b: number; answer: number };
 
-export const GROWN_UP = { a: [3, 6], b: [11, 49] } as const;
+const GROWN_UP = { a: [3, 6], b: [11, 49] } as const;
 
 /** A whole number from `low` to `high` (both included) from one `rng()` call. */
 const pick = (rng: () => number, [low, high]: readonly [number, number]) =>
