@@ -49,10 +49,12 @@ export class FeedbackAudio {
     if (!this.enabled || !context || context.state !== 'running') return false;
     try {
       if (outcome === 'growl') return this.growl();
+      // SCRUM-324: the soft flip tick plays over a running sound (the pair's correct cue) instead
+      // of cutting it; its gain is bounded (0.18) and it lasts 80 ms.
+      if (outcome === 'flip') return this.flip(context);
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
-      if (outcome === 'flip') return this.flip(context);
       if (outcome === 'pop' || outcome === 'step') {
         // SCRUM-156: a short soft pop when a picture moves (a quick falling blip, quieter
         // than the answer sounds). SCRUM-262: the bear's step is a lower, softer pop.

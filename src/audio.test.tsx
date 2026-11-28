@@ -261,3 +261,53 @@ test('SCRUM-262: the bear step is one short, soft, low falling blip (quieter tha
   await player.setEnabled(false);
   expect(player.play('step')).toBe(false);
 });
+
+test('SCRUM-324: a card flip plays over a running correct cue and does not stop it', async () => {
+  const f = fixture();
+  const peaks: number[] = [];
+  f.context.createGain = vi.fn(() => ({
+    gain: {
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: (value: number) => peaks.push(value),
+      exponentialRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(),
+    disconnect: vi.fn(),
+  }));
+  f.context.createOscillator = vi.fn(() => {
+    const node = {
+      frequency: {
+        setValueAtTime: (value: number) => f.frequencies.push(value),
+        exponentialRampToValueAtTime: vi.fn(),
+      },
+      type: '',
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      start: vi.fn(),
+      stop: vi.fn(),
+      onended: null,
+    };
+    f.nodes.push(node);
+    return node;
+  });
+  const player = new PlayerClass(f.factory) as unknown as { play(o: string): boolean } & Player;
+  await player.setEnabled(true);
+  expect(player.play('correct')).toBe(true);
+  const melody = [...f.nodes];
+  expect(melody).toHaveLength(3);
+  // Each note was scheduled with its own end time; none was stopped early (stop() with no time).
+  const earlyStops = () => melody.flatMap((n) => n.stop.mock.calls).filter((c) => c.length === 0);
+  expect(earlyStops()).toHaveLength(0);
+  expect(player.play('flip')).toBe(true);
+  expect(f.nodes).toHaveLength(4);
+  expect(earlyStops()).toHaveLength(0);
+  for (const node of melody)
+    expect((node as unknown as { disconnect: () => void }).disconnect).not.toHaveBeenCalled();
+  // The flip itself stays soft (bounded gain).
+  expect(Math.max(...peaks.slice(-2))).toBeLessThanOrEqual(0.18);
+  // A new answer cue still cancels older feedback (and mute still stops everything).
+  expect(player.play('incorrect')).toBe(true);
+  expect(earlyStops().length).toBeGreaterThan(0);
+  await player.setEnabled(false);
+  for (const node of f.nodes) expect(node.stop).toHaveBeenCalledWith();
+});
