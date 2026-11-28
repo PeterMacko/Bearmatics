@@ -13,6 +13,7 @@ import { boardCells, sameCell, type Cell } from '../cell';
 import { fill, type Copy } from '../i18n';
 import FeedbackLine from '../lesson/FeedbackLine';
 import NextButton from '../lesson/NextButton';
+import { TAP_GAP_MS } from '../tapGuard';
 import PracticeHeader from '../lesson/PracticeHeader';
 import SpeakerIcon from '../english/SpeakerIcon';
 import { GRID, gridLetters } from './grid';
@@ -22,7 +23,6 @@ import useSearchFit from './useSearchFit';
 /** How long a wrong pair flashes before it clears (scope 3: a soft flash). */
 const FLASH_MS = 650;
 /** A pointer tap on the marked letter this soon after the tap that marked it is ignored. */
-const TAP_GUARD_MS = 500;
 
 const CELLS: readonly Cell[] = boardCells(GRID);
 const KEY_STEPS: Record<string, [number, number]> = {
@@ -149,7 +149,10 @@ export default function WordSearchView({
     const now = Date.now();
     if (selected && sameCell(selected, cell) && e.detail > 0) {
       const marked = markedAt.current;
-      if (e.detail > 1 || (marked && sameCell(marked.cell, cell) && now - marked.at < TAP_GUARD_MS))
+      if (
+        e.detail > 1 ||
+        (marked && sameCell(marked.cell, cell) && now - marked.at < TAP_GAP_MS.letter)
+      )
         return;
     }
     markedAt.current = selected || e.detail === 0 ? null : { cell, at: now };
