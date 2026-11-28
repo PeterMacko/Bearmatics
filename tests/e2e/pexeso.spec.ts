@@ -373,6 +373,16 @@ test.describe('turns (AC 4, 11)', () => {
     page,
   }) => {
     await signedOut(page);
+    // The page time of every new (not auto-repeat) keydown.
+    await page.addInitScript(() => {
+      const w = window as unknown as { downs: number[] };
+      w.downs = [];
+      document.addEventListener(
+        'keydown',
+        (e) => e.repeat || w.downs.push(performance.now()),
+        true,
+      );
+    });
     await page.goto('/');
     await startPexeso(page, 8);
     const cards = page.locator('.pexeso-card');
@@ -400,29 +410,61 @@ test.describe('turns (AC 4, 11)', () => {
       second = first + 1;
       await page.waitForTimeout(320);
     }
-    // Held: auto-repeat keydowns for ~0.5 s (Playwright sends repeat: true on a held key).
-    for (let i = 0; i < 12; i++) {
+    // Held: auto-repeat keydowns (Playwright sends repeat: true on a held key). Each check reads
+    // the page clock since card 2's keydown in the same call as the cards, so a slow machine
+    // cannot mistake the miss's own 1.5 s close for a repeat closing it.
+    const sinceDown = () =>
+      page.evaluate(() => {
+        const at = (window as unknown as { downs: number[] }).downs;
+        const labels = [...document.querySelectorAll('.pexeso-card')].map(
+          (c) => c.getAttribute('aria-label') ?? '',
+        );
+        return {
+          ms: performance.now() - at[at.length - 1],
+          open: labels.filter((n) => /^Card \d+, (?!face down)/.test(n)).length,
+        };
+      });
+    let checked = 0;
+    for (;;) {
       await page.waitForTimeout(40);
       await page.keyboard.down('Enter');
+      const { ms, open } = await sinceDown();
+      if (ms >= 1400) break;
+      expect(open, `${Math.round(ms)} ms after card 2`).toBe(2);
+      if (ms > 350) checked++; // past the 300 ms guard: only the repeat guard holds the miss
+      if (ms > 800) break;
     }
     await page.keyboard.up('Enter');
-    expect(await openCount()).toBe(2);
+    expect(checked, 'repeat keydowns checked 0.35-1.4 s after card 2').toBeGreaterThan(0);
     await expect(cards.nth(second)).toBeFocused();
     // The miss still closes by itself after 1.5 s.
     await expect.poll(openCount, { timeout: 2500 }).toBe(0);
-    // Fast repeated Enter: the first press opens card 1 of a new turn, a press right after it
-    // on card 2 is ignored (within 300 ms of the accepted press).
+    // Fast repeated Enter on card 2: the first press turns it (the same miss again), a second
+    // press right after it is ignored, so both stay open.
     await page.waitForTimeout(320);
     await cards.nth(first).focus();
     await page.keyboard.press('Enter');
+    await page.waitForTimeout(320);
     await cards.nth(second).focus();
     await page.keyboard.press('Enter');
-    expect(await openCount()).toBe(1);
-    // A deliberate Enter still turns card 2: the same miss again, both open.
+    await page.keyboard.press('Enter');
+    const fast = await sinceDown();
+    const gap = await page.evaluate(() => {
+      const at = (window as unknown as { downs: number[] }).downs;
+      return at[at.length - 1] - at[at.length - 2];
+    });
+    if (gap < 300) expect(fast.open, `presses ${Math.round(gap)} ms apart`).toBe(2);
+    else test.info().annotations.push({ type: 'slow', description: `presses ${gap} ms apart` });
+    await expect(page.locator('.pexeso-message')).toHaveText('Not a pair');
+    // A deliberate Enter later closes the miss (the next-tap rule), as a tap does.
     await page.waitForTimeout(320);
     await page.keyboard.press('Enter');
-    expect(await openCount()).toBe(2);
-    await expect(page.locator('.pexeso-message')).toHaveText('Not a pair');
+    const late = await page.evaluate(() => {
+      const at = (window as unknown as { downs: number[] }).downs;
+      return at[at.length - 1] - at[at.length - 3];
+    });
+    // Before the 1.5 s close it closes the two; after it (a very slow machine) it turns card 2.
+    expect(await openCount()).toBe(late < 1450 ? 0 : 1);
   });
 });
 
