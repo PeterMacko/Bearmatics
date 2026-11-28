@@ -4,9 +4,10 @@ import {
   type MouseEvent as ReactMouseEvent,
   type PointerEvent as ReactPointerEvent,
 } from 'react';
+import { SCREEN_SETTLE_MS, tooSoonAfter } from './tapGuard';
 
 /** How long a stray second tap is swallowed after closing (and ignored after opening). */
-export const STRAY_TAP_MS = 600;
+export const STRAY_TAP_MS = SCREEN_SETTLE_MS;
 
 /**
  * Closing uncovers the page under the finger: the second tap of a double tap must not press a
@@ -68,11 +69,7 @@ export function useShadeClose(
     anywhere || event.target === event.currentTarget;
   /** A second press (detail > 1) or one in the first `settleMs`: part of a double tap. */
   const repeat = (event: ReactMouseEvent) => settleMs > 0 && event.detail > 1;
-  const tooSoon = () => {
-    if (settleMs <= 0) return false;
-    const opened = openedAt.current;
-    return opened === null || performance.now() - opened < settleMs;
-  };
+  const tooSoon = () => settleMs > 0 && tooSoonAfter(openedAt.current, { ms: settleMs });
   const close = (event?: ReactMouseEvent) => {
     const pointer = !!event && event.detail > 0;
     if (pointer && (repeat(event) || tooSoon())) return;
