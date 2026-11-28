@@ -12,6 +12,7 @@ import { randomHex, sha256Hex } from './crypto';
 import { cookie, json, readCookie, readJson } from './http';
 import { validKey } from '../shared/rules';
 import * as rules from './rules';
+import { now } from './time';
 
 export interface GoogleEnv extends AccountEnv {
   GOOGLE_CLIENT_ID?: string;
@@ -85,7 +86,7 @@ function subjectFrom(idToken: string, clientId: string): string | null {
     ) as { iss?: string; aud?: string; exp?: number; sub?: string };
     if (!payload.iss || !ISSUERS.has(payload.iss)) return null;
     if (payload.aud !== clientId) return null;
-    if (!payload.exp || payload.exp * 1000 < Date.now()) return null;
+    if (!payload.exp || payload.exp * 1000 < now()) return null;
     return typeof payload.sub === 'string' && /^[0-9A-Za-z_-]{1,255}$/.test(payload.sub)
       ? payload.sub
       : null;
@@ -134,7 +135,7 @@ export async function googleCallback(
   }
   // First Google sign-in: the child still has to pick a nickname and bear.
   const pending = randomHex(32);
-  const time = Date.now();
+  const time = now();
   await env.DB.batch([
     env.DB.prepare('DELETE FROM google_pending WHERE expires_at < ?').bind(time),
     env.DB.prepare(
@@ -159,7 +160,7 @@ export async function googleComplete(request: Request, env: GoogleEnv): Promise<
     ? await env.DB.prepare(
         'SELECT google_sub FROM google_pending WHERE token_hash = ? AND expires_at > ?',
       )
-        .bind(tokenHash, Date.now())
+        .bind(tokenHash, now())
         .first<{ google_sub: string }>()
     : null;
   if (!pending) {
@@ -175,7 +176,7 @@ export async function googleComplete(request: Request, env: GoogleEnv): Promise<
       `INSERT INTO accounts (id, google_sub, nickname, bear, bear_fur, bear_bg, bear_head, bear_neck,
         bear_eyes, parent_confirmed_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (google_sub) DO NOTHING`,
-    ).bind(id, pending.google_sub, nickname, ...lookColumns(look), Date.now()),
+    ).bind(id, pending.google_sub, nickname, ...lookColumns(look), now()),
     env.DB.prepare('DELETE FROM google_pending WHERE token_hash = ?').bind(tokenHash),
   ]);
   const account = await env.DB.prepare('SELECT * FROM accounts WHERE google_sub = ?')

@@ -10,11 +10,13 @@ import { notSignedIn, Renewed, type AccountEnv, type SessionHandler } from './ac
 import { randomHex } from './crypto';
 import { BadRequest, json, readJson } from './http';
 import { answerOffer, finishDay, openOffer, streakView, type StreakState } from './streak';
+import { DAY_MS, now } from './time';
 
 /** Every size a lesson may have (SCRUM-324: Pexeso saves its pair count as the size). */
 const LESSON_SIZES = [...SESSION_SIZES, ...PEXESO_PAIR_COUNTS];
-const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
-const now = () => Date.now();
+const KEEP_LESSONS_MS = 2 * DAY_MS;
+/** A lesson ID: randomHex(16), 32 lowercase hex digits (see startLesson). */
+const LESSON_ID = /^[0-9a-f]{32}$/;
 
 type Row = { points: number; state: StreakState };
 
@@ -130,11 +132,10 @@ export const startLesson: SessionHandler = async (request, env, session) => {
   return new Renewed({ lessonId: id }, 201);
 };
 
-/** A lesson is finished (including its review round): add its points once. */
-export const finishLesson: SessionHandler = async (request, env, session) => {
-  const body = await readJson(request);
+/** The finish request: the lesson ID, its size and the points the app counted (checked in that order). */
+function readFinish(body: Record<string, unknown>): { id: string; size: number; earned: number } {
   const id = body.lessonId;
-  if (typeof id !== 'string' || !/^[0-9a-f]{32}$/.test(id)) {
+  if (typeof id !== 'string' || !LESSON_ID.test(id)) {
     throw new BadRequest('invalid', 'lessonId');
   }
   const size = lessonSize(body.size);
@@ -147,16 +148,27 @@ export const finishLesson: SessionHandler = async (request, env, session) => {
   ) {
     throw new BadRequest('invalid', 'points');
   }
-  const accountId = session.account.id;
-  const lesson = await env.DB.prepare(
-    'SELECT size, started_at, finished_at FROM lessons WHERE id = ? AND account_id = ?',
-  )
-    .bind(id, accountId)
-    .first<{ size: number; started_at: number; finished_at: number | null }>();
-  if (!lesson || lesson.started_at < now() - KEEP_LESSONS_MS) {
-    return json({ error: 'unknown_lesson' }, 404);
-  }
-  if (lesson.size !== size) throw new BadRequest('invalid', 'size');
+  return { id, size, earned };
+}
+
+async function accountExists(env: AccountEnv, accountId: string): Promise<boolean> {
+  const row = await env.DB.prepare('SELECT 1 AS ok FROM accounts WHERE id = ?')
+    .bind(accountId)
+    .first();
+  return !!row;
+}
+
+/**
+ * Claims the lesson and adds its points: 'counted' when this request made the claim, 'repeat'
+ * when the lesson was already finished, 'gone' when the account was deleted meanwhile (then
+ * anything this request may have written is removed).
+ */
+async function claimLesson(
+  env: AccountEnv,
+  accountId: string,
+  id: string,
+  earned: number,
+): Promise<'counted' | 'repeat' | 'gone'> {
   // One transaction: claim the lesson (only if not yet finished), then add the points only
   // when this request made the claim. A repeated or parallel save adds nothing.
   const claim = randomHex(16);
@@ -172,22 +184,30 @@ export const finishLesson: SessionHandler = async (request, env, session) => {
        ON CONFLICT (account_id) DO UPDATE SET points = points + excluded.points`,
     ).bind(accountId, earned, id, claim, accountId),
   ]);
-  const stillThere = await env.DB.prepare('SELECT 1 AS ok FROM accounts WHERE id = ?')
-    .bind(accountId)
-    .first();
-  if (!stillThere) {
+  if (!(await accountExists(env, accountId))) {
     // Deleted meanwhile: remove anything this request may have written.
     await env.DB.batch([
       env.DB.prepare('DELETE FROM lessons WHERE account_id = ?').bind(accountId),
       env.DB.prepare('DELETE FROM progress WHERE account_id = ?').bind(accountId),
     ]);
-    return notSignedIn();
+    return 'gone';
   }
   const counted = await env.DB.prepare('SELECT 1 AS ok FROM lessons WHERE id = ? AND claim = ?')
     .bind(id, claim)
     .first();
-  // SCRUM-118: a counted lesson is a played day. A repeated save of the same lesson never
-  // reaches this, so it cannot add a day or make a second offer.
+  return counted ? 'counted' : 'repeat';
+}
+
+/**
+ * The progress after a finished lesson, today's Slovak day and the unlock offer. SCRUM-118: a
+ * counted lesson is a played day. A repeated save of the same lesson never counts, so it
+ * cannot add a day or make a second offer.
+ */
+async function playedDay(
+  env: AccountEnv,
+  accountId: string,
+  counted: boolean,
+): Promise<{ row: Row; today: string; offer: Offer | null }> {
   let offer: Offer | null;
   let row = await readRow(env, accountId);
   const today = slovakDay(now());
@@ -208,6 +228,26 @@ export const finishLesson: SessionHandler = async (request, env, session) => {
     // today's open offer (QA131-04).
     offer = openOffer(row.state, today, row.points);
   }
+  return { row, today, offer };
+}
+
+/** A lesson is finished (including its review round): add its points once. */
+export const finishLesson: SessionHandler = async (request, env, session) => {
+  const { id, size, earned } = readFinish(await readJson(request));
+  const accountId = session.account.id;
+  const lesson = await env.DB.prepare(
+    'SELECT size, started_at, finished_at FROM lessons WHERE id = ? AND account_id = ?',
+  )
+    .bind(id, accountId)
+    .first<{ size: number; started_at: number; finished_at: number | null }>();
+  if (!lesson || lesson.started_at < now() - KEEP_LESSONS_MS) {
+    return json({ error: 'unknown_lesson' }, 404);
+  }
+  if (lesson.size !== size) throw new BadRequest('invalid', 'size');
+  const claim = await claimLesson(env, accountId, id, earned);
+  if (claim === 'gone') return notSignedIn();
+  const counted = claim === 'counted';
+  const { row, today, offer } = await playedDay(env, accountId, counted);
   const reply: FinishReply = { ...progressBody(row, today), added: counted ? earned : 0, offer };
   return new Renewed(reply);
 };

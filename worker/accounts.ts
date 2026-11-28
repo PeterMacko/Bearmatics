@@ -5,6 +5,7 @@ import type { Account } from '../shared/api-types';
 import { oldBearFor, type BearLook } from '../shared/bearLook';
 import { validKey, validUsername } from '../shared/rules';
 import * as rules from './rules';
+import { DAY_MS, now } from './time';
 
 export interface AccountEnv {
   DB: D1Database;
@@ -12,7 +13,6 @@ export interface AccountEnv {
 
 export const SESSION_COOKIE = 'bm_session';
 const SESSION_DAYS = 30;
-const DAY = 24 * 60 * 60 * 1000;
 /** Session length: the cookie's Max-Age (seconds) and the stored expiry (milliseconds). */
 const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
 const SESSION_MS = SESSION_SECONDS * 1000;
@@ -67,8 +67,6 @@ export function publicAccount(row: AccountRow): Account {
     leaderboard: row.leaderboard !== 0,
   };
 }
-
-const now = () => Date.now();
 
 export async function startSession(env: AccountEnv, accountId: string): Promise<string> {
   const token = randomHex(32);
@@ -238,7 +236,7 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
   const keyHash = await attemptKey(rawUsername);
   const time = now();
   await env.DB.prepare('DELETE FROM login_attempts WHERE updated_at < ?')
-    .bind(time - DAY)
+    .bind(time - DAY_MS)
     .run();
   const account = await limited(
     env,

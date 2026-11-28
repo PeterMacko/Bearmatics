@@ -6,6 +6,7 @@ import { isRudeNickname } from '../shared/rules';
 import { slovakDay } from '../shared/slovakDay';
 import { lookOf, Renewed, type LookColumns, type SessionHandler } from './accounts';
 import { streakView } from './streak';
+import { now } from './time';
 
 const TOP = 10;
 
@@ -54,7 +55,7 @@ export function leaderboardRows(players: Player[], meId: string | null): Leaderb
 }
 
 export const getLeaderboard: SessionHandler = async (_request, env, session) => {
-  const today = slovakDay(Date.now());
+  const today = slovakDay(now());
   const { results } = await env.DB.prepare(
     `SELECT a.id, a.nickname, a.bear_fur, a.bear_bg, a.bear_head, a.bear_neck, a.bear_eyes, p.points, p.streak, p.last_day, p.offer_day
      FROM progress p JOIN accounts a ON a.id = p.account_id
