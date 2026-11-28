@@ -2,17 +2,11 @@ import { act, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, expect, test, vi } from 'vitest';
 import App from './App';
 import { fakeServer, reply } from './testing/fakeServer';
+import { ACCOUNT as KID } from './testing/account';
 
 // SCRUM-148: two bar buttons, the leaderboard window and the profile switch.
 
-const ACCOUNT = {
-  kind: 'password',
-  username: 'kid',
-  nickname: 'Mia',
-  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
-  email: null,
-  leaderboard: true,
-};
+const ACCOUNT = { ...KID, nickname: 'Mia', leaderboard: true };
 const row = (place: number, nickname: string, points: number, extra = {}) => ({
   place,
   nickname,

@@ -5,16 +5,9 @@ import { openMathematics } from './testing/openMathematics';
 import { fakeServer, reply } from './testing/fakeServer';
 import { playFive } from './testing/lesson';
 import { tap } from './testing/ui';
+import { ACCOUNT } from './testing/account';
 
 // SCRUM-117: points for finished lessons of signed-in players, badge in the bar and summary.
-
-const ACCOUNT = {
-  kind: 'password',
-  username: 'kid',
-  nickname: 'Kid',
-  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
-  email: null,
-};
 
 function server(
   start: number,
