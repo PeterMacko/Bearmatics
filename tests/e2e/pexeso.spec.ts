@@ -1,5 +1,6 @@
-import { expect, test, type Page, type Route } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
+import { mockAccount, mockLessonApi, mockSignedOut } from './support/mockApi';
 import { cardNames, playPerfect, startPexeso, tapCard } from './support/pexeso';
 
 // SCRUM-324: Pexeso (memory game), Logic Levels 6-8, on the defined devices.
@@ -11,57 +12,25 @@ const LEVELS = [
 ] as const;
 
 /** Signed in (a 12-character nickname) with the lesson endpoints; records finish requests. */
-async function signedIn(page: Page) {
-  const finished: unknown[] = [];
-  const started: unknown[] = [];
-  await page.route('**/api/**', async (route: Route) => {
-    const request = route.request();
-    const path = new URL(request.url()).pathname;
-    const json = (body: unknown, status = 200) =>
-      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
-    if (path === '/api/me')
-      return json({
-        account: {
-          kind: 'password',
-          username: 'kid',
-          nickname: 'Medvedik1234',
-          look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
-          email: null,
-          leaderboard: false,
-        },
-      });
-    if (path === '/api/progress')
-      return json({ points: 1234, streak: 3, frozen: false, today: true });
-    if (path === '/api/progress/lessons') {
-      started.push(request.postDataJSON());
-      return json({ lessonId: 'c'.repeat(32) }, 201);
-    }
-    if (path === '/api/progress/lessons/finish') {
-      const body = request.postDataJSON() as { points: number };
-      finished.push(body);
-      return json({
-        points: 1234 + body.points,
-        streak: 3,
-        frozen: false,
-        today: true,
-        added: body.points,
-        offer: null,
-      });
-    }
-    return json({ available: false });
+const signedIn = (page: Page) =>
+  mockLessonApi(page, {
+    account: mockAccount('Medvedik1234', { leaderboard: false }),
+    progress: { points: 1234, streak: 3, frozen: false, today: true },
+    lessonId: 'c'.repeat(32),
+    lessonStatus: 201,
+    finish: (body) => ({
+      points: 1234 + body.points,
+      streak: 3,
+      frozen: false,
+      today: true,
+      added: body.points,
+      offer: null,
+    }),
+    record: true,
   });
-  return { finished, started };
-}
 
 /** Signed out: the server answers 401 for the account. */
-const signedOut = (page: Page) =>
-  page.route('**/api/**', (route) =>
-    route.fulfill({
-      status: 401,
-      contentType: 'application/json',
-      body: '{"error":"not_signed_in"}',
-    }),
-  );
+const signedOut = (page: Page) => mockSignedOut(page, '401');
 
 /** Fit numbers of the board. */
 const boardFit = (page: Page) =>
