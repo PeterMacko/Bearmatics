@@ -53,7 +53,7 @@ const BEAD_COLOURS = ['#ffd23f', '#e0567a', '#4f9be0', '#4f9be0', '#e0567a', '#f
  * (LookPartIcon) draw the same shapes. `outline` (choice pictures only) gives the coral hat and
  * scarf a darker edge so they stand out on the pale choice tile; the bear itself is unchanged.
  */
-export const ITEM_OUTLINE = '#b63e45';
+const ITEM_OUTLINE = '#b63e45';
 
 export function Head({ item, outline = false }: { item: number; outline?: boolean }) {
   switch (item) {
@@ -212,7 +212,7 @@ export function Eyes({ item, eyeColour }: { item: number; eyeColour: string }) {
 }
 
 /** Panda eyes are white on their dark patches; every other bear has dark eyes. */
-export const eyeColourOf = (fur: Fur) => (fur.patches ? '#ffffff' : INK);
+const eyeColourOf = (fur: Fur) => (fur.patches ? '#ffffff' : INK);
 
 /**
  * The plain bear face: ears, head, panda patches, muzzle, eyes, nose and mouth. `outline` (the

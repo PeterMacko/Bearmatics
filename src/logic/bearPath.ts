@@ -4,20 +4,19 @@
 // SCRUM-289/292: level 2 "Around the stones": 1-2 stones stand in the bear's way, up to 6
 // arrows; an arrow into a stone stops the bear like the edge.
 import type { AnswerResult } from '../math/engine';
-import { shuffled } from '../random';
-import { SESSION_SIZES } from '../session';
+import { pickOne, shuffled } from '../../shared/random';
+import { sameCell, type Cell } from '../cell';
+import { assertSessionSize } from '../session';
 
 export const GRID_SIZE = 4;
 /** Level 1's arrow limit (and the default of the checker). */
-export const MAX_ARROWS = 4;
+const MAX_ARROWS = 4;
 
 export type LogicLevel = 1 | 2;
 export const LOGIC_LEVELS: readonly LogicLevel[] = [1, 2];
 /** How many arrows a child may plan per level (scope 3: Level 1 stays 4, Level 2 has 6). */
 export const ARROW_LIMIT: Readonly<Record<LogicLevel, number>> = { 1: MAX_ARROWS, 2: 6 };
 
-/** A grid cell, 0-based: row 0 is the top row, col 0 the left column. */
-export type Cell = Readonly<{ row: number; col: number }>;
 export type Arrow = 'up' | 'down' | 'left' | 'right';
 export const ARROWS: readonly Arrow[] = ['up', 'down', 'left', 'right'];
 
@@ -25,7 +24,7 @@ export const ARROWS: readonly Arrow[] = ['up', 'down', 'left', 'right'];
 export type BearPuzzle = Readonly<{ bear: Cell; honey: Cell; stones?: readonly Cell[] }>;
 
 /** The displacement from the bear to the honey (dx = columns to the right, dy = rows down). */
-export type MoveShape = Readonly<{ dx: number; dy: number }>;
+type MoveShape = Readonly<{ dx: number; dy: number }>;
 
 const STEP: Record<Arrow, MoveShape> = {
   up: { dx: 0, dy: -1 },
@@ -71,7 +70,7 @@ export function placements(shape: MoveShape): BearPuzzle[] {
 }
 
 /** How many puzzles of 2, 3 and 4 moves a lesson has, easier first (scope 2). */
-export const DISTANCE_MIX: Readonly<Record<number, readonly [number, number, number]>> = {
+const DISTANCE_MIX: Readonly<Record<number, readonly [number, number, number]>> = {
   5: [2, 2, 1],
   10: [3, 4, 3],
   20: [6, 7, 7],
@@ -85,8 +84,7 @@ export function generateBearSession(
   size: number,
   rng: () => number = Math.random,
 ): readonly BearPuzzle[] {
-  if (!(SESSION_SIZES as readonly number[]).includes(size))
-    throw new RangeError('Unsupported session size');
+  assertSessionSize(size);
   const mix = DISTANCE_MIX[size];
   return mix.flatMap((count, i) =>
     shuffled(
@@ -94,10 +92,7 @@ export function generateBearSession(
       rng,
     )
       .slice(0, count)
-      .map((shape) => {
-        const options = placements(shape);
-        return options[Math.min(options.length - 1, Math.floor(rng() * options.length))];
-      }),
+      .map((shape) => pickOne(placements(shape), rng)),
   );
 }
 
@@ -106,8 +101,6 @@ export function generateBearSession(
  * then `stone` is that stone's cell), where it ends.
  */
 export type Walk = Readonly<{ steps: readonly Cell[]; bumped: boolean; end: Cell; stone?: Cell }>;
-
-export const sameCell = (a: Cell, b: Cell) => a.row === b.row && a.col === b.col;
 
 /**
  * The bear walks the arrows one cell each; an arrow off the grid stops it at the edge, an arrow
@@ -185,7 +178,7 @@ export function shortestPath(puzzle: BearPuzzle): number | null {
  * the bear and the stones' offsets from the bear (sorted). "No layout twice in a lesson" means
  * no relative layout twice.
  */
-export type StoneLayout = Readonly<{
+type StoneLayout = Readonly<{
   shape: MoveShape;
   stones: readonly MoveShape[];
   /** The fewest arrows on the grid (the best placements). */
@@ -201,7 +194,7 @@ function layoutPlacements(layout: StoneLayout): readonly BearPuzzle[] {
 }
 
 /** Lesson tiers, easier first (scope 4): A free way 2-3 moves, B round 4-5, C round 6. */
-export type StoneTier = 'A' | 'B' | 'C';
+type StoneTier = 'A' | 'B' | 'C';
 
 export const layoutKey = (layout: Pick<StoneLayout, 'shape' | 'stones'>) =>
   `${layout.shape.dx},${layout.shape.dy}:${layout.stones.map((s) => `${s.dx},${s.dy}`).join(';')}`;
@@ -212,7 +205,7 @@ const at = (bear: Cell, offset: MoveShape): Cell => ({
 });
 
 /** The puzzle of a layout with the bear on `bear` (cells may lie off the grid). */
-export const layoutPuzzle = (layout: Pick<StoneLayout, 'shape' | 'stones'>, bear: Cell) => ({
+const layoutPuzzle = (layout: Pick<StoneLayout, 'shape' | 'stones'>, bear: Cell) => ({
   bear,
   honey: at(bear, layout.shape),
   stones: layout.stones.map((offset) => at(bear, offset)),
@@ -224,7 +217,7 @@ const onGrid = (c: Cell) => inside(c.row) && inside(c.col);
  * Every bear cell where the layout stands wholly on the grid and the fewest arrows equal
  * `length` (near the edges some placements are longer or blocked: those are never used).
  */
-export function stonePlacements(
+function stonePlacements(
   layout: Pick<StoneLayout, 'shape' | 'stones'>,
   length: number,
 ): BearPuzzle[] {
@@ -275,7 +268,7 @@ export const STONE_LAYOUTS: readonly StoneLayout[] = (() => {
 })();
 
 /** The tier of a layout, or null when it belongs to none (free ways of 4+ moves). */
-export function stoneTier(layout: StoneLayout): StoneTier | null {
+function stoneTier(layout: StoneLayout): StoneTier | null {
   const straight = distance(layout.shape);
   if (layout.length === straight) return straight <= 3 ? 'A' : null;
   return layout.length <= 5 ? 'B' : 'C';
@@ -288,14 +281,11 @@ export const TIER_LAYOUTS: Readonly<Record<StoneTier, readonly StoneLayout[]>> =
 };
 
 /** How many puzzles of tier A, B and C a Level 2 lesson has, easier first (scope 4). */
-export const TIER_MIX: Readonly<Record<number, readonly [number, number, number]>> = {
+const TIER_MIX: Readonly<Record<number, readonly [number, number, number]>> = {
   5: [1, 2, 2],
   10: [2, 4, 4],
   20: [4, 8, 8],
 };
-
-const pick = <T>(options: readonly T[], rng: () => number) =>
-  options[Math.min(options.length - 1, Math.floor(rng() * options.length))];
 
 /**
  * A Level 2 lesson: tiers A, B, C in that order (shorter ways first inside a tier), no layout
@@ -306,12 +296,11 @@ export function generateStoneSession(
   size: number,
   rng: () => number = Math.random,
 ): readonly BearPuzzle[] {
-  if (!(SESSION_SIZES as readonly number[]).includes(size))
-    throw new RangeError('Unsupported session size');
+  assertSessionSize(size);
   return (['A', 'B', 'C'] as const).flatMap((tier, i) =>
     shuffled(TIER_LAYOUTS[tier], rng)
       .slice(0, TIER_MIX[size][i])
       .sort((a, b) => a.length - b.length)
-      .map((layout) => pick(layoutPlacements(layout), rng)),
+      .map((layout) => pickOne(layoutPlacements(layout), rng)),
   );
 }

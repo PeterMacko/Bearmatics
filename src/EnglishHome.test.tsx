@@ -1,9 +1,8 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import App from './App';
+import { button, heading } from './testing/ui';
 
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
-const heading = () => screen.getByRole('heading', { level: 2 });
 const openEnglish = () => fireEvent.click(button('English'));
 
 test('English home shows three levels, 5/10/20 and focuses its heading', () => {

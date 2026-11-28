@@ -1,5 +1,11 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, leaveProfile, uniqueName } from '../e2e/support/account';
+import {
+  createAccount,
+  hideFromLeaderboard,
+  leaveProfile,
+  uniqueName,
+} from '../e2e/support/account';
+import { badge as barBadge } from '../e2e/support/bar';
 import { answerFor } from '../e2e/support/maths';
 
 // SCRUM-202: daily points multipliers against the real server (local database). Play counts
@@ -7,28 +13,8 @@ import { answerFor } from '../e2e/support/maths';
 
 test.setTimeout(120_000);
 
-const badge = (page: Page) =>
-  page.getByRole('navigation', { name: /Main controls|Hlavné ovládanie/ }).getByRole('button', {
-    name: /badge|odznak/,
-  });
-/**
- * Keeps this spec's players (up to 26 points each) off the leaderboard: every accounts spec shares
- * one local database, and the leaderboard spec expects its own 5-point player in the top ten.
- */
-async function hideFromLeaderboard(page: Page) {
-  const status = await page.evaluate(
-    async () =>
-      (
-        await fetch('/api/me', {
-          method: 'PATCH',
-          credentials: 'same-origin',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ leaderboard: false }),
-        })
-      ).status,
-  );
-  expect(status).toBe(200);
-}
+const badge = (page: Page) => barBadge(page, { anyLanguage: true });
+// hideFromLeaderboard keeps this spec's players (up to 26 points each) off the leaderboard.
 const level = (page: Page, n: number) => page.locator(`.level-option.level-${n}`);
 const radio = (page: Page, n: number) => level(page, n).getByRole('radio');
 

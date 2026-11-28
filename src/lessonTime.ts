@@ -1,3 +1,4 @@
+import { readJson, writeJson } from './deviceStore';
 import { fill, pointsText, type Copy } from './i18n';
 
 /**
@@ -8,9 +9,9 @@ import { fill, pointsText, type Copy } from './i18n';
  */
 export const LESSON_START_KEY = 'bearmatics.lessonStart';
 
-export type LessonStart = { startedAt: number; size: number };
+type LessonStart = { startedAt: number; size: number };
 /** Whole seconds: the total, and the average per chosen example. */
-export type LessonTime = { total: number; average: number };
+type LessonTime = { total: number; average: number };
 
 /** Storage can be unavailable (privacy modes): the time line then just stays away. */
 function storage(): Storage | null {
@@ -23,11 +24,8 @@ function storage(): Storage | null {
 
 /** A lesson starts (its first example is shown): `size` is the number chosen (5, 10 or 20). */
 export function startLessonClock(size: number, now = Date.now()) {
-  try {
-    storage()?.setItem(LESSON_START_KEY, JSON.stringify({ startedAt: now, size }));
-  } catch {
-    // Full or blocked storage: no time on the summary, nothing else changes.
-  }
+  // Full or blocked storage: no time on the summary, nothing else changes.
+  writeJson(storage, LESSON_START_KEY, { startedAt: now, size });
 }
 
 export function clearLessonStart() {
@@ -39,23 +37,17 @@ export function clearLessonStart() {
 }
 
 export function readLessonStart(): LessonStart | null {
-  try {
-    const raw = storage()?.getItem(LESSON_START_KEY);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as Partial<LessonStart> | null;
-    if (
-      !value ||
-      typeof value.startedAt !== 'number' ||
-      !Number.isFinite(value.startedAt) ||
-      typeof value.size !== 'number' ||
-      !Number.isInteger(value.size) ||
-      value.size <= 0
-    )
-      return null;
-    return { startedAt: value.startedAt, size: value.size };
-  } catch {
+  const value = readJson(storage, LESSON_START_KEY) as Partial<LessonStart> | null;
+  if (
+    !value ||
+    typeof value.startedAt !== 'number' ||
+    !Number.isFinite(value.startedAt) ||
+    typeof value.size !== 'number' ||
+    !Number.isInteger(value.size) ||
+    value.size <= 0
+  )
     return null;
-  }
+  return { startedAt: value.startedAt, size: value.size };
 }
 
 /**

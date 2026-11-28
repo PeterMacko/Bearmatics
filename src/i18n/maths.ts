@@ -1,0 +1,53 @@
+// Small maths (with the take-away basket) and the Maths course.
+export const mathsCopy = {
+  en: {
+    smallCourse: 'Small maths',
+    smallCourseDetail: 'Count pictures: add up to 12, take away up to 6',
+    diceResult: 'Result: {first} and {second}, {total}',
+    smallTrail: 'Small maths',
+    smallChoose: 'What shall we count?',
+    smallIntro: 'Count the pictures, add them up and take some away.',
+    basket: {
+      basket: 'Basket',
+      takenOut: 'Taken out',
+      empty: 'Empty',
+      inBasket: '{name}, in the basket',
+      out: '{name}, taken out',
+      counts: 'In the basket: {basket}. Taken out: {out}.',
+      names: {
+        pirates: 'Pirate',
+        bears: 'Bear',
+        lollipops: 'Lollipop',
+        boats: 'Boat',
+        aircraft: 'Plane',
+      },
+    },
+    mathCourse: 'Maths',
+    mathCourseDetail: 'Count, add, subtract, multiply and share',
+  },
+  sk: {
+    smallCourse: 'Malá matematika',
+    smallCourseDetail: 'Počítaj obrázky: sčítaj do 12, odoberaj do 6',
+    diceResult: 'Výsledok: {first} a {second}, {total}',
+    smallTrail: 'Malá matematika',
+    smallChoose: 'Čo budeme počítať?',
+    smallIntro: 'Počítaj obrázky, sčítaj ich a niektoré odober.',
+    basket: {
+      basket: 'Košík',
+      takenOut: 'Vybrané',
+      empty: 'Prázdne',
+      inBasket: '{name} v košíku',
+      out: '{name} medzi vybranými',
+      counts: 'V košíku: {basket}. Vybrané: {out}.',
+      names: {
+        pirates: 'Pirát',
+        bears: 'Medveď',
+        lollipops: 'Lízanka',
+        boats: 'Loď',
+        aircraft: 'Lietadlo',
+      },
+    },
+    mathCourse: 'Matematika',
+    mathCourseDetail: 'Počítanie, sčítanie, odčítanie, násobenie a delenie',
+  },
+} as const;

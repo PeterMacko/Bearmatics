@@ -10,7 +10,7 @@ import { SESSION_SIZES } from '../session';
 import type { Game } from './picker';
 
 /** A game's course name and level name as the menus show them. */
-export function gameNames(t: Copy, game: Game): { course: string; level: string } {
+function gameNames(t: Copy, game: Game): { course: string; level: string } {
   const { course, shown } = game;
   if (course === 'small') {
     const value = SMALL_MATH_LEVELS.find((l) => l.shown === shown)?.value ?? 0;

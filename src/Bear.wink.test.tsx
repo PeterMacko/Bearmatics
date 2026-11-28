@@ -4,6 +4,7 @@ import { StrictMode } from 'react';
 import Bear from './Bear';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
+import { advance } from './testing/ui';
 let reduced = false;
 let hidden = false;
 let media: EventTarget;
@@ -25,7 +26,6 @@ afterEach(() => {
   vi.useRealTimers();
   vi.unstubAllGlobals();
 });
-const advance = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 const visibility = (value: boolean) =>
   act(() => {
     hidden = value;

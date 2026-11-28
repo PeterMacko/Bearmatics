@@ -6,12 +6,11 @@ import { fakeServer, reply } from '../testing/fakeServer';
 import { seeded } from '../testing/seeded';
 import * as grid from './grid';
 import type { Puzzle } from './grid';
+import { button, flush, heading } from '../testing/ui';
 
 // SCRUM-241/245: the Word search course in the app (menu, lesson, scoring, sounds, SR mode).
 
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const exact = (name: string) => screen.getByRole('button', { name, exact: true } as never);
-const heading = () => screen.getByRole('heading', { level: 2 });
 let played: string[] = [];
 let feedback: ReturnType<typeof vi.fn>;
 let lesson: readonly Puzzle[] = [];
@@ -38,10 +37,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-const flush = () =>
-  act(async () => {
-    await Promise.resolve();
-  });
 const pops = () => feedback.mock.calls.filter(([sound]) => sound === 'pop').length;
 const melodies = () =>
   feedback.mock.calls.filter(([sound]) => sound === 'correct' || sound === 'incorrect').length;

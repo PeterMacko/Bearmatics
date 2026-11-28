@@ -1,19 +1,14 @@
 // Browser side of the points and streak API (SCRUM-117/118). Only for signed-in players.
-import type { Leaderboard, Offer } from '../../shared/api-types';
+import type { FinishReply, Leaderboard, Progress } from '../../shared/api-types';
 import { call } from '../account/api';
 
-export type { LeaderboardRow, Offer } from '../../shared/api-types';
-
-/** today: a lesson already counted for the streak today (lit flame). */
-export type Streak = { streak: number; frozen: boolean; today: boolean };
-/** day: the server's Slovak day 'YYYY-MM-DD' (SCRUM-202; missing from older servers). */
-export type Progress = { points: number; day?: string } & Streak;
+export type { LeaderboardRow, Offer, Progress, Streak } from '../../shared/api-types';
 
 export const loadProgress = () => call<Progress>('/api/progress');
 export const startLesson = (size: number) =>
   call<{ lessonId: string }>('/api/progress/lessons', 'POST', { size }).then((r) => r.lessonId);
 export const finishLesson = (lessonId: string, size: number, points: number) =>
-  call<Progress & { added: number; offer: Offer | null }>('/api/progress/lessons/finish', 'POST', {
+  call<FinishReply>('/api/progress/lessons/finish', 'POST', {
     lessonId,
     size,
     points,

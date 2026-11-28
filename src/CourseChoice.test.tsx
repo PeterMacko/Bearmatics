@@ -1,9 +1,7 @@
 import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import App from './App';
-
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
-const heading = () => screen.getByRole('heading', { level: 2 });
+import { button, heading } from './testing/ui';
 
 test('the app opens on the course choice with the five courses and nothing else to start', () => {
   render(<App />);

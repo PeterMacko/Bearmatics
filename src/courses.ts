@@ -2,6 +2,9 @@ import type { Copy } from './i18n';
 import type { MenuLevel } from './LevelMenu';
 import type { Level } from './math/engine';
 
+/** The courses on the course choice (also the course of a lesson's points and play counts). */
+export type Course = 'small' | 'logic' | 'math' | 'english' | 'wordsearch';
+
 /** One level in a maths course menu: the engine level and the number the child sees. */
 type CourseLevel = { value: Level; shown: number };
 

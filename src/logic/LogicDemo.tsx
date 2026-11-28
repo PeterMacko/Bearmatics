@@ -4,7 +4,7 @@ import { ArrowIcon, Finger, GridBear, HoneyPot } from './LogicArt';
 
 /** How long the moving demo and the reduced-motion still steps stay on screen. */
 export const DEMO_MS = 3200;
-export const STILL_DEMO_MS = 4500;
+const STILL_DEMO_MS = 4500;
 
 /** One picture of the demo: a 2-cell strip, the arrow slot and the Go button. */
 function DemoScene({ step }: { step: 1 | 2 | 3 | 'moving' }) {

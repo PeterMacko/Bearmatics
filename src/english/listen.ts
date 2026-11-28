@@ -1,6 +1,6 @@
 import type { AnswerResult } from '../math/engine';
-import { shuffled } from '../random';
-import { SESSION_SIZES } from '../session';
+import { shuffled } from '../../shared/random';
+import { isSessionSize, SESSION_SIZES } from '../session';
 import { WORDS, type ListenLevel } from './words';
 
 /** One listen-and-choose question: the spoken target and four word buttons in display order. */
@@ -21,7 +21,7 @@ export function generateWordSession(
   size: number,
   rng: () => number = Math.random,
 ): readonly WordQuestion[] {
-  if (![1, 2].includes(level) || !(SESSION_SIZES as readonly number[]).includes(size))
+  if (![1, 2].includes(level) || !isSessionSize(size))
     throw new RangeError('Unsupported session settings');
   return shuffled(WORDS, rng)
     .slice(0, size)

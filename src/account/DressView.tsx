@@ -20,7 +20,7 @@ import { Message, useAction, type T } from './fields';
 import { errorText } from './problems';
 
 /** Tells App that a sub-screen is open (`close` cancels it, used by the bar's Back). */
-export type SubView = (close: (() => void) | null) => void;
+type SubView = (close: (() => void) | null) => void;
 
 /**
  * The dress screen opened from a form: while open the form is replaced (its state is kept by

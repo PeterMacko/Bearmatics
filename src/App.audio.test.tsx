@@ -5,15 +5,10 @@ import * as math from './math/engine';
 import { FeedbackAudio } from './audio';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
-import { click } from './testing/ui';
+import { button, click, flush } from './testing/ui';
 
-const button = (name: string) => screen.getByRole('button', { name });
 const settings = () => click('Settings');
 const close = () => click('Close settings');
-const flush = () =>
-  act(async () => {
-    await Promise.resolve();
-  });
 
 test('sound is desired initially without autoplay; Start lazily activates', async () => {
   const activate = vi.spyOn(FeedbackAudio.prototype, 'setEnabled').mockResolvedValue(true);

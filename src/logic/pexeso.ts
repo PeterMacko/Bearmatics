@@ -3,18 +3,22 @@
 // a miss costs a point only when it was "forgotten" (the partner of the turn's FIRST card had
 // already been seen open in an earlier turn); the first 1 / 2 / 3 forgotten misses are free.
 // Pure functions; the random source is passed in (seeded in tests).
-import { shuffled } from '../random';
+import { PEXESO_PAIR_COUNTS } from '../../shared/lessonSizes';
+import { shuffled } from '../../shared/random';
 import type { Session } from '../session';
 
 export type PexesoLevel = 6 | 7 | 8;
 export const PEXESO_LEVELS: readonly PexesoLevel[] = [6, 7, 8];
-export type PexesoPairs = 6 | 10 | 15;
+export type PexesoPairs = (typeof PEXESO_PAIR_COUNTS)[number];
 
 /** Pictures (pairs) per level: Logic 6 / 7 / 8 = 6 / 10 / 15 pictures. */
 export const PEXESO_PAIRS: Readonly<Record<PexesoLevel, PexesoPairs>> = { 6: 6, 7: 10, 8: 15 };
 
 /** Forgotten misses that cost nothing (the hearts): 1 / 2 / 3. */
 export const FREE_MISSES: Readonly<Record<PexesoPairs, number>> = { 6: 1, 10: 2, 15: 3 };
+
+/** How long the two cards of a miss stay open before they turn face down again. */
+export const PEXESO_CLOSE_MS = 1500;
 
 export const isPexesoLevel = (level: number): level is PexesoLevel =>
   (PEXESO_LEVELS as readonly number[]).includes(level);
@@ -40,7 +44,7 @@ export const PEXESO_PICTURES = [
 export type PexesoPicture = (typeof PEXESO_PICTURES)[number];
 
 /** What the last finished turn was (for the bear, the sounds and the polite message). */
-export type TurnResult =
+type TurnResult =
   Readonly<{ kind: 'pair'; picture: PexesoPicture }> | Readonly<{ kind: 'forgotten' | 'lucky' }>;
 
 export type PexesoGame = Readonly<{

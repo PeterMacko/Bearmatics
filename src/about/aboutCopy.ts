@@ -297,5 +297,3 @@ export const aboutCopy = {
     } satisfies Record<Shot, ShotCopy>,
   },
 } satisfies Record<Language, unknown>;
-
-export type AboutCopy = (typeof aboutCopy)[Language];

@@ -5,6 +5,7 @@ import type { Account } from '../shared/api-types';
 import { oldBearFor, type BearLook } from '../shared/bearLook';
 import { validKey, validUsername } from '../shared/rules';
 import * as rules from './rules';
+import { DAY_MS, now } from './time';
 
 export interface AccountEnv {
   DB: D1Database;
@@ -12,14 +13,13 @@ export interface AccountEnv {
 
 export const SESSION_COOKIE = 'bm_session';
 const SESSION_DAYS = 30;
-const DAY = 24 * 60 * 60 * 1000;
 /** Session length: the cookie's Max-Age (seconds) and the stored expiry (milliseconds). */
 const SESSION_SECONDS = SESSION_DAYS * 24 * 60 * 60;
 const SESSION_MS = SESSION_SECONDS * 1000;
 export const MAX_FAILURES = 5;
 export const LOCK_MINUTES = 15;
 
-interface AccountRow {
+export interface AccountRow {
   id: string;
   username: string | null;
   google_sub: string | null;
@@ -37,8 +37,14 @@ interface AccountRow {
   leaderboard: number;
 }
 
+/** The bear look columns of an account row. */
+export type LookColumns = Pick<
+  AccountRow,
+  'bear_fur' | 'bear_bg' | 'bear_head' | 'bear_neck' | 'bear_eyes'
+>;
+
 /** The parts as stored in the account row. */
-const lookOf = (row: AccountRow): BearLook => ({
+export const lookOf = (row: LookColumns): BearLook => ({
   fur: row.bear_fur,
   background: row.bear_bg,
   head: row.bear_head,
@@ -51,7 +57,7 @@ export const lookColumns = (look: BearLook) =>
   [oldBearFor(look), look.fur, look.background, look.head, look.neck, look.eyes] as const;
 
 /** What the browser may see about the signed-in account. */
-function publicAccount(row: AccountRow): Account {
+export function publicAccount(row: AccountRow): Account {
   return {
     kind: row.google_sub ? 'google' : 'password',
     username: row.username,
@@ -62,9 +68,7 @@ function publicAccount(row: AccountRow): Account {
   };
 }
 
-const now = () => Date.now();
-
-async function startSession(env: AccountEnv, accountId: string): Promise<string> {
+export async function startSession(env: AccountEnv, accountId: string): Promise<string> {
   const token = randomHex(32);
   await env.DB.prepare('INSERT INTO sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)')
     .bind(await sha256Hex(token), accountId, now() + SESSION_MS)
@@ -232,7 +236,7 @@ export async function signIn(request: Request, env: AccountEnv): Promise<Respons
   const keyHash = await attemptKey(rawUsername);
   const time = now();
   await env.DB.prepare('DELETE FROM login_attempts WHERE updated_at < ?')
-    .bind(time - DAY)
+    .bind(time - DAY_MS)
     .run();
   const account = await limited(
     env,
@@ -374,6 +378,3 @@ export const deleteAccount: SessionHandler = async (_request, env, session) => {
   ]);
   return json({ account: null }, 200, { 'set-cookie': endSessionCookie() });
 };
-
-// Exported for the Google sign-in module.
-export { publicAccount, startSession, type AccountRow };

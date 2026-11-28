@@ -1,7 +1,8 @@
 // SCRUM-118: daily streak rules (pure functions, tested with fixed dates).
 // A day is the calendar date in Slovak time (Europe/Bratislava, summer time included), decided
 // on the server so a changed device clock does not matter.
-import type { Offer } from '../shared/api-types';
+import type { Offer, Streak } from '../shared/api-types';
+import { daysBetween, slovakDay } from '../shared/slovakDay';
 
 export type StreakState = {
   /** Days in a row with a finished lesson (missed days are never added). */
@@ -16,26 +17,8 @@ export type StreakState = {
 const MAX_MISSED = 7;
 const COST_PER_DAY = 10;
 
-const DAY_FORMAT = new Intl.DateTimeFormat('en-CA', {
-  timeZone: 'Europe/Bratislava',
-  year: 'numeric',
-  month: '2-digit',
-  day: '2-digit',
-});
-
-/** Calendar date in Slovakia for a moment in time. */
-export function slovakDay(ms: number): string {
-  return DAY_FORMAT.format(new Date(ms));
-}
-
-/** Whole calendar days from day a to day b ('YYYY-MM-DD'). */
-export function daysBetween(a: string, b: string): number {
-  const utc = (day: string) => {
-    const [y, m, d] = day.split('-').map(Number);
-    return Date.UTC(y, m - 1, d);
-  };
-  return Math.round((utc(b) - utc(a)) / 86_400_000);
-}
+// The tests import the day helpers from here.
+export { daysBetween, slovakDay };
 
 /** Days without a lesson between the last counted day and today (0 = played yesterday). */
 function missedDays(lastDay: string, today: string): number {
@@ -104,11 +87,7 @@ export function answerOffer(
 }
 
 /** What the app shows: the current streak (0 = none) and whether it is frozen. */
-export function streakView(
-  before: StreakState,
-  today: string,
-  points: number,
-): { streak: number; frozen: boolean; today: boolean } {
+export function streakView(before: StreakState, today: string, points: number): Streak {
   const state = settle(before, today);
   // today: a lesson already counted for the streak today (Peter: lit flame only then).
   if (!state.lastDay || state.streak < 1) return { streak: 0, frozen: false, today: false };

@@ -13,14 +13,14 @@ const SIDE_MIN = 170;
 
 /** Where Next sits once every word is found: in its place (side column / top-right corner) or
  *  below the whole lesson. `setBelow` must re-render the view with Next in the other place. */
-export type NextPlace = { below: boolean; setBelow: (below: boolean) => void };
+type NextPlace = { below: boolean; setBelow: (below: boolean) => void };
 
 /**
  * True when Next does not fit its usual place: a word of its label sticks out of the button
  * (QA247-01), the button runs out of its column or the window, or it covers the letter grid
  * (QA247-02). Rectangles are 0 in unit tests (never misplaced there).
  */
-export function nextMisplaced(section: HTMLElement): boolean {
+function nextMisplaced(section: HTMLElement): boolean {
   const button = section.querySelector<HTMLElement>('.ws-actions .answer-button');
   const board = section.querySelector<HTMLElement>('.ws-board');
   if (!button || !board) return false;

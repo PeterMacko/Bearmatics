@@ -18,8 +18,6 @@ export interface Env extends GoogleEnv {
 /** Schema version the code needs; /api/health reports an error until migrations reach it. */
 const EXPECTED_SCHEMA = '7';
 
-export { json };
-
 export async function health(env: Env): Promise<Response> {
   try {
     await env.DB.prepare('SELECT 1').first();

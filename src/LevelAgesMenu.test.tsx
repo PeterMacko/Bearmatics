@@ -5,6 +5,7 @@ import { copy } from './i18n';
 import { LEVEL_AGES } from './levelAges';
 import { PLAYS_KEY, deviceSlovakDay } from './progress/playCounts';
 import { fakeServer, reply } from './testing/fakeServer';
+import { ACCOUNT } from './testing/account';
 
 // SCRUM-308: every level row of the five level menus shows its suggested age (aria-hidden badge
 // "5–7") and the screen-reader text "Ages 5 to 7" / "Vek 5 až 7 rokov" next to the title.
@@ -20,13 +21,6 @@ const RADIO_NAME: Record<string, string> = {
   wordsearch: 'search-level',
 };
 
-const ACCOUNT = {
-  kind: 'password',
-  username: 'kid',
-  nickname: 'Kid',
-  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
-  email: null,
-};
 const server = (signedIn: boolean) =>
   fakeServer(({ path }) => {
     if (path === '/api/me') return reply({ account: signedIn ? ACCOUNT : null });

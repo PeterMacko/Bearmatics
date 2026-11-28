@@ -2,10 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test } from 'vitest';
 import App from './App';
 import { openMathematics, openSmallMaths } from './testing/openMathematics';
+import { button, heading } from './testing/ui';
 
 // SCRUM-141: Small maths holds the old level 0 (count the pictures), shown as Level 1.
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
-const heading = () => screen.getByRole('heading', { level: 2 });
 
 test('course choice offers Small maths, Logic, Maths, English and Word search in this order', () => {
   render(<App />);

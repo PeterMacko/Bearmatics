@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { GRID_SIZE, type Cell } from './bearPath';
+import type { Cell } from '../cell';
+import { GRID_SIZE } from './bearPath';
 
 // SCRUM-289 / SCRUM-294: a "?" speech balloon at the board bear's mouth, a quiet reminder that
 // the child can plan the way. A picture only (aria-hidden, no sound, no taps).
@@ -11,10 +12,10 @@ export const BALLOON_SHOW_MS = 3_000;
 /** The fade out (the pop in takes 0.3 s too; reduced motion: neither). */
 export const BALLOON_FADE_MS = 300;
 
-export type BalloonPhase = 'hidden' | 'shown' | 'fading';
+type BalloonPhase = 'hidden' | 'shown' | 'fading';
 
 /** Timers the hook uses (fake ones in tests). */
-export type BalloonClock = {
+type BalloonClock = {
   setTimeout: (run: () => void, ms: number) => number;
   clearTimeout: (id: number) => void;
 };

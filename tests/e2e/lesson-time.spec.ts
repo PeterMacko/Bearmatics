@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
 import { openMathematics, openSmallMaths } from './support/course';
 import { answerFor } from './support/maths';
+import { mockAccount, mockLessonApi, mockSignedOut } from './support/mockApi';
 
 // SCRUM-211: lesson time and average time per exercise on the summary, every course, signed in
 // (mocked server) and out. The clock is Playwright's fake clock: Date.now is held at the lesson
@@ -13,38 +14,16 @@ const KEY = 'bearmatics.lessonStart';
 
 /** Signed-in demo player: 123 points before, +8 (5 x 1.5) after, a new badge and streak 5. */
 async function signedIn(page: Page) {
-  await page.route('**/api/**', (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const json = (body: unknown) =>
-      route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
-    if (path === '/api/me')
-      return json({
-        account: {
-          kind: 'password',
-          username: 'kid',
-          nickname: 'Kid',
-          look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
-          email: null,
-        },
-      });
-    if (path === '/api/progress')
-      return json({ points: 123, streak: 4, frozen: false, today: false });
-    if (path === '/api/progress/lessons') return json({ lessonId: 'a'.repeat(32) });
-    if (path === '/api/progress/lessons/finish')
-      return json({ points: 131, streak: 5, frozen: false, today: true, added: 8, offer: null });
-    return json({ available: false });
+  await mockLessonApi(page, {
+    account: mockAccount('Kid'),
+    progress: { points: 123, streak: 4, frozen: false, today: false },
+    lessonId: 'a'.repeat(32),
+    finish: { points: 131, streak: 5, frozen: false, today: true, added: 8, offer: null },
   });
 }
 
 async function signedOut(page: Page) {
-  await page.route('**/api/**', (route) =>
-    route.fulfill({
-      contentType: 'application/json',
-      body: JSON.stringify(
-        new URL(route.request().url()).pathname === '/api/me' ? { account: null } : {},
-      ),
-    }),
-  );
+  await mockSignedOut(page, 'no-account');
 }
 
 /** Records the word each play() uses, so English answers are known. */
