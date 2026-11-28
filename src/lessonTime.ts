@@ -1,3 +1,4 @@
+import { readJson, writeJson } from './deviceStore';
 import { fill, pointsText, type Copy } from './i18n';
 
 /**
@@ -23,11 +24,8 @@ function storage(): Storage | null {
 
 /** A lesson starts (its first example is shown): `size` is the number chosen (5, 10 or 20). */
 export function startLessonClock(size: number, now = Date.now()) {
-  try {
-    storage()?.setItem(LESSON_START_KEY, JSON.stringify({ startedAt: now, size }));
-  } catch {
-    // Full or blocked storage: no time on the summary, nothing else changes.
-  }
+  // Full or blocked storage: no time on the summary, nothing else changes.
+  writeJson(storage, LESSON_START_KEY, { startedAt: now, size });
 }
 
 export function clearLessonStart() {
@@ -39,23 +37,17 @@ export function clearLessonStart() {
 }
 
 export function readLessonStart(): LessonStart | null {
-  try {
-    const raw = storage()?.getItem(LESSON_START_KEY);
-    if (!raw) return null;
-    const value = JSON.parse(raw) as Partial<LessonStart> | null;
-    if (
-      !value ||
-      typeof value.startedAt !== 'number' ||
-      !Number.isFinite(value.startedAt) ||
-      typeof value.size !== 'number' ||
-      !Number.isInteger(value.size) ||
-      value.size <= 0
-    )
-      return null;
-    return { startedAt: value.startedAt, size: value.size };
-  } catch {
+  const value = readJson(storage, LESSON_START_KEY) as Partial<LessonStart> | null;
+  if (
+    !value ||
+    typeof value.startedAt !== 'number' ||
+    !Number.isFinite(value.startedAt) ||
+    typeof value.size !== 'number' ||
+    !Number.isInteger(value.size) ||
+    value.size <= 0
+  )
     return null;
-  }
+  return { startedAt: value.startedAt, size: value.size };
 }
 
 /**

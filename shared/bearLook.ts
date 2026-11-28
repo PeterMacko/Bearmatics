@@ -1,6 +1,7 @@
 // SCRUM-249: a profile bear is built from five parts. Each part is stored as a number (an index
 // into that part's list of choices). Shared by the server (checks, legacy column) and the app.
 // Pure data and checks only: no browser or Worker APIs.
+import { randomIndex, shuffled } from './random';
 
 /** The parts of a bear, in the order the dress screen shows them. */
 export const LOOK_PARTS = ['fur', 'background', 'head', 'neck', 'eyes'] as const;
@@ -63,8 +64,7 @@ export const oldBearFor = (look: BearLook): number => [1, 2, 8, 3, 4, 5, 6, 7][l
 
 /** A random look (`random` returns [0, 1), like Math.random). */
 export function randomLook(random: () => number = Math.random): BearLook {
-  const pick = (part: LookPart) =>
-    Math.min(PART_COUNTS[part] - 1, Math.floor(random() * PART_COUNTS[part]));
+  const pick = (part: LookPart) => randomIndex(PART_COUNTS[part], random);
   return {
     fur: pick('fur'),
     background: pick('background'),
@@ -76,11 +76,10 @@ export function randomLook(random: () => number = Math.random): BearLook {
 
 /** `count` random looks with different furs (so their spoken names differ too). */
 export function randomLooks(count: number, random: () => number = Math.random): BearLook[] {
-  const furs = Array.from({ length: PART_COUNTS.fur }, (_, index) => index);
-  for (let i = furs.length - 1; i > 0; i--) {
-    const j = Math.min(i, Math.floor(random() * (i + 1)));
-    [furs[i], furs[j]] = [furs[j], furs[i]];
-  }
+  const furs = shuffled(
+    Array.from({ length: PART_COUNTS.fur }, (_, index) => index),
+    random,
+  );
   return furs.slice(0, count).map((fur) => ({ ...randomLook(random), fur }));
 }
 

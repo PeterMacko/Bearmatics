@@ -8,8 +8,8 @@
 // Pictures are the Small maths motifs and the Logic arrows (no new art).
 import type { AnswerResult } from '../math/engine';
 import { PICTURE_THEMES, type PictureTheme } from '../PictureGroup';
-import { shuffled } from '../random';
-import { SESSION_SIZES } from '../session';
+import { pickOne, shuffled } from '../../shared/random';
+import { isSessionSize } from '../session';
 import type { Arrow } from './bearPath';
 
 export type PatternLevel = 3 | 4 | 5;
@@ -158,9 +158,6 @@ export const LEVEL5_POOL: readonly PatternPuzzle[] = (() => {
 /** How many choices a row of each level offers. */
 export const CHOICE_COUNT: Readonly<Record<PatternLevel, number>> = { 3: 3, 4: 4, 5: 3 };
 
-const pick = <T>(options: readonly T[], rng: () => number) =>
-  options[Math.min(options.length - 1, Math.floor(rng() * options.length))];
-
 /**
  * The wrong choices of a row. L3/L4: the row's other pictures, then motifs not in the row up to
  * the level's choice count. L5 counts: same motif, answer +-1 (one side outside 1-6: the other
@@ -183,7 +180,7 @@ export function distractors(puzzle: PatternPuzzle, rng: () => number): PatternIt
     const rest = CLOCKWISE.filter((a) => a !== answer.arrow && a !== otherWay);
     return [
       { kind: 'arrow', arrow: otherWay },
-      { kind: 'arrow', arrow: pick(rest, rng) },
+      { kind: 'arrow', arrow: pickOne(rest, rng) },
     ];
   }
   const inRow = [...new Set(puzzle.places.map((p) => (p.kind === 'motif' ? p.motif : null)))];
@@ -236,7 +233,7 @@ export function generatePatternSession(
   size: number,
   rng: () => number = Math.random,
 ): readonly PatternRow[] {
-  if (!PATTERN_LEVELS.includes(level) || !(SESSION_SIZES as readonly number[]).includes(size))
+  if (!PATTERN_LEVELS.includes(level) || !isSessionSize(size))
     throw new RangeError('Unsupported session settings');
   const used = new Set<string>();
   const groups = lessonGroups(level);

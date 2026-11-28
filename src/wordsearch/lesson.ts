@@ -1,8 +1,9 @@
 // SCRUM-245: one word search lesson as plain state (no React): the grids, the words found in
 // the grid on screen, the first tapped letter, the first-try score. The App turns it into a
 // `Session` shape for the shared bar, bear, leave question and summary (asSession).
+import { sameCell, type Cell } from '../cell';
 import type { Session } from '../session';
-import { checkSelection, sameCell, type Cell, type Puzzle, type SearchLevel } from './grid';
+import { checkSelection, type Puzzle, type SearchLevel } from './grid';
 
 /** What the last action did (the view reacts once per `seq`). */
 type SearchEvent =

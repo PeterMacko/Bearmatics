@@ -4,6 +4,7 @@
 // days are removed whenever counts are written.
 import { DAY_MS, dayStartUtc, slovakDay } from '../../shared/slovakDay';
 import type { Account } from '../account/api';
+import { readJson, writeJson } from '../deviceStore';
 import type { PointsCourse } from './multipliers';
 
 export const PLAYS_KEY = 'bearmatics-plays';
@@ -44,12 +45,8 @@ export function dayShift(ms: number, serverDay: string): number {
 }
 
 function readStore(): Store {
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(PLAYS_KEY) ?? '{}');
-    return parsed && typeof parsed === 'object' ? (parsed as Store) : {};
-  } catch {
-    return {};
-  }
+  const parsed = readJson(() => localStorage, PLAYS_KEY);
+  return parsed && typeof parsed === 'object' ? (parsed as Store) : {};
 }
 
 const levelKey = (course: PointsCourse, level: number) => `${course}:${level}`;
@@ -71,9 +68,6 @@ export function addPlay(account: string, day: string, course: PointsCourse, leve
   const counts = store[account]?.day === day ? { ...store[account].counts } : {};
   counts[levelKey(course, level)] = playsToday(account, day, course, level) + 1;
   kept[account] = { day, counts };
-  try {
-    localStorage.setItem(PLAYS_KEY, JSON.stringify(kept));
-  } catch {
-    // Storage full or blocked: the play simply is not counted on this device.
-  }
+  // Storage full or blocked: the play simply is not counted on this device.
+  writeJson(() => localStorage, PLAYS_KEY, kept);
 }

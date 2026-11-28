@@ -19,6 +19,7 @@ import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import LeaveDialog from './LeaveDialog';
+import type { Cell } from './cell';
 import CourseChoice from './CourseChoice';
 import EnglishHome, { type EnglishLevel } from './EnglishHome';
 import LevelMenu from './LevelMenu';
@@ -82,12 +83,7 @@ import {
   type PatternRow,
 } from './logic/patterns';
 import { demoSeen, markDemoSeen } from './demoSeen';
-import {
-  generateSearchLesson,
-  SEARCH_LEVELS,
-  type Cell,
-  type SearchLevel,
-} from './wordsearch/grid';
+import { generateSearchLesson, SEARCH_LEVELS, type SearchLevel } from './wordsearch/grid';
 import {
   asSession,
   createSearchLesson,

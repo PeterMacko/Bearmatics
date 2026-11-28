@@ -1,6 +1,7 @@
 // SCRUM-309 "Bear picks a game": the bear picks a random game that suits the child's age.
 // Pure functions; the random source is passed in (seeded in tests).
 
+import { pickOne } from '../../shared/random';
 import { LEVEL_AGES, type AgeRow } from '../levelAges';
 import type { PointsCourse } from '../progress/multipliers';
 
@@ -17,9 +18,6 @@ export function gamesForAge(age: number, rows: readonly AgeRow[] = LEVEL_AGES): 
     .map((r) => ({ course: r.course, shown: r.shown }));
 }
 
-/** An index below `n` from one `rng()` value (an rng of exactly 1 stays in range). */
-const index = (n: number, rng: () => number) => Math.min(n - 1, Math.floor(rng() * n));
-
 /**
  * The next game: the pool is the age's games minus `exclude` (the last played game and the one
  * just turned down with "Choose another"). Removed BEFORE the course is chosen: a course whose
@@ -35,9 +33,9 @@ export function pickGame(
   const pool = gamesForAge(age, rows).filter((g) => !exclude.some((x) => sameGame(g, x)));
   if (pool.length === 0) return null;
   const courses = [...new Set(pool.map((g) => g.course))];
-  const course = courses[index(courses.length, rng)];
+  const course = pickOne(courses, rng);
   const levels = pool.filter((g) => g.course === course);
-  return levels[index(levels.length, rng)];
+  return pickOne(levels, rng);
 }
 
 /**

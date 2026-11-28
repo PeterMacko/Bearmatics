@@ -4,7 +4,7 @@
 // already been seen open in an earlier turn); the first 1 / 2 / 3 forgotten misses are free.
 // Pure functions; the random source is passed in (seeded in tests).
 import { PEXESO_PAIR_COUNTS } from '../../shared/lessonSizes';
-import { shuffled } from '../random';
+import { shuffled } from '../../shared/random';
 import type { Session } from '../session';
 
 export type PexesoLevel = 6 | 7 | 8;

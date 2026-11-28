@@ -4,11 +4,15 @@
 // new (random placement with retries, random filler letters) and checked: each of its words
 // appears exactly once reading in any of the 8 directions, no other list word appears, and no
 // rude word (the shared SK/EN nickname filter) can be read in any direction.
+import { pickOne, shuffled } from '../../shared/random';
 import { isRudeNickname } from '../../shared/rules';
+import { sameCell, type Cell } from '../cell';
 import { WORDS } from '../english/words';
-import { shuffled } from '../random';
-import { SESSION_SIZES } from '../session';
+import { assertSessionSize } from '../session';
 import { GRID_RUDE_WORDS } from './gridRudeWords';
+
+// The tests read the cell type from here.
+export type { Cell };
 
 export const GRID = 6;
 export const WORDS_PER_PUZZLE = 5;
@@ -16,8 +20,6 @@ export const WORDS_PER_PUZZLE = 5;
 export type SearchLevel = 1 | 2 | 3;
 export const SEARCH_LEVELS: readonly SearchLevel[] = [1, 2, 3];
 
-/** A grid cell, 0-based: row 0 is the top row, col 0 the left column. */
-export type Cell = Readonly<{ row: number; col: number }>;
 /** One step along a word: dr rows down, dc columns to the right (each -1, 0 or 1). */
 type Direction = Readonly<{ dr: number; dc: number }>;
 
@@ -71,8 +73,6 @@ type GenerateStats = { attempts: number; rejected: Record<Rejection, number> };
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const inside = (n: number) => n >= 0 && n < GRID;
-const pick = <T>(items: readonly T[], rng: () => number): T =>
-  items[Math.min(items.length - 1, Math.floor(rng() * items.length))];
 
 /** The cells of a word of `length` letters from `start` in `direction` (may leave the grid). */
 function wordCells(start: Cell, direction: Direction, length: number): Cell[] {
@@ -177,7 +177,7 @@ function placeWords(
             spots.push({ word, start: { row, col }, direction, cells: path });
         }
     if (spots.length === 0) return null;
-    const spot = pick(spots, rng);
+    const spot = pickOne(spots, rng);
     spot.cells.forEach((cell, i) => (cells[cell.row][cell.col] = letters[i]));
     placed.set(word, spot);
   }
@@ -205,7 +205,7 @@ export function generatePuzzle(
       continue;
     }
     const rows = placement.cells.map((row) =>
-      row.map((letter) => letter ?? pick([...LETTERS], rng)).join(''),
+      row.map((letter) => letter ?? pickOne([...LETTERS], rng)).join(''),
     );
     const problem = gridProblem(rows, words);
     if (problem) {
@@ -232,8 +232,7 @@ export function generateSearchLesson(
   rng: () => number = Math.random,
   stats?: GenerateStats,
 ): readonly Puzzle[] {
-  if (!(SESSION_SIZES as readonly number[]).includes(size))
-    throw new RangeError('Unsupported session size');
+  assertSessionSize(size);
   // Bounded: a set of 5 words that cannot be placed (never seen in tests) gets new words.
   for (let round = 0; round < 50; round++) {
     const words = shuffled(SEARCH_WORDS, rng).slice(0, size);
@@ -247,8 +246,6 @@ export function generateSearchLesson(
   }
   throw new Error('No word search grid found');
 }
-
-export const sameCell = (a: Cell, b: Cell) => a.row === b.row && a.col === b.col;
 
 /**
  * The selection checker: the first and the last tapped cell. The index of the puzzle word whose

@@ -1,3 +1,4 @@
+import { isSessionSize, SESSION_SIZES } from '../shared/lessonSizes';
 import { checkAnswer, type AnswerResult, type Exercise } from './math/engine';
 
 export type Feedback = 'ready' | 'correct' | 'incorrect' | 'invalid';
@@ -19,7 +20,12 @@ export type Session<E = Exercise> = {
 export const MAX_HINT_STAGE = 3;
 
 /** Exercise counts a child can choose for a lesson (shared with the server's check). */
-export { SESSION_SIZES } from '../shared/lessonSizes';
+export { isSessionSize, SESSION_SIZES };
+
+/** Lesson generators reject any other size. */
+export function assertSessionSize(size: number) {
+  if (!isSessionSize(size)) throw new RangeError('Unsupported session size');
+}
 
 export function createSession<E>(exercises: readonly E[]): Session<E> {
   return {
