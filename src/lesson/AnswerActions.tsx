@@ -1,6 +1,7 @@
 import type { MouseEvent, PointerEvent, ReactNode, RefObject } from 'react';
 import type { Copy } from '../i18n';
 import type { Feedback } from '../session';
+import NextButton from './NextButton';
 
 /**
  * Check / Next under a lesson exercise. By default Check submits the form and a separate Next
@@ -54,19 +55,8 @@ export default function AnswerActions({
   return (
     <div className="answer-actions">
       {solved ? (
-        <button
-          ref={nextRef}
-          type="button"
-          className="primary answer-button"
-          data-state="correct"
-          onClick={(event) => {
-            event.preventDefault();
-            onNext?.();
-          }}
-        >
-          {nextLabel}
-          <span aria-hidden="true"> →</span>
-        </button>
+        // No repeat-click guard here today (SCRUM-347), unlike the game screens.
+        <NextButton label={nextLabel} nextRef={nextRef} onNext={onNext} guard={false} />
       ) : (
         <button
           type="submit"

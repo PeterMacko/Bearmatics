@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { badgeFor, badgeThreshold } from './badges';
+import { prefersReducedMotion } from '../motion';
 
 /** What the badge progress shows at one moment (top bar and summary). */
 export type PointsFrame = {
@@ -50,12 +51,6 @@ export function pointsFrames(before: number, after: number): PointsFrame[] {
   return frames;
 }
 
-/** The player asked for reduced motion (false outside a browser). */
-export const reducedMotion = () =>
-  typeof window !== 'undefined' &&
-  typeof window.matchMedia === 'function' &&
-  window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
 /**
  * Plays the frames from `before` to `after` once per `runKey`, after `delay` ms.
  * Reduced motion: the end state at once (the new badge is still shown and announced).
@@ -76,7 +71,7 @@ export function usePointsAnimation(
     }
     const frames = pointsFrames(run.before, run.after);
     const last = frames[frames.length - 1];
-    if (reducedMotion()) {
+    if (prefersReducedMotion()) {
       const newBadge = badgeFor(run.after).badge > badgeFor(run.before).badge;
       setFrame({ ...last, levelUp: newBadge ? last.badge : undefined, jump: true });
       if (newBadge) levelUp.current(last.badge);

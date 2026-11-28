@@ -11,19 +11,14 @@ import { boardCells, sameCell, type Cell } from '../cell';
 import Icon from '../Icon';
 import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import FeedbackLine from '../lesson/FeedbackLine';
+import NextButton from '../lesson/NextButton';
 import PracticeHeader from '../lesson/PracticeHeader';
+import ShowMeButton from '../lesson/ShowMeButton';
+import { useLessonFocus } from '../lesson/useLessonFocus';
+import { prefersReducedMotion } from '../motion';
 import type { Feedback } from '../session';
 import { encodeArrows, GRID_SIZE, walkArrows, type Arrow, type BearPuzzle } from './bearPath';
-import {
-  ArrowIcon,
-  EyeIcon,
-  GridBear,
-  HoneyPot,
-  Paw,
-  QuestionBalloon,
-  RemoveIcon,
-  Stone,
-} from './LogicArt';
+import { ArrowIcon, GridBear, HoneyPot, Paw, QuestionBalloon, RemoveIcon, Stone } from './LogicArt';
 import LogicDemo from './LogicDemo';
 import useBoardFit from './useBoardFit';
 import { balloonSide, useIdleBalloon } from './useIdleBalloon';
@@ -46,9 +41,6 @@ const KEY_ARROWS: Record<string, Arrow> = {
 /** Arrow pad order: a cross reads naturally on one row too (up, left, down, right). */
 const PAD: readonly Arrow[] = ['up', 'left', 'down', 'right'];
 const CELLS = boardCells(GRID_SIZE);
-
-const prefersReducedMotion = () =>
-  typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * Logic lesson (SCRUM-262; Level 2 with stones SCRUM-289): plan up to `maxArrows` arrows, then
@@ -152,10 +144,7 @@ export default function LogicPracticeView({
 
   // A new puzzle (mount) and the end of the demo put focus on the board, which reads the
   // bear's and the honey's cells; a solved puzzle focuses Next.
-  useEffect(() => {
-    if (solved) nextRef.current?.focus({ preventScroll: true });
-    else if (!demo) boardRef.current?.focus({ preventScroll: true });
-  }, [solved, demo, nextRef]);
+  useLessonFocus(solved, demo, nextRef, boardRef);
 
   const change = (next: Arrow[]) => {
     backToStart(false);
@@ -396,18 +385,7 @@ export default function LogicPracticeView({
         <FeedbackLine kind={feedback}>{message}</FeedbackLine>
         <div className="answer-actions logic-actions">
           {solved ? (
-            <button
-              ref={nextRef}
-              type="button"
-              className="primary answer-button"
-              data-state="correct"
-              onClick={(event: MouseEvent) => {
-                if (!ignoreRepeatClick(event)) onNext();
-              }}
-            >
-              {nextLabel}
-              <span aria-hidden="true"> →</span>
-            </button>
+            <NextButton label={nextLabel} nextRef={nextRef} onNext={onNext} guard />
           ) : (
             <button
               type="button"
@@ -422,19 +400,14 @@ export default function LogicPracticeView({
               {t.go}
             </button>
           )}
-          <button
-            type="button"
-            className="secondary logic-show-me"
-            aria-disabled={locked}
-            onClick={(event: MouseEvent) => {
-              if (ignoreRepeatClick(event) || locked) return;
+          <ShowMeButton
+            t={t}
+            ariaDisabled={locked}
+            onShowMe={() => {
               backToStart(true);
               onShowMe();
             }}
-          >
-            <EyeIcon />
-            {t.showMe}
-          </button>
+          />
         </div>
       </div>
       <p id="logic-keys" className="sr-only">

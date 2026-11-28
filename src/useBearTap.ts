@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type MouseEvent, type PointerEvent } from 'react';
+import { prefersReducedMotion } from './motion';
 
 /** How long the bubble and the happy face stay after a tap (the hop takes 1 s of it). */
 const BEAR_TAP_MS = 1500;
@@ -38,8 +39,7 @@ export function useBearTap({
     if (running.current || reacting) return;
     if (moodAnimates && performance.now() - mountedAt.current < BEAR_REACTION_MS) return;
     running.current = true;
-    const reduce =
-      typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reduce = prefersReducedMotion();
     setTap({ hop: !reduce });
     onTap?.();
     timer.current = setTimeout(() => {

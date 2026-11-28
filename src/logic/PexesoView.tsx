@@ -7,6 +7,7 @@ import {
 } from 'react';
 import { fill, type Copy } from '../i18n';
 import { ignoreRepeatClick, SCREEN_SETTLE_MS } from '../ignoreRepeatClick';
+import PracticeHeader from '../lesson/PracticeHeader';
 import { PexesoBack, PexesoFace } from './PexesoArt';
 import { gamePoints, heartsLeft, type PexesoGame } from './pexeso';
 import usePexesoFit from './usePexesoFit';
@@ -100,12 +101,7 @@ export default function PexesoView({
       data-signed-in={signedIn || undefined}
       style={{ '--cols': 3, '--rows': 4 } as CSSProperties}
     >
-      <div className="practice-header">
-        <div className="practice-top">
-          <span className="level-pill">
-            {t.level} {level}
-          </span>
-        </div>
+      <PracticeHeader t={t} level={level}>
         <div className="exercise-position pexeso-status">
           <span className="pexeso-pairs">
             <span aria-hidden="true">
@@ -163,7 +159,7 @@ export default function PexesoView({
             <span aria-hidden="true">i</span>
           </button>
         </div>
-      </div>
+      </PracticeHeader>
       <h2 ref={headingRef} tabIndex={-1} className="pexeso-title">
         {p.title}
       </h2>

@@ -11,8 +11,8 @@ import {
 import { shuffled } from '../../shared/random';
 import { boardCells, sameCell, type Cell } from '../cell';
 import { fill, type Copy } from '../i18n';
-import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import FeedbackLine from '../lesson/FeedbackLine';
+import NextButton from '../lesson/NextButton';
 import PracticeHeader from '../lesson/PracticeHeader';
 import SpeakerIcon from '../english/SpeakerIcon';
 import { GRID, gridLetters } from './grid';
@@ -197,18 +197,7 @@ export default function WordSearchView({
 
   const nextActions = (
     <div className={`answer-actions ws-actions${nextBelow ? ' ws-actions-below' : ''}`}>
-      <button
-        ref={nextRef}
-        type="button"
-        className="primary answer-button"
-        data-state="correct"
-        onClick={(e: MouseEvent) => {
-          if (!ignoreRepeatClick(e)) onNext();
-        }}
-      >
-        {nextLabel}
-        <span aria-hidden="true"> →</span>
-      </button>
+      <NextButton label={nextLabel} nextRef={nextRef} onNext={onNext} guard />
     </div>
   );
 

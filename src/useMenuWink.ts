@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { REDUCED_MOTION_QUERY } from './motion';
 
 /** Opt-in idle gesture: never used by practice or expression feedback. */
 export function useMenuWink(enabled: boolean) {
@@ -6,7 +7,7 @@ export function useMenuWink(enabled: boolean) {
   const [motionAllowed, setMotionAllowed] = useState(false);
   useEffect(() => {
     if (!enabled || typeof matchMedia === 'undefined') return;
-    const motion = matchMedia('(prefers-reduced-motion: reduce)');
+    const motion = matchMedia(REDUCED_MOTION_QUERY);
     let timer: ReturnType<typeof setTimeout>;
     const allowed = () => !document.hidden && !motion.matches;
     const schedule = () => {

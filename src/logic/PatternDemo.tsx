@@ -1,12 +1,13 @@
-import { useEffect, useRef } from 'react';
 import type { Copy } from '../i18n';
+import PictureDemo, { type DemoStep } from '../lesson/PictureDemo';
 import { Finger } from './LogicArt';
 import { PatternPicture } from './PatternArt';
 import type { PatternItem } from './patterns';
 
-/** How long the moving demo and the reduced-motion still steps stay on screen. */
-export const PATTERN_DEMO_MS = 3200;
-export const PATTERN_STILL_DEMO_MS = 4500;
+export {
+  DEMO_MS as PATTERN_DEMO_MS,
+  STILL_DEMO_MS as PATTERN_STILL_DEMO_MS,
+} from '../lesson/PictureDemo';
 
 const bear: PatternItem = { kind: 'motif', motif: 'bears' };
 const pirate: PatternItem = { kind: 'motif', motif: 'pirates' };
@@ -16,7 +17,7 @@ const ROW = [bear, pirate, bear, pirate];
 const CHOICES = [pirate, bear, lollipop];
 
 /** One picture of the demo: a short row with "?", three choices, the finger and the mover. */
-function DemoScene({ step }: { step: 1 | 2 | 3 | 'moving' }) {
+function DemoScene({ step }: { step: DemoStep }) {
   return (
     <div className="pattern-demo-scene" data-step={step}>
       <div className="pattern-demo-row">
@@ -59,35 +60,14 @@ export default function PatternDemo({
   reduced: boolean;
   onDone: () => void;
 }) {
-  const done = useRef(onDone);
-  useEffect(() => {
-    done.current = onDone;
-  });
-  useEffect(() => {
-    const timer = window.setTimeout(
-      () => done.current(),
-      reduced ? PATTERN_STILL_DEMO_MS : PATTERN_DEMO_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [reduced]);
   return (
-    <div
-      className={`pattern-demo ${reduced ? 'pattern-demo-still' : 'pattern-demo-moving'}`}
-      role="img"
-      aria-label={t.pattern.demo}
-    >
-      {reduced ? (
-        ([1, 2, 3] as const).map((step) => (
-          <div className="pattern-demo-frame" key={step}>
-            <span className="demo-number" aria-hidden="true">
-              {step}
-            </span>
-            <DemoScene step={step} />
-          </div>
-        ))
-      ) : (
-        <DemoScene step="moving" />
-      )}
-    </div>
+    <PictureDemo
+      className="pattern-demo"
+      frameClassName="pattern-demo-frame"
+      label={t.pattern.demo}
+      reduced={reduced}
+      onDone={onDone}
+      Scene={DemoScene}
+    />
   );
 }

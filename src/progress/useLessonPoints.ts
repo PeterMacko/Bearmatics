@@ -8,7 +8,8 @@ import {
   type Progress,
   type Streak,
 } from './api';
-import { pointsFrames, reducedMotion, staticFrame, usePointsAnimation } from './animation';
+import { prefersReducedMotion } from '../motion';
+import { pointsFrames, staticFrame, usePointsAnimation } from './animation';
 import { lessonPoints, multiplierFor, type Multiplier, type PointsCourse } from './multipliers';
 import { addPlay, dayShift, playDay, playsAccountKey, playsToday } from './playCounts';
 import type { LessonSave } from './SummaryPoints';
@@ -241,7 +242,7 @@ export function useLessonPoints({
   // SCRUM-118: open the unlock offer once the points have filled the bar.
   useEffect(() => {
     if (!offer || lessonSave?.state !== 'saved') return;
-    const reduce = reducedMotion();
+    const reduce = prefersReducedMotion();
     const fill = pointsFrames(lessonSave.before, lessonSave.after).reduce(
       (sum, f) => sum + f.hold,
       0,

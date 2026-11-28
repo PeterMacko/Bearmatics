@@ -1,13 +1,11 @@
-import { useEffect, useRef } from 'react';
 import type { Copy } from '../i18n';
+import PictureDemo, { type DemoStep } from '../lesson/PictureDemo';
 import { ArrowIcon, Finger, GridBear, HoneyPot } from './LogicArt';
 
-/** How long the moving demo and the reduced-motion still steps stay on screen. */
-export const DEMO_MS = 3200;
-const STILL_DEMO_MS = 4500;
+export { DEMO_MS } from '../lesson/PictureDemo';
 
 /** One picture of the demo: a 2-cell strip, the arrow slot and the Go button. */
-function DemoScene({ step }: { step: 1 | 2 | 3 | 'moving' }) {
+function DemoScene({ step }: { step: DemoStep }) {
   return (
     <div className="demo-scene" data-step={step}>
       <div className="demo-strip">
@@ -52,32 +50,14 @@ export default function LogicDemo({
   reduced: boolean;
   onDone: () => void;
 }) {
-  const done = useRef(onDone);
-  useEffect(() => {
-    done.current = onDone;
-  });
-  useEffect(() => {
-    const timer = window.setTimeout(() => done.current(), reduced ? STILL_DEMO_MS : DEMO_MS);
-    return () => window.clearTimeout(timer);
-  }, [reduced]);
   return (
-    <div
-      className={`logic-demo ${reduced ? 'logic-demo-still' : 'logic-demo-moving'}`}
-      role="img"
-      aria-label={t.logicDemo}
-    >
-      {reduced ? (
-        ([1, 2, 3] as const).map((step) => (
-          <div className="demo-frame" key={step}>
-            <span className="demo-number" aria-hidden="true">
-              {step}
-            </span>
-            <DemoScene step={step} />
-          </div>
-        ))
-      ) : (
-        <DemoScene step="moving" />
-      )}
-    </div>
+    <PictureDemo
+      className="logic-demo"
+      frameClassName="demo-frame"
+      label={t.logicDemo}
+      reduced={reduced}
+      onDone={onDone}
+      Scene={DemoScene}
+    />
   );
 }

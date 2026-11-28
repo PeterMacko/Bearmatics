@@ -1,24 +1,17 @@
-import {
-  useEffect,
-  useRef,
-  useState,
-  type CSSProperties,
-  type MouseEvent,
-  type RefObject,
-} from 'react';
+import { useRef, useState, type CSSProperties, type MouseEvent, type RefObject } from 'react';
 import type { Copy } from '../i18n';
 import { ignoreRepeatClick } from '../ignoreRepeatClick';
 import FeedbackLine from '../lesson/FeedbackLine';
+import NextButton from '../lesson/NextButton';
 import PracticeHeader from '../lesson/PracticeHeader';
+import ShowMeButton from '../lesson/ShowMeButton';
+import { useLessonFocus } from '../lesson/useLessonFocus';
+import { prefersReducedMotion } from '../motion';
 import type { Feedback } from '../session';
-import { EyeIcon } from './LogicArt';
 import { capitalize, itemName, PatternPicture, rowLabel } from './PatternArt';
 import PatternDemo from './PatternDemo';
 import { answerOf, itemKey, type PatternRow } from './patterns';
 import usePatternFit from './usePatternFit';
-
-const prefersReducedMotion = () =>
-  typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /**
  * Logic Levels 3-5 (SCRUM-299): a row of pictures with a dashed "?" place and big picture
@@ -72,10 +65,7 @@ export default function PatternPracticeView({
 
   // A new row and the end of the demo put focus on the row (it reads the pictures and the
   // question mark); a solved row focuses Next.
-  useEffect(() => {
-    if (solved) nextRef.current?.focus({ preventScroll: true });
-    else if (!demo) rowRef.current?.focus({ preventScroll: true });
-  }, [solved, demo, nextRef]);
+  useLessonFocus(solved, demo, nextRef, rowRef);
 
   const choose = (event: MouseEvent<HTMLButtonElement>, key: string) => {
     // A double tap is one answer; after the right answer nothing more counts.
@@ -186,35 +176,20 @@ export default function PatternPracticeView({
         <FeedbackLine kind={feedback}>{message}</FeedbackLine>
         <div className="answer-actions pattern-actions">
           {solved ? (
-            <button
-              ref={nextRef}
-              type="button"
-              className="primary answer-button"
-              data-state="correct"
-              onClick={(event: MouseEvent) => {
-                if (!ignoreRepeatClick(event)) onNext();
-              }}
-            >
-              {nextLabel}
-              <span aria-hidden="true"> →</span>
-            </button>
+            <NextButton label={nextLabel} nextRef={nextRef} onNext={onNext} guard />
           ) : (
             // Keeps Next's place so nothing moves when it appears.
             <span className="answer-button pattern-next-room" aria-hidden="true" />
           )}
-          <button
-            type="button"
-            className="secondary logic-show-me pattern-show-me"
-            aria-disabled={demo || undefined}
-            onClick={(event: MouseEvent) => {
-              if (ignoreRepeatClick(event) || demo) return;
+          <ShowMeButton
+            t={t}
+            className="pattern-show-me"
+            ariaDisabled={demo || undefined}
+            onShowMe={() => {
               setFrom(null);
               onShowMe();
             }}
-          >
-            <EyeIcon />
-            {t.showMe}
-          </button>
+          />
         </div>
       </div>
     </section>
