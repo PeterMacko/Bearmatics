@@ -18,8 +18,8 @@ export type Session<E = Exercise> = {
 
 export const MAX_HINT_STAGE = 3;
 
-/** Exercise counts a child can choose for a lesson (the server checks its own copy). */
-export const SESSION_SIZES = [5, 10, 20] as const;
+/** Exercise counts a child can choose for a lesson (shared with the server's check). */
+export { SESSION_SIZES } from '../shared/lessonSizes';
 
 export function createSession<E>(exercises: readonly E[]): Session<E> {
   return {

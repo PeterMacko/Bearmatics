@@ -19,7 +19,7 @@ import { useCompactPractice, useTouchCapability } from './useCompactPractice';
 import HintPanel from './HintPanel';
 import HintDialog from './HintDialog';
 import LeaveDialog from './LeaveDialog';
-import CourseChoice, { type Course } from './CourseChoice';
+import CourseChoice from './CourseChoice';
 import EnglishHome, { type EnglishLevel } from './EnglishHome';
 import LevelMenu from './LevelMenu';
 import PracticeView from './PracticeView';
@@ -34,7 +34,7 @@ import {
 } from './lessonTime';
 import { nextLabel, positionText } from './lesson/lessonText';
 import { useMenuLayout } from './useMenuLayout';
-import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel } from './courses';
+import { MATH_LEVELS, menuLevels, SMALL_MATH_LEVELS, shownLevel, type Course } from './courses';
 import EnglishPracticeView from './english/EnglishPracticeView';
 import { checkWord, generateWordSession, type WordQuestion } from './english/listen';
 import { useWordPlayer } from './english/wordPlayer';

@@ -19,6 +19,13 @@ export type Account = {
 /** SCRUM-118: today's offer to unlock a frozen streak. */
 export type Offer = { streak: number; missed: number; cost: number };
 
+/** today: a lesson already counted for the streak today (lit flame). */
+export type Streak = { streak: number; frozen: boolean; today: boolean };
+/** day: the server's Slovak day 'YYYY-MM-DD' (SCRUM-202; missing from older servers). */
+export type Progress = { points: number; day?: string } & Streak;
+/** The answer to a finished lesson: the new progress, the points added and an unlock offer. */
+export type FinishReply = Progress & { added: number; offer: Offer | null };
+
 /** SCRUM-148: leaderboard rows (only nickname, bear look, streak and points of other players). */
 export type LeaderboardRow = {
   place: number;

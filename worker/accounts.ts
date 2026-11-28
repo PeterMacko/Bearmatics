@@ -37,8 +37,14 @@ export interface AccountRow {
   leaderboard: number;
 }
 
+/** The bear look columns of an account row. */
+export type LookColumns = Pick<
+  AccountRow,
+  'bear_fur' | 'bear_bg' | 'bear_head' | 'bear_neck' | 'bear_eyes'
+>;
+
 /** The parts as stored in the account row. */
-const lookOf = (row: AccountRow): BearLook => ({
+export const lookOf = (row: LookColumns): BearLook => ({
   fur: row.bear_fur,
   background: row.bear_bg,
   head: row.bear_head,

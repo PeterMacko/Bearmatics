@@ -3,21 +3,16 @@
 // a lesson must be started while signed in, it counts once, and it gives at most
 // ceil(9/4 x its size) (SCRUM-202: the app's daily multipliers go up to x1.5; SCRUM-309: a
 // "Bear picks a game" lesson gives x1.5 on top; the server cannot check either).
-import type { Offer } from '../shared/api-types';
+import type { FinishReply, Offer, Progress } from '../shared/api-types';
+import { PEXESO_PAIR_COUNTS, SESSION_SIZES } from '../shared/lessonSizes';
+import { slovakDay } from '../shared/slovakDay';
 import { notSignedIn, Renewed, type AccountEnv, type SessionHandler } from './accounts';
 import { randomHex } from './crypto';
 import { BadRequest, json, readJson } from './http';
-import {
-  answerOffer,
-  finishDay,
-  openOffer,
-  slovakDay,
-  streakView,
-  type StreakState,
-} from './streak';
+import { answerOffer, finishDay, openOffer, streakView, type StreakState } from './streak';
 
-// SCRUM-324: Pexeso saves its pair count (6 / 10 / 15) as the size.
-const LESSON_SIZES = [5, 6, 10, 15, 20] as const;
+/** Every size a lesson may have (SCRUM-324: Pexeso saves its pair count as the size). */
+const LESSON_SIZES = [...SESSION_SIZES, ...PEXESO_PAIR_COUNTS];
 const KEEP_LESSONS_MS = 2 * 24 * 60 * 60 * 1000;
 const now = () => Date.now();
 
@@ -43,7 +38,7 @@ async function readRow(env: AccountEnv, accountId: string): Promise<Row> {
  * Points plus the streak as the app shows it (SCRUM-118), and the Slovak day
  * ('YYYY-MM-DD'): the app's daily play counts (SCRUM-202) change with it.
  */
-function progressBody(row: Row, today: string) {
+function progressBody(row: Row, today: string): Progress {
   return { points: row.points, ...streakView(row.state, today, row.points), day: today };
 }
 
@@ -213,5 +208,6 @@ export const finishLesson: SessionHandler = async (request, env, session) => {
     // today's open offer (QA131-04).
     offer = openOffer(row.state, today, row.points);
   }
-  return new Renewed({ ...progressBody(row, today), added: counted ? earned : 0, offer });
+  const reply: FinishReply = { ...progressBody(row, today), added: counted ? earned : 0, offer };
+  return new Renewed(reply);
 };

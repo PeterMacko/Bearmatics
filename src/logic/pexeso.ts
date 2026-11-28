@@ -3,12 +3,13 @@
 // a miss costs a point only when it was "forgotten" (the partner of the turn's FIRST card had
 // already been seen open in an earlier turn); the first 1 / 2 / 3 forgotten misses are free.
 // Pure functions; the random source is passed in (seeded in tests).
+import { PEXESO_PAIR_COUNTS } from '../../shared/lessonSizes';
 import { shuffled } from '../random';
 import type { Session } from '../session';
 
 export type PexesoLevel = 6 | 7 | 8;
 export const PEXESO_LEVELS: readonly PexesoLevel[] = [6, 7, 8];
-export type PexesoPairs = 6 | 10 | 15;
+export type PexesoPairs = (typeof PEXESO_PAIR_COUNTS)[number];
 
 /** Pictures (pairs) per level: Logic 6 / 7 / 8 = 6 / 10 / 15 pictures. */
 export const PEXESO_PAIRS: Readonly<Record<PexesoLevel, PexesoPairs>> = { 6: 6, 7: 10, 8: 15 };
