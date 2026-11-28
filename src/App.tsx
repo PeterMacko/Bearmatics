@@ -82,7 +82,7 @@ import {
   type PatternLevel,
   type PatternRow,
 } from './logic/patterns';
-import { demoSeen, markDemoSeen } from './demoSeen';
+import { demoSeen, markDemoSeen, type DemoName } from './demoSeen';
 import { generateSearchLesson, SEARCH_LEVELS, type SearchLevel } from './wordsearch/grid';
 import {
   asSession,
@@ -108,7 +108,7 @@ import SummaryStreak from './progress/SummaryStreak';
 import BadgeButton from './progress/BadgeButton';
 import SummaryPoints, { SignInHint } from './progress/SummaryPoints';
 import { staticFrame } from './progress/animation';
-import { useLessonPoints } from './progress/useLessonPoints';
+import { useLessonPoints, type LessonPlace } from './progress/useLessonPoints';
 import {
   MAX_HINT_STAGE,
   advance,
@@ -214,6 +214,11 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const pexesoSession = useMemo(() => pexeso && pexesoAsSession(pexeso), [pexeso]);
   const demoCount = useRef(0);
   const showDemo = () => setDemoRun(++demoCount.current);
+  // A demo played to its end (leaving earlier unmounts it without this call).
+  const demoDone = (name: DemoName) => () => {
+    markDemoSeen(name);
+    setDemoRun(0);
+  };
   // SCRUM-241: Word search. The lesson keeps its own state; `searchSession` is its Session shape
   // for the bar, bear, leave question, summary and points.
   const [searchLevel, setSearchLevel] = useState<SearchLevel>(1);
@@ -417,10 +422,19 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   useEffect(() => {
     document.documentElement.lang = language;
   }, [language]);
+  // When any lesson ends, its summary heading takes focus (Pexeso without scrolling). Only one
+  // lesson runs at a time, so this is the moment the lesson on screen turns done.
+  const lessonDone = !!active?.done;
   useEffect(() => {
-    if (session?.done) summaryRef.current?.focus();
-    else if (session?.solved) nextRef.current?.focus();
-    else if (session) inputRef.current?.focus();
+    if (!lessonDone) return;
+    if (pexesoSession?.done) summaryRef.current?.focus({ preventScroll: true });
+    else summaryRef.current?.focus();
+    // oxlint-disable-next-line react-hooks/exhaustive-deps -- focus only when a lesson ends
+  }, [lessonDone]);
+  useEffect(() => {
+    if (!session || session.done) return; // the summary effect above
+    if (session.solved) nextRef.current?.focus();
+    else inputRef.current?.focus();
     // Move focus only when the exercise, solved or done state changes; depending on the whole
     // session would re-focus on every attempt or hint step.
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
@@ -428,9 +442,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const speakerRef = useRef<HTMLButtonElement>(null);
   const englishQuestion = englishSession ? currentExercise(englishSession) : undefined;
   useEffect(() => {
-    if (englishSession?.done) summaryRef.current?.focus();
-    else if (englishSession?.solved) nextRef.current?.focus();
-    else if (englishSession) speakerRef.current?.focus();
+    if (!englishSession || englishSession.done) return; // the summary effect above
+    if (englishSession.solved) nextRef.current?.focus();
+    else speakerRef.current?.focus();
     // Same rule as maths: move focus only on a new question, solved or done.
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- intentional partial dependencies (see above)
   }, [englishQuestion, englishSession?.solved, englishSession?.done]);
@@ -441,29 +455,35 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     words.preload([...englishQuestion.options, ...(following ? following.options : [])]);
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- preload once per question
   }, [englishQuestion]);
-  useEffect(() => {
-    if (logicSession?.done) summaryRef.current?.focus();
-  }, [logicSession?.done]);
-  useEffect(() => {
-    if (patternSession?.done) summaryRef.current?.focus();
-  }, [patternSession?.done]);
-  const pexesoDone = !!pexesoSession?.done;
   const pexesoHeadingRef = useRef<HTMLHeadingElement>(null);
-  useEffect(() => {
-    if (pexesoDone) summaryRef.current?.focus({ preventScroll: true });
-  }, [pexesoDone]);
   const writeQuestion = writeSession ? currentExercise(writeSession) : undefined;
   useEffect(() => {
-    if (writeSession?.done) summaryRef.current?.focus();
     // The input keeps focus through the question (Enter checks, then Enter goes on), so an open
-    // on-screen keyboard stays open between words.
-    else if (writeSession) writeInputRef.current?.focus({ preventScroll: true });
+    // on-screen keyboard stays open between words. The summary effect above covers done.
+    if (writeSession && !writeSession.done) writeInputRef.current?.focus({ preventScroll: true });
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- move focus per question only
   }, [writeQuestion, writeSession?.done]);
   const current = session ? currentExercise(session) : undefined;
   // Counts presentations (new example, review repeat, new lesson): the take-away basket
   // starts full for each (SCRUM-156).
   const [presentation, setPresentation] = useState(0);
+  // The start of every lesson run: a new presentation (English keeps its own), fresh feedback
+  // sounds, and the sound woken by this tap.
+  const freshRun = (bump = true) => {
+    if (bump) setPresentation((n) => n + 1);
+    resetForNewSession();
+    void activateSound();
+  };
+  // SCRUM-211: the lesson clock starts with the first exercise; the points lesson with it.
+  const beginRun = (lessonSize: number, place: LessonPlace, bearPicks: boolean) => {
+    startLessonClock(lessonSize);
+    beginLesson(lessonSize, { ...place, ...(bearPicks && { bearPicks: true }) });
+  };
+  // Next in a lesson: the tap wakes the sound and shows a new presentation.
+  const showNext = () => {
+    void activateSound();
+    setPresentation((n) => n + 1);
+  };
   // A new board (from the menu, Play again or Bear picks) is a new screen: it starts at the top
   // with focus on its heading.
   useEffect(() => {
@@ -481,17 +501,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     const lessonLevel = pick ? (pick.level as Level) : small ? smallLevel : level;
     const lessonSize = pick ? pick.size : small ? smallSize : size;
     const shown = shownLevel(small ? SMALL_MATH_LEVELS : MATH_LEVELS, lessonLevel);
-    setPresentation((n) => n + 1);
-    resetForNewSession();
-    void activateSound();
+    freshRun();
     setAnswer('');
     // SCRUM-211: the first example appears with this tap; a new lesson overwrites the start.
-    startLessonClock(lessonSize);
-    beginLesson(lessonSize, {
-      course: small ? 'small' : 'math',
-      level: shown,
-      ...(pick && { bearPicks: true }),
-    });
+    beginRun(lessonSize, { course: small ? 'small' : 'math', level: shown }, !!pick);
     setMathShown(shown);
     setSession(createSession(generateSession(lessonLevel, lessonSize)));
   };
@@ -501,8 +514,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setSession((previous) => previous && submitAnswer(previous, answer));
   }
   const next = () => {
-    void activateSound();
-    setPresentation((n) => n + 1);
+    showNext();
     setHintOpen(false);
     setSession((previous) => previous && advance(previous));
     setAnswer('');
@@ -522,15 +534,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
       return;
     }
     const lessonSize = pick ? pick.size : logicSize;
-    setPresentation((n) => n + 1);
-    resetForNewSession();
-    void activateSound();
-    startLessonClock(lessonSize);
-    beginLesson(lessonSize, {
-      course: 'logic',
-      level: lessonLevel,
-      ...(pick && { bearPicks: true }),
-    });
+    freshRun();
+    beginRun(lessonSize, { course: 'logic', level: lessonLevel }, !!pick);
     setLogicArrows([]);
     // SCRUM-289 / SCRUM-299: each game's demo plays until it has been seen to the end once on
     // this device (one shared helper, one flag per game).
@@ -553,11 +558,8 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const startPexeso = (shown: PexesoLevel, bearPicks: boolean) => {
     const pairs = PEXESO_PAIRS[shown];
     clearPexesoTimer();
-    setPresentation((n) => n + 1);
-    resetForNewSession();
-    void activateSound();
-    startLessonClock(pairs);
-    beginLesson(pairs, { course: 'logic', level: shown, ...(bearPicks && { bearPicks: true }) });
+    freshRun();
+    beginRun(pairs, { course: 'logic', level: shown }, bearPicks);
     setDemoRun(0);
     setPexesoHelpOpen(false);
     setPexesoLevel(shown);
@@ -585,8 +587,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     }
   };
   const nextLogic = () => {
-    void activateSound();
-    setPresentation((n) => n + 1);
+    showNext();
     setLogicArrows([]);
     setLogicSession((previous) => previous && advance(previous));
   };
@@ -597,24 +598,16 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setPatternSession((previous) => previous && submitAnswer(previous, key, checkPattern));
   };
   const nextPattern = () => {
-    void activateSound();
-    setPresentation((n) => n + 1);
+    showNext();
     setPatternSession((previous) => previous && advance(previous));
   };
   // SCRUM-241: a word search lesson of 5/10/20 words = 1/2/4 new grids.
   const startSearch = (pick?: PickStart) => {
     const lessonLevel = pick ? (pick.level as SearchLevel) : searchLevel;
     const lessonSize = pick ? pick.size : searchSize;
-    setPresentation((n) => n + 1);
-    resetForNewSession();
-    void activateSound();
+    freshRun();
     words.stop();
-    startLessonClock(lessonSize);
-    beginLesson(lessonSize, {
-      course: 'wordsearch',
-      level: lessonLevel,
-      ...(pick && { bearPicks: true }),
-    });
+    beginRun(lessonSize, { course: 'wordsearch', level: lessonLevel }, !!pick);
     setSearchLesson(createSearchLesson(lessonLevel, generateSearchLesson(lessonLevel, lessonSize)));
   };
   /** A found word: a pop (follows Mute) and the word itself (always), from the tap's gesture. */
@@ -645,21 +638,12 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     if (searchPuzzle) words.preload(searchPuzzle.words.map((w) => w.word));
     // oxlint-disable-next-line react-hooks/exhaustive-deps -- preload once per grid
   }, [searchPuzzle]);
-  useEffect(() => {
-    if (searchLesson?.done) summaryRef.current?.focus();
-  }, [searchLesson?.done]);
   // English: the Start/Next tap is the gesture that lets the new word play straight away.
   const startEnglish = (pick?: PickStart) => {
     const lessonLevel = pick ? (pick.level as EnglishLevel) : englishLevel;
     const lessonSize = pick ? pick.size : englishSize;
-    startLessonClock(lessonSize);
-    beginLesson(lessonSize, {
-      course: 'english',
-      level: lessonLevel,
-      ...(pick && { bearPicks: true }),
-    });
-    resetForNewSession();
-    void activateSound();
+    beginRun(lessonSize, { course: 'english', level: lessonLevel }, !!pick);
+    freshRun(false);
     let first: string;
     if (lessonLevel === 3) {
       setWritten('');
@@ -893,11 +877,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                     onChoose={choosePattern}
                     onNext={nextPattern}
                     onShowMe={showDemo}
-                    onDemoDone={() => {
-                      // Played to its end (leaving earlier unmounts it without this call).
-                      markDemoSeen('patterns');
-                      setDemoRun(0);
-                    }}
+                    onDemoDone={demoDone('patterns')}
                   />
                 ),
             }
@@ -940,11 +920,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
                       }
                       onNext={nextLogic}
                       onShowMe={showDemo}
-                      onDemoDone={() => {
-                        // Played to its end (leaving earlier unmounts it without this call).
-                        markDemoSeen('bear-path');
-                        setDemoRun(0);
-                      }}
+                      onDemoDone={demoDone('bear-path')}
                       onStep={playStep}
                     />
                   ),

@@ -17,7 +17,7 @@ import type { LessonSave } from './SummaryPoints';
  * Where a lesson is played: course and level as shown in its menu (SCRUM-202). `bearPicks`:
  * played in "Bear picks a game" (SCRUM-309, x1.5 on top of the table's multiplier).
  */
-type LessonPlace = { course: PointsCourse; level: number; bearPicks?: boolean };
+export type LessonPlace = { course: PointsCourse; level: number; bearPicks?: boolean };
 
 // The running lesson. Its server ID is requested at Start when the player is signed in; a
 // lesson started before the account has loaded asks for it as soon as the account is known.
