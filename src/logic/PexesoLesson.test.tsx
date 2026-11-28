@@ -320,6 +320,23 @@ async function openLogicReal() {
 
 describe('leaving and replaying (AC 8, pitfalls)', () => {
   test('leaving mid-game asks first, saves nothing; the close timer does not leak into the next game', () => {
+    // Watch the 1.5 s close timer: record every time its callback actually runs.
+    const fired: number[] = [];
+    const realSetTimeout = window.setTimeout;
+    vi.spyOn(window, 'setTimeout').mockImplementation(((
+      handler: TimerHandler,
+      ms?: number,
+      ...rest: unknown[]
+    ) =>
+      realSetTimeout.call(
+        window,
+        (...args: unknown[]) => {
+          if (ms === 1500) fired.push(now);
+          if (typeof handler === 'function') handler(...args);
+        },
+        ms,
+        ...rest,
+      )) as unknown as typeof window.setTimeout);
     openLogic();
     start(6);
     flip(1);
@@ -330,13 +347,18 @@ describe('leaving and replaying (AC 8, pitfalls)', () => {
     expect(screen.getByRole('heading', { level: 2 })).toHaveTextContent(
       'Which puzzle shall we try?',
     );
-    start(6); // 700 ms after the miss
+    // On the menu, well past the old miss's 1.5 s: leaving cleared its timer, so it never runs.
+    wait(1600);
+    expect(fired).toEqual([]);
+    start(6);
     flip(3);
-    flip(4); // a new miss at ~1.3 s after the old one
-    wait(300); // the old timer would have fired here (1.5 s after the old miss)
+    flip(4); // a new miss: only its own timer closes it, 1.5 s later
+    const missAt = now;
+    wait(1400);
     expect(names().slice(2, 4)).toEqual(['Card 3, lollipop', 'Card 4, boat']);
-    wait(1300);
+    wait(100);
     expect(names().slice(2, 4)).toEqual(['Card 3, face down', 'Card 4, face down']);
+    expect(fired).toEqual([missAt + 1500]);
   });
   test('Play again: a new shuffled board (new game), the summary buttons keep their guards', () => {
     openLogic();
