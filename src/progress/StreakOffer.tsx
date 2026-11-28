@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AccountError } from '../account/api';
 import HintDialog from '../HintDialog';
 import Icon from '../Icon';
-import { ignoreRepeatClick } from '../ignoreRepeatClick';
+import { ignoreSettlingTap, SCREEN_SETTLE_MS } from '../tapGuard';
 import { fill, pointsText, type Copy } from '../i18n';
 import { answerStreak, type Offer, type Progress } from './api';
 import { badgeFor } from './badges';
@@ -69,7 +69,8 @@ export default function StreakOffer({
   }, [step, error]);
   const deliberate =
     (action: () => void) => (event: { detail: number; preventDefault: () => void }) => {
-      if (!ignoreRepeatClick(event, performance.now() - stepAt.current < 600)) action();
+      // The keyboard waits too (QA131-01).
+      if (!ignoreSettlingTap(event, stepAt.current, 'wait')) action();
     };
   // Closing uncovers the summary: a quick second tap must not land on Play again behind the
   // dialog (QA131-06), so clicks are swallowed for a moment after closing.
@@ -80,7 +81,7 @@ export default function StreakOffer({
       event.stopPropagation();
     };
     document.addEventListener('click', swallow, true);
-    window.setTimeout(() => document.removeEventListener('click', swallow, true), 600);
+    window.setTimeout(() => document.removeEventListener('click', swallow, true), SCREEN_SETTLE_MS);
     onClose();
   };
   const after = currentPoints - offer.cost;
