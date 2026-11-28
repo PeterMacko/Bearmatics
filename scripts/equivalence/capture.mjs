@@ -200,6 +200,18 @@ export function snapshot(properties) {
     }
     elements[path(el)] = entry;
   }
+  // The DOM with every element's attributes in name order: React sets some attributes from
+  // different effects, and their insertion order (which outerHTML keeps) can change with timing
+  // between two runs of the same build (e.g. `inert` and `data-menu-compact` on the workspace).
+  // (A copy in an inert document: nothing in it loads or runs.)
+  const sorted = document.implementation.createHTMLDocument('').importNode(document.body, true);
+  for (const el of [sorted, ...sorted.querySelectorAll('*')]) {
+    const attributes = [...el.attributes]
+      .map((a) => [a.name, a.value])
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+    for (const [name] of attributes) el.removeAttribute(name);
+    for (const [name, value] of attributes) el.setAttribute(name, value);
+  }
   const active = document.activeElement;
   const scroller = document.scrollingElement;
   return {
@@ -219,7 +231,7 @@ export function snapshot(properties) {
     activeElement: active
       ? { path: path(active), html: active.outerHTML.slice(0, 400) }
       : { path: null, html: null },
-    dom: document.body.outerHTML,
+    dom: sorted.outerHTML,
     elements,
   };
 }
@@ -232,6 +244,19 @@ export function snapshot(properties) {
  */
 export async function settle(frames = true) {
   await document.fonts.ready;
+  // Chromium reports an auto margin (e.g. the centred .app-shell) from the box's last full
+  // layout: after some partial relayouts getComputedStyle says 0px instead of the used 50px, and
+  // which one depends on the screen's history (seen on the Logic lesson at 1280x520). Laying the
+  // page out once at a 1 px narrower body and back makes every box lay out again, so the values
+  // no longer depend on what happened before. The body's style attribute is left as it was.
+  const body = document.body;
+  const style = body.getAttribute('style');
+  const padding = getComputedStyle(body).paddingRight;
+  body.style.setProperty('padding-right', `calc(${padding} + 1px)`, 'important');
+  void body.offsetWidth;
+  if (style === null) body.removeAttribute('style');
+  else body.setAttribute('style', style);
+  void body.offsetWidth;
   for (const animation of document.getAnimations()) {
     try {
       const timing = animation.effect?.getComputedTiming();
