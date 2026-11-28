@@ -359,6 +359,7 @@ test.describe('turns (AC 4, 11)', () => {
     await expect(page.locator('.pexeso-card').nth(0)).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.locator('.pexeso-card').nth(1)).toBeFocused();
+    await page.waitForTimeout(320); // a deliberate next press (300 ms between accepted turns)
     await page.keyboard.press('Space');
     await expect(page.locator('.pexeso-card').nth(1)).not.toHaveAttribute(
       'aria-label',
@@ -367,6 +368,61 @@ test.describe('turns (AC 4, 11)', () => {
     await expect(page.locator('.pexeso-message')).toHaveText(
       /^(Not a pair|Pair found: .+, 1 of 6)$/,
     );
+  });
+  test('keyboard: a held or fast repeated Enter on card 2 does not close the miss at once', async ({
+    page,
+  }) => {
+    await signedOut(page);
+    await page.goto('/');
+    await startPexeso(page, 8);
+    const cards = page.locator('.pexeso-card');
+    const openCount = async () =>
+      (await cardNames(page)).filter((n) => /^Card \d+, (?!face down)/.test(n)).length;
+    // Card 1 by keyboard, then the next face-down cards until a turn is a miss.
+    let first = 0;
+    let second = 1;
+    for (;;) {
+      await cards.nth(first).focus();
+      await page.keyboard.press('Enter');
+      await expect(cards.nth(first)).toHaveAttribute('aria-label', /^Card \d+, (?!face down)/);
+      await page.waitForTimeout(320);
+      await cards.nth(second).focus();
+      await page.keyboard.down('Enter'); // card 2, and the key stays down
+      await expect(page.locator('.pexeso-message')).toHaveText(/^(Not a pair|Pair found: .+)$/);
+      if (
+        (await cardNames(page))[second].endsWith('face down') === false &&
+        (await openCount()) === 2
+      )
+        break;
+      await page.keyboard.up('Enter');
+      if (second + 2 >= 30) test.skip(true, 'no miss on this board');
+      first = second + 1;
+      second = first + 1;
+      await page.waitForTimeout(320);
+    }
+    // Held: auto-repeat keydowns for ~0.5 s (Playwright sends repeat: true on a held key).
+    for (let i = 0; i < 12; i++) {
+      await page.waitForTimeout(40);
+      await page.keyboard.down('Enter');
+    }
+    await page.keyboard.up('Enter');
+    expect(await openCount()).toBe(2);
+    await expect(cards.nth(second)).toBeFocused();
+    // The miss still closes by itself after 1.5 s.
+    await expect.poll(openCount, { timeout: 2500 }).toBe(0);
+    // Fast repeated Enter: the first press opens card 1 of a new turn, a press right after it
+    // on card 2 is ignored (within 300 ms of the accepted press).
+    await page.waitForTimeout(320);
+    await cards.nth(first).focus();
+    await page.keyboard.press('Enter');
+    await cards.nth(second).focus();
+    await page.keyboard.press('Enter');
+    expect(await openCount()).toBe(1);
+    // A deliberate Enter still turns card 2: the same miss again, both open.
+    await page.waitForTimeout(320);
+    await page.keyboard.press('Enter');
+    expect(await openCount()).toBe(2);
+    await expect(page.locator('.pexeso-message')).toHaveText('Not a pair');
   });
 });
 

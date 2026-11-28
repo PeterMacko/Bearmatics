@@ -80,9 +80,12 @@ export default function PexesoView({
   const tap = (event: MouseEvent<HTMLButtonElement>, index: number) => {
     const now = performance.now();
     const shown = shownAt.current;
+    // The 300 ms between accepted card taps holds for the keyboard too (detail 0), so a fast
+    // repeated Enter cannot open card 2 and close the miss at once; the 600 ms settle after the
+    // board appears is for the rest of a pointer tap only (keyboard focus starts on the heading).
     const tooSoon =
-      event.detail > 0 &&
-      (shown === null || now - shown < SCREEN_SETTLE_MS || now - lastTap.current < CARD_TAP_MS);
+      now - lastTap.current < CARD_TAP_MS ||
+      (event.detail > 0 && (shown === null || now - shown < SCREEN_SETTLE_MS));
     if (ignoreRepeatClick(event, tooSoon)) return;
     lastTap.current = now;
     onTap(index);
@@ -178,6 +181,11 @@ export default function PexesoView({
                 aria-label={cardName(t, game, index)}
                 aria-disabled={found || undefined}
                 onClick={(event) => tap(event, index)}
+                onKeyDown={(event) => {
+                  // A held Enter/Space auto-repeats: only the first press turns a card.
+                  if (event.repeat && (event.key === 'Enter' || event.key === ' '))
+                    event.preventDefault();
+                }}
               >
                 <span className="pexeso-face" key={up ? 'up' : 'down'}>
                   {up ? <PexesoFace picture={picture} /> : <PexesoBack />}

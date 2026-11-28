@@ -170,9 +170,47 @@ describe('turns (AC 4, 11)', () => {
     wait(100);
     fireEvent.click(card(2), { detail: 1 }); // too soon after the accepted tap
     expect(card(2)).toHaveAccessibleName('Card 2, face down');
-    // Keyboard Enter/Space (detail 0) always counts.
+    // Keyboard Enter/Space (detail 0) counts once 300 ms have passed since the accepted tap.
+    wait(250);
     fireEvent.click(card(2), { detail: 0 });
     expect(card(2)).toHaveAccessibleName('Card 2, pirate');
+  });
+  test('keyboard: a held or fast repeated Enter does not close a miss at once; a deliberate Enter or Space still works', () => {
+    openLogic();
+    start(6);
+    const key = (n: number, init: { key: string; repeat?: boolean }) => {
+      // Like a browser: a button activates on Enter keydown unless the keydown is cancelled.
+      const allowed = fireEvent.keyDown(card(n), init);
+      if (allowed) fireEvent.click(card(n), { detail: 0 });
+    };
+    // The first card on the keyboard, right away (focus came from the heading, no settle wait).
+    key(1, { key: 'Enter' });
+    expect(card(1)).toHaveAccessibleName('Card 1, bear');
+    wait(400);
+    key(2, { key: 'Enter' }); // card 2: a miss, both stay open for 1.5 s
+    expect(names().slice(0, 2)).toEqual(['Card 1, bear', 'Card 2, pirate']);
+    // A fast second Enter (a new press within 300 ms of card 2) changes nothing.
+    wait(50);
+    key(2, { key: 'Enter' });
+    expect(names().slice(0, 2)).toEqual(['Card 1, bear', 'Card 2, pirate']);
+    // Enter held down for 0.6 s: the auto-repeat keydowns are cancelled, the miss stays open.
+    for (let i = 0; i < 17; i++) {
+      wait(35);
+      key(2, { key: 'Enter', repeat: true });
+    }
+    expect(names().slice(0, 2)).toEqual(['Card 1, bear', 'Card 2, pirate']);
+    // A deliberate Enter later closes the miss (the next-tap rule), as a tap does.
+    wait(300);
+    key(2, { key: 'Enter' });
+    expect(names().every((n) => n!.endsWith('face down'))).toBe(true);
+    // Space works the same: a deliberate press opens a card.
+    wait(310);
+    key(3, { key: ' ' });
+    expect(card(3)).toHaveAccessibleName('Card 3, lollipop');
+    wait(310);
+    key(9, { key: ' ' }); // card 9 = lollipop: a pair
+    expect(card(9)).toHaveAccessibleName('lollipop, found');
+    expect(message()).toBe('Pair found: lollipop, 1 of 6');
   });
 });
 
