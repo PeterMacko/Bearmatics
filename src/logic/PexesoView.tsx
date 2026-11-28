@@ -6,14 +6,13 @@ import {
   type RefObject,
 } from 'react';
 import { fill, type Copy } from '../i18n';
-import { ignoreRepeatClick, SCREEN_SETTLE_MS } from '../ignoreRepeatClick';
+import { ignoreRepeatClick, TAP_GAP_MS, tooSoonAfter } from '../tapGuard';
 import PracticeHeader from '../lesson/PracticeHeader';
 import { PexesoBack, PexesoFace } from './PexesoArt';
 import { gamePoints, heartsLeft, type PexesoGame } from './pexeso';
 import usePexesoFit from './usePexesoFit';
 
 /** A deliberate next card tap comes at least this long after the previous accepted one. */
-const CARD_TAP_MS = 300;
 
 const counted = (forms: readonly string[], n: number) =>
   fill(n === 1 ? forms[0] : n >= 2 && n <= 4 ? forms[1] : forms[2], { n });
@@ -43,7 +42,7 @@ function cardName(t: Copy, game: PexesoGame, index: number): string {
  * SCRUM-324: the Pexeso board (Logic Levels 6-8). The parent owns the game (engine state) and the
  * 1.5 s close; this view draws the cards, the pairs counter, the points chip with the hearts
  * (signed in only) and the help button, and guards the card taps: the repeat click of a double
- * tap (`detail > 1`), a tap within CARD_TAP_MS of the last accepted card tap and taps in the first
+ * tap (`detail > 1`), a tap within TAP_GAP_MS.card of the last accepted card tap and taps in the first
  * SCREEN_SETTLE_MS after the board appeared (the rest of the tap that started it) change nothing.
  * Keyboard Enter/Space (detail 0) always counts. Mount with a new `key` per game.
  */
@@ -85,8 +84,7 @@ export default function PexesoView({
     // repeated Enter cannot open card 2 and close the miss at once; the 600 ms settle after the
     // board appears is for the rest of a pointer tap only (keyboard focus starts on the heading).
     const tooSoon =
-      now - lastTap.current < CARD_TAP_MS ||
-      (event.detail > 0 && (shown === null || now - shown < SCREEN_SETTLE_MS));
+      now - lastTap.current < TAP_GAP_MS.card || (event.detail > 0 && tooSoonAfter(shown, { now }));
     if (ignoreRepeatClick(event, tooSoon)) return;
     lastTap.current = now;
     onTap(index);
