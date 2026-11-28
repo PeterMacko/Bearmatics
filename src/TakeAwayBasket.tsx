@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { fill, type Copy } from './i18n';
 import { PictureMotif, type PictureTheme } from './PictureGroup';
+import { TAP_GAP_MS } from './tapGuard';
 
 /**
  * SCRUM-156: Small maths "Take away". The basket holds the first number of pictures; a tap moves
@@ -72,7 +73,8 @@ export default function TakeAwayBasket({
               onClick={(event) => {
                 // Keyboard activation (detail 0) is always deliberate.
                 if (event.detail > 1) return;
-                if (event.detail === 1 && performance.now() - movedAt.current < 350) return;
+                if (event.detail === 1 && performance.now() - movedAt.current < TAP_GAP_MS.basket)
+                  return;
                 movedAt.current = performance.now();
                 move(index, document.activeElement === event.currentTarget);
               }}
