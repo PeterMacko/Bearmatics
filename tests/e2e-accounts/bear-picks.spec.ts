@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, uniqueName } from '../e2e/support/account';
-import { answerFor } from '../e2e/support/maths';
+import { createAccount, hideFromLeaderboard, uniqueName } from '../e2e/support/account';
+import { badge as barBadge } from '../e2e/support/bar';
+import { solveAll } from '../e2e/support/bearPicks';
 
 // SCRUM-309 "Bear picks a game" against the real server (local database): x1.5 on top of the
 // table multiplier, the server takes the new top 12 for a 5-exercise lesson, a mode lesson is a
@@ -8,25 +9,7 @@ import { answerFor } from '../e2e/support/maths';
 
 test.setTimeout(120_000);
 
-const badge = (page: Page) =>
-  page.getByRole('navigation', { name: /Main controls|Hlavné ovládanie/ }).getByRole('button', {
-    name: /badge|odznak/,
-  });
-/** Keeps this spec's players off the shared database's leaderboard (see multipliers.spec). */
-async function hideFromLeaderboard(page: Page) {
-  const status = await page.evaluate(
-    async () =>
-      (
-        await fetch('/api/me', {
-          method: 'PATCH',
-          credentials: 'same-origin',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ leaderboard: false }),
-        })
-      ).status,
-  );
-  expect(status).toBe(200);
-}
+const badge = (page: Page) => barBadge(page, { anyLanguage: true });
 const game = (page: Page) => page.locator('.pick-game-level').textContent();
 async function until(page: Page, match: RegExp) {
   for (
@@ -38,13 +21,6 @@ async function until(page: Page, match: RegExp) {
     await page.getByRole('button', { name: /Choose another|Vyber inú/ }).press('Enter');
   // Every new game restarts the 600 ms tap guard (QA321-04).
   await page.waitForTimeout(650);
-}
-async function solveAll(page: Page) {
-  while (!(await page.locator('.summary').isVisible())) {
-    await page.getByRole('textbox').fill(String(await answerFor(page)));
-    await page.locator('.answer-button').click();
-    await page.locator('.answer-button').click();
-  }
 }
 
 test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points and counts as a play', async ({

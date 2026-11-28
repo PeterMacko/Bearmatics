@@ -1,14 +1,12 @@
 import { expect, test } from '@playwright/test';
 import { createAccount, uniqueName } from '../e2e/support/account';
+import { badge } from '../e2e/support/bar';
 import { ALL_DEVICES, DEVICE } from '../e2e/support/devices';
 import { cell, findWord, gridWords, searchLayout, wrongPair } from '../e2e/support/wordsearch';
 
 // SCRUM-241: Word search for a signed-in player (real server + local database): first-try points
 // are saved like other lessons (x1, no multiplier row), and the lesson fits the defined devices
 // with the badge, points, streak and a long nickname in the bar.
-
-const badge = (page: import('@playwright/test').Page) =>
-  page.getByRole('navigation', { name: 'Main controls' }).getByRole('button', { name: /badge/ });
 
 async function start(page: import('@playwright/test').Page, level: 1 | 2 | 3, size: 5 | 10) {
   await page.getByRole('button', { name: 'Word search', exact: true }).click();

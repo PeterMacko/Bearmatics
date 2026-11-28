@@ -10,6 +10,32 @@ export const uniqueName = (prefix: string) =>
     20,
   );
 
+/** Opens the course choice (in English) and waits for its Maths card. */
+export async function openApp(page: Page) {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
+}
+
+/**
+ * Keeps a spec's players off the leaderboard (PATCH /api/me): every accounts spec shares one
+ * local database, and the leaderboard spec expects its own 5-point player in the top ten.
+ * `check: false` sends the same request without asserting its answer.
+ */
+export async function hideFromLeaderboard(page: Page, { check = true } = {}) {
+  const status = await page.evaluate(
+    async () =>
+      (
+        await fetch('/api/me', {
+          method: 'PATCH',
+          credentials: 'same-origin',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ leaderboard: false }),
+        })
+      ).status,
+  );
+  if (check) expect(status).toBe(200);
+}
+
 /** Creates a password account from the current screen (the Sign in button must be visible). */
 export async function createAccount(
   page: Page,

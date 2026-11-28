@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import { solveAll } from './support/bearPicks';
 import { answerFor } from './support/maths';
 import { mockApi } from './support/mockApi';
 
@@ -41,14 +42,6 @@ const rngAlways = (page: Page, value: number) =>
   }, value);
 /** SCRUM-324: any game but Pexeso (Logic 6-8 have no exercise count on this screen). */
 const NOT_PEXESO = /^(?!Logic\|Level [678] )/;
-/** Answers a maths lesson to its summary, all first try. */
-async function solveAll(page: Page) {
-  while (!(await page.locator('.summary').isVisible())) {
-    await page.getByRole('textbox').fill(String(await answerFor(page)));
-    await page.locator('.answer-button').click();
-    await page.locator('.answer-button').click();
-  }
-}
 
 test('age screen, next-game screen, Choose another, remembered age and count', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

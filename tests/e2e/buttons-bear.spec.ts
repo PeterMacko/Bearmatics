@@ -1,6 +1,6 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
-import { answerFor } from './support/maths';
+import { answerFor, fillAnswer } from './support/maths';
 import { nextFrames } from './support/layout';
 
 // SCRUM-172 on every defined device, in English and Slovak: the former text buttons are bordered
@@ -59,16 +59,6 @@ async function open(page: Page, device: Device, lang: Lang) {
   }
 }
 
-/** Types into the answer, through the keyboard when the app number pad made it read-only. */
-async function type(page: Page, value: string) {
-  const input = page.getByRole('textbox');
-  if ((await input.getAttribute('readonly')) !== null) {
-    await input.focus();
-    await input.press('Delete');
-    await input.pressSequentially(value);
-  } else await input.fill(value);
-}
-
 /** 5 exercises, tapped on its visible pill (Firefox reports the 1 px radio as covered by it). */
 async function pickFive(page: Page) {
   await page.locator('.session-options label').first().click();
@@ -84,7 +74,7 @@ async function startMaths(page: Page, lang: Lang) {
 
 async function finishLesson(page: Page) {
   for (let i = 0; i < 5; i++) {
-    await type(page, String(await answerFor(page)));
+    await fillAnswer(page, String(await answerFor(page)));
     await page.locator('.answer-button').first().click();
     await page.locator('.answer-button').first().click();
   }
@@ -208,7 +198,7 @@ for (const device of ALL_DEVICES) {
       await pickFive(page);
       await page.locator('.start-button').click();
       // Lesson: the tap keeps focus and the typed answer.
-      await type(page, '7');
+      await fillAnswer(page, '7');
       const input = page.getByRole('textbox');
       await input.focus();
       const before = await page.locator('.practice').textContent();
@@ -540,7 +530,7 @@ for (const device of [DEVICE.smallPhone, DEVICE.phone]) {
       await bigText(page);
       await expect(page.locator('.badge-button')).toBeVisible();
       await startMaths(page, lang);
-      await type(page, '7');
+      await fillAnswer(page, '7');
       await page.locator('.app-bar button').first().click();
       await expect(page.getByRole('dialog')).toBeVisible();
       await expectIconsInline(page);

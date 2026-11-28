@@ -1,13 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, uniqueName } from '../e2e/support/account';
+import { createAccount, openApp, uniqueName } from '../e2e/support/account';
 import { ALL_DEVICES, DEVICE } from '../e2e/support/devices';
 import { horizontalOverflow } from '../e2e/support/layout';
 
 // SCRUM-249: dress your bear from parts (real server + local database).
-async function openApp(page: Page) {
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
-}
 
 const picker = (page: Page) => page.getByRole('group', { name: 'Choose your bear' });
 const looksOnOffer = (page: Page) =>

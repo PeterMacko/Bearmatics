@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { createAccount, uniqueName } from '../e2e/support/account';
+import { createAccount, hideFromLeaderboard, uniqueName } from '../e2e/support/account';
 import { ALL_DEVICES, DEVICE, type Device } from '../e2e/support/devices';
 import { horizontalOverflow, nextFrames } from '../e2e/support/layout';
 
@@ -13,16 +13,6 @@ async function openApp(page: Page, sk = false) {
   // SCRUM-218: the app starts in Slovak from /?lang=sk (it starts in English otherwise).
   await page.goto(sk ? '/?lang=sk' : '/');
   await expect(page.locator('.settings-button')).toBeVisible();
-}
-
-async function hideFromLeaderboard(page: Page) {
-  await page.evaluate(() =>
-    fetch('/api/me', {
-      method: 'PATCH',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ leaderboard: false }),
-    }),
-  );
 }
 
 /** Profile > Dress your bear (EN or SK names). Waits for the signed-in bar first: under load the
@@ -137,7 +127,7 @@ for (const sk of [false, true])
     test.setTimeout(120_000);
     await openApp(page);
     await createAccount(page, uniqueName('fit273'), { nickname: NICKNAME });
-    await hideFromLeaderboard(page);
+    await hideFromLeaderboard(page, { check: false });
     for (const device of ALL_DEVICES) {
       await page.setViewportSize({ width: device.width, height: device.height });
       await openApp(page, sk);
@@ -178,7 +168,7 @@ for (const sk of [false, true])
     test.setTimeout(120_000);
     await openApp(page);
     await createAccount(page, uniqueName('head273'), { nickname: NICKNAME });
-    await hideFromLeaderboard(page);
+    await hideFromLeaderboard(page, { check: false });
     {
       for (const device of ALL_DEVICES) {
         await page.setViewportSize({ width: device.width, height: device.height });
@@ -235,7 +225,7 @@ test('SCRUM-273 200% text at 390x844 and 320x568: one scrolling page, every choi
   test.setTimeout(120_000);
   await openApp(page);
   await createAccount(page, uniqueName('big273'), { nickname: NICKNAME });
-  await hideFromLeaderboard(page);
+  await hideFromLeaderboard(page, { check: false });
   for (const screenName of ['profile', 'sign-up'] as const) {
     // Signed in for the profile, then signed out for the sign-up Customize screen.
     if (screenName === 'sign-up') await page.context().clearCookies();
@@ -279,7 +269,7 @@ test('SCRUM-273 keyboard: a focused choice scrolls into view inside the pane, ne
   test.setTimeout(120_000);
   await openApp(page);
   await createAccount(page, uniqueName('keys273'), { nickname: NICKNAME });
-  await hideFromLeaderboard(page);
+  await hideFromLeaderboard(page, { check: false });
   for (const device of [DEVICE.smallPhone, DEVICE.smallPhoneLandscape, DEVICE.foldableVivaldi]) {
     await page.setViewportSize({ width: device.width, height: device.height });
     await openApp(page);
