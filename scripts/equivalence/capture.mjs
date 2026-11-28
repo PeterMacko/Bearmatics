@@ -224,8 +224,13 @@ export function snapshot(properties) {
   };
 }
 
-/** Freezes the page: fonts loaded, finite animations finished, infinite ones paused at 0. */
-export async function settle() {
+/**
+ * Freezes the page: fonts loaded, finite animations finished, infinite ones paused at 0.
+ * `frames`: wait two animation frames at the end; false when the page's fake clock is paused
+ * (its requestAnimationFrame never fires then), where two message-channel turns let React's
+ * scheduled work run instead.
+ */
+export async function settle(frames = true) {
   await document.fonts.ready;
   for (const animation of document.getAnimations()) {
     try {
@@ -239,5 +244,12 @@ export async function settle() {
       animation.cancel();
     }
   }
-  await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+  if (frames) await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+  else
+    for (let i = 0; i < 2; i++)
+      await new Promise((done) => {
+        const channel = new MessageChannel();
+        channel.port1.onmessage = done;
+        channel.port2.postMessage(0);
+      });
 }

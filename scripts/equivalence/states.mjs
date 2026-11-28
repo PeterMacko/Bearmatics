@@ -25,6 +25,9 @@ export const QUICK = ['390x844', '844x390', '1366x900'];
 
 export const LANGUAGES = ['en', 'sk'];
 
+/** Fixed wall clock (streak days, lesson time) shared by both builds; run.mjs installs it. */
+export const CLOCK = new Date('2026-06-15T09:00:00+02:00');
+
 const ACCOUNT = {
   kind: 'password',
   username: 'kid',
@@ -105,10 +108,24 @@ export function initScript(seed) {
   HTMLMediaElement.prototype.load = function () {};
 }
 
-const course = { small: 0, maths: 1, english: 2 };
+// Course cards by class, not by position: the course choice gained Logic (2nd) and Word search
+// (5th) after these states were written, and positions shifted every maths/English state.
+const course = {
+  small: '.course-small',
+  logic: '.course-logic',
+  maths: '.course-math',
+  english: '.course-english',
+  wordsearch: '.course-wordsearch',
+};
 
 /** Pages of the 200% text variants (see large()). */
 const LARGE = new WeakSet();
+
+/**
+ * Pages whose fake clock is paused (see pause()). The capture must not wait for animation frames
+ * there: requestAnimationFrame is part of the fake clock and would never fire.
+ */
+export const FROZEN = new WeakSet();
 
 async function home(page, lang) {
   await page.goto('/');
@@ -124,7 +141,7 @@ async function home(page, lang) {
 }
 
 async function openCourse(page, name) {
-  await page.locator('.course-option').nth(course[name]).click();
+  await page.locator(course[name]).click();
   await page.locator('.level-option').first().waitFor();
 }
 
@@ -428,7 +445,8 @@ STATES['in-profile'] = {
   async steps(page, lang) {
     await signedInHome(page, lang);
     await page.locator('.account-button').click();
-    await page.locator('.account-screen .profile-badge').waitFor();
+    // The profile (SCRUM-281) has no badge any more: its rows mark the screen.
+    await page.locator('.profile-screen .profile-rows').waitFor();
   },
 };
 STATES['in-leaderboard'] = {

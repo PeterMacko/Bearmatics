@@ -22,7 +22,16 @@ import { parseArgs } from 'node:util';
 import { gzipSync } from 'node:zlib';
 import { PROPERTIES, settle, snapshot } from './capture.mjs';
 import { compareTrees, formatReport, parseReplace } from './diff.mjs';
-import { DEVICES, LANGUAGES, QUICK, STATES, initScript, mockApi } from './states.mjs';
+import {
+  CLOCK,
+  DEVICES,
+  FROZEN,
+  LANGUAGES,
+  QUICK,
+  STATES,
+  initScript,
+  mockApi,
+} from './states.mjs';
 
 const { values: args } = parseArgs({
   options: {
@@ -161,8 +170,6 @@ function serve(dir) {
 }
 
 const seedOf = (name) => [...name].reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) >>> 0, 7);
-// Fixed wall clock (streak days, timers) shared by both builds.
-const CLOCK = new Date('2026-06-15T09:00:00+02:00');
 
 async function captureState(browser, engine, url, device, lang, name, dir) {
   const state = STATES[name];
@@ -180,6 +187,9 @@ async function captureState(browser, engine, url, device, lang, name, dir) {
   let result;
   try {
     await context.clock.install({ time: CLOCK });
+    // Date stays at CLOCK (timers and performance.now still run): the lesson time on a summary
+    // (start to end, whole seconds) is then always 0:00 instead of 0:00 or 0:01 by chance.
+    await context.clock.setFixedTime(CLOCK);
     const page = await context.newPage();
     page.setDefaultTimeout(15_000);
     page.on('pageerror', (e) => pageErrors.push(e.message));
@@ -193,7 +203,7 @@ async function captureState(browser, engine, url, device, lang, name, dir) {
     // that case deterministic (it lands on the page background, not on a control).
     await page.mouse.move(0, 0);
     await page.mouse.move(-10, -10);
-    await page.evaluate(settle);
+    await page.evaluate(settle, !FROZEN.has(page));
     result = await page.evaluate(snapshot, PROPERTIES);
     if (args.screenshots)
       await page.screenshot({
