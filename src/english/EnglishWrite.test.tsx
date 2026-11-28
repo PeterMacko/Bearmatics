@@ -1,8 +1,8 @@
 import { act, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import App from '../App';
+import { button } from '../testing/ui';
 
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 let played: string[] = [];
 
 beforeEach(() => {

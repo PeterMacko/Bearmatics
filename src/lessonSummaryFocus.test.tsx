@@ -6,14 +6,13 @@ import * as bearPath from './logic/bearPath';
 import { BACK_MS, STEP_MS } from './logic/LogicPracticeView';
 import * as patterns from './logic/patterns';
 import type { PatternItem, PatternRow } from './logic/patterns';
-import { tap } from './testing/ui';
+import { advance, button, tap } from './testing/ui';
 
 // SCRUM-335 Wave 0 (review RF-02): when a lesson ends, the summary heading has the focus. Maths,
 // Word search and Pexeso assert this already (foundation.spec, wordsearch.spec,
 // PexesoLesson.test); this covers the four lessons that had no such check, so the seven
 // "focus the summary" effects in App can later become one without losing a case.
 
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 let played: string[] = [];
 const lastPlayed = () => played[played.length - 1];
 
@@ -68,8 +67,6 @@ async function playWrite() {
   }
 }
 
-const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
-
 /** Logic Level 1 (bear path), demo already seen: right, right, down on every puzzle. */
 async function playBearPath() {
   vi.useFakeTimers();
@@ -82,7 +79,7 @@ async function playBearPath() {
   for (let i = 0; i < 5; i++) {
     for (const arrow of ['Right', 'Right', 'Down']) tap(arrow);
     tap('Go');
-    wait(STEP_MS * 7 + BACK_MS + 200);
+    advance(STEP_MS * 7 + BACK_MS + 200);
     tap(i < 4 ? 'Next exercise' : 'See how you did');
   }
 }
@@ -122,7 +119,7 @@ async function playPatterns() {
         (b) => b.classList.contains('pattern-choice') && b.getAttribute('aria-label') === 'Pirate',
       )!;
     fireEvent.click(pirate, { detail: 1 });
-    wait(1000);
+    advance(1000);
     tap(i < 4 ? 'Next exercise' : 'See how you did');
   }
 }

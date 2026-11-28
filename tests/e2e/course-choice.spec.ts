@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, COURSE_CHOICE_DEVICES } from './support/devices';
 import { setLanguage } from './support/language';
+import { mockAccount } from './support/mockApi';
 
 // SCRUM-71: course choice and English home across devices, languages and input methods.
 const SIZES = COURSE_CHOICE_DEVICES;
@@ -474,14 +475,9 @@ for (const device of ALL_DEVICES)
           route.fulfill({ contentType: 'application/json', body: JSON.stringify(body) });
         if (path === '/api/me')
           return json({
-            account: {
-              kind: 'password',
-              username: 'kid',
-              nickname: lang === 'en' ? 'Brave Cub' : 'Honeybear123',
-              look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
-              email: null,
+            account: mockAccount(lang === 'en' ? 'Brave Cub' : 'Honeybear123', {
               leaderboard: true,
-            },
+            }),
           });
         if (path === '/api/progress')
           return json({ points: 135, streak: 12, frozen: true, today: false });

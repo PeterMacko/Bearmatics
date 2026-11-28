@@ -5,7 +5,8 @@ import { LESSON_START_KEY } from './lessonTime';
 import * as math from './math/engine';
 import { fakeServer, reply } from './testing/fakeServer';
 import { openMathematics, openSmallMaths } from './testing/openMathematics';
-import { tap } from './testing/ui';
+import { button, tap } from './testing/ui';
+import { ACCOUNT } from './testing/account';
 
 // SCRUM-211: lesson time and average time per exercise on the summary. A fake clock (Date.now)
 // moves only where the test says so.
@@ -41,7 +42,6 @@ const summaryBack = () =>
   );
 const timeLine = () => document.querySelector('.lesson-time');
 const stored = () => JSON.parse(sessionStorage.getItem(LESSON_START_KEY) ?? 'null');
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const summaryHeading = () => screen.queryByRole('heading', { name: 'Look how far you’ve come!' });
 
 /** Answers every maths exercise right (records the real generated lesson to know the answers). */
@@ -290,13 +290,6 @@ test.each([1, 2, 3] as const)('English level %i: time on the summary', async (le
 });
 
 test('signed in: the time line sits between the first-try score and the points', async () => {
-  const ACCOUNT = {
-    kind: 'password',
-    username: 'kid',
-    nickname: 'Kid',
-    look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
-    email: null,
-  };
   const calls = fakeServer(({ path }) => {
     if (path === '/api/me') return reply({ account: ACCOUNT });
     if (path === '/api/auth/google') return reply({ available: false });

@@ -4,16 +4,9 @@ import App from './App';
 import { fakeServer, reply } from './testing/fakeServer';
 import { playFive } from './testing/lesson';
 import { tap } from './testing/ui';
+import { ACCOUNT } from './testing/account';
 
 // SCRUM-118: streak in the bar and the unlock offer after the summary.
-
-const ACCOUNT = {
-  kind: 'password',
-  username: 'kid',
-  nickname: 'Kid',
-  look: { fur: 0, background: 0, head: 3, neck: 0, eyes: 0 },
-  email: null,
-};
 
 function server(state: {
   points: number;

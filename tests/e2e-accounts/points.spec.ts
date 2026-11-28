@@ -5,6 +5,7 @@ import {
   uniqueName,
   WINDOW_SETTLE_MS,
 } from '../e2e/support/account';
+import { badge } from '../e2e/support/bar';
 import { BADGE_DEVICES, DEVICE } from '../e2e/support/devices';
 import { answerFor } from '../e2e/support/maths';
 import { horizontalOverflow, nextFrames } from '../e2e/support/layout';
@@ -39,9 +40,6 @@ async function playMaths(page: Page, size: 5 | 10, wrongFirst = false) {
   }
   await expect(page.getByRole('heading', { name: 'Look how far you’ve come!' })).toBeVisible();
 }
-
-const badge = (page: Page) =>
-  page.getByRole('navigation', { name: 'Main controls' }).getByRole('button', { name: /badge/ });
 
 test('a finished lesson adds its first-try points once; leaving early adds nothing', async ({
   page,

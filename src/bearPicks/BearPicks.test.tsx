@@ -10,6 +10,7 @@ import { staticFrame } from '../progress/animation';
 import { fakeServer, reply } from '../testing/fakeServer';
 import * as picker from './picker';
 import { BEAR_PICKS_KEY } from './storage';
+import { button, heading } from '../testing/ui';
 
 // SCRUM-309 "Bear picks a game": course-choice button, age screen, next-game screen, the mode
 // chain through lesson and summary, storage, double-tap guards and copy.
@@ -38,9 +39,7 @@ afterEach(() => vi.restoreAllMocks());
 const settle = () => {
   now += 700;
 };
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const tap = (name: string | RegExp) => fireEvent.click(button(name), { detail: 1 });
-const heading = () => screen.getByRole('heading', { level: 2 });
 const stored = () => JSON.parse(localStorage.getItem(BEAR_PICKS_KEY) ?? 'null');
 /** The game on the next-game screen: "Maths|Level 4 · Find the missing number". */
 const shownGame = () => {

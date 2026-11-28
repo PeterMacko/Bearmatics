@@ -3,6 +3,7 @@ import {
   answerGrownUp,
   createAccount,
   leaveProfile,
+  openApp,
   PASSWORD,
   uniqueName,
   WINDOW_SETTLE_MS,
@@ -12,10 +13,6 @@ import { setLanguage } from '../e2e/support/language';
 import { horizontalOverflow } from '../e2e/support/layout';
 
 // SCRUM-97: optional sign-in with username and password (real server + local database).
-async function openApp(page: Page) {
-  await page.goto('/');
-  await expect(page.getByRole('button', { name: 'Maths', exact: true })).toBeVisible();
-}
 
 async function signIn(page: Page, username: string, password = PASSWORD) {
   await page.getByLabel('Username').fill(username);

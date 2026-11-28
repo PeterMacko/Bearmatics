@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE } from './support/devices';
 import { setLanguage } from './support/language';
 import { horizontalOverflow, nextFrames } from './support/layout';
+import { SETTLE_WAIT_MS } from './support/timing';
 
 // SCRUM-281: the tidier profile (bear beside the greeting, rows with pencils, small windows,
 // grown-up question) on the defined devices, with mocked server answers. Measured signed in with
@@ -290,7 +291,7 @@ test('AC3 review: a tap on the dark background closes each window like Cancel; n
     const field = window.locator('input:not([type="checkbox"])').first();
     if (TYPED[opener]) await field.fill(TYPED[opener]);
     else await window.getByRole('checkbox').uncheck();
-    await page.waitForTimeout(650); // a deliberate tap, not the second tap of a double tap
+    await page.waitForTimeout(SETTLE_WAIT_MS); // a deliberate tap, not the second tap of a double tap
     for (const [x, y] of [
       [4, 4],
       [386, 840],
@@ -305,7 +306,7 @@ test('AC3 review: a tap on the dark background closes each window like Cancel; n
     expect(calls, opener).toEqual([]);
     await expect(page.locator('.profile-note'), opener).toBeEmpty();
     // Typed text is discarded: the window opens again with the saved value.
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     await button.click();
     if (TYPED[opener]) await expect(field, opener).not.toHaveValue(TYPED[opener]);
     else await expect(window.getByRole('checkbox')).toBeChecked();
@@ -326,7 +327,7 @@ test('AC3 review: a press inside the window released outside (or the other way) 
   const window = page.getByRole('dialog', { name: 'Change nickname' });
   const field = window.getByLabel('Nickname');
   await field.fill('Typed');
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   const box = (await field.boundingBox())!;
   // Selecting text in the field and letting go on the shade (QA265-01).
   await page.mouse.move(box.x + box.width - 4, box.y + box.height / 2);
@@ -394,11 +395,11 @@ for (const [width, height, big] of [
       await page.waitForTimeout(100);
       await expect(window, opener).toBeVisible();
       // Later, a deliberate tap there closes.
-      await page.waitForTimeout(650);
+      await page.waitForTimeout(SETTLE_WAIT_MS);
       await page.mouse.click(4, height - 4);
       await expect(window, opener).toHaveCount(0);
       await expect(button, opener).toBeFocused();
-      await page.waitForTimeout(650);
+      await page.waitForTimeout(SETTLE_WAIT_MS);
     }
     expect(calls).toEqual([]);
   });
@@ -540,10 +541,10 @@ test('review: the bear button: 72 px, focus ring; tap, X, Escape and Enter open/
   await expect(bear).toBeFocused();
   // Tap anywhere: the corner, the bear itself, the X.
   for (const where of ['corner', 'bear', 'X'] as const) {
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     await bear.click();
     await expect(view).toBeVisible();
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     if (where === 'corner') await page.mouse.click(4, 840);
     if (where === 'bear') await view.getByRole('img').click();
     if (where === 'X') await close.click();
@@ -583,7 +584,7 @@ test('review: a double tap on the bear keeps it open; a double tap on the X pres
   await page.waitForTimeout(100);
   await expect(view).toBeVisible();
   // A double tap on the X: closes; the second tap does not press what lies under the X.
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   const x = (await view.getByRole('button', { name: 'Close' }).boundingBox())!;
   const under = await page.evaluate(
     ([cx, cy]) => {
@@ -751,14 +752,14 @@ for (const [language, names] of [
     await expect(window.locator('.grown-up-question')).toHaveText('3³ + 11 = ?');
     const field = window.getByRole('textbox', { name: names.said });
     await expect(field).toHaveAttribute('inputmode', 'numeric');
-    await page.waitForTimeout(650); // QA287-01: presses in the first 600 ms are ignored
+    await page.waitForTimeout(SETTLE_WAIT_MS); // QA287-01: presses in the first 600 ms are ignored
     await window.getByRole('button', { name: names.keep }).click();
     await expect(window).toHaveCount(0);
     await expect(page.getByRole('button', { name: names.del })).toBeFocused();
     // Sign out: empty, wrong, then right.
     await page.getByRole('button', { name: names.signOut }).click();
     await expect(field).toBeFocused();
-    await page.waitForTimeout(650);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     const go = window.getByRole('button', { name: names.signOut, exact: true });
     await go.click();
     await expect(window.getByRole('alert')).toHaveText(names.empty);
@@ -788,7 +789,7 @@ test('AC5: a double tap on Delete account, or a quick tap after it opens, never 
   await expect(window).toBeVisible();
   await window.getByRole('textbox').fill('38');
   // The second press of a double tap on "Yes, delete forever" (detail 2) is ignored.
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   const yes = window.getByRole('button', { name: 'Yes, delete forever' });
   const box = (await yes.boundingBox())!;
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
@@ -821,7 +822,7 @@ test('AC5: a double tap on Delete account, or a quick tap after it opens, never 
   await expect(window).toBeVisible();
   await expect(window.locator('.account-error')).toBeEmpty();
   // A deliberate tap later deletes.
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await window.getByRole('button', { name: 'Yes, delete forever' }).click();
   await expect(page.getByText('Your account was deleted.')).toBeVisible();
   expect(calls).toEqual([{ method: 'DELETE', path: '/api/me' }]);

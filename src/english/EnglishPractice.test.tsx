@@ -5,8 +5,8 @@ import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import App from '../App';
 import { WordPlayer, type AudioLike } from './wordPlayer';
 import { allWords, audioFile, WORDS } from './words';
+import { button } from '../testing/ui';
 
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 let played: string[] = [];
 
 beforeEach(() => {

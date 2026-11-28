@@ -1,7 +1,8 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
-import { answerFor } from './support/maths';
+import { answerFor, fillAnswer } from './support/maths';
 import { nextFrames } from './support/layout';
+import { mockAccount, mockLessonApi } from './support/mockApi';
 
 // SCRUM-172 on every defined device, in English and Slovak: the former text buttons are bordered
 // secondary buttons with a decorative icon before an unchanged name, the screens that fitted
@@ -59,16 +60,6 @@ async function open(page: Page, device: Device, lang: Lang) {
   }
 }
 
-/** Types into the answer, through the keyboard when the app number pad made it read-only. */
-async function type(page: Page, value: string) {
-  const input = page.getByRole('textbox');
-  if ((await input.getAttribute('readonly')) !== null) {
-    await input.focus();
-    await input.press('Delete');
-    await input.pressSequentially(value);
-  } else await input.fill(value);
-}
-
 /** 5 exercises, tapped on its visible pill (Firefox reports the 1 px radio as covered by it). */
 async function pickFive(page: Page) {
   await page.locator('.session-options label').first().click();
@@ -84,7 +75,7 @@ async function startMaths(page: Page, lang: Lang) {
 
 async function finishLesson(page: Page) {
   for (let i = 0; i < 5; i++) {
-    await type(page, String(await answerFor(page)));
+    await fillAnswer(page, String(await answerFor(page)));
     await page.locator('.answer-button').first().click();
     await page.locator('.answer-button').first().click();
   }
@@ -166,28 +157,14 @@ const pageScroll = (page: Page) =>
 
 /** Signed in with a frozen streak: finishing a lesson offers the unlock; the leaderboard fails. */
 async function signedIn(page: Page) {
-  await page.route('**/api/**', async (route) => {
-    const path = new URL(route.request().url()).pathname;
-    const json = (body: unknown, status = 200) =>
-      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) });
-    const view = { points: 135, streak: 12, frozen: true, today: false };
-    if (path === '/api/me')
-      return json({
-        account: {
-          kind: 'password',
-          username: 'kid',
-          nickname: 'Brave Cub',
-          look: { fur: 1, background: 1, head: 2, neck: 0, eyes: 0 },
-          email: null,
-          leaderboard: true,
-        },
-      });
-    if (path === '/api/progress') return json(view);
-    if (path === '/api/progress/lessons') return json({ lessonId: 'a'.repeat(32) }, 201);
-    if (path === '/api/progress/lessons/finish')
-      return json({ ...view, points: 140, added: 5, offer: { streak: 12, missed: 2, cost: 14 } });
-    if (path === '/api/leaderboard') return json({ error: 'offline' }, 500);
-    return json({ available: false });
+  const view = { points: 135, streak: 12, frozen: true, today: false };
+  await mockLessonApi(page, {
+    account: mockAccount('Brave Cub', { leaderboard: true }),
+    progress: view,
+    lessonId: 'a'.repeat(32),
+    lessonStatus: 201,
+    finish: { ...view, points: 140, added: 5, offer: { streak: 12, missed: 2, cost: 14 } },
+    leaderboard: { status: 500, body: { error: 'offline' } },
   });
 }
 
@@ -208,7 +185,7 @@ for (const device of ALL_DEVICES) {
       await pickFive(page);
       await page.locator('.start-button').click();
       // Lesson: the tap keeps focus and the typed answer.
-      await type(page, '7');
+      await fillAnswer(page, '7');
       const input = page.getByRole('textbox');
       await input.focus();
       const before = await page.locator('.practice').textContent();
@@ -540,7 +517,7 @@ for (const device of [DEVICE.smallPhone, DEVICE.phone]) {
       await bigText(page);
       await expect(page.locator('.badge-button')).toBeVisible();
       await startMaths(page, lang);
-      await type(page, '7');
+      await fillAnswer(page, '7');
       await page.locator('.app-bar button').first().click();
       await expect(page.getByRole('dialog')).toBeVisible();
       await expectIconsInline(page);

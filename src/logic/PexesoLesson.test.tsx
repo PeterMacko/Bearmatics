@@ -7,6 +7,7 @@ import { fakeServer, reply, type Call } from '../testing/fakeServer';
 import { tap } from '../testing/ui';
 import * as pexeso from './pexeso';
 import { PEXESO_PICTURES, gameFromCards, type PexesoPicture } from './pexeso';
+import { openLogic } from '../testing/openCourse';
 
 // SCRUM-324: Pexeso (Logic Levels 6-8) in the app: menu, turns, guards, chip and hearts,
 // messages, summary, points, leaving and the 1.5 s close timer.
@@ -50,15 +51,6 @@ const flip = (n: number) => {
   fireEvent.click(card(n), { detail: 1 });
 };
 
-function openLogic(lang: 'en' | 'sk' = 'en') {
-  render(<App />);
-  if (lang === 'sk') {
-    fireEvent.click(exact('Settings'));
-    fireEvent.click(exact('Slovenčina'));
-    fireEvent.click(exact('Zavrieť nastavenia'));
-    fireEvent.click(exact('Logika'));
-  } else fireEvent.click(exact('Logic'));
-}
 function start(level: 6 | 7 | 8, lang: 'en' | 'sk' = 'en') {
   const word = lang === 'sk' ? 'Úroveň' : 'Level';
   fireEvent.click(screen.getByRole('radio', { name: new RegExp(`^${word} ${level} ·`) }));
