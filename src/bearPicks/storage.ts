@@ -6,7 +6,7 @@ import { MAX_AGE, MIN_AGE } from '../levelAges';
 export const BEAR_PICKS_KEY = 'bearmatics-bear-picks';
 
 export type PickSize = 5 | 10 | 20;
-export type BearPicksStore = { age: number | null; size: PickSize };
+type BearPicksStore = { age: number | null; size: PickSize };
 
 const SIZES: readonly number[] = [5, 10, 20];
 const validAge = (age: unknown): age is number =>

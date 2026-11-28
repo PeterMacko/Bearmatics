@@ -17,9 +17,6 @@ import PatternDemo from './PatternDemo';
 import { answerOf, itemKey, type PatternRow } from './patterns';
 import usePatternFit from './usePatternFit';
 
-/** How long the right picture takes to move from its button into the "?" place. */
-export const ARRIVE_MS = 450;
-
 const prefersReducedMotion = () =>
   typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
 

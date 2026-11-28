@@ -19,15 +19,15 @@ export const SEARCH_LEVELS: readonly SearchLevel[] = [1, 2, 3];
 /** A grid cell, 0-based: row 0 is the top row, col 0 the left column. */
 export type Cell = Readonly<{ row: number; col: number }>;
 /** One step along a word: dr rows down, dc columns to the right (each -1, 0 or 1). */
-export type Direction = Readonly<{ dr: number; dc: number }>;
+type Direction = Readonly<{ dr: number; dc: number }>;
 
 /** Levels 1-2: left to right and top to bottom only. */
-export const SIMPLE_DIRECTIONS: readonly Direction[] = [
+const SIMPLE_DIRECTIONS: readonly Direction[] = [
   { dr: 0, dc: 1 },
   { dr: 1, dc: 0 },
 ];
 /** All 8 directions (level 3, and every check of a finished grid). */
-export const ALL_DIRECTIONS: readonly Direction[] = [
+const ALL_DIRECTIONS: readonly Direction[] = [
   { dr: 0, dc: 1 },
   { dr: 1, dc: 0 },
   { dr: 1, dc: 1 },
@@ -38,7 +38,7 @@ export const ALL_DIRECTIONS: readonly Direction[] = [
   { dr: 1, dc: -1 },
 ];
 
-export function levelDirections(level: SearchLevel): readonly Direction[] {
+function levelDirections(level: SearchLevel): readonly Direction[] {
   return level === 3 ? ALL_DIRECTIONS : SIMPLE_DIRECTIONS;
 }
 
@@ -50,7 +50,7 @@ export const SEARCH_WORDS: readonly string[] = WORDS.map((entry) => entry.word).
 /** Grid letters are capitals (the list keeps the word's own spelling, e.g. "Suzy"). */
 export const gridLetters = (word: string) => word.toUpperCase();
 
-export type PlacedWord = Readonly<{
+type PlacedWord = Readonly<{
   word: string;
   start: Cell;
   direction: Direction;
@@ -65,9 +65,9 @@ export type Puzzle = Readonly<{
 }>;
 
 /** Why a filled grid was thrown away (for the generator statistics in the tests). */
-export type Rejection = 'placement' | 'repeat' | 'other' | 'rude';
+type Rejection = 'placement' | 'repeat' | 'other' | 'rude';
 
-export type GenerateStats = { attempts: number; rejected: Record<Rejection, number> };
+type GenerateStats = { attempts: number; rejected: Record<Rejection, number> };
 
 const LETTERS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 const inside = (n: number) => n >= 0 && n < GRID;
@@ -75,7 +75,7 @@ const pick = <T>(items: readonly T[], rng: () => number): T =>
   items[Math.min(items.length - 1, Math.floor(rng() * items.length))];
 
 /** The cells of a word of `length` letters from `start` in `direction` (may leave the grid). */
-export function wordCells(start: Cell, direction: Direction, length: number): Cell[] {
+function wordCells(start: Cell, direction: Direction, length: number): Cell[] {
   return Array.from({ length }, (_, i) => ({
     row: start.row + i * direction.dr,
     col: start.col + i * direction.dc,
@@ -83,7 +83,7 @@ export function wordCells(start: Cell, direction: Direction, length: number): Ce
 }
 
 /** Every straight reading of the grid: each line in each of the 8 directions, edge to edge. */
-export function gridLines(rows: readonly string[]): string[] {
+function gridLines(rows: readonly string[]): string[] {
   const lines: string[] = [];
   for (const direction of ALL_DIRECTIONS)
     for (let row = 0; row < GRID; row++)
@@ -99,7 +99,7 @@ export function gridLines(rows: readonly string[]): string[] {
 }
 
 /** How often `word` can be read in the grid, any of the 8 directions. */
-export function countWord(rows: readonly string[], word: string, lines = gridLines(rows)): number {
+function countWord(rows: readonly string[], word: string, lines = gridLines(rows)): number {
   const letters = gridLetters(word);
   let count = 0;
   for (const line of lines)

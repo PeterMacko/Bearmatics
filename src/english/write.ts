@@ -1,6 +1,6 @@
 import type { AnswerResult } from '../math/engine';
 import { shuffled } from '../random';
-import { SESSION_SIZES } from './listen';
+import { SESSION_SIZES } from '../session';
 import { WORDS } from './words';
 
 /** One listen-and-write question (English level 3): only the sound is given. */

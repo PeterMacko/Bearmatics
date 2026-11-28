@@ -21,7 +21,7 @@ export type PatternItem =
   | Readonly<{ kind: 'count'; motif: PictureTheme; count: number }>
   | Readonly<{ kind: 'arrow'; arrow: Arrow }>;
 
-export type PatternType =
+type PatternType =
   | 'AB'
   | 'AAB' // also ABB: the same rows with the two pictures swapped (see L3 pool)
   | 'ABC'
@@ -41,7 +41,7 @@ export type PatternRow = Readonly<{
 }>;
 
 /** A row without its choices (the pools). */
-export type PatternPuzzle = Omit<PatternRow, 'choices'>;
+type PatternPuzzle = Omit<PatternRow, 'choices'>;
 
 /** A stable text key per picture; the answer string handed to the session checker. */
 export function itemKey(item: PatternItem): string {
@@ -101,7 +101,7 @@ export const LEVEL3_POOL: readonly PatternPuzzle[] = (() => {
 })();
 
 /** Level 4: the "?" may stand at places 5-8 (index 4-7). */
-export const LEVEL4_GAPS: readonly number[] = [4, 5, 6, 7];
+const LEVEL4_GAPS: readonly number[] = [4, 5, 6, 7];
 
 /**
  * Level 4: 220 distinct 8-place sequences (ABC 60, AABB 40, ABCB 120) x 4 "?" places = 880.
@@ -155,12 +155,6 @@ export const LEVEL5_POOL: readonly PatternPuzzle[] = (() => {
   return pool;
 })();
 
-export const PATTERN_POOLS: Readonly<Record<PatternLevel, readonly PatternPuzzle[]>> = {
-  3: LEVEL3_POOL,
-  4: LEVEL4_POOL,
-  5: LEVEL5_POOL,
-};
-
 /** How many choices a row of each level offers. */
 export const CHOICE_COUNT: Readonly<Record<PatternLevel, number>> = { 3: 3, 4: 4, 5: 3 };
 
@@ -210,16 +204,14 @@ export function withChoices(puzzle: PatternPuzzle, rng: () => number): PatternRo
  * How many rows of each group a lesson has, easier first (Dev's split): L3 AB / AAB-ABB;
  * L4 "?" at the end / inside; L5 growing / shrinking / turning arrows.
  */
-export const LESSON_MIX: Readonly<
-  Record<PatternLevel, Readonly<Record<number, readonly number[]>>>
-> = {
+const LESSON_MIX: Readonly<Record<PatternLevel, Readonly<Record<number, readonly number[]>>>> = {
   3: { 5: [2, 3], 10: [4, 6], 20: [8, 12] },
   4: { 5: [2, 3], 10: [4, 6], 20: [8, 12] },
   5: { 5: [2, 1, 2], 10: [3, 3, 4], 20: [6, 6, 8] },
 };
 
 /** The lesson groups of a level's pool in the order they are met. */
-export function lessonGroups(level: PatternLevel): readonly (readonly PatternPuzzle[])[] {
+function lessonGroups(level: PatternLevel): readonly (readonly PatternPuzzle[])[] {
   if (level === 3)
     return [LEVEL3_POOL.filter((r) => r.type === 'AB'), LEVEL3_POOL.filter((r) => r.type !== 'AB')];
   if (level === 4)

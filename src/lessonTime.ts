@@ -8,9 +8,9 @@ import { fill, pointsText, type Copy } from './i18n';
  */
 export const LESSON_START_KEY = 'bearmatics.lessonStart';
 
-export type LessonStart = { startedAt: number; size: number };
+type LessonStart = { startedAt: number; size: number };
 /** Whole seconds: the total, and the average per chosen example. */
-export type LessonTime = { total: number; average: number };
+type LessonTime = { total: number; average: number };
 
 /** Storage can be unavailable (privacy modes): the time line then just stays away. */
 function storage(): Storage | null {

@@ -11,10 +11,10 @@ export const BALLOON_SHOW_MS = 3_000;
 /** The fade out (the pop in takes 0.3 s too; reduced motion: neither). */
 export const BALLOON_FADE_MS = 300;
 
-export type BalloonPhase = 'hidden' | 'shown' | 'fading';
+type BalloonPhase = 'hidden' | 'shown' | 'fading';
 
 /** Timers the hook uses (fake ones in tests). */
-export type BalloonClock = {
+type BalloonClock = {
   setTimeout: (run: () => void, ms: number) => number;
   clearTimeout: (id: number) => void;
 };

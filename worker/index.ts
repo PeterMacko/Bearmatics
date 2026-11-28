@@ -2,7 +2,8 @@
 // http can be sent to https (SCRUM-198): workers.dev has no "Always Use HTTPS" setting.
 // /api goes to the API; every other address is handed to the static assets unchanged.
 // The entry module may export only the handler, so the logic lives in api.ts.
-import { handleApi, isApiPath, json, type Env } from './api';
+import { handleApi, isApiPath, type Env } from './api';
+import { json } from './http';
 
 // Plain http stays allowed only on this computer (wrangler dev, local e2e servers).
 const LOCAL_HOSTS = new Set(['localhost', '127.0.0.1', '[::1]']);

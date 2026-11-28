@@ -5,7 +5,7 @@ import type { Session } from '../session';
 import { checkSelection, sameCell, type Cell, type Puzzle, type SearchLevel } from './grid';
 
 /** What the last action did (the view reacts once per `seq`). */
-export type SearchEvent =
+type SearchEvent =
   | { kind: 'found'; word: number; seq: number }
   | { kind: 'wrong'; cells: readonly Cell[]; seq: number };
 

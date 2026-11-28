@@ -86,6 +86,3 @@ export function randomLooks(count: number, random: () => number = Math.random): 
 
 export const sameLook = (a: BearLook, b: BearLook) =>
   LOOK_PARTS.every((part) => a[part] === b[part]);
-
-/** "0.0.3.0.0": the parts in order, for data attributes and React keys. */
-export const lookKey = (look: BearLook) => LOOK_PARTS.map((part) => look[part]).join('.');

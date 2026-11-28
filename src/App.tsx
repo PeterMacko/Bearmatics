@@ -67,6 +67,7 @@ import {
   closeMiss,
   isPexesoLevel,
   newGame,
+  PEXESO_CLOSE_MS,
   PEXESO_LEVELS,
   PEXESO_PAIRS,
   tapCard,
@@ -566,7 +567,6 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setPexesoLevel(shown);
     setPexeso(newGame(pairs, Math.random));
   };
-  const PEXESO_CLOSE_MS = 1500;
   const tapPexeso = (index: number) => {
     const before = pexesoRef.current;
     if (!before) return;

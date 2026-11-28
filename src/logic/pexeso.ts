@@ -16,6 +16,9 @@ export const PEXESO_PAIRS: Readonly<Record<PexesoLevel, PexesoPairs>> = { 6: 6, 
 /** Forgotten misses that cost nothing (the hearts): 1 / 2 / 3. */
 export const FREE_MISSES: Readonly<Record<PexesoPairs, number>> = { 6: 1, 10: 2, 15: 3 };
 
+/** How long the two cards of a miss stay open before they turn face down again. */
+export const PEXESO_CLOSE_MS = 1500;
+
 export const isPexesoLevel = (level: number): level is PexesoLevel =>
   (PEXESO_LEVELS as readonly number[]).includes(level);
 
@@ -40,7 +43,7 @@ export const PEXESO_PICTURES = [
 export type PexesoPicture = (typeof PEXESO_PICTURES)[number];
 
 /** What the last finished turn was (for the bear, the sounds and the polite message). */
-export type TurnResult =
+type TurnResult =
   Readonly<{ kind: 'pair'; picture: PexesoPicture }> | Readonly<{ kind: 'forgotten' | 'lucky' }>;
 
 export type PexesoGame = Readonly<{

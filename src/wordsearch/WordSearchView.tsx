@@ -18,9 +18,9 @@ import { currentPuzzle, puzzleSolved, type SearchLesson } from './lesson';
 import useSearchFit from './useSearchFit';
 
 /** How long a wrong pair flashes before it clears (scope 3: a soft flash). */
-export const FLASH_MS = 650;
+const FLASH_MS = 650;
 /** A pointer tap on the marked letter this soon after the tap that marked it is ignored. */
-export const TAP_GUARD_MS = 500;
+const TAP_GUARD_MS = 500;
 
 const CELLS: readonly Cell[] = Array.from({ length: GRID * GRID }, (_, i) => ({
   row: Math.floor(i / GRID),

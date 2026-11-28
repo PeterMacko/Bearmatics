@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 
 /** How long the popup stays open by itself (Peter's SCRUM-308 round 2: "small popup"). */
-export const AGE_POPUP_MS = 3000;
+const AGE_POPUP_MS = 3000;
 /** Room kept to the window edges and between the badge and the popup, in px. */
 const EDGE = 8;
 const GAP = 7;

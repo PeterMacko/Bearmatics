@@ -19,7 +19,7 @@ const SESSION_MS = SESSION_SECONDS * 1000;
 export const MAX_FAILURES = 5;
 export const LOCK_MINUTES = 15;
 
-interface AccountRow {
+export interface AccountRow {
   id: string;
   username: string | null;
   google_sub: string | null;
@@ -51,7 +51,7 @@ export const lookColumns = (look: BearLook) =>
   [oldBearFor(look), look.fur, look.background, look.head, look.neck, look.eyes] as const;
 
 /** What the browser may see about the signed-in account. */
-function publicAccount(row: AccountRow): Account {
+export function publicAccount(row: AccountRow): Account {
   return {
     kind: row.google_sub ? 'google' : 'password',
     username: row.username,
@@ -64,7 +64,7 @@ function publicAccount(row: AccountRow): Account {
 
 const now = () => Date.now();
 
-async function startSession(env: AccountEnv, accountId: string): Promise<string> {
+export async function startSession(env: AccountEnv, accountId: string): Promise<string> {
   const token = randomHex(32);
   await env.DB.prepare('INSERT INTO sessions (token_hash, account_id, expires_at) VALUES (?, ?, ?)')
     .bind(await sha256Hex(token), accountId, now() + SESSION_MS)
@@ -374,6 +374,3 @@ export const deleteAccount: SessionHandler = async (_request, env, session) => {
   ]);
   return json({ account: null }, 200, { 'set-cookie': endSessionCookie() });
 };
-
-// Exported for the Google sign-in module.
-export { publicAccount, startSession, type AccountRow };

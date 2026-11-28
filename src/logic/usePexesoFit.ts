@@ -4,16 +4,16 @@ import { watchResize } from '../watchResize';
 import { boardShape, type PexesoPairs } from './pexeso';
 
 /** Cards are never smaller than this (AC 3: 48 px touch targets); then the page may scroll. */
-export const MIN_CARD = 48;
+const MIN_CARD = 48;
 /** Largest card: phones (compact lessons) and larger windows. */
-export const MAX_CARD = { compact: 96, wide: 128 } as const;
+const MAX_CARD = { compact: 96, wide: 128 } as const;
 
 /**
  * The board's shape follows the layout viewport: portrait 3x4 / 4x5 / 5x6, landscape (and wide
  * windows) 4x3 / 5x4 / 6x5. Keyed on `documentElement.clientWidth/clientHeight` (never
  * innerWidth/innerHeight, which grow while a mobile browser zooms out an overflowing page).
  */
-export const isLandscape = () => {
+const isLandscape = () => {
   const root = document.documentElement;
   const width = root.clientWidth || window.innerWidth;
   const height = root.clientHeight || window.innerHeight;

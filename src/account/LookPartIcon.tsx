@@ -6,7 +6,7 @@ import { BACKGROUNDS, Eyes, Face, FURS, Head, INK, Neck } from './BearIcon';
 /** The pale tile behind faces, items and "None" (the background choices are their colour). */
 export const PART_TILE = '#f4efe9';
 /** Thin edge of every tile, so pale tiles and backgrounds read as tiles on the page. */
-export const TILE_EDGE = '#cfc4bb';
+const TILE_EDGE = '#cfc4bb';
 /** Outline round the faces (pale furs: polar, panda) and the colour of the "no" sign. */
 export const PART_OUTLINE = INK;
 export const NONE_SIGN = '#626178';

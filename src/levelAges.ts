@@ -16,7 +16,7 @@ export type AgeRow = {
   to: number;
 };
 
-export type AgeRange = { from: number; to: number };
+type AgeRange = { from: number; to: number };
 
 const row = (course: PointsCourse, shown: number, from: number, to: number): AgeRow => ({
   course,

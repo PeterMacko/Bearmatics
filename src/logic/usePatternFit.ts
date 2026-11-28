@@ -3,12 +3,12 @@ import { LAYOUT } from '../layoutSelectors';
 import { watchResize } from '../watchResize';
 
 /** Gap between the places of a row (narrower where 7 places would drop under 40 px). */
-export const PLACE_GAP = { wide: 6, narrow: 3 } as const;
+const PLACE_GAP = { wide: 6, narrow: 3 } as const;
 /** Smallest place: 7 places x 40 px fit a 320 px phone; dice groups (Level 5) stay larger.
  *  Level 4's 8 places stay on one line on phones too (Peter, SCRUM-307), so they may get smaller. */
-export const MIN_PLACE = { pictures: 40, eight: 28, dice: 56 } as const;
+const MIN_PLACE = { pictures: 40, eight: 28, dice: 56 } as const;
 /** Largest place on phones (compact lessons) and larger windows. */
-export const MAX_PLACE = {
+const MAX_PLACE = {
   pictures: { compact: 76, wide: 84 },
   dice: { compact: 96, wide: 120 },
 } as const;
