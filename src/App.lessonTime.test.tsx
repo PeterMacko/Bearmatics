@@ -5,7 +5,7 @@ import { LESSON_START_KEY } from './lessonTime';
 import * as math from './math/engine';
 import { fakeServer, reply } from './testing/fakeServer';
 import { openMathematics, openSmallMaths } from './testing/openMathematics';
-import { tap } from './testing/ui';
+import { button, tap } from './testing/ui';
 
 // SCRUM-211: lesson time and average time per exercise on the summary. A fake clock (Date.now)
 // moves only where the test says so.
@@ -41,7 +41,6 @@ const summaryBack = () =>
   );
 const timeLine = () => document.querySelector('.lesson-time');
 const stored = () => JSON.parse(sessionStorage.getItem(LESSON_START_KEY) ?? 'null');
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const summaryHeading = () => screen.queryByRole('heading', { name: 'Look how far you’ve come!' });
 
 /** Answers every maths exercise right (records the real generated lesson to know the answers). */

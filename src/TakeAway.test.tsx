@@ -4,7 +4,7 @@ import * as math from './math/engine';
 import { FeedbackAudio } from './audio';
 import App from './App';
 import { openSmallMaths } from './testing/openMathematics';
-import { click } from './testing/ui';
+import { click, flush } from './testing/ui';
 
 // SCRUM-156: Small maths level 2 "Take away" with the picture basket.
 type Ex = math.Exercise;
@@ -21,10 +21,6 @@ const answer = (value: string) => {
   fireEvent.change(screen.getByRole('textbox'), { target: { value } });
   click('Check answer');
 };
-const flush = () =>
-  act(async () => {
-    await Promise.resolve();
-  });
 
 async function start(exercises: Ex[]) {
   vi.spyOn(math, 'generateSession').mockReturnValue(exercises);

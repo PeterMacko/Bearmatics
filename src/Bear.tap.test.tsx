@@ -5,6 +5,7 @@ import { FeedbackAudio } from './audio';
 import Bear from './Bear';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
+import { flush } from './testing/ui';
 
 // SCRUM-172: tapping the bear shows "Grrr!" / "Brum brum!", closes its eyes happily, hops (not
 // with reduced motion) and growls (follows Mute). Secret and harmless: never during an answer
@@ -134,10 +135,6 @@ function startLesson() {
   fireEvent.click(screen.getByRole('radio', { name: '5 exercises' }));
   fireEvent.click(screen.getByRole('button', { name: 'Let’s count' }));
 }
-const flush = () =>
-  act(async () => {
-    await Promise.resolve();
-  });
 
 test('in a lesson: a tap keeps focus, the typed answer and the exercise; SK says Brum brum', async () => {
   vi.spyOn(FeedbackAudio.prototype, 'setEnabled').mockResolvedValue(true);

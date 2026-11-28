@@ -8,6 +8,7 @@ import { describeLook } from './bearLook';
 import { checkGrownUp, grownUpQuestion } from './grownUp';
 import { ProfileView } from './ProfileView';
 import { releaseStrayTaps } from '../useShadeClose';
+import { button } from '../testing/ui';
 
 const api = vi.hoisted(() => ({
   updateProfile: vi.fn(),
@@ -64,7 +65,6 @@ function show(account: Account = KID, language: 'en' | 'sk' = 'en', random = seq
   return { onAccount, onSignedOut };
 }
 const t = copy.en.account;
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const dialog = () => screen.getByRole('dialog');
 /** Lets the window's 600 ms double-tap guard pass. */
 const settle = () => {

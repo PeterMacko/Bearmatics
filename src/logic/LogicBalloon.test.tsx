@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-import { act, fireEvent, render, renderHook, screen } from '@testing-library/react';
+import { fireEvent, renderHook, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest';
-import App from '../App';
-import { tap } from '../testing/ui';
+import { advance, tap } from '../testing/ui';
 import * as bearPath from './bearPath';
 import type { BearPuzzle } from './bearPath';
 import { DEMO_KEYS } from '../demoSeen';
@@ -19,6 +18,7 @@ import {
   balloonSide,
   useIdleBalloon,
 } from './useIdleBalloon';
+import { openLogic } from '../testing/openCourse';
 
 // SCRUM-289 / SCRUM-294: the picture demo once per device, and the "?" balloon.
 
@@ -26,7 +26,6 @@ const at = (row: number, col: number) => ({ row, col });
 /** Bear at row 2, column 1; honey at row 3, column 3 (right, right, down). */
 const PUZZLE: BearPuzzle = { bear: at(1, 0), honey: at(2, 2) };
 const exact = (name: string) => screen.getByRole('button', { name });
-const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 const demo = () => document.querySelector('.logic-demo');
 const board = () => document.querySelector('.logic-board');
 const balloon = () => document.querySelector<HTMLElement>('.logic-balloon');
@@ -44,10 +43,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function openLogic() {
-  render(<App />);
-  fireEvent.click(exact('Logic'));
-}
 /** Start (from the Logic menu); the demo, if it plays, is left running. */
 function start(size = '5 exercises') {
   fireEvent.click(screen.getByRole('radio', { name: size }));
@@ -63,9 +58,9 @@ describe('demo once per device', () => {
     start();
     expect(demo()).not.toBeNull();
     expect(board()).toBeNull();
-    wait(DEMO_MS - 10);
+    advance(DEMO_MS - 10);
     expect(localStorage.getItem(DEMO_SEEN_KEY)).toBeNull();
-    wait(20);
+    advance(20);
     expect(demo()).toBeNull();
     expect(localStorage.getItem(DEMO_SEEN_KEY)).toBe('1');
     back();
@@ -83,10 +78,10 @@ describe('demo once per device', () => {
   test('leaving during the demo is not "seen": the next lesson shows it again', () => {
     openLogic();
     start();
-    wait(DEMO_MS - 200);
+    advance(DEMO_MS - 200);
     back();
     expect(localStorage.getItem(DEMO_SEEN_KEY)).toBeNull();
-    wait(DEMO_MS);
+    advance(DEMO_MS);
     expect(localStorage.getItem(DEMO_SEEN_KEY)).toBeNull();
     start();
     expect(demo()).not.toBeNull();
@@ -96,7 +91,7 @@ describe('demo once per device', () => {
     openLogic();
     fireEvent.click(screen.getByRole('radio', { name: /^Level 2 · Around the stones/ }));
     start();
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     back();
     fireEvent.click(screen.getByRole('radio', { name: /^Level 1 · Bear goes to the honey/ }));
     start();
@@ -111,7 +106,7 @@ describe('demo once per device', () => {
     plan('Right');
     tap('Show me');
     expect(screen.getByRole('img', { name: /^Demo/ })).toBeInTheDocument();
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     expect(demo()).toBeNull();
     expect(screen.getByRole('list', { name: /^Arrows:/ })).toHaveAccessibleName('Arrows: right');
   });
@@ -132,7 +127,7 @@ describe('demo once per device', () => {
     openLogic();
     start();
     expect(demo()).not.toBeNull();
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     expect(board()).not.toBeNull();
     back();
     start();
@@ -145,14 +140,14 @@ describe('the "?" balloon', () => {
     openLogic();
     start();
     expect(balloon()).toBeNull(); // hidden while the demo plays
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     expect(balloon()).not.toBeNull();
     expect(balloon()).toHaveAttribute('data-phase', 'shown');
-    wait(BALLOON_SHOW_MS - 20);
+    advance(BALLOON_SHOW_MS - 20);
     expect(balloon()).toHaveAttribute('data-phase', 'shown');
-    wait(30);
+    advance(30);
     expect(balloon()).toHaveAttribute('data-phase', 'fading');
-    wait(BALLOON_FADE_MS);
+    advance(BALLOON_FADE_MS);
     expect(balloon()).toBeNull();
   });
 
@@ -186,7 +181,7 @@ describe('the "?" balloon', () => {
     start(); // the bear appears at 0 s: first pop
     let now = 0;
     const until = (t: number) => {
-      wait(t - now);
+      advance(t - now);
       now = t;
     };
     until(BALLOON_SHOW_MS + BALLOON_FADE_MS);
@@ -223,53 +218,53 @@ describe('the "?" balloon', () => {
     // Puzzle 1 right, puzzle 2 wrong first (review later), then right.
     plan('Right', 'Right', 'Down');
     tap('Go');
-    wait(STEP_MS * 4 + 200);
+    advance(STEP_MS * 4 + 200);
     expect(balloon()).toBeNull(); // hidden once solved
     tap('Next exercise');
     expect(balloon()).toBeNull();
-    wait(BALLOON_IDLE_MS - 10);
+    advance(BALLOON_IDLE_MS - 10);
     expect(balloon()).toBeNull();
-    wait(20);
+    advance(20);
     expect(balloon()).toHaveAttribute('data-phase', 'shown');
     fireEvent.pointerDown(document.body);
     plan('Down');
     tap('Go');
     expect(balloon()).toBeNull(); // hidden while the bear walks
-    wait(STEP_MS * 2 + BACK_MS + 200);
+    advance(STEP_MS * 2 + BACK_MS + 200);
     tap('Remove last arrow');
     for (let i = 1; i < 5; i++) {
       plan('Right', 'Right', 'Down');
       tap('Go');
-      wait(STEP_MS * 4 + 200);
+      advance(STEP_MS * 4 + 200);
       tap(i < 4 ? 'Next exercise' : 'Review tricky ones');
     }
     expect(screen.getByText('Review · 1 to practise')).toBeInTheDocument();
     expect(balloon()).toBeNull();
-    wait(BALLOON_IDLE_MS - 10);
+    advance(BALLOON_IDLE_MS - 10);
     expect(balloon()).toBeNull();
-    wait(20);
+    advance(20);
     expect(balloon()).not.toBeNull();
   });
 
   test('hidden during Show me, during the walk and after solving; no first pop again after Show me', () => {
     openLogic();
     start();
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     expect(balloon()).not.toBeNull();
     tap('Show me');
     expect(balloon()).toBeNull();
-    wait(DEMO_MS + 10);
+    advance(DEMO_MS + 10);
     expect(balloon()).toBeNull(); // the bear "first appears" only once
-    wait(BALLOON_IDLE_MS - 100);
+    advance(BALLOON_IDLE_MS - 100);
     expect(balloon()).toBeNull();
-    wait(100); // 30 s after the demo ended
+    advance(100); // 30 s after the demo ended
     expect(balloon()).not.toBeNull();
     plan('Right', 'Right', 'Down');
     tap('Go');
     expect(balloon()).toBeNull();
-    wait(STEP_MS * 4 + 200);
+    advance(STEP_MS * 4 + 200);
     expect(exact('Next exercise')).toBeInTheDocument();
-    wait(BALLOON_IDLE_MS * 3);
+    advance(BALLOON_IDLE_MS * 3);
     expect(balloon()).toBeNull();
   });
 

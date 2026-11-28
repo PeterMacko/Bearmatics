@@ -2,10 +2,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { expect, test, vi } from 'vitest';
 import App from './App';
 import { openMathematics } from './testing/openMathematics';
+import { button } from './testing/ui';
 
 // CR-12: both ways out of a lesson (the leave dialog and Back without progress) end in one
 // place; the next lesson always starts with an empty answer.
-const button = (name: string | RegExp) => screen.getByRole('button', { name });
 const leaveThroughDialog = () => {
   fireEvent.click(button('Choose level'));
   expect(screen.getByRole('dialog', { name: 'Leave this trail?' })).toBeInTheDocument();

@@ -5,10 +5,11 @@ import { FeedbackAudio } from '../audio';
 import { DEMO_KEYS } from '../demoSeen';
 import { multiplierFor } from '../progress/multipliers';
 import { fakeServer, reply } from '../testing/fakeServer';
-import { tap } from '../testing/ui';
+import { advance, tap } from '../testing/ui';
 import { PATTERN_DEMO_MS, PATTERN_STILL_DEMO_MS } from './PatternDemo';
 import * as patterns from './patterns';
 import type { PatternItem, PatternRow } from './patterns';
+import { openLogic } from '../testing/openCourse';
 
 // SCRUM-299 / SCRUM-302: Logic Levels 3-5 "What comes next?" in the app.
 
@@ -57,7 +58,6 @@ const choice = (name: string) =>
     screen.getByRole('group', { name: /^(Pictures to choose from|Obrázky na výber)$/ }),
   ).getByRole('button', { name });
 const feedback = () => document.getElementById('answer-feedback')!;
-const wait = (ms: number) => act(() => vi.advanceTimersByTime(ms));
 const pick = (name: string, detail = 1) => fireEvent.click(choice(name), { detail });
 
 let rows: (level: number) => PatternRow = () => ROW3;
@@ -74,15 +74,6 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function openLogic(lang: 'en' | 'sk' = 'en') {
-  render(<App />);
-  if (lang === 'sk') {
-    fireEvent.click(exact('Settings'));
-    fireEvent.click(exact('Slovenčina'));
-    fireEvent.click(exact('Zavrieť nastavenia'));
-    fireEvent.click(exact('Logika'));
-  } else fireEvent.click(exact('Logic'));
-}
 /** Picks a level and 5 exercises and starts (the demo, if it plays, keeps running). */
 function start(level = 3, lang: 'en' | 'sk' = 'en') {
   const word = lang === 'sk' ? 'Úroveň' : 'Level';
@@ -285,9 +276,9 @@ describe('demo once per device (shared helper, own key)', () => {
     expect(demo()).not.toBeNull();
     expect(screen.getByRole('img', { name: /^Demo: a finger taps/ })).toBeInTheDocument();
     expect(row()).toBeNull();
-    wait(PATTERN_DEMO_MS - 10);
+    advance(PATTERN_DEMO_MS - 10);
     expect(localStorage.getItem('bearmatics-pattern-demo-seen')).toBeNull();
-    wait(20);
+    advance(20);
     expect(demo()).toBeNull();
     expect(row()).toHaveFocus();
     expect(localStorage.getItem('bearmatics-pattern-demo-seen')).toBe('1');
@@ -304,9 +295,9 @@ describe('demo once per device (shared helper, own key)', () => {
   test('leaving mid-demo is not "seen"', () => {
     openLogic();
     start();
-    wait(PATTERN_DEMO_MS - 200);
+    advance(PATTERN_DEMO_MS - 200);
     back();
-    wait(PATTERN_DEMO_MS);
+    advance(PATTERN_DEMO_MS);
     expect(localStorage.getItem('bearmatics-pattern-demo-seen')).toBeNull();
     start();
     expect(demo()).not.toBeNull();
@@ -317,7 +308,7 @@ describe('demo once per device (shared helper, own key)', () => {
     openLogic();
     start(3);
     expect(demo()).not.toBeNull();
-    wait(PATTERN_DEMO_MS + 10);
+    advance(PATTERN_DEMO_MS + 10);
     back();
     localStorage.removeItem('bearmatics-logic-demo-seen');
     fireEvent.click(screen.getByRole('radio', { name: /^Level 1 ·/ }));
@@ -335,7 +326,7 @@ describe('demo once per device (shared helper, own key)', () => {
     expect(document.querySelector('.pattern-choice')).toHaveAttribute('aria-disabled', 'true');
     pick('Pirate'); // no answer during the demo
     expect(exact('Show me')).toHaveAttribute('aria-disabled', 'true');
-    wait(PATTERN_DEMO_MS + 10);
+    advance(PATTERN_DEMO_MS + 10);
     expect(demo()).toBeNull();
     expect(feedback()).toHaveTextContent('');
     pick('Pirate');
@@ -358,7 +349,7 @@ describe('demo once per device (shared helper, own key)', () => {
     openLogic();
     start();
     expect(demo()).not.toBeNull();
-    wait(PATTERN_DEMO_MS + 10);
+    advance(PATTERN_DEMO_MS + 10);
     expect(row()).not.toBeNull();
     back();
     start();
@@ -381,9 +372,9 @@ describe('demo once per device (shared helper, own key)', () => {
     openLogic();
     start();
     expect(document.querySelectorAll('.pattern-demo-still .pattern-demo-frame')).toHaveLength(3);
-    wait(PATTERN_DEMO_MS + 10);
+    advance(PATTERN_DEMO_MS + 10);
     expect(demo()).not.toBeNull();
-    wait(PATTERN_STILL_DEMO_MS - PATTERN_DEMO_MS);
+    advance(PATTERN_STILL_DEMO_MS - PATTERN_DEMO_MS);
     expect(demo()).toBeNull();
     pick('Pirate');
     expect(document.querySelector('.pattern-arrive')).not.toBeNull();
