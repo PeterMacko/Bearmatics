@@ -3,7 +3,8 @@ import { useBearTap } from './useBearTap';
 import { useMenuWink } from './useMenuWink';
 
 /** Original SVG artwork and expressions created for Bearmatics. */
-type BearMood = 'neutral' | 'happy' | 'sad';
+/** SCRUM-324: 'thinking' = a kind "hmm" (Pexeso miss): eyes look up, no frown. */
+export type BearMood = 'neutral' | 'happy' | 'sad' | 'thinking';
 export default function Bear({
   mood = 'neutral',
   idleWink = false,
@@ -122,6 +123,11 @@ export default function Bear({
                 <path d="M90 121q7-12 14 0" />
                 <path d="M156 121q7-12 14 0" />
               </g>
+            ) : mood === 'thinking' ? (
+              <g fill="#382a22" className="bear-thinking-eyes">
+                <ellipse cx="100" cy="114" rx="6" ry="8" />
+                <ellipse cx="166" cy="114" rx="6" ry="8" />
+              </g>
             ) : (
               <g fill="#382a22">
                 <ellipse cx="97" cy="119" rx="6" ry="8" />
@@ -171,7 +177,9 @@ export default function Bear({
                     ? 'M130 146v7m-13 11q13-13 26 0'
                     : mood === 'happy'
                       ? 'M130 146v10m-17 0q17 23 34 0'
-                      : 'M130 146v9m-10 4q10 5 20 0'
+                      : mood === 'thinking'
+                        ? 'M130 146v9m-9 4q9 3 18 0'
+                        : 'M130 146v9m-10 4q10 5 20 0'
                 }
                 fill="none"
                 stroke="#382a22"

@@ -189,6 +189,9 @@ export default function AboutPage({ language }: { language: Language }) {
                 {level(3, t.logicLevels[3], a.logicDetail3)}
                 {level(4, t.logicLevels[4], a.logicDetail4)}
                 {level(5, t.logicLevels[5], a.logicDetail5)}
+                {([6, 7, 8] as const).map((shown) =>
+                  level(shown, t.logicLevels[shown], a.pexesoDetails[shown]),
+                )}
               </ul>
             </li>
             <li>
@@ -220,7 +223,16 @@ export default function AboutPage({ language }: { language: Language }) {
           </ul>
           <Shots
             language={language}
-            shots={['small-maths', 'take-away', 'logic', 'patterns', 'english', 'wordsearch']}
+            shots={[
+              'small-maths',
+              'take-away',
+              'logic',
+              'patterns',
+              'logic-menu',
+              'pexeso',
+              'english',
+              'wordsearch',
+            ]}
           />
         </section>
 

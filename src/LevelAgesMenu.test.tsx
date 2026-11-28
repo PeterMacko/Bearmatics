@@ -59,7 +59,7 @@ const rows = () =>
   });
 
 for (const language of ['en', 'sk'] as const)
-  test(`all 21 level rows show their age badge and screen-reader text (${language})`, async () => {
+  test(`all 24 level rows (SCRUM-324: + Logic 6-8) show their age badge and screen-reader text (${language})`, async () => {
     server(false);
     render(<App />);
     await act(async () => {});
@@ -92,7 +92,7 @@ for (const language of ['en', 'sk'] as const)
       }
       back(t.backToCourses);
     }
-    expect(seen).toBe(21);
+    expect(seen).toBe(24);
   });
 
 test('with the age badge the multiplier signs, their screen-reader text and level choice are unchanged', async () => {

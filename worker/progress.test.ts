@@ -141,6 +141,26 @@ describe('points (SCRUM-117)', () => {
     expect(await total(cookie)).toBe(12 + 23 + 45);
   });
 
+  // SCRUM-324: Pexeso saves its pair count (6 / 10 / 15) as the size, capped like any lesson at
+  // ceil(9/4 x size) = 14 / 23 / 34.
+  it('accepts Pexeso sizes 6 / 10 / 15 up to 14 / 23 / 34 points and rejects 15 / 24 / 35', async () => {
+    const cookie = await newPlayer();
+    for (const [size, most] of [
+      [6, 14],
+      [10, 23],
+      [15, 34],
+    ] as const) {
+      const id = await lesson(cookie, size);
+      const tooMany = await finish(cookie, { lessonId: id, size, points: most + 1 });
+      expect(tooMany.status, `${size}: ${most + 1}`).toBe(400);
+      const ok = await finish(cookie, { lessonId: id, size, points: most });
+      expect(ok.status, `${size}: ${most}`).toBe(200);
+      expect(await read(ok)).toMatchObject({ added: most });
+    }
+    expect(await total(cookie)).toBe(14 + 23 + 34);
+    for (const size of [4, 7, 12, 16, 30]) expect((await start(cookie, size)).status).toBe(400);
+  });
+
   it('tells the app the Slovak day (SCRUM-202 play counts change at Slovak midnight)', async () => {
     const cookie = await newPlayer();
     const day = slovakDay(Date.now());

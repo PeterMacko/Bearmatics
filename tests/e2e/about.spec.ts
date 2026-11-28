@@ -154,7 +154,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
   const boxes = await page
     .locator('main figure img')
     .evaluateAll((images) => images.map((image) => image.getBoundingClientRect().toJSON()));
-  expect(boxes).toHaveLength(11); // SCRUM-309: Bear picks a game
+  expect(boxes).toHaveLength(13); // SCRUM-309: Bear picks a game; SCRUM-324: Logic menu, Pexeso
   for (const box of boxes) {
     expect(box.width).toBeGreaterThanOrEqual(260);
     expect(box.width).toBeLessThanOrEqual(300);
@@ -166,7 +166,7 @@ async function expectReadableShots(page: Page, oneRow: boolean) {
 /** Scrolls every screenshot into view (they load lazily) and waits until each has loaded. */
 async function expectImagesLoaded(page: Page, lang: Lang) {
   const images = page.locator('main img');
-  await expect(images).toHaveCount(11);
+  await expect(images).toHaveCount(13);
   for (const image of await images.all()) {
     await image.scrollIntoViewIfNeeded();
     await expect
@@ -382,14 +382,16 @@ for (const lang of LANGS)
     const links = await page
       .locator('a[href]')
       .evaluateAll((list) => list.map((a) => a.getAttribute('href')));
-    // Bearmatics, Slovenčina, English, play (bar), the 11 full-size screenshots (SCRUM-241: Word
-    // search; SCRUM-309: Bear picks a game), What we store, e-mail.
+    // Bearmatics, Slovenčina, English, play (bar), the 13 full-size screenshots (SCRUM-241: Word
+    // search; SCRUM-309: Bear picks a game; SCRUM-324: Logic menu, Pexeso), What we store, e-mail.
     const shots = [
       'course',
       'small-maths',
       'take-away',
       'logic',
       'patterns',
+      'logic-menu',
+      'pexeso',
       'english',
       'wordsearch',
       'bear-picks',
@@ -403,9 +405,9 @@ for (const lang of LANGS)
       `/?lang=${lang}`,
       ...[...shots, 'leaderboard'].map((shot) => `/about/${lang}/${shot}.webp`),
       '#about-store',
-      links[16],
+      links[18],
     ]);
-    expect(links[16]).toMatch(/^mailto:/);
+    expect(links[18]).toMatch(/^mailto:/);
     const reached: (string | null)[] = [];
     // WebKit-style "Tab skips links" does not apply to Chromium/Firefox on Linux.
     for (let i = 0; i < links.length; i++) {
@@ -459,8 +461,8 @@ for (const lang of LANGS)
 test('a screenshot opens its full-size file in a new tab (O1)', async ({ page, context }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/about/sk');
-  // The last of the 11 screenshots (SCRUM-309 added Bear picks a game).
-  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(10);
+  // The last of the 13 screenshots (SCRUM-309 added Bear picks a game, SCRUM-324 two Logic ones).
+  const link = page.getByRole('link', { name: /otvorí sa na novej karte/ }).nth(12);
   await expect(link).toHaveAttribute('href', '/about/sk/leaderboard.webp');
   await link.scrollIntoViewIfNeeded();
   const [tab] = await Promise.all([context.waitForEvent('page'), link.click()]);

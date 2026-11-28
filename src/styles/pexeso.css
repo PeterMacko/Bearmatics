@@ -1,0 +1,289 @@
+/* SCRUM-324: Logic Levels 6-8 Pexeso (memory game). Part of index.css (after patterns.css).
+   The card size (--card) and the board shape (--cols x --rows) come from usePexesoFit; cards
+   never go below 48 px (then the page may scroll). Own layout blocks (:has(.pexeso-practice)). */
+/* Levels without an exercise count (Pexeso): the count keeps its room, invisible. */
+.session-options.session-options-off {
+  visibility: hidden;
+}
+.pexeso-practice {
+  --card: 64px;
+  --card-gap: 6px;
+  --cols: 3;
+  --rows: 4;
+  container: pexeso / inline-size;
+}
+.pexeso-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.pexeso-pairs {
+  font-weight: 800;
+  color: var(--blue-ink);
+  white-space: nowrap;
+}
+.pexeso-score {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.pexeso-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 2px 10px 2px 6px;
+  border-radius: 999px;
+  background: #fff3d3;
+  border: 1.5px solid #e2b84f;
+  color: #6a4a00;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.pexeso-chip svg {
+  width: 20px;
+  height: 20px;
+  fill: #ffc93c;
+  stroke: #a87212;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+}
+/* A lost point: a soft pop (the chip is mounted anew for every value). No red minus. */
+.pexeso-chip[data-dropped] {
+  animation: pexeso-soft-pop 0.45s ease-out 1;
+}
+@keyframes pexeso-soft-pop {
+  0% {
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(0.88);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.pexeso-hearts {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.pexeso-heart {
+  width: 18px;
+  height: 18px;
+  fill: #f48fb1;
+  stroke: #b84d78;
+  stroke-width: 1.5;
+}
+/* A used free miss: the heart fades to an outline (gently, once). */
+.pexeso-heart[data-used] {
+  fill: none;
+  stroke: #c9b6c0;
+  animation: pexeso-heart-out 0.5s ease-out 1;
+}
+@keyframes pexeso-heart-out {
+  0% {
+    fill: #f48fb1;
+    stroke: #b84d78;
+    transform: scale(1);
+  }
+  40% {
+    transform: scale(1.25);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+.pexeso-help-button {
+  flex: 0 0 auto;
+  width: var(--target);
+  min-width: var(--target);
+  min-height: var(--target);
+  margin: 0;
+  padding: 4px;
+  /* The round "i" keeps its size at large text (its name is the button's label). */
+  font-size: 20px;
+}
+.pexeso-title {
+  margin: 4px 0 0;
+}
+.pexeso-title:focus {
+  outline: none;
+}
+.pexeso-title:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+.pexeso-stage {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  min-width: 0;
+  margin-top: 8px;
+}
+.pexeso-board {
+  display: grid;
+  grid-template-columns: repeat(var(--cols), var(--card));
+  grid-auto-rows: var(--card);
+  gap: var(--card-gap);
+  direction: ltr;
+}
+.pexeso-card {
+  position: relative;
+  display: block;
+  width: var(--card);
+  height: var(--card);
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  border: 2px solid #4f7fb8;
+  border-radius: 10px;
+  background: #5b8bc4;
+  box-shadow: 0 2px 0 #b9cde4;
+  cursor: pointer;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
+}
+.pexeso-card[data-state='open'] {
+  border-color: #6489b3;
+  background: var(--paper);
+}
+.pexeso-card[data-state='found'] {
+  border-color: #4caf50;
+  background: #eaf7e6;
+  box-shadow: none;
+  cursor: default;
+}
+.pexeso-card:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+.pexeso-face {
+  position: absolute;
+  inset: 7%;
+  display: block;
+  animation: pexeso-flip 0.22s ease-out 1;
+}
+.pexeso-card[data-state='down'] .pexeso-face {
+  inset: 0;
+}
+.pexeso-face svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+/* A card turns: it narrows to an edge and opens again on its other side (no 3D, cheap). */
+@keyframes pexeso-flip {
+  0% {
+    transform: scaleX(0.05);
+  }
+  100% {
+    transform: scaleX(1);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pexeso-face,
+  .pexeso-chip[data-dropped],
+  .pexeso-heart[data-used] {
+    animation: none;
+  }
+}
+
+/* The help window: two apple cards (a pair) and a card back, then one sentence. */
+.pexeso-help-picture {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin: 4px 0 10px;
+}
+.pexeso-help-card {
+  display: block;
+  width: 56px;
+  height: 56px;
+  padding: 5px;
+  box-sizing: border-box;
+  border: 2px solid #4caf50;
+  border-radius: 10px;
+  background: #eaf7e6;
+}
+.pexeso-help-back {
+  padding: 0;
+  border-color: #4f7fb8;
+  background: #5b8bc4;
+}
+.pexeso-help-card svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.pexeso-help-note {
+  font-weight: 700;
+}
+
+/* Phones (compact lessons), portrait: a smaller bear beside the status line; the board fills
+   the width under the title. */
+@media (orientation: portrait) {
+  .compact-practice:has(.pexeso-practice) {
+    --practice-bear-size: 96px;
+  }
+  .compact-practice .pexeso-practice {
+    position: relative;
+    --card-gap: 5px;
+  }
+  .compact-practice .workspace:has(.pexeso-practice) .companion {
+    z-index: 1;
+  }
+  .compact-practice .pexeso-practice .exercise-position {
+    font-size: 0.95rem;
+    min-height: 32px;
+  }
+  /* The help button at the top right (like Show me in the other Logic lessons). */
+  .compact-practice .pexeso-help-button {
+    position: absolute;
+    top: 0;
+    right: 0;
+  }
+}
+@media (orientation: portrait) and (max-height: 700px) {
+  .compact-practice:has(.pexeso-practice) {
+    --practice-bear-size: 64px;
+  }
+  .compact-practice .pexeso-practice .pexeso-title {
+    font-size: 1.15rem;
+  }
+}
+/* Short landscape phones: the bear stays in the left column (shared compact rules), but the
+   app bar's items fill that column, so the status (pairs, points, hearts, help) gets its own
+   narrow column right of the board instead of the shared position place under the bear. */
+@media (max-height: 500px) and (min-width: 480px) and (max-width: 950px) {
+  .compact-practice .pexeso-practice {
+    --card-gap: 4px;
+    --status-width: 104px;
+    position: relative;
+    margin-left: 110px;
+  }
+  .compact-practice .pexeso-practice .practice-header {
+    position: absolute;
+    top: 6px;
+    right: 0;
+    left: auto;
+    width: var(--status-width);
+    padding: 0;
+    min-height: 0;
+  }
+  .compact-practice .pexeso-status {
+    flex-direction: column;
+    align-items: flex-start;
+    min-height: 0;
+    font-size: 0.9rem;
+  }
+  .compact-practice .pexeso-score {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .compact-practice .pexeso-stage {
+    width: calc(100% - var(--status-width) - 8px);
+    margin-top: 6px;
+  }
+}

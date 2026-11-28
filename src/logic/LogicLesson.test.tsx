@@ -66,19 +66,20 @@ test('course choice: Small maths, Logic, Maths, English, Word search with the Lo
   render(<App />);
   const titles = [...document.querySelectorAll('.course-title')].map((e) => e.textContent);
   expect(titles).toEqual(['Small maths', 'Logic', 'Maths', 'English', 'Word search']);
+  // SCRUM-324: the card text also mentions the pairs (Pexeso, Levels 6-8).
   expect(exact('Logic')).toHaveAccessibleDescription(
-    'Think ahead: guide the bear to the honey with arrows',
+    'Think ahead: guide the bear to the honey, find the pairs',
   );
   expect(document.querySelector('.course-logic .course-icon svg')).not.toBeNull();
   fireEvent.click(button('Settings'));
   fireEvent.click(button('Slovenčina'));
   fireEvent.click(button('Zavrieť nastavenia'));
   expect(exact('Logika')).toHaveAccessibleDescription(
-    'Mysli dopredu: priveď medveďa šípkami k medu',
+    'Mysli dopredu: priveď medveďa k medu, nájdi dvojice',
   );
 });
 
-test('Logic menu: Level 1, sizes 5/10/20 (10 first), heading focused; Back returns to courses', () => {
+test('Logic menu: Level 1, sizes 5/10/20 (10 first), Levels 6-8 Pexeso, heading focused; Back returns to courses', () => {
   openLogic();
   expect(heading()).toHaveTextContent('Which puzzle shall we try?');
   expect(document.activeElement).toBe(heading());
@@ -96,6 +97,10 @@ test('Logic menu: Level 1, sizes 5/10/20 (10 first), heading focused; Back retur
     expect.stringMatching(
       /^5.*Growing and turning.*More, fewer or a turning arrow: pick the next one/,
     ),
+    // SCRUM-324: Pexeso / Matching pairs as Levels 6-8 (6 / 10 / 15 pictures).
+    expect.stringMatching(/^6.*Matching pairs.*6 pictures: turn two cards and find the pairs/),
+    expect.stringMatching(/^7.*Matching pairs.*10 pictures: turn two cards and find the pairs/),
+    expect.stringMatching(/^8.*Matching pairs.*15 pictures: turn two cards and find the pairs/),
   ]);
   expect(screen.getByText('Plan the way with arrows, up to 4 steps')).toBeInTheDocument();
   expect(

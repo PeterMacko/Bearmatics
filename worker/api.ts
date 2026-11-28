@@ -16,7 +16,7 @@ export interface Env extends GoogleEnv {
 }
 
 /** Schema version the code needs; /api/health reports an error until migrations reach it. */
-const EXPECTED_SCHEMA = '6';
+const EXPECTED_SCHEMA = '7';
 
 export { json };
 

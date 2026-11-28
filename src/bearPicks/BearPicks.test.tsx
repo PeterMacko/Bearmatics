@@ -8,15 +8,30 @@ import * as math from '../math/engine';
 import SummaryPoints from '../progress/SummaryPoints';
 import { staticFrame } from '../progress/animation';
 import { fakeServer, reply } from '../testing/fakeServer';
+import * as picker from './picker';
 import { BEAR_PICKS_KEY } from './storage';
 
 // SCRUM-309 "Bear picks a game": course-choice button, age screen, next-game screen, the mode
 // chain through lesson and summary, storage, double-tap guards and copy.
 
 let now = 1000;
+// SCRUM-324: Pexeso games (Logic 6-8) have no exercise count, so the tests about the count
+// choice pick only from the other games; Pexeso in the mode has its own tests (end of file).
+const realPickGame = picker.pickGame;
+const realPickAnother = picker.pickAnother;
+const NO_PEXESO = LEVEL_AGES.filter((r) => !(r.course === 'logic' && r.shown >= 6));
+const withoutPexeso = () => {
+  vi.spyOn(picker, 'pickGame').mockImplementation((age, exclude, rng) =>
+    realPickGame(age, exclude, rng, NO_PEXESO),
+  );
+  vi.spyOn(picker, 'pickAnother').mockImplementation((age, shown, last, rng) =>
+    realPickAnother(age, shown, last, rng, NO_PEXESO),
+  );
+};
 beforeEach(() => {
   now = 1000;
   vi.spyOn(performance, 'now').mockImplementation(() => now);
+  withoutPexeso();
 });
 afterEach(() => vi.restoreAllMocks());
 /** Time passes beyond the 600 ms after a screen change. */
@@ -160,6 +175,9 @@ describe('age screen and next-game screen', () => {
   });
 
   it('Choose another always shows a different game, pressed again and again; a double tap picks once', () => {
+    // Every game of the age, Pexeso included (SCRUM-324).
+    vi.mocked(picker.pickGame).mockRestore();
+    vi.mocked(picker.pickAnother).mockRestore();
     localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 9, size: 5 }));
     render(<App />);
     open();
@@ -171,7 +189,7 @@ describe('age screen and next-game screen', () => {
       expect(shownGame()).not.toBe(before);
       settle();
     }
-    // Age 9 has 11 games: they all come up.
+    // Age 9 has 14 games (SCRUM-324: with Logic 6-8): they all come up.
     expect(seen.size).toBe(LEVEL_AGES.filter((r) => r.to >= 9).length);
     const before = shownGame();
     fireEvent.click(button('Choose another'), { detail: 2 });
@@ -469,5 +487,33 @@ describe('copy', () => {
     expect(aboutCopy.en.shots['bear-picks'].caption).toBe('Bear picks a game');
     expect(aboutCopy.sk.shots['bear-picks'].caption).toBe('Medveď vyberie hru');
     expect(copy.en.bearPicks.button).toBe('Bear picks a game');
+  });
+});
+
+// SCRUM-324 (AC 10): the bear can pick Pexeso (Logic 6-8). Its count choice is hidden for that
+// game, Play starts the board (lesson size = pairs) and the remembered count stays.
+describe('Pexeso in Bear picks a game', () => {
+  it('no count choice for Pexeso; Play starts the board; the remembered count is unchanged', () => {
+    vi.mocked(picker.pickGame).mockReturnValue({ course: 'logic', shown: 7 });
+    localStorage.setItem(BEAR_PICKS_KEY, JSON.stringify({ age: 6, size: 20 }));
+    render(<App />);
+    open();
+    expect(shownGame()).toBe('Logic|Level 7 · Matching pairs');
+    // The count keeps its room (invisible, aria-hidden, inert): the buttons do not move.
+    expect(document.querySelector('.pick-sizes')).toHaveClass('session-options-off');
+    expect(document.querySelector('.pick-sizes')).toHaveAttribute('aria-hidden', 'true');
+    expect(screen.queryByRole('radio', { name: /exercises$/ })).toBeNull();
+    settle();
+    tap('Play');
+    const board = screen.getByRole('group', { name: 'Cards' });
+    expect(within(board).getAllByRole('button')).toHaveLength(20);
+    expect(document.querySelector('.level-pill')).toHaveTextContent('Level 7');
+    expect(stored()).toEqual({ age: 6, size: 20 });
+    // Back to the mode: another (non-Pexeso) game shows the remembered count again.
+    vi.mocked(picker.pickGame).mockReturnValue({ course: 'math', shown: 4 });
+    fireEvent.click(button('Back to courses'));
+    settle();
+    open();
+    expect(screen.getByRole('radio', { name: '20 exercises' })).toBeChecked();
   });
 });

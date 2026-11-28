@@ -82,7 +82,8 @@ export function formatClock(seconds: number): string {
   return hours > 0 ? `${hours}:${two(minutes)}:${two(rest)}` : `${minutes}:${two(rest)}`;
 }
 
-type TimeCopy = Copy['lessonTime'];
+// SCRUM-324: line/spoken may be another lesson's wording (Pexeso: per pair).
+type TimeCopy = Omit<Copy['lessonTime'], 'line' | 'spoken'> & { line: string; spoken: string };
 
 /** "3 minutes 25 seconds" / "3 minúty 25 sekúnd"; zero parts are left out (all zero: "0 seconds"). */
 type Units = { hour: readonly string[]; minute: readonly string[]; second: readonly string[] };

@@ -19,6 +19,7 @@ export default function SummaryView({
   onBack,
   againLabel,
   backLabel,
+  lines,
 }: {
   t: Copy;
   eyebrow?: string;
@@ -39,6 +40,8 @@ export default function SummaryView({
   /** SCRUM-309, "Bear picks a game": "Next game" and "Stop" instead of Play again / Choose level. */
   againLabel?: string;
   backLabel?: string;
+  /** SCRUM-324: the game's own score lines (Pexeso: pairs and turns) instead of first-try. */
+  lines?: ReactNode;
 }) {
   return (
     <section className="summary">
@@ -54,15 +57,19 @@ export default function SummaryView({
       <h2 ref={headingRef} tabIndex={-1} className="sr-only">
         {t.complete}
       </h2>
-      <p className="completed-total">
-        {total} {finishedLabel ?? t.finished}
-      </p>
-      <p className="first-try">
-        {t.first}{' '}
-        <strong>
-          {firstTry} / {total}
-        </strong>
-      </p>
+      {lines ?? (
+        <>
+          <p className="completed-total">
+            {total} {finishedLabel ?? t.finished}
+          </p>
+          <p className="first-try">
+            {t.first}{' '}
+            <strong>
+              {firstTry} / {total}
+            </strong>
+          </p>
+        </>
+      )}
       {time && (
         <p className="lesson-time">
           <span aria-hidden="true">{time.shown}</span>

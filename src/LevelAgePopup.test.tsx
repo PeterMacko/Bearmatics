@@ -73,7 +73,7 @@ const tap = (el: Element) => {
 };
 
 for (const lang of ['en', 'sk'] as const)
-  test(`a tap on the age badge shows the age popup per table and chooses the level (${lang}, 21 levels)`, () => {
+  test(`a tap on the age badge shows the age popup per table and chooses the level (${lang}, 24 levels; SCRUM-324: + Logic 6-8)`, () => {
     let seen = 0;
     for (const course of COURSES) {
       const { unmount } = render(<Menu course={course} lang={lang} />);
@@ -88,7 +88,7 @@ for (const lang of ['en', 'sk'] as const)
       }
       unmount();
     }
-    expect(seen).toBe(21);
+    expect(seen).toBe(24);
   });
 
 test('the badge stays aria-hidden and out of the tab order; accessible names unchanged', () => {

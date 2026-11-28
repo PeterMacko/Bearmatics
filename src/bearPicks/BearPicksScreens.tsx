@@ -97,6 +97,7 @@ export function PickNextScreen({
   onChangeAge,
   signedIn,
   signedOut,
+  showSizes = true,
 }: {
   t: Copy;
   game: Game;
@@ -115,6 +116,8 @@ export function PickNextScreen({
   signedIn: boolean;
   /** Known to be signed out: a note that signing in collects points. */
   signedOut: boolean;
+  /** SCRUM-324: false for Pexeso (no exercise count; the remembered count stays). */
+  showSizes?: boolean;
 }) {
   const c = t.bearPicks;
   const names = gameNames(t, game);
@@ -173,7 +176,13 @@ export function PickNextScreen({
           </span>
         </div>
         {signedOut && <p className="pick-note">{t.signInNote}</p>}
-        <fieldset className="session-options pick-sizes">
+        {/* SCRUM-324: Pexeso has no count: the fieldset keeps its room (invisible, out of reach),
+            so Play, Choose another and Stop never move under the finger between games. */}
+        <fieldset
+          className={`session-options pick-sizes${showSizes ? '' : ' session-options-off'}`}
+          aria-hidden={!showSizes || undefined}
+          inert={!showSizes || undefined}
+        >
           <legend>{t.count}</legend>
           {SESSION_SIZES.map((n) => (
             <label key={n}>

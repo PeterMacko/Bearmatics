@@ -34,13 +34,14 @@ const bonus = (course: PointsCourse, from: number, to: number): MultiplierRow =>
 
 /**
  * The table (Jira SCRUM-202; Peter's revision: Maths levels 4-7 all get the first-play bonus
- * and are never reduced). Anything without a row is x1 (Logic has no row, SCRUM-262; Word
- * search neither, SCRUM-241).
+ * and are never reduced). Anything without a row is x1 (Logic 1-5 have no row, SCRUM-262; Word
+ * search neither, SCRUM-241). SCRUM-324: Pexeso (Logic 6-8) gets the repeat penalty only.
  */
 export const MULTIPLIER_ROWS: readonly MultiplierRow[] = [
   ...repeated('small', 1, 2),
   ...repeated('math', 1, 3),
   ...repeated('english', 1, 2),
+  ...repeated('logic', 6, 8), // SCRUM-324 Pexeso (Matching pairs); Logic 1-5 stay x1
   bonus('small', 3, 3),
   bonus('math', 4, 7),
   bonus('english', 3, 3),

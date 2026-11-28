@@ -1,4 +1,5 @@
-type SoundOutcome = 'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl' | 'step';
+type SoundOutcome =
+  'correct' | 'incorrect' | 'complete' | 'badge' | 'pop' | 'growl' | 'step' | 'flip';
 
 /** Minimal part of HTMLAudioElement the growl needs (injectable for tests). */
 type GrowlAudio = {
@@ -48,6 +49,9 @@ export class FeedbackAudio {
     if (!this.enabled || !context || context.state !== 'running') return false;
     try {
       if (outcome === 'growl') return this.growl();
+      // SCRUM-324: the soft flip tick plays over a running sound (the pair's correct cue) instead
+      // of cutting it; its gain is bounded (0.18) and it lasts 80 ms.
+      if (outcome === 'flip') return this.flip(context);
       // Cancel older feedback so fast retries cannot pile up loud overlapping sounds.
       this.stop();
       const anchor = context.currentTime;
@@ -123,6 +127,34 @@ export class FeedbackAudio {
       this.stop();
       return false;
     }
+  }
+
+  /**
+   * SCRUM-324: a Pexeso card turns over: a short soft tick (a quick triangle blip with a smooth
+   * envelope, quieter than the pop; peak gain 0.18). It does not cut a running sound.
+   */
+  private flip(context: AudioContext): boolean {
+    const anchor = context.currentTime;
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    const note = { oscillator, gain };
+    this.active.add(note);
+    oscillator.type = 'triangle';
+    oscillator.frequency.setValueAtTime(1100, anchor);
+    oscillator.frequency.exponentialRampToValueAtTime(620, anchor + 0.05);
+    gain.gain.setValueAtTime(0, anchor);
+    gain.gain.linearRampToValueAtTime(0.18, anchor + 0.006);
+    gain.gain.exponentialRampToValueAtTime(0.001, anchor + 0.07);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.onended = () => {
+      this.active.delete(note);
+      oscillator.disconnect();
+      gain.disconnect();
+    };
+    oscillator.start(anchor);
+    oscillator.stop(anchor + 0.08);
+    return true;
   }
 
   /**

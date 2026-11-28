@@ -97,6 +97,10 @@ export function useFeedbackAudio(
   const playStep = () => {
     if (desiredSound.current && readySound.current) audio.play('step');
   };
+  /** SCRUM-324: a Pexeso card turns over (follows Mute). */
+  const playFlip = () => {
+    if (desiredSound.current && readySound.current) audio.play('flip');
+  };
   /**
    * SCRUM-172: the bear's growl when it is tapped. Follows Mute; the tap is a user gesture, so
    * it may also allow sound that no Start has allowed yet (menus).
@@ -127,6 +131,7 @@ export function useFeedbackAudio(
     playBadge,
     playPop,
     playStep,
+    playFlip,
     playGrowl,
   };
 }

@@ -569,6 +569,20 @@ progress::-webkit-progress-value {
 .bear-sad .bear-character {
   animation: bear-think 0.65s ease-out 1;
 }
+/* SCRUM-324: the kind "hmm" after a Pexeso miss: a gentle head tilt, no frown. */
+.bear-thinking .bear-character {
+  animation: bear-hmm 0.9s ease-in-out 1;
+}
+@keyframes bear-hmm {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  40%,
+  70% {
+    transform: rotate(-4deg);
+  }
+}
 @keyframes bear-cheer {
   0%,
   100% {

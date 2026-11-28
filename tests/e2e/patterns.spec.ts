@@ -139,7 +139,7 @@ for (const { name, width, height } of ALL_DEVICES)
         }
       });
 
-/** The Logic menu with 5 levels: heading, count and Start on screen; only the list scrolls. */
+/** The Logic menu with 8 levels (SCRUM-324: 6-8 Pexeso): heading, count and Start on screen; only the list scrolls. */
 const menuLayout = (page: Page) =>
   page.evaluate(() => {
     const d = document.documentElement;
@@ -159,7 +159,7 @@ const menuLayout = (page: Page) =>
 
 for (const { name, width, height } of ALL_DEVICES)
   for (const lang of ['en', 'sk'] as const)
-    test(`Logic menu with Levels 1-5 at ${name} ${width}x${height} ${lang}: heading, count and Start on screen, no page scroll`, async ({
+    test(`Logic menu with Levels 1-8 at ${name} ${width}x${height} ${lang}: heading, count and Start on screen, no page scroll`, async ({
       page,
     }) => {
       await page.setViewportSize({ width, height });
@@ -169,18 +169,20 @@ for (const { name, width, height } of ALL_DEVICES)
       await expect(page.locator('.workspace')).toHaveAttribute('data-menu-mode', 'contained');
       const menu = await menuLayout(page);
       test.info().annotations.push({ type: 'menu', description: JSON.stringify(menu) });
-      expect(menu.levels).toBe(5);
+      expect(menu.levels).toBe(8);
       expect(menu.pageScroll, 'page scroll').toBeLessThanOrEqual(1);
       expect(menu.heading, 'heading on screen').toBe(true);
       expect(menu.count, 'count on screen').toBe(true);
       expect(menu.start, 'Start on screen').toBe(true);
       // The last level can be reached by scrolling the list (contained) when it does not fit.
-      await page.locator('.logic-home .level-5').scrollIntoViewIfNeeded();
-      await expect(page.locator('.logic-home .level-5')).toBeInViewport();
+      await page.locator('.logic-home .level-8').scrollIntoViewIfNeeded();
+      await expect(page.locator('.logic-home .level-8')).toBeInViewport();
       expect((await menuLayout(page)).pageScroll).toBeLessThanOrEqual(1);
     });
 
-test('Logic menu names Levels 3-5 after the bear levels (EN and SK)', async ({ page }) => {
+test('Logic menu names Levels 3-5 after the bear levels, then 6-8 Pexeso (EN and SK)', async ({
+  page,
+}) => {
   await page.goto('/');
   await page.locator('.course-logic').click();
   const titles = () => page.locator('.logic-home .level-title').allTextContents();
@@ -190,6 +192,9 @@ test('Logic menu names Levels 3-5 after the bear levels (EN and SK)', async ({ p
     'Level 3 · What comes next?',
     'Level 4 · What is missing?',
     'Level 5 · Growing and turning',
+    'Level 6 · Matching pairs',
+    'Level 7 · Matching pairs',
+    'Level 8 · Matching pairs',
   ]);
   await setLanguage(page, 'Slovenčina');
   expect(await titles()).toEqual([
@@ -198,6 +203,9 @@ test('Logic menu names Levels 3-5 after the bear levels (EN and SK)', async ({ p
     'Úroveň 3 · Čo príde ďalej?',
     'Úroveň 4 · Čo chýba?',
     'Úroveň 5 · Rastie a otáča sa',
+    'Úroveň 6 · Pexeso',
+    'Úroveň 7 · Pexeso',
+    'Úroveň 8 · Pexeso',
   ]);
 });
 

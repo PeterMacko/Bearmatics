@@ -11,7 +11,8 @@ import {
 } from 'react';
 import { flushSync } from 'react-dom';
 import { generateSession, type Level } from './math/engine';
-import { copy, type Language } from './i18n';
+import { copy, fill, type Language } from './i18n';
+import { SCREEN_SETTLE_MS } from './ignoreRepeatClick';
 import Bear from './Bear';
 import { PICTURE_THEMES } from './PictureGroup';
 import { useCompactPractice, useTouchCapability } from './useCompactPractice';
@@ -59,6 +60,19 @@ import {
 } from './logic/bearPath';
 import LogicPracticeView from './logic/LogicPracticeView';
 import PatternPracticeView from './logic/PatternPracticeView';
+import PexesoView from './logic/PexesoView';
+import { PexesoBack, PexesoFace } from './logic/PexesoArt';
+import {
+  asSession as pexesoAsSession,
+  closeMiss,
+  isPexesoLevel,
+  newGame,
+  PEXESO_LEVELS,
+  PEXESO_PAIRS,
+  tapCard,
+  type PexesoGame,
+  type PexesoLevel,
+} from './logic/pexeso';
 import {
   checkPattern,
   generatePatternSession,
@@ -177,12 +191,30 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const [logicSize, setLogicSize] = useState(10);
   // SCRUM-289: Level 2 "Around the stones". The lesson keeps the level it started with.
   // SCRUM-299: Levels 3-5 "What comes next?" picture patterns (their own session and screen).
-  const [logicLevel, setLogicLevel] = useState<LogicLevel | PatternLevel>(1);
+  const [logicLevel, setLogicLevel] = useState<LogicLevel | PatternLevel | PexesoLevel>(1);
   const [logicLessonLevel, setLogicLessonLevel] = useState<LogicLevel>(1);
   const [logicSession, setLogicSession] = useState<Session<BearPuzzle> | null>(null);
   const [patternSession, setPatternSession] = useState<Session<PatternRow> | null>(null);
   const [logicArrows, setLogicArrows] = useState<Arrow[]>([]);
   const [demoRun, setDemoRun] = useState(0);
+  // SCRUM-324: Logic Levels 6-8 Pexeso. The game (engine state) with a ref for tap handlers,
+  // the level shown, the 1.5 s close timer of a miss and the help window.
+  const [pexeso, setPexesoState] = useState<PexesoGame | null>(null);
+  const pexesoRef = useRef<PexesoGame | null>(null);
+  const [pexesoLevel, setPexesoLevel] = useState<PexesoLevel>(6);
+  const pexesoTimer = useRef(0);
+  const [pexesoHelpOpen, setPexesoHelpOpen] = useState(false);
+  const pexesoHelpRef = useRef<HTMLButtonElement>(null);
+  const setPexeso = (next: PexesoGame | null) => {
+    pexesoRef.current = next;
+    setPexesoState(next);
+  };
+  const clearPexesoTimer = () => {
+    window.clearTimeout(pexesoTimer.current);
+    pexesoTimer.current = 0;
+  };
+  useEffect(() => () => window.clearTimeout(pexesoTimer.current), []);
+  const pexesoSession = useMemo(() => pexeso && pexesoAsSession(pexeso), [pexeso]);
   const demoCount = useRef(0);
   const showDemo = () => setDemoRun(++demoCount.current);
   // SCRUM-241: Word search. The lesson keeps its own state; `searchSession` is its Session shape
@@ -200,7 +232,13 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   const searchSession = useMemo(() => searchLesson && asSession(searchLesson), [searchLesson]);
   // The practice on screen, maths or English: drives bear, progress, Back and feedback sounds.
   const active: Session<unknown> | null =
-    session ?? englishSession ?? writeSession ?? logicSession ?? patternSession ?? searchSession;
+    session ??
+    englishSession ??
+    writeSession ??
+    logicSession ??
+    patternSession ??
+    searchSession ??
+    pexesoSession;
   // Set on every screen change: the new screen's heading takes focus (effect below).
   const focusMenuHeading = useRef(false);
   // Optional account (SCRUM-97). Everything works signed out; the server may be missing.
@@ -289,6 +327,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     playBadge,
     playPop,
     playStep,
+    playFlip,
     playGrowl,
     // Word search plays a pop and the word for a found word, nothing for a wrong pair (scope 3),
     // so its feedback does not start the answer melodies; the completion fanfare stays.
@@ -357,6 +396,9 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     setLogicSession(null);
     setPatternSession(null);
     setSearchLesson(null);
+    clearPexesoTimer();
+    setPexeso(null);
+    setPexesoHelpOpen(false);
     setDemoRun(0);
     resetAnswers();
     // SCRUM-309: leaving a lesson or its summary ends "Bear picks a game" (Next game opens it
@@ -367,7 +409,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // What to open after leaving a lesson (the profile button asks like Back, then opens it).
   const afterLeave = useRef<(() => void) | null>(null);
   const requestLeave = (then: (() => void) | null = null) => {
-    if (settingsOpen || hintOpen || leaveOpen) return;
+    if (settingsOpen || hintOpen || leaveOpen || pexesoHelpOpen) return;
     afterLeave.current = then;
     if (lessonKind && hasProgress(lessonKind.session, lessonKind.answer)) setLeaveOpen(true);
     else {
@@ -408,6 +450,11 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   useEffect(() => {
     if (patternSession?.done) summaryRef.current?.focus();
   }, [patternSession?.done]);
+  const pexesoDone = !!pexesoSession?.done;
+  const pexesoHeadingRef = useRef<HTMLHeadingElement>(null);
+  useEffect(() => {
+    if (pexesoDone) summaryRef.current?.focus({ preventScroll: true });
+  }, [pexesoDone]);
   const writeQuestion = writeSession ? currentExercise(writeSession) : undefined;
   useEffect(() => {
     if (writeSession?.done) summaryRef.current?.focus();
@@ -420,6 +467,13 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // Counts presentations (new example, review repeat, new lesson): the take-away basket
   // starts full for each (SCRUM-156).
   const [presentation, setPresentation] = useState(0);
+  // A new board (from the menu, Play again or Bear picks) is a new screen: it starts at the top
+  // with focus on its heading.
+  useEffect(() => {
+    if (!pexesoRef.current) return;
+    window.scrollTo(0, 0);
+    pexesoHeadingRef.current?.focus({ preventScroll: true });
+  }, [presentation]);
   const pictureTheme =
     session && current
       ? PICTURE_THEMES[session.exercises.indexOf(current) % PICTURE_THEMES.length]
@@ -466,6 +520,10 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
   // seen once on this device), then the first puzzle.
   const startLogic = (pick?: PickStart) => {
     const lessonLevel = pick ? (pick.level as LogicLevel | PatternLevel) : logicLevel;
+    if (isPexesoLevel(lessonLevel)) {
+      startPexeso(lessonLevel, !!pick);
+      return;
+    }
     const lessonSize = pick ? pick.size : logicSize;
     setPresentation((n) => n + 1);
     resetForNewSession();
@@ -493,6 +551,42 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
         lessonLevel === 2 ? generateStoneSession(lessonSize) : generateBearSession(lessonSize),
       ),
     );
+  };
+  // SCRUM-324: a Pexeso game: a new shuffled board; its lesson size is the pair count.
+  const startPexeso = (shown: PexesoLevel, bearPicks: boolean) => {
+    const pairs = PEXESO_PAIRS[shown];
+    clearPexesoTimer();
+    setPresentation((n) => n + 1);
+    resetForNewSession();
+    void activateSound();
+    startLessonClock(pairs);
+    beginLesson(pairs, { course: 'logic', level: shown, ...(bearPicks && { bearPicks: true }) });
+    setDemoRun(0);
+    setPexesoHelpOpen(false);
+    setPexesoLevel(shown);
+    setPexeso(newGame(pairs, Math.random));
+  };
+  const PEXESO_CLOSE_MS = 1500;
+  const tapPexeso = (index: number) => {
+    const before = pexesoRef.current;
+    if (!before) return;
+    void activateSound();
+    const after = tapCard(before, index);
+    if (after === before) return;
+    if (before.closing) clearPexesoTimer();
+    // A card turned face up (not only the close of a miss): the soft flip.
+    const faceUp = (g: PexesoGame, closed: boolean) =>
+      (closed ? 0 : g.open.length) + 2 * g.foundPairs;
+    if (faceUp(after, false) > faceUp(before, before.closing)) playFlip();
+    setPexeso(after);
+    if (after.closing) {
+      clearPexesoTimer();
+      pexesoTimer.current = window.setTimeout(() => {
+        pexesoTimer.current = 0;
+        const current = pexesoRef.current;
+        if (current) setPexeso(closeMiss(current));
+      }, PEXESO_CLOSE_MS);
+    }
   };
   const nextLogic = () => {
     void activateSound();
@@ -708,247 +802,276 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
     else showPick('next', pickGame(pickAge, [last], Math.random));
   };
 
-  const modalOpen = leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen;
+  const modalOpen =
+    leaveOpen || hintOpen || settingsOpen || offerOpen || boardOpen || pexesoHelpOpen;
   // The lesson on screen, whichever kind: one summary, one position text and one Next label.
   const lessonKind: LessonKind | null =
-    searchLesson && searchSession
+    pexeso && pexesoSession
       ? {
-          session: searchSession,
-          // A first letter tapped is unsent work (the leave question).
-          answer: searchLesson.selected ? 'selected' : '',
-          trail: t.searchTrail,
-          eyebrow: t.searchTrail,
-          finishedLabel: t.searchFinished,
-          onAgain: startSearch,
-          practice: () =>
-            searchPuzzle && (
-              <WordSearchView
-                key={presentation}
-                t={t}
-                lesson={searchLesson}
-                // "1 of 2" stays on one line where the position wraps beside the bear.
-                position={`${t.searchPuzzle} ${searchLesson.index + 1}\u00a0${t.of}\u00a0${searchLesson.puzzles.length}`}
-                playing={words.playing ? playSource : null}
-                playFailed={words.failed}
-                nextLabel={
-                  searchLesson.index === searchLesson.puzzles.length - 1 ? t.finish : t.searchNext
-                }
-                nextRef={nextRef}
-                onTap={tapSearch}
-                onPlay={(index, source) => {
-                  setPlaySource(source);
-                  void words.play(searchPuzzle.words[index].word);
-                }}
-                onFoundByLetters={(index) => {
-                  const current = searchRef.current;
-                  if (!current) return;
-                  void activateSound();
-                  afterSearch(current, findWord(current, index));
-                }}
-                onWrongLetter={() => {
-                  const current = searchRef.current;
-                  if (current) setSearchLesson(wrongTry(current));
-                }}
-                onRetryPlay={() => void words.retry()}
-                onNext={nextSearch}
-              />
-            ),
+          session: pexesoSession,
+          // A first card turned over is unsent work (the leave question).
+          answer: pexeso.open.length === 1 ? 'open' : '',
+          trail: t.logicTrail,
+          eyebrow: t.logicTrail,
+          onAgain: () => startPexeso(pexesoLevel, false),
+          practice: () => (
+            <PexesoView
+              key={presentation}
+              t={t}
+              level={pexesoLevel}
+              game={pexeso}
+              signedIn={!!account}
+              headingRef={pexesoHeadingRef}
+              helpRef={pexesoHelpRef}
+              helpOpen={pexesoHelpOpen}
+              onTap={tapPexeso}
+              onHelp={() => {
+                if (!settingsOpen && !leaveOpen) setPexesoHelpOpen(true);
+              }}
+            />
+          ),
         }
-      : patternSession
+      : searchLesson && searchSession
         ? {
-            session: patternSession,
-            answer: '',
-            trail: t.logicTrail,
-            eyebrow: t.logicTrail,
-            onAgain: startLogic,
+            session: searchSession,
+            // A first letter tapped is unsent work (the leave question).
+            answer: searchLesson.selected ? 'selected' : '',
+            trail: t.searchTrail,
+            eyebrow: t.searchTrail,
+            finishedLabel: t.searchFinished,
+            onAgain: startSearch,
             practice: () =>
-              patternRow && (
-                <PatternPracticeView
+              searchPuzzle && (
+                <WordSearchView
                   key={presentation}
                   t={t}
-                  row={patternRow}
-                  position={positionText(t, patternSession, t.exercise)}
-                  reviewing={patternSession.reviewing}
-                  solved={patternSession.solved}
-                  feedback={patternSession.feedback}
-                  nextLabel={nextLabel(t, patternSession)}
-                  demoRun={demoRun}
+                  lesson={searchLesson}
+                  // "1 of 2" stays on one line where the position wraps beside the bear.
+                  position={`${t.searchPuzzle} ${searchLesson.index + 1}\u00a0${t.of}\u00a0${searchLesson.puzzles.length}`}
+                  playing={words.playing ? playSource : null}
+                  playFailed={words.failed}
+                  nextLabel={
+                    searchLesson.index === searchLesson.puzzles.length - 1 ? t.finish : t.searchNext
+                  }
                   nextRef={nextRef}
-                  onChoose={choosePattern}
-                  onNext={nextPattern}
-                  onShowMe={showDemo}
-                  onDemoDone={() => {
-                    // Played to its end (leaving earlier unmounts it without this call).
-                    markDemoSeen('patterns');
-                    setDemoRun(0);
+                  onTap={tapSearch}
+                  onPlay={(index, source) => {
+                    setPlaySource(source);
+                    void words.play(searchPuzzle.words[index].word);
                   }}
+                  onFoundByLetters={(index) => {
+                    const current = searchRef.current;
+                    if (!current) return;
+                    void activateSound();
+                    afterSearch(current, findWord(current, index));
+                  }}
+                  onWrongLetter={() => {
+                    const current = searchRef.current;
+                    if (current) setSearchLesson(wrongTry(current));
+                  }}
+                  onRetryPlay={() => void words.retry()}
+                  onNext={nextSearch}
                 />
               ),
           }
-        : logicSession
+        : patternSession
           ? {
-              session: logicSession,
-              answer: encodeArrows(logicArrows),
+              session: patternSession,
+              answer: '',
               trail: t.logicTrail,
               eyebrow: t.logicTrail,
               onAgain: startLogic,
               practice: () =>
-                logicPuzzle && (
-                  <LogicPracticeView
+                patternRow && (
+                  <PatternPracticeView
                     key={presentation}
                     t={t}
-                    puzzle={logicPuzzle}
-                    level={logicLessonLevel}
-                    maxArrows={ARROW_LIMIT[logicLessonLevel]}
-                    first={logicSession.index === 0 && !logicSession.reviewing}
-                    position={positionText(t, logicSession, t.exercise)}
-                    reviewing={logicSession.reviewing}
-                    solved={logicSession.solved}
-                    feedback={logicSession.feedback}
-                    arrows={logicArrows}
-                    nextLabel={nextLabel(t, logicSession)}
-                    keysActive={!modalOpen}
+                    row={patternRow}
+                    position={positionText(t, patternSession, t.exercise)}
+                    reviewing={patternSession.reviewing}
+                    solved={patternSession.solved}
+                    feedback={patternSession.feedback}
+                    nextLabel={nextLabel(t, patternSession)}
                     demoRun={demoRun}
                     nextRef={nextRef}
-                    onArrowsChange={(next) => {
-                      setLogicArrows(next);
-                      setLogicSession((previous) => previous && clearFeedback(previous));
-                    }}
-                    onGo={() => void activateSound()}
-                    onWalked={(walked) =>
-                      setLogicSession(
-                        (previous) =>
-                          previous && submitAnswer(previous, walked, bearChecker(logicLessonLevel)),
-                      )
-                    }
-                    onNext={nextLogic}
+                    onChoose={choosePattern}
+                    onNext={nextPattern}
                     onShowMe={showDemo}
                     onDemoDone={() => {
                       // Played to its end (leaving earlier unmounts it without this call).
-                      markDemoSeen('bear-path');
+                      markDemoSeen('patterns');
                       setDemoRun(0);
                     }}
-                    onStep={playStep}
                   />
                 ),
             }
-          : writeSession
+          : logicSession
             ? {
-                session: writeSession,
-                answer: written,
-                trail: t.englishTrail,
-                eyebrow: t.englishTrail,
-                finishedLabel: t.writeFinished,
-                onAgain: startEnglish,
+                session: logicSession,
+                answer: encodeArrows(logicArrows),
+                trail: t.logicTrail,
+                eyebrow: t.logicTrail,
+                onAgain: startLogic,
                 practice: () =>
-                  writeQuestion && (
-                    <EnglishWriteView
+                  logicPuzzle && (
+                    <LogicPracticeView
+                      key={presentation}
                       t={t}
-                      question={writeQuestion}
-                      position={positionText(t, writeSession, t.englishWord)}
-                      reviewing={writeSession.reviewing}
-                      solved={writeSession.solved}
-                      feedback={writeSession.feedback}
-                      attempts={writeSession.attempts}
-                      wrongAnswer={wrongAnswer}
-                      prompt={writeNote}
-                      answer={written}
-                      playing={!!words.playing && playSource === 'speaker'}
-                      playFailed={words.failed}
-                      nextLabel={nextLabel(t, writeSession, true)}
-                      keyboard={keyboard}
-                      speakerRef={speakerRef}
-                      inputRef={writeInputRef}
-                      onAnswerChange={(value) => {
-                        if (writeSession.solved) return;
-                        setWritten(value);
-                        setWriteNote(null);
-                        if (writeSession.feedback !== 'ready')
-                          setWriteSession((previous) => previous && clearFeedback(previous));
+                      puzzle={logicPuzzle}
+                      level={logicLessonLevel}
+                      maxArrows={ARROW_LIMIT[logicLessonLevel]}
+                      first={logicSession.index === 0 && !logicSession.reviewing}
+                      position={positionText(t, logicSession, t.exercise)}
+                      reviewing={logicSession.reviewing}
+                      solved={logicSession.solved}
+                      feedback={logicSession.feedback}
+                      arrows={logicArrows}
+                      nextLabel={nextLabel(t, logicSession)}
+                      keysActive={!modalOpen}
+                      demoRun={demoRun}
+                      nextRef={nextRef}
+                      onArrowsChange={(next) => {
+                        setLogicArrows(next);
+                        setLogicSession((previous) => previous && clearFeedback(previous));
                       }}
-                      onReplay={() => {
-                        setPlaySource('speaker');
-                        void words.play(writeQuestion.target);
+                      onGo={() => void activateSound()}
+                      onWalked={(walked) =>
+                        setLogicSession(
+                          (previous) =>
+                            previous &&
+                            submitAnswer(previous, walked, bearChecker(logicLessonLevel)),
+                        )
+                      }
+                      onNext={nextLogic}
+                      onShowMe={showDemo}
+                      onDemoDone={() => {
+                        // Played to its end (leaving earlier unmounts it without this call).
+                        markDemoSeen('bear-path');
+                        setDemoRun(0);
                       }}
-                      onRetryPlay={() => void words.retry()}
-                      onCheck={checkWrite}
-                      onNext={nextWrite}
+                      onStep={playStep}
                     />
                   ),
               }
-            : englishSession
+            : writeSession
               ? {
-                  session: englishSession,
-                  answer: choice,
+                  session: writeSession,
+                  answer: written,
                   trail: t.englishTrail,
                   eyebrow: t.englishTrail,
-                  finishedLabel: t.englishFinished,
+                  finishedLabel: t.writeFinished,
                   onAgain: startEnglish,
                   practice: () =>
-                    englishQuestion && (
-                      <EnglishPracticeView
+                    writeQuestion && (
+                      <EnglishWriteView
                         t={t}
-                        question={englishQuestion}
-                        position={positionText(t, englishSession, t.englishWord)}
-                        reviewing={englishSession.reviewing}
-                        solved={englishSession.solved}
-                        feedback={englishSession.feedback}
-                        choice={choice}
-                        playing={words.playing ? playSource : null}
+                        question={writeQuestion}
+                        position={positionText(t, writeSession, t.englishWord)}
+                        reviewing={writeSession.reviewing}
+                        solved={writeSession.solved}
+                        feedback={writeSession.feedback}
+                        attempts={writeSession.attempts}
+                        wrongAnswer={wrongAnswer}
+                        prompt={writeNote}
+                        answer={written}
+                        playing={!!words.playing && playSource === 'speaker'}
                         playFailed={words.failed}
-                        nextLabel={nextLabel(t, englishSession, true)}
+                        nextLabel={nextLabel(t, writeSession, true)}
+                        keyboard={keyboard}
                         speakerRef={speakerRef}
-                        nextRef={nextRef}
+                        inputRef={writeInputRef}
+                        onAnswerChange={(value) => {
+                          if (writeSession.solved) return;
+                          setWritten(value);
+                          setWriteNote(null);
+                          if (writeSession.feedback !== 'ready')
+                            setWriteSession((previous) => previous && clearFeedback(previous));
+                        }}
                         onReplay={() => {
                           setPlaySource('speaker');
-                          void words.play(englishQuestion.target);
+                          void words.play(writeQuestion.target);
                         }}
                         onRetryPlay={() => void words.retry()}
-                        onChoose={chooseWord}
-                        onCheck={checkChoice}
-                        onNext={nextWord}
+                        onCheck={checkWrite}
+                        onNext={nextWrite}
                       />
                     ),
                 }
-              : session
+              : englishSession
                 ? {
-                    session,
-                    answer,
-                    trail: t.trail,
-                    onAgain: start,
+                    session: englishSession,
+                    answer: choice,
+                    trail: t.englishTrail,
+                    eyebrow: t.englishTrail,
+                    finishedLabel: t.englishFinished,
+                    onAgain: startEnglish,
                     practice: () =>
-                      current && (
-                        <PracticeView
+                      englishQuestion && (
+                        <EnglishPracticeView
                           t={t}
-                          level={mathShown}
-                          current={current}
-                          pictureTheme={pictureTheme}
-                          presentation={presentation}
-                          onPop={playPop}
-                          position={positionText(t, session, t.exercise)}
-                          reviewing={session.reviewing}
-                          solved={session.solved}
-                          feedback={session.feedback}
-                          nextLabel={nextLabel(t, session)}
-                          answer={answer}
-                          padMode={padMode}
-                          touch={touch}
-                          hintOpen={hintOpen}
-                          inputRef={inputRef}
+                          question={englishQuestion}
+                          position={positionText(t, englishSession, t.englishWord)}
+                          reviewing={englishSession.reviewing}
+                          solved={englishSession.solved}
+                          feedback={englishSession.feedback}
+                          choice={choice}
+                          playing={words.playing ? playSource : null}
+                          playFailed={words.failed}
+                          nextLabel={nextLabel(t, englishSession, true)}
+                          speakerRef={speakerRef}
                           nextRef={nextRef}
-                          hintRef={hintRef}
-                          onSubmit={submit}
-                          onAnswerChange={editAnswer}
-                          onAnswerKey={handleAnswerKey}
-                          onPadKey={padEdit}
-                          onNext={next}
-                          onOpenHint={openHint}
-                          onToggleInputMode={toggleInputMode}
+                          onReplay={() => {
+                            setPlaySource('speaker');
+                            void words.play(englishQuestion.target);
+                          }}
+                          onRetryPlay={() => void words.retry()}
+                          onChoose={chooseWord}
+                          onCheck={checkChoice}
+                          onNext={nextWord}
                         />
                       ),
                   }
-                : null;
+                : session
+                  ? {
+                      session,
+                      answer,
+                      trail: t.trail,
+                      onAgain: start,
+                      practice: () =>
+                        current && (
+                          <PracticeView
+                            t={t}
+                            level={mathShown}
+                            current={current}
+                            pictureTheme={pictureTheme}
+                            presentation={presentation}
+                            onPop={playPop}
+                            position={positionText(t, session, t.exercise)}
+                            reviewing={session.reviewing}
+                            solved={session.solved}
+                            feedback={session.feedback}
+                            nextLabel={nextLabel(t, session)}
+                            answer={answer}
+                            padMode={padMode}
+                            touch={touch}
+                            hintOpen={hintOpen}
+                            inputRef={inputRef}
+                            nextRef={nextRef}
+                            hintRef={hintRef}
+                            onSubmit={submit}
+                            onAnswerChange={editAnswer}
+                            onAnswerKey={handleAnswerKey}
+                            onPadKey={padEdit}
+                            onNext={next}
+                            onOpenHint={openHint}
+                            onToggleInputMode={toggleInputMode}
+                          />
+                        ),
+                    }
+                  : null;
 
+  // SCRUM-324: a Pexeso miss waiting to close: the bear's kind "hmm" (lucky or forgotten alike).
+  const pexesoMiss = !!pexeso?.closing;
   // A lesson in progress (not its summary): the bar shows no profile, so a child cannot leave
   // the lesson by mistake (SCRUM-133). Back still asks before leaving.
   const inLesson = !!active && !active.done;
@@ -1072,12 +1195,13 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             <span className="scene-ring" />
             <Bear
               idleWink={!active}
-              key={`${active?.done}:${active?.feedback}:${active?.attempts}`}
-              mood={bearMood(active)}
+              key={`${active?.done}:${active?.feedback}:${active?.attempts}:${pexesoMiss}`}
+              mood={pexesoMiss ? 'thinking' : bearMood(active)}
               reacting={
-                !!active &&
-                !active.done &&
-                (active.feedback === 'correct' || active.feedback === 'incorrect')
+                pexesoMiss ||
+                (!!active &&
+                  !active.done &&
+                  (active.feedback === 'correct' || active.feedback === 'incorrect'))
               }
               bubble={t.bearTap}
               onTap={playGrowl}
@@ -1094,8 +1218,28 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               finishedLabel={lessonKind.finishedLabel}
               total={lessonKind.session.exercises.length}
               firstTry={lessonKind.session.firstTry}
+              lines={
+                pexeso ? (
+                  <>
+                    <p className="completed-total">
+                      {fill(t.pexeso.summaryPairs, { pairs: pexeso.foundPairs })}
+                    </p>
+                    <p className="first-try pexeso-turns">
+                      {fill(t.pexeso.summaryTurns, { turns: pexeso.turns })}
+                    </p>
+                  </>
+                ) : undefined
+              }
               headingRef={summaryRef}
-              time={lessonTime && lessonTimeText(t.lessonTime, lessonTime)}
+              time={
+                lessonTime &&
+                lessonTimeText(
+                  pexeso
+                    ? { ...t.lessonTime, line: t.pexeso.timeLine, spoken: t.pexeso.timeSpoken }
+                    : t.lessonTime,
+                  lessonTime,
+                )
+              }
               points={summaryPoints}
               footer={summaryFooter}
               streak={summaryStreak}
@@ -1126,6 +1270,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
               game={pick.game}
               age={pickAge}
               size={pickSize}
+              showSizes={!(pick.game.course === 'logic' && isPexesoLevel(pick.game.shown))}
               multiplier={nextMultiplier({ course: pick.game.course, level: pick.game.shown })}
               shownAt={pick.shownAt}
               headingRef={menuHeadingRef}
@@ -1165,7 +1310,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
           <LevelMenu
             t={t}
             className="selection logic-home"
-            levels={[...LOGIC_LEVELS, ...PATTERN_LEVELS].map((value) => ({
+            levels={[...LOGIC_LEVELS, ...PATTERN_LEVELS, ...PEXESO_LEVELS].map((value) => ({
               value,
               shown: value,
               title: t.logicLevels[value],
@@ -1183,6 +1328,7 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
             nextMultiplier={(shown) => nextMultiplier({ course: 'logic', level: shown })}
             onLevelChange={setLogicLevel}
             onSizeChange={setLogicSize}
+            withoutSize={isPexesoLevel}
             onStart={startLogic}
           />
         ) : course === 'wordsearch' ? (
@@ -1306,6 +1452,31 @@ export default function App({ startLanguage = 'en' }: { startLanguage?: Language
         >
           {session.reviewing && <p className="review-note">{t.reviewHelp}</p>}
           <HintPanel exercise={current} stage={session.hintStage} language={language} />
+        </HintDialog>
+      )}
+      {pexesoHelpOpen && pexeso && (
+        <HintDialog
+          title={t.pexeso.helpTitle}
+          closeLabel={t.closeHint}
+          titleId="pexeso-help-title"
+          closeOnShade
+          settleMs={SCREEN_SETTLE_MS}
+          onClose={() => setPexesoHelpOpen(false)}
+          triggerRef={pexesoHelpRef}
+        >
+          <div className="pexeso-help-picture" role="img" aria-label={t.pexeso.helpPicture}>
+            <span className="pexeso-help-card">
+              <PexesoFace picture="apple" />
+            </span>
+            <span className="pexeso-help-card">
+              <PexesoFace picture="apple" />
+            </span>
+            <span className="pexeso-help-card pexeso-help-back">
+              <PexesoBack />
+            </span>
+          </div>
+          <p>{account ? t.pexeso.helpText : t.pexeso.helpTextSignedOut}</p>
+          {accountKnown && !account && <p className="pexeso-help-note">{t.points.signIn}</p>}
         </HintDialog>
       )}
       {leaveOpen && (
