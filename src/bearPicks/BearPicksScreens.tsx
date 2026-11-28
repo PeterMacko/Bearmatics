@@ -3,7 +3,7 @@ import { COURSE_ICONS } from '../CourseChoice';
 import { SMALL_MATH_LEVELS } from '../courses';
 import { fill, type Copy } from '../i18n';
 import Icon from '../Icon';
-import { ignoreRepeatClick, SCREEN_SETTLE_MS } from '../ignoreRepeatClick';
+import { ignoreSettlingTap } from '../tapGuard';
 import { ageRange, MAX_AGE, MIN_AGE } from '../levelAges';
 import { multiplierName, type Multiplier } from '../progress/multipliers';
 import { SESSION_SIZES } from '../session';
@@ -27,8 +27,7 @@ function gameNames(t: Copy, game: Game): { course: string; level: string } {
  * (`detail > 1`) and any tap right after the screen changed are ignored. Keyboard activation
  * (detail 0) always works.
  */
-const guard = (event: MouseEvent, shownAt: number) =>
-  ignoreRepeatClick(event, event.detail > 0 && performance.now() - shownAt < SCREEN_SETTLE_MS);
+const guard = (event: MouseEvent, shownAt: number) => ignoreSettlingTap(event, shownAt, 'pass');
 
 const AGES = Array.from({ length: MAX_AGE - MIN_AGE + 1 }, (_, i) => MIN_AGE + i) as (
   5 | 6 | 7 | 8 | 9
