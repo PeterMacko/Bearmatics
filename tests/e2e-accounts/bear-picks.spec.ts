@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { createAccount, hideFromLeaderboard, uniqueName } from '../e2e/support/account';
 import { badge as barBadge } from '../e2e/support/bar';
 import { solveAll } from '../e2e/support/bearPicks';
+import { SETTLE_WAIT_MS } from '../e2e/support/timing';
 
 // SCRUM-309 "Bear picks a game" against the real server (local database): x1.5 on top of the
 // table multiplier, the server takes the new top 12 for a 5-exercise lesson, a mode lesson is a
@@ -20,7 +21,7 @@ async function until(page: Page, match: RegExp) {
   )
     await page.getByRole('button', { name: /Choose another|Vyber inú/ }).press('Enter');
   // Every new game restarts the 600 ms tap guard (QA321-04).
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
 }
 
 test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points and counts as a play', async ({
@@ -39,7 +40,7 @@ test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points a
     'Games for your age, points × 1.5',
   );
   await page.getByRole('button', { name: 'Bear picks a game' }).click();
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await expect(page.locator('.pick-note')).toHaveCount(0);
   await until(page, /^Maths\|/);
   const shown = (await game(page))!;
@@ -67,7 +68,7 @@ test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points a
   // Stop: the Maths menu no longer shows the star on that level (x1 now), others still do.
   await page.getByRole('button', { name: 'Stop' }).click();
   await expect(page.getByRole('heading', { name: 'What shall we learn today?' })).toBeFocused();
-  await page.waitForTimeout(650); // taps right after Stop are its rest (QA321-01)
+  await page.waitForTimeout(SETTLE_WAIT_MS); // taps right after Stop are its rest (QA321-01)
   await page.getByRole('button', { name: 'Maths', exact: true }).click();
   await expect(page.locator(`.level-option.level-${level} .next-play`)).toHaveCount(0);
   const other = level === 7 ? 6 : 7;
@@ -75,7 +76,7 @@ test('signed in: Maths top level in the mode gives 5 × 1.5 × 1.5 = 12 points a
   // Back in the mode, the same game now shows no table sign, only the x1.5.
   await page.getByRole('button', { name: 'Back to courses' }).click();
   await page.getByRole('button', { name: 'Bear picks a game' }).click();
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await until(page, new RegExp(`^Maths\\|Level ${level} `));
   await expect(page.locator('.pick-tag-table')).toHaveCount(0);
   await expect(page.locator('.pick-tag-mode')).toBeVisible();
@@ -116,7 +117,7 @@ test('signed in, Slovak: Small maths 1 after two plays: half points × 1,5 in th
   await page.getByRole('button', { name: 'Slovenčina' }).click();
   await page.getByRole('button', { name: 'Zavrieť nastavenia' }).click();
   await page.getByRole('button', { name: 'Medveď vyberie hru' }).click();
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await until(page, /^Malá matematika\|Úroveň 1 /);
   await expect(page.locator('.pick-tag-table')).toHaveText('1/2');
   await expect(page.locator('.pick-tag-mode')).toHaveText('× 1,5');

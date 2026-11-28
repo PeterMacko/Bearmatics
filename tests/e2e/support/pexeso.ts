@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { SETTLE_WAIT_MS, TURN_WAIT_MS } from './timing';
 
 /** Opens Logic and starts a Pexeso level (6 / 7 / 8); waits until the board takes taps. */
 export async function startPexeso(page: Page, level: 6 | 7 | 8, sk = false) {
@@ -13,7 +14,7 @@ export async function startPexeso(page: Page, level: 6 | 7 | 8, sk = false) {
   await page.locator('.start-button').click();
   await expect(page.locator('.pexeso-card').first()).toBeVisible();
   // The board ignores taps for its first 600 ms (the rest of the Start tap).
-  await page.waitForTimeout(650);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
 }
 
 /** Every card's accessible name ("Card 4, face down" / "Card 4, apple" / "apple, found"). */
@@ -24,7 +25,7 @@ export const cardNames = (page: Page) =>
 
 /** A deliberate tap on card i (0-based), after the 300 ms between accepted card taps. */
 export async function tapCard(page: Page, index: number) {
-  await page.waitForTimeout(320);
+  await page.waitForTimeout(TURN_WAIT_MS);
   await page.locator('.pexeso-card').nth(index).click();
 }
 

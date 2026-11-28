@@ -2,12 +2,12 @@ import { expect, test, type Page } from '@playwright/test';
 import { solveAll } from './support/bearPicks';
 import { answerFor } from './support/maths';
 import { mockApi } from './support/mockApi';
+import { SETTLE_WAIT_MS } from './support/timing';
 
 // SCRUM-309 "Bear picks a game": the mode's screens and chain in the browser (signed out and
 // with a mocked signed-in bar), double taps, keyboard, the English Play gesture and the fit of
 // the course choice and the two new screens at the defined devices.
 
-const SETTLE = 650; // the screens ignore taps for 600 ms after they appear
 const heading = (page: Page) => page.getByRole('heading', { level: 2 });
 const game = (page: Page) =>
   page
@@ -20,7 +20,7 @@ const store = (page: Page) =>
   page.evaluate(() => JSON.parse(localStorage.getItem('bearmatics-bear-picks') ?? 'null'));
 async function openMode(page: Page) {
   await page.getByRole('button', { name: 'Bear picks a game' }).click();
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
 }
 /**
  * Choose another until the shown game's course and level text match. By keyboard (Enter is
@@ -33,7 +33,7 @@ async function until(page: Page, match: RegExp) {
     pressed = true;
   }
   expect(await game(page)).toMatch(match);
-  if (pressed) await page.waitForTimeout(SETTLE);
+  if (pressed) await page.waitForTimeout(SETTLE_WAIT_MS);
 }
 /** SCRUM-324: Math.random always returns `value` (a fixed Bear picks choice). */
 const rngAlways = (page: Page, value: number) =>
@@ -67,13 +67,13 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
   expect(from <= 7 && 7 <= to).toBe(true);
   await page.locator('.pick-sizes label').nth(1).click();
   expect(await store(page)).toEqual({ age: 7, size: 10 });
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   // Deliberate taps on Choose another: a different game each time.
   for (let i = 0; i < 10; i++) {
     const before = await game(page);
     await page.getByRole('button', { name: 'Choose another' }).click();
     expect(await game(page)).not.toBe(before);
-    await page.waitForTimeout(SETTLE);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
   }
   // Next time the mode opens: no age question, the count from last time.
   await page.reload();
@@ -87,17 +87,17 @@ test('age screen, next-game screen, Choose another, remembered age and count', a
     'aria-pressed',
     'true',
   );
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await page.getByRole('button', { name: '9 years or older' }).click();
   await expect(page.getByRole('button', { name: 'Change age (9+)' })).toBeVisible();
   expect(await store(page)).toEqual({ age: 9, size: 10 });
   expect(Number((await page.locator('.pick-tag-age').textContent())!.split('–')[1])).toBe(9);
   // Stop and the bar's Back lead to the course choice.
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await page.getByRole('button', { name: 'Stop' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
   await expect(heading(page)).toBeFocused();
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await openMode(page);
   await page.getByRole('button', { name: 'Back to courses' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
@@ -188,7 +188,7 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   await expect(heading(page)).toHaveText('The bear picked this game');
   await expect(page.getByRole('textbox')).toHaveCount(0);
   expect(await game(page)).not.toBe(played);
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   await until(page, NOT_PEXESO);
   await page.locator('.pick-sizes label').nth(1).click();
   await until(page, /^Maths\|/);
@@ -204,7 +204,7 @@ test('a lesson in the mode: count used, Next game / Stop on the summary, double 
   // QA321-06: a tap on a card right after leaving is the rest of the double tap: ignored.
   await page.getByRole('button', { name: 'Small maths' }).click();
   await expect(heading(page)).toHaveText('What shall we learn today?');
-  await page.waitForTimeout(SETTLE);
+  await page.waitForTimeout(SETTLE_WAIT_MS);
   // Normal menus keep their own count (10), untouched by the mode's choice.
   await page.getByRole('button', { name: 'Small maths' }).click();
   await expect(page.getByRole('radio', { name: '10 exercises' })).toBeChecked();
@@ -381,10 +381,10 @@ for (const signed of ['out', 'in'] as const)
         await page.waitForTimeout(300);
         const choice = await fit(page);
         await page.locator('.bear-picks-button').click();
-        await page.waitForTimeout(SETTLE);
+        await page.waitForTimeout(SETTLE_WAIT_MS);
         const age = await fit(page);
         await page.locator('.pick-age-button').nth(3).click();
-        await page.waitForTimeout(SETTLE);
+        await page.waitForTimeout(SETTLE_WAIT_MS);
         // The worst of several games (titles differ in length).
         let next = await fit(page);
         for (let i = 0; i < 8; i++) {
@@ -433,7 +433,7 @@ test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () 
       return { x: box.x + box.width / 2, y: box.y + box.height / 2 };
     };
     await page.getByRole('button', { name: 'Bear picks a game' }).tap();
-    await page.waitForTimeout(SETTLE);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     // Choose another: two taps 150 ms apart give one new game.
     const before = await game(page);
     const another = await centre('Choose another');
@@ -443,7 +443,7 @@ test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () 
     await page.waitForTimeout(150);
     await page.touchscreen.tap(another.x, another.y);
     expect(await game(page)).toBe(once);
-    await page.waitForTimeout(SETTLE);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     // Stop, then the rest of the double tap on a course card (wherever the layout puts it
     // under the finger): nothing opens.
     const stop = await centre('Stop');
@@ -455,7 +455,7 @@ test.describe('QA321-01/04: double taps on Stop and Choose another (touch)', () 
     await page.waitForTimeout(300);
     await expect(heading(page)).toHaveText('What shall we learn today?');
     // A deliberate tap later opens the card as before.
-    await page.waitForTimeout(SETTLE);
+    await page.waitForTimeout(SETTLE_WAIT_MS);
     await page.touchscreen.tap(card.x, card.y);
     await expect(heading(page)).toHaveText('Where shall we explore?');
   });

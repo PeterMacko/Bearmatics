@@ -1,4 +1,5 @@
 import { expect, type Page } from '@playwright/test';
+import { SETTLE_WAIT_MS } from './timing';
 
 export const PASSWORD = 'honeyPot42';
 
@@ -58,7 +59,7 @@ export async function createAccount(
 }
 
 /** SCRUM-281 / QA287-01: the profile windows ignore button presses in their first 600 ms. */
-export const WINDOW_SETTLE_MS = 650;
+export const WINDOW_SETTLE_MS = SETTLE_WAIT_MS;
 
 /** Reads the open grown-up question ("5³ + 21 = ?") and types its answer. */
 export async function answerGrownUp(page: Page, offset = 0) {

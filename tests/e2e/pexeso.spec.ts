@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { ALL_DEVICES, DEVICE, type Device } from './support/devices';
 import { mockAccount, mockLessonApi, mockSignedOut } from './support/mockApi';
 import { cardNames, playPerfect, startPexeso, tapCard } from './support/pexeso';
+import { TURN_WAIT_MS } from './support/timing';
 
 // SCRUM-324: Pexeso (memory game), Logic Levels 6-8, on the defined devices.
 
@@ -295,7 +296,7 @@ test.describe('turns (AC 4, 11)', () => {
     expect(openBefore).toHaveLength(2);
     // Fast double tap on a third card during the 1.5 s: the miss closes, one card opens.
     const third = (await names()).findIndex((n, i) => i > second && n.endsWith('face down'));
-    await page.waitForTimeout(320);
+    await page.waitForTimeout(TURN_WAIT_MS);
     await page.locator('.pexeso-card').nth(third).dblclick();
     const after = (await names()).filter((n) => /^Card \d+, (?!face down)/.test(n));
     expect(after).toEqual([expect.stringMatching(new RegExp(`^Card ${third + 1}, `))]);
@@ -328,7 +329,7 @@ test.describe('turns (AC 4, 11)', () => {
     await expect(page.locator('.pexeso-card').nth(0)).toBeFocused();
     await page.keyboard.press('Tab');
     await expect(page.locator('.pexeso-card').nth(1)).toBeFocused();
-    await page.waitForTimeout(320); // a deliberate next press (300 ms between accepted turns)
+    await page.waitForTimeout(TURN_WAIT_MS); // a deliberate next press (300 ms between accepted turns)
     await page.keyboard.press('Space');
     await expect(page.locator('.pexeso-card').nth(1)).not.toHaveAttribute(
       'aria-label',
@@ -364,7 +365,7 @@ test.describe('turns (AC 4, 11)', () => {
       await cards.nth(first).focus();
       await page.keyboard.press('Enter');
       await expect(cards.nth(first)).toHaveAttribute('aria-label', /^Card \d+, (?!face down)/);
-      await page.waitForTimeout(320);
+      await page.waitForTimeout(TURN_WAIT_MS);
       await cards.nth(second).focus();
       await page.keyboard.down('Enter'); // card 2, and the key stays down
       await expect(page.locator('.pexeso-message')).toHaveText(/^(Not a pair|Pair found: .+)$/);
@@ -377,7 +378,7 @@ test.describe('turns (AC 4, 11)', () => {
       if (second + 2 >= 30) test.skip(true, 'no miss on this board');
       first = second + 1;
       second = first + 1;
-      await page.waitForTimeout(320);
+      await page.waitForTimeout(TURN_WAIT_MS);
     }
     // Held: auto-repeat keydowns (Playwright sends repeat: true on a held key). Each check reads
     // the page clock since card 2's keydown in the same call as the cards, so a slow machine
@@ -410,10 +411,10 @@ test.describe('turns (AC 4, 11)', () => {
     await expect.poll(openCount, { timeout: 2500 }).toBe(0);
     // Fast repeated Enter on card 2: the first press turns it (the same miss again), a second
     // press right after it is ignored, so both stay open.
-    await page.waitForTimeout(320);
+    await page.waitForTimeout(TURN_WAIT_MS);
     await cards.nth(first).focus();
     await page.keyboard.press('Enter');
-    await page.waitForTimeout(320);
+    await page.waitForTimeout(TURN_WAIT_MS);
     await cards.nth(second).focus();
     await page.keyboard.press('Enter');
     await page.keyboard.press('Enter');
@@ -426,7 +427,7 @@ test.describe('turns (AC 4, 11)', () => {
     else test.info().annotations.push({ type: 'slow', description: `presses ${gap} ms apart` });
     await expect(page.locator('.pexeso-message')).toHaveText('Not a pair');
     // A deliberate Enter later closes the miss (the next-tap rule), as a tap does.
-    await page.waitForTimeout(320);
+    await page.waitForTimeout(TURN_WAIT_MS);
     await page.keyboard.press('Enter');
     const late = await page.evaluate(() => {
       const at = (window as unknown as { downs: number[] }).downs;
