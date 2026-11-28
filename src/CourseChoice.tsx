@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 import type { Course } from './courses';
 import type { Copy } from './i18n';
-import { ignoreRepeatClick, SCREEN_SETTLE_MS } from './ignoreRepeatClick';
+import { ignoreRepeatClick, tooSoonAfter } from './tapGuard';
 import MenuHeading from './MenuHeading';
 import { watchResize } from './watchResize';
 
@@ -126,7 +126,7 @@ export default function CourseChoice({
   onChoose: (course: Course) => void;
   /** SCRUM-309: the "Bear picks a game" mode. */
   onBearPicks: () => void;
-  /** When "Bear picks a game" Stop led here: taps within SCREEN_SETTLE_MS are its rest. */
+  /** When "Bear picks a game" Stop led here: taps within the settle time are its rest. */
   settleSince?: number | null;
   /** Known to be signed out: the intro invites to sign in and the mode shows no × 1.5. */
   signedOut?: boolean;
@@ -135,8 +135,9 @@ export default function CourseChoice({
 }) {
   // QA321-01: Stop's double tap must not open the card (or the mode) now under the finger.
   // Keyboard activation (detail 0) always works.
+  // No Stop before (null): no settle time.
   const tooSoon = (event: { detail: number }) =>
-    event.detail > 0 && settleSince !== null && performance.now() - settleSince < SCREEN_SETTLE_MS;
+    event.detail > 0 && tooSoonAfter(settleSince ?? null, { unknown: false });
   // Peter: the Bear picks button ends where the course cards end. The card list keeps room for
   // its scrollbar (Chromium: 15 px, overlay scrollbars: 0), so the button gets the same room.
   const sectionRef = useRef<HTMLElement>(null);
